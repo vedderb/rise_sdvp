@@ -1,0 +1,80 @@
+ARM GAS  /tmp/ccZpLwO2.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m4
+   3              		.eabi_attribute 27, 1
+   4              		.eabi_attribute 28, 1
+   5              		.fpu fpv4-sp-d16
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 2
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.thumb
+  16              		.file	"basic_rf_security.c"
+  17              		.text
+  18              	.Ltext0:
+  19              		.cfi_sections	.debug_frame
+  20              	.Letext0:
+  21              		.section	.debug_line,"",%progbits
+  22              	.Ldebug_line0:
+  23              		.section	.debug_str,"MS",%progbits,1
+  24              	.LASF0:
+  25 0000 474E5520 		.ascii	"GNU C 4.9.3 20150529 (release) [ARM/embedded-4_9-br"
+  25      4320342E 
+  25      392E3320 
+  25      32303135 
+  25      30353239 
+  26 0033 616E6368 		.ascii	"anch revision 227977] -mcpu=cortex-m4 -mfloat-abi=h"
+  26      20726576 
+  26      6973696F 
+  26      6E203232 
+  26      37393737 
+  27 0066 61726420 		.ascii	"ard -mfpu=fpv4-sp-d16 -mno-thumb-interwork -mthumb "
+  27      2D6D6670 
+  27      753D6670 
+  27      76342D73 
+  27      702D6431 
+  28 0099 2D676764 		.ascii	"-ggdb -O2 -std=gnu99 -fomit-frame-pointer -falign-f"
+  28      62202D4F 
+  28      32202D73 
+  28      74643D67 
+  28      6E753939 
+  29 00cc 756E6374 		.ascii	"unctions=16 -ffunction-sections -fdata-sections -fn"
+  29      696F6E73 
+  29      3D313620 
+  29      2D666675 
+  29      6E637469 
+  30 00ff 6F2D636F 		.ascii	"o-common -fsingle-precision-constant\000"
+  30      6D6D6F6E 
+  30      202D6673 
+  30      696E676C 
+  30      652D7072 
+  31              	.LASF1:
+  32 0124 63633235 		.ascii	"cc2520/basicrf/basic_rf_security.c\000"
+  32      32302F62 
+ARM GAS  /tmp/ccZpLwO2.s 			page 2
+
+
+  32      61736963 
+  32      72662F62 
+  32      61736963 
+  33              	.LASF2:
+  34 0147 2F686F6D 		.ascii	"/home/benjamin/Skrivbord/SP-RCCar/Embedded/Mote/\000"
+  34      652F6265 
+  34      6E6A616D 
+  34      696E2F53 
+  34      6B726976 
+  35              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 4.9.3 20150529 (release) [ARM/embedded-4_9-br
+ARM GAS  /tmp/ccZpLwO2.s 			page 3
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 basic_rf_security.c
+
+NO UNDEFINED SYMBOLS
