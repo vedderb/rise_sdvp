@@ -37,10 +37,12 @@ public:
     void startUdpConnection(QHostAddress ip, int port);
     void stopUdpConnection();
     bool isUdpConnected();
+    void getImu(quint8 car);
 
 signals:
     void dataToSend(QByteArray &data);
-    void printReceived(QString str);
+    void printReceived(int id, QString str);
+    void imuReceived(int id, IMU_INFO imu);
     
 public slots:
     void timerSlot();

@@ -83,6 +83,9 @@
        <property name="prefix">
         <string>ID: </string>
        </property>
+       <property name="maximum">
+        <number>255</number>
+       </property>
       </widget>
      </item>
     </layout>

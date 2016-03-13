@@ -22,6 +22,7 @@
 #include <QList>
 #include <QTimer>
 #include <QSerialPort>
+#include <QLabel>
 #include "carinterface.h"
 #include "packetinterface.h"
 
@@ -38,7 +39,12 @@ public:
     ~MainWindow();
 
 private slots:
+    void serialDataAvailable();
+    void serialPortError(QSerialPort::SerialPortError error);
     void timerSlot();
+    void packetDataToSend(QByteArray &data);
+    void printReceived(int id, QString str);
+    void imuReceived(int id, IMU_INFO imu);
 
     void on_carAddButton_clicked();
     void on_carRemoveButton_clicked();
@@ -50,11 +56,18 @@ private slots:
     void on_terminalSendButton_clicked();
     void on_terminalClearButton_clicked();
 
+    void on_udpConnectButton_clicked();
+
 private:
     Ui::MainWindow *ui;
     QTimer *mTimer;
     QSerialPort *mSerialPort;
+    PacketInterface *mPacketInterface;
     QList<CarInterface*> mCars;
+    QLabel *mStatusLabel;
+    int mStatusInfoTime;
+
+    void showStatusInfo(QString info, bool isGood);
 };
 
 #endif // MAINWINDOW_H

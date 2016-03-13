@@ -249,17 +249,38 @@ bool PacketInterface::sendPacket(QByteArray data)
 
 void PacketInterface::processPacket(const unsigned char *data, int len)
 {
-    int32_t ind = 0;
-
     unsigned char id = data[0];
     data++;
     len--;
 
-    switch (id) {
+    COMM_PACKET_ID cmd = (COMM_PACKET_ID)(quint8)data[0];
+    data++;
+    len--;
+
+    switch (cmd) {
     case COMM_PRINTF: {
         QByteArray tmpArray = QByteArray::fromRawData((char*)data, len);
         tmpArray[len] = '\0';
-        emit printReceived(QString::fromLatin1(tmpArray));
+        emit printReceived(id, QString::fromLatin1(tmpArray));
+    } break;
+
+    case COMM_GET_IMU: {
+        IMU_INFO imu;
+        int32_t ind = 0;
+
+        imu.roll = utility::buffer_get_double32(data, 1e6, &ind);
+        imu.pitch = utility::buffer_get_double32(data, 1e6, &ind);
+        imu.yaw = utility::buffer_get_double32(data, 1e6, &ind);
+        imu.accel[0] = utility::buffer_get_double32(data, 1e6, &ind);
+        imu.accel[1] = utility::buffer_get_double32(data, 1e6, &ind);
+        imu.accel[2] = utility::buffer_get_double32(data, 1e6, &ind);
+        imu.gyro[0] = utility::buffer_get_double32(data, 1e6, &ind);
+        imu.gyro[1] = utility::buffer_get_double32(data, 1e6, &ind);
+        imu.gyro[2] = utility::buffer_get_double32(data, 1e6, &ind);
+        imu.mag[0] = utility::buffer_get_double32(data, 1e6, &ind);
+        imu.mag[1] = utility::buffer_get_double32(data, 1e6, &ind);
+        imu.mag[2] = utility::buffer_get_double32(data, 1e6, &ind);
+        emit imuReceived(id, imu);
     } break;
 
     default:
@@ -285,4 +306,12 @@ void PacketInterface::stopUdpConnection()
 bool PacketInterface::isUdpConnected()
 {
     return QString::compare(mHostAddress.toString(), "0.0.0.0") != 0;
+}
+
+void PacketInterface::getImu(quint8 car)
+{
+    QByteArray packet;
+    packet.append(car);
+    packet.append(COMM_GET_IMU);
+    sendPacket(packet);
 }

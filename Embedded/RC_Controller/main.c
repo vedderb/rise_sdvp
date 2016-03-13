@@ -35,15 +35,13 @@
 #include "adconv.h"
 #include "led.h"
 #include "packet.h"
+#include "pos.h"
 
 /*
  * TODO: Update this...
  *
  * Timers used:
- * TIM13: utils
- * TIM6: Control
- * TIM3: PPM
- * TIM5: Global clock
+ * TIM6: Pos
  *
  * DMA/Stream	Device		Usage
  * 2, 4			ADC1		Battery voltage measurement
@@ -55,8 +53,6 @@
  *
  */
 
-#include "hal_cc2520.h"
-
 int main(void) {
 	halInit();
 	chSysInit();
@@ -66,17 +62,12 @@ int main(void) {
 	adconv_init();
 	comm_usb_init();
 	ext_cb_init();
-	mpu9150_init();
+	pos_init();
 	comm_cc2520_init();
 	commands_set_send_func(comm_cc2520_send_buffer);
 
-	chThdSleepMilliseconds(1000);
-	led_write(LED_RED, 1);
-	mpu9150_sample_gyro_offsets(100);
-	led_write(LED_RED, 0);
-
 	for(;;) {
-		commands_printf("Hello World");
+		commands_printf("Hello World\n");
 		chThdSleepMilliseconds(500);
 	}
 

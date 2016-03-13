@@ -19,13 +19,8 @@
 #define GLWIDGET_H
 
 #include <QGLWidget>
-
 #include <QtOpenGL/QGLFunctions>
 
-//class QtLogo;
-
-//! [0]
-//class OrientationWidget : public QGLWidget
 class OrientationWidget : public QGLWidget, protected QGLFunctions
 {
     Q_OBJECT

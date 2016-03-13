@@ -18,6 +18,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QSerialPortInfo>
+#include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -27,8 +28,24 @@ MainWindow::MainWindow(QWidget *parent) :
 
     mTimer = new QTimer(this);
     mTimer->start(20);
+    mStatusLabel = new QLabel(this);
+    ui->statusBar->addPermanentWidget(mStatusLabel);
+    mStatusInfoTime = 0;
+    mPacketInterface = new PacketInterface(this);
+    mSerialPort = new QSerialPort(this);
 
     connect(mTimer, SIGNAL(timeout()), this, SLOT(timerSlot()));
+    connect(mSerialPort, SIGNAL(readyRead()),
+            this, SLOT(serialDataAvailable()));
+    connect(mSerialPort, SIGNAL(error(QSerialPort::SerialPortError)),
+            this, SLOT(serialPortError(QSerialPort::SerialPortError)));
+    connect(mTimer, SIGNAL(timeout()), this, SLOT(timerSlot()));
+    connect(mPacketInterface, SIGNAL(dataToSend(QByteArray&)),
+            this, SLOT(packetDataToSend(QByteArray&)));
+    connect(mPacketInterface, SIGNAL(printReceived(int,QString)),
+            this, SLOT(printReceived(int,QString)));
+    connect(mPacketInterface, SIGNAL(imuReceived(int,IMU_INFO)),
+            this, SLOT(imuReceived(int,IMU_INFO)));
 
     on_serialRefreshButton_clicked();
 }
@@ -38,9 +55,100 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::serialDataAvailable()
+{
+    while (mSerialPort->bytesAvailable() > 0) {
+        QByteArray data = mSerialPort->readAll();
+        mPacketInterface->processData(data);
+    }
+}
+
+void MainWindow::serialPortError(QSerialPort::SerialPortError error)
+{
+    QString message;
+    switch (error) {
+    case QSerialPort::NoError:
+        break;
+    case QSerialPort::DeviceNotFoundError:
+        message = tr("Device not found");
+        break;
+    case QSerialPort::OpenError:
+        message = tr("Can't open device");
+        break;
+    case QSerialPort::NotOpenError:
+        message = tr("Not open error");
+        break;
+    case QSerialPort::ResourceError:
+        message = tr("Port disconnected");
+        break;
+    case QSerialPort::PermissionError:
+        message = tr("Permission error");
+        break;
+    case QSerialPort::UnknownError:
+        message = tr("Unknown error");
+        break;
+    default:
+        message = "Serial port error: " + QString::number(error);
+        break;
+    }
+
+    if(!message.isEmpty()) {
+        showStatusInfo(message, false);
+
+        if(mSerialPort->isOpen()) {
+            mSerialPort->close();
+        }
+    }
+}
+
 void MainWindow::timerSlot()
 {
+    // Update status label
+    if (mStatusInfoTime) {
+        mStatusInfoTime--;
+        if (!mStatusInfoTime) {
+            mStatusLabel->setStyleSheet(qApp->styleSheet());
+        }
+    } else {
+        if (mSerialPort->isOpen() || mPacketInterface->isUdpConnected()) {
+            mStatusLabel->setText("Connected");
+        } else {
+            mStatusLabel->setText("Not connected");
+        }
+    }
 
+    // Poll data
+    for(QList<CarInterface*>::Iterator it_car = mCars.begin();it_car < mCars.end();it_car++) {
+        CarInterface *car = *it_car;
+        if (car->pollData()) {
+            mPacketInterface->getImu(car->getId());
+        }
+    }
+}
+
+void MainWindow::packetDataToSend(QByteArray &data)
+{
+    if (mSerialPort->isOpen()) {
+        mSerialPort->write(data);
+    }
+}
+
+void MainWindow::printReceived(int id, QString str)
+{
+    QString str2;
+    str2.sprintf("Car %d:\n", id);
+    str2 += str;
+    ui->terminalBrowser->append(str2);
+}
+
+void MainWindow::imuReceived(int id, IMU_INFO imu)
+{
+    for(QList<CarInterface*>::Iterator it_car = mCars.begin();it_car < mCars.end();it_car++) {
+        CarInterface *car = *it_car;
+        if (car->getId() == id) {
+            car->setOrientation(imu.roll, imu.pitch, imu.yaw);
+        }
+    }
 }
 
 void MainWindow::on_carAddButton_clicked()
@@ -66,7 +174,24 @@ void MainWindow::on_carRemoveButton_clicked()
 
 void MainWindow::on_serialConnectButton_clicked()
 {
+    if(mSerialPort->isOpen()) {
+        return;
+    }
 
+    mSerialPort->setPortName(ui->serialPortBox->currentData().toString());
+    mSerialPort->open(QIODevice::ReadWrite);
+
+    if(!mSerialPort->isOpen()) {
+        return;
+    }
+
+    mSerialPort->setBaudRate(QSerialPort::Baud115200);
+    mSerialPort->setDataBits(QSerialPort::Data8);
+    mSerialPort->setParity(QSerialPort::NoParity);
+    mSerialPort->setStopBits(QSerialPort::OneStop);
+    mSerialPort->setFlowControl(QSerialPort::NoFlowControl);
+
+    mPacketInterface->stopUdpConnection();
 }
 
 void MainWindow::on_serialRefreshButton_clicked()
@@ -90,17 +215,23 @@ void MainWindow::on_serialRefreshButton_clicked()
 
 void MainWindow::on_disconnectButton_clicked()
 {
+    if (mSerialPort->isOpen()) {
+        mSerialPort->close();
+    }
 
+    if (mPacketInterface->isUdpConnected()) {
+        mPacketInterface->stopUdpConnection();
+    }
 }
 
 void MainWindow::on_mapRemoveTraceButton_clicked()
 {
-
+    ui->mapWidget->clearTrace();
 }
 
 void MainWindow::on_MapRemovePixmapsButton_clicked()
 {
-
+    ui->mapWidget->clearPerspectivePixmaps();
 }
 
 void MainWindow::on_terminalSendButton_clicked()
@@ -110,5 +241,32 @@ void MainWindow::on_terminalSendButton_clicked()
 
 void MainWindow::on_terminalClearButton_clicked()
 {
+    ui->terminalBrowser->clear();
+}
 
+void MainWindow::showStatusInfo(QString info, bool isGood)
+{
+    if (isGood) {
+        mStatusLabel->setStyleSheet("QLabel { background-color : lightgreen; color : black; }");
+    } else {
+        mStatusLabel->setStyleSheet("QLabel { background-color : red; color : black; }");
+    }
+
+    mStatusInfoTime = 80;
+    mStatusLabel->setText(info);
+}
+
+void MainWindow::on_udpConnectButton_clicked()
+{
+    QHostAddress ip;
+
+    if (ip.setAddress(ui->udpIpEdit->text().trimmed())) {
+        if (mSerialPort->isOpen()) {
+            mSerialPort->close();
+        }
+
+        mPacketInterface->startUdpConnection(ip, ui->udpPortBox->value());
+    } else {
+        showStatusInfo("Invalid IP address", false);
+    }
 }

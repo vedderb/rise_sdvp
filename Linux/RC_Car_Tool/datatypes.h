@@ -41,6 +41,15 @@ typedef struct {
 	int initialUpdateDone;
 } ATTITUDE_INFO;
 
+typedef struct {
+    double roll;
+    double pitch;
+    double yaw;
+    double accel[3];
+    double gyro[3];
+    double mag[3];
+} IMU_INFO;
+
 typedef enum {
 	MOTE_PACKET_FILL_RX_BUFFER = 0,
 	MOTE_PACKET_FILL_RX_BUFFER_LONG,
@@ -50,7 +59,7 @@ typedef enum {
 
 typedef enum {
 	COMM_PRINTF = 0,
-	COMM_GET_ATTITUDE
+    COMM_GET_IMU
 } COMM_PACKET_ID;
 
 typedef struct {

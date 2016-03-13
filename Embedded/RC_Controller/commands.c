@@ -24,6 +24,8 @@
 
 #include "commands.h"
 #include "packet.h"
+#include "pos.h"
+#include "buffer.h"
 
 #include <math.h>
 #include <string.h>
@@ -74,7 +76,6 @@ void commands_process_packet(unsigned char *data, unsigned int len) {
 	}
 
 	COMM_PACKET_ID packet_id;
-	int32_t ind = 0;
 	uint8_t id = 0;
 
 	id = data[0];
@@ -87,9 +88,30 @@ void commands_process_packet(unsigned char *data, unsigned int len) {
 
 	if (id == main_config.id || id == ID_ALL) {
 		switch (packet_id) {
-		case COMM_GET_ATTITUDE:
-			// TODO!
-			break;
+		case COMM_GET_IMU: {
+			float rpy[3];
+			float accel[3];
+			float gyro[3];
+			float mag[3];
+
+			pos_get_attitude(rpy, accel, gyro, mag);
+			int32_t send_index = 0;
+			send_buffer[send_index++] = main_config.id;
+			send_buffer[send_index++] = COMM_GET_IMU;
+			buffer_append_float32(send_buffer, rpy[0], 1e6, &send_index);
+			buffer_append_float32(send_buffer, rpy[1], 1e6, &send_index);
+			buffer_append_float32(send_buffer, rpy[2], 1e6, &send_index);
+			buffer_append_float32(send_buffer, accel[0], 1e6, &send_index);
+			buffer_append_float32(send_buffer, accel[1], 1e6, &send_index);
+			buffer_append_float32(send_buffer, accel[2], 1e6, &send_index);
+			buffer_append_float32(send_buffer, gyro[0], 1e6, &send_index);
+			buffer_append_float32(send_buffer, gyro[1], 1e6, &send_index);
+			buffer_append_float32(send_buffer, gyro[2], 1e6, &send_index);
+			buffer_append_float32(send_buffer, mag[0], 1e6, &send_index);
+			buffer_append_float32(send_buffer, mag[1], 1e6, &send_index);
+			buffer_append_float32(send_buffer, mag[2], 1e6, &send_index);
+			commands_send_packet(send_buffer, send_index);
+		} break;
 
 		default:
 			break;

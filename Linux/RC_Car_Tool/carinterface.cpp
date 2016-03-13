@@ -18,6 +18,16 @@ int CarInterface::getId()
     return ui->idBox->value();
 }
 
+bool CarInterface::pollData()
+{
+    return ui->pollBox->isChecked();
+}
+
+void CarInterface::setOrientation(double roll, double pitch, double yaw)
+{
+    ui->orientationWidget->setRollPitchYaw(roll, pitch, yaw);
+}
+
 CarInterface::~CarInterface()
 {
     delete ui;

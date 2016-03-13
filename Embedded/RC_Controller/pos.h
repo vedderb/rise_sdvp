@@ -15,46 +15,13 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
- * datatypes.h
- *
- *  Created on: 10 mars 2016
- *      Author: benjamin
- */
+#ifndef POS_H_
+#define POS_H_
 
-#ifndef DATATYPES_H_
-#define DATATYPES_H_
+#include "conf_general.h"
 
-#include <stdint.h>
-#include <stdbool.h>
+// Functions
+void pos_init(void);
+void pos_get_attitude(float *rpy, float *accel, float *gyro, float *mag);
 
-// Orientation data
-typedef struct {
-	float q0;
-	float q1;
-	float q2;
-	float q3;
-	float integralFBx;
-	float integralFBy;
-	float integralFBz;
-	float accMagP;
-	int initialUpdateDone;
-} ATTITUDE_INFO;
-
-typedef enum {
-	MOTE_PACKET_FILL_RX_BUFFER = 0,
-	MOTE_PACKET_FILL_RX_BUFFER_LONG,
-	MOTE_PACKET_PROCESS_RX_BUFFER,
-	MOTE_PACKET_PROCESS_SHORT_BUFFER,
-} MOTE_PACKET;
-
-typedef enum {
-	COMM_PRINTF = 0,
-	COMM_GET_IMU
-} COMM_PACKET_ID;
-
-typedef struct {
-	int id;
-} MAIN_CONFIG;
-
-#endif /* DATATYPES_H_ */
+#endif /* POS_H_ */
