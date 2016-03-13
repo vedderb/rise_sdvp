@@ -19,6 +19,11 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QList>
+#include <QTimer>
+#include <QSerialPort>
+#include "carinterface.h"
+#include "packetinterface.h"
 
 namespace Ui {
 class MainWindow;
@@ -32,8 +37,24 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+private slots:
+    void timerSlot();
+
+    void on_carAddButton_clicked();
+    void on_carRemoveButton_clicked();
+    void on_serialConnectButton_clicked();
+    void on_serialRefreshButton_clicked();
+    void on_disconnectButton_clicked();
+    void on_mapRemoveTraceButton_clicked();
+    void on_MapRemovePixmapsButton_clicked();
+    void on_terminalSendButton_clicked();
+    void on_terminalClearButton_clicked();
+
 private:
     Ui::MainWindow *ui;
+    QTimer *mTimer;
+    QSerialPort *mSerialPort;
+    QList<CarInterface*> mCars;
 };
 
 #endif // MAINWINDOW_H

@@ -5,26 +5,43 @@
 #-------------------------------------------------
 
 QT       += core gui
+QT       += widgets
 QT       += printsupport
 QT       += serialport
 QT       += network
+QT       += opengl
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+# Req
+# sudo apt-get install libassimp-dev
 
 TARGET = RC_Car_Tool
 TEMPLATE = app
 
+LIBS += -lassimp
 
 SOURCES += main.cpp\
         mainwindow.cpp \
     qcustomplot.cpp \
     packetinterface.cpp \
-    utility.cpp
+    utility.cpp \
+    mapwidget.cpp \
+    carinfo.cpp \
+    locpoint.cpp \
+    perspectivepixmap.cpp \
+    carinterface.cpp \
+    orientationwidget.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
     datatypes.h \
     packetinterface.h \
-    utility.h
+    utility.h \
+    mapwidget.h \
+    carinfo.h \
+    locpoint.h \
+    perspectivepixmap.h \
+    carinterface.h \
+    orientationwidget.h
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    carinterface.ui
