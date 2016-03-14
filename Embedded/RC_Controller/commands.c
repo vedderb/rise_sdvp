@@ -26,6 +26,7 @@
 #include "packet.h"
 #include "pos.h"
 #include "buffer.h"
+#include "terminal.h"
 
 #include <math.h>
 #include <string.h>
@@ -113,6 +114,11 @@ void commands_process_packet(unsigned char *data, unsigned int len) {
 			commands_send_packet(send_buffer, send_index);
 		} break;
 
+		case COMM_TERMINAL_CMD:
+			data[len] = '\0';
+			terminal_process_string((char*)data);
+			break;
+
 		default:
 			break;
 		}
@@ -131,6 +137,6 @@ void commands_printf(char* format, ...) {
 	va_end (arg);
 
 	if(len > 0) {
-		commands_send_packet((unsigned char*)print_buffer, (len<253)? len+2: 255);
+		commands_send_packet((unsigned char*)print_buffer, (len<253) ? len + 2: 255);
 	}
 }

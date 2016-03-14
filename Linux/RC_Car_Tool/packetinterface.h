@@ -41,12 +41,13 @@ public:
 
 signals:
     void dataToSend(QByteArray &data);
-    void printReceived(int id, QString str);
-    void imuReceived(int id, IMU_INFO imu);
+    void printReceived(quint8 id, QString str);
+    void imuReceived(quint8 id, IMU_DATA imu);
     
 public slots:
     void timerSlot();
     void readPendingDatagrams();
+    void sendTerminalCmd(quint8 car, QString cmd);
 
 private:
     unsigned short crc16(const unsigned char *buf, unsigned int len);

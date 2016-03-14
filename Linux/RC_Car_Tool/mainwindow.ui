@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>943</width>
-    <height>780</height>
+    <width>1076</width>
+    <height>736</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -113,37 +113,6 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab_3">
-       <attribute name="title">
-        <string>Terminal</string>
-       </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout_4">
-        <item>
-         <widget class="QTextBrowser" name="terminalBrowser"/>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_4">
-          <item>
-           <widget class="QLineEdit" name="terminalEdit"/>
-          </item>
-          <item>
-           <widget class="QPushButton" name="terminalSendButton">
-            <property name="text">
-             <string>Send</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="terminalClearButton">
-            <property name="text">
-             <string>Clear Terminal</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-       </layout>
-      </widget>
      </widget>
     </item>
     <item>
@@ -171,7 +140,7 @@
            <x>0</x>
            <y>0</y>
            <width>300</width>
-           <height>82</height>
+           <height>78</height>
           </rect>
          </property>
          <attribute name="label">
@@ -203,7 +172,7 @@
            <x>0</x>
            <y>0</y>
            <width>300</width>
-           <height>82</height>
+           <height>78</height>
           </rect>
          </property>
          <attribute name="label">
@@ -276,8 +245,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>943</width>
-     <height>27</height>
+     <width>1076</width>
+     <height>25</height>
     </rect>
    </property>
   </widget>
@@ -293,22 +262,5 @@
   </customwidget>
  </customwidgets>
  <resources/>
- <connections>
-  <connection>
-   <sender>terminalEdit</sender>
-   <signal>returnPressed()</signal>
-   <receiver>terminalSendButton</receiver>
-   <slot>click()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>382</x>
-     <y>716</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>411</x>
-     <y>723</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>

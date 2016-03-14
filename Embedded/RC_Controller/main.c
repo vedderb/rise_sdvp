@@ -66,10 +66,10 @@ int main(void) {
 	comm_cc2520_init();
 	commands_set_send_func(comm_cc2520_send_buffer);
 
-	for(;;) {
-		commands_printf("Hello World\n");
-		chThdSleepMilliseconds(500);
-	}
+//	for(;;) {
+//		commands_printf("Hello World\n");
+//		chThdSleepMilliseconds(500);
+//	}
 
 	for(;;) {
 		chThdSleepMilliseconds(2);

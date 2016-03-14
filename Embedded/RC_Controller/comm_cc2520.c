@@ -16,10 +16,10 @@
 #include <string.h>
 
 // Settings
-#define TX_BUFFER_LENGTH	130
-#define TX_BUFFER_SLOTS		10
+#define TX_BUFFER_LENGTH	110
+#define TX_BUFFER_SLOTS		30
 #define TX_DELAY_US			5000
-#define MAX_PL_LEN			110
+#define MAX_PL_LEN			100
 #define RX_BUFFER_SIZE		PACKET_MAX_PL_LEN
 
 // Private variables

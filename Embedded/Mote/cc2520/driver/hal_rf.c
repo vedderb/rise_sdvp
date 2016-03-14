@@ -133,8 +133,8 @@ static regVal_t regval[] = {
 #else
 		{CC2520_TXPOWER, 0xF7}, // Max TX output power
 #endif
-		{CC2520_CCACTRL0, 0xF8}, // CCA threshold -80dBm
-		{CC2520_CCACTRL1, 0b00011010},
+		{CC2520_CCACTRL0, 0xFF}, // CCA threshold -77 dBm
+		{CC2520_CCACTRL1, 0b00000010}, // Default: 0b00011010, for CCA
 
 		// Recommended RX settings
 		{CC2520_MDMCTRL0, 0x85},
@@ -487,6 +487,7 @@ uint8 halRfTransmit(void) {
 
 	// Reuse GPIO2 for TX_FRM_DONE exception
 	CC2520_CFG_GPIO_OUT(2, 1 + CC2520_EXC_TX_FRM_DONE);
+	CC2520_CLEAR_EXC(CC2520_EXC_TX_FRM_DONE); // Clear the exception
 
 	// Wait for the transmission to begin before exiting (makes sure that this function cannot be called
 	// a second time, and thereby canceling the first transmission.
@@ -506,7 +507,18 @@ uint8 halRfTransmit(void) {
 	} else {
 		status = SUCCESS;
 		// Wait for TX_FRM_DONE exception
-		while(!CC2520_TX_FRM_DONE_PIN){};
+		timeout = 500;
+		while (--timeout > 0) {
+			if (CC2520_TX_FRM_DONE_PIN) {
+				break;
+			}
+
+			chThdSleepMicroseconds(100);
+		}
+
+		if (timeout == 0) {
+			status = FAILED;
+		}
 	}
 
 	PA_RX();

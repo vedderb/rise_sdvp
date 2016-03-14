@@ -265,7 +265,7 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
     } break;
 
     case COMM_GET_IMU: {
-        IMU_INFO imu;
+        IMU_DATA imu;
         int32_t ind = 0;
 
         imu.roll = utility::buffer_get_double32(data, 1e6, &ind);
@@ -313,5 +313,15 @@ void PacketInterface::getImu(quint8 car)
     QByteArray packet;
     packet.append(car);
     packet.append(COMM_GET_IMU);
+    sendPacket(packet);
+}
+
+void PacketInterface::sendTerminalCmd(quint8 car, QString cmd)
+{
+    QByteArray packet;
+    packet.clear();
+    packet.append(car);
+    packet.append((char)COMM_TERMINAL_CMD);
+    packet.append(cmd.toLatin1());
     sendPacket(packet);
 }

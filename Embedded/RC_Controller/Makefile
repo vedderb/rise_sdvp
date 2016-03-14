@@ -137,7 +137,8 @@ CSRC = $(STARTUPSRC) \
        packet.c \
        commands.c \
        conf_general.c \
-       pos.c
+       pos.c \
+       terminal.c
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.

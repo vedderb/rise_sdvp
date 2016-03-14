@@ -43,8 +43,7 @@ private slots:
     void serialPortError(QSerialPort::SerialPortError error);
     void timerSlot();
     void packetDataToSend(QByteArray &data);
-    void printReceived(int id, QString str);
-    void imuReceived(int id, IMU_INFO imu);
+    void imuReceived(quint8 id, IMU_DATA imu);
 
     void on_carAddButton_clicked();
     void on_carRemoveButton_clicked();
@@ -53,9 +52,6 @@ private slots:
     void on_disconnectButton_clicked();
     void on_mapRemoveTraceButton_clicked();
     void on_MapRemovePixmapsButton_clicked();
-    void on_terminalSendButton_clicked();
-    void on_terminalClearButton_clicked();
-
     void on_udpConnectButton_clicked();
 
 private:

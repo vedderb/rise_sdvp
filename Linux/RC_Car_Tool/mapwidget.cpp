@@ -376,7 +376,7 @@ void MapWidget::mouseMoveEvent(QMouseEvent *e)
 
 void MapWidget::mousePressEvent(QMouseEvent *e)
 {
-    if ((e->buttons() & Qt::LeftButton) && (e->modifiers() & Qt::ControlModifier)) {
+    if ((e->buttons() & Qt::LeftButton) && (e->modifiers() & Qt::ControlModifier) && mCarInfo.size() > 0) {
         LocPoint pos = mCarInfo[0].getLocation();
         QPoint p = getMousePosRelative();
         pos.setXY(p.x(), p.y());

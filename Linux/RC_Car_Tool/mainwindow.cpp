@@ -42,10 +42,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(mTimer, SIGNAL(timeout()), this, SLOT(timerSlot()));
     connect(mPacketInterface, SIGNAL(dataToSend(QByteArray&)),
             this, SLOT(packetDataToSend(QByteArray&)));
-    connect(mPacketInterface, SIGNAL(printReceived(int,QString)),
-            this, SLOT(printReceived(int,QString)));
-    connect(mPacketInterface, SIGNAL(imuReceived(int,IMU_INFO)),
-            this, SLOT(imuReceived(int,IMU_INFO)));
+    connect(mPacketInterface, SIGNAL(imuReceived(quint8,IMU_DATA)),
+            this, SLOT(imuReceived(quint8,IMU_DATA)));
 
     on_serialRefreshButton_clicked();
 }
@@ -133,20 +131,12 @@ void MainWindow::packetDataToSend(QByteArray &data)
     }
 }
 
-void MainWindow::printReceived(int id, QString str)
-{
-    QString str2;
-    str2.sprintf("Car %d:\n", id);
-    str2 += str;
-    ui->terminalBrowser->append(str2);
-}
-
-void MainWindow::imuReceived(int id, IMU_INFO imu)
+void MainWindow::imuReceived(quint8 id, IMU_DATA imu)
 {
     for(QList<CarInterface*>::Iterator it_car = mCars.begin();it_car < mCars.end();it_car++) {
         CarInterface *car = *it_car;
         if (car->getId() == id) {
-            car->setOrientation(imu.roll, imu.pitch, imu.yaw);
+            car->setImuData(imu);
         }
     }
 }
@@ -160,6 +150,11 @@ void MainWindow::on_carAddButton_clicked()
     name.sprintf("Car %d", id);
     car->setID(id);
     ui->carsWidget->addTab(car, name);
+
+    connect(car, SIGNAL(terminalCmd(quint8,QString)),
+            mPacketInterface, SLOT(sendTerminalCmd(quint8,QString)));
+    connect(mPacketInterface, SIGNAL(printReceived(quint8,QString)),
+            car, SLOT(terminalPrint(quint8,QString)));
 }
 
 void MainWindow::on_carRemoveButton_clicked()
@@ -232,16 +227,6 @@ void MainWindow::on_mapRemoveTraceButton_clicked()
 void MainWindow::on_MapRemovePixmapsButton_clicked()
 {
     ui->mapWidget->clearPerspectivePixmaps();
-}
-
-void MainWindow::on_terminalSendButton_clicked()
-{
-
-}
-
-void MainWindow::on_terminalClearButton_clicked()
-{
-    ui->terminalBrowser->clear();
 }
 
 void MainWindow::showStatusInfo(QString info, bool isGood)
