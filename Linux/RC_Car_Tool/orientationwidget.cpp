@@ -101,7 +101,7 @@ OrientationWidget::OrientationWidget(QWidget *parent)
     bgColor = palette().color(QPalette::Window);
 
     Assimp::Importer importer;
-    QString path = "Models/quadrotor_base.blend";
+    QString path = "Models/car.3ds";
     const aiScene *scene = importer.ReadFile(path.toLocal8Bit().data(),
                                              aiProcessPreset_TargetRealtime_Quality);
 
@@ -167,16 +167,8 @@ OrientationWidget::OrientationWidget(QWidget *parent)
             qSetColor(mData->faceColor, Qt::black);
             break;
 
-        case 2:
-            qSetColor(mData->faceColor, Qt::darkCyan);
-            break;
-
         default:
-            if (m % 2 == 0) {
-                qSetColor(mData->faceColor, Qt::darkBlue);
-            } else {
-                qSetColor(mData->faceColor, Qt::green);
-            }
+            qSetColor(mData->faceColor, QColor(20, 20, 25));
             break;
         }
     }
