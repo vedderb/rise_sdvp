@@ -77,11 +77,11 @@ void CarInterface::setImuData(IMU_DATA data)
     ui->accelPlot->legend->setVisible(true);
     ui->accelPlot->replot();
 
-    gyroXData.append(data.gyro[0]);
+    gyroXData.append(data.gyro[0] * 180.0 / M_PI);
     gyroXData.remove(0, 1);
-    gyroYData.append(data.gyro[1]);
+    gyroYData.append(data.gyro[1] * 180.0 / M_PI);
     gyroYData.remove(0, 1);
-    gyroZData.append(data.gyro[2]);
+    gyroZData.append(data.gyro[2] * 180.0 / M_PI);
     gyroZData.remove(0, 1);
 
     ui->gyroPlot->clearGraphs();
