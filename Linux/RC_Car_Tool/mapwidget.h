@@ -46,6 +46,7 @@ public:
     CarInfo* getCarInfo(int car);
     void setFollowCar(int car);
     void setTraceCar(int car);
+    void setSelectedCar(int car);
     void addCar(CarInfo car);
     bool removeCar(int carId);
     void setScaleFactor(double scale);
@@ -85,6 +86,7 @@ private:
     int mMouseLastY;
     int mFollowCar;
     int mTraceCar;
+    int mSelectedCar;
     double xRealPos;
     double yRealPos;
     QTimer *mPaintTimer;

@@ -184,12 +184,12 @@ OrientationWidget::~OrientationWidget()
 
 QSize OrientationWidget::minimumSizeHint() const
 {
-    return QSize(50, 50);
+    return QSize(0, 0);
 }
 
 QSize OrientationWidget::sizeHint() const
 {
-    return QSize(400, 400);
+    return QSize(0, 0);
 }
 
 void OrientationWidget::setRollPitchYaw(float roll, float pitch, float yaw)

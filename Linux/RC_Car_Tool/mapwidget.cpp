@@ -43,6 +43,8 @@ MapWidget::MapWidget(QWidget *parent) :
     mMouseLastX = 1000000;
     mMouseLastY = 1000000;
     mFollowCar = -1;
+    mTraceCar = -1;
+    mSelectedCar = -1;
     xRealPos = 0;
     yRealPos = 0;
     mCarInfo.clear();
@@ -160,6 +162,11 @@ void MapWidget::setFollowCar(int car)
 void MapWidget::setTraceCar(int car)
 {
     mTraceCar = car;
+}
+
+void MapWidget::setSelectedCar(int car)
+{
+    mSelectedCar = car;
 }
 
 void MapWidget::paintEvent(QPaintEvent *event)
@@ -426,13 +433,18 @@ void MapWidget::mouseMoveEvent(QMouseEvent *e)
 
 void MapWidget::mousePressEvent(QMouseEvent *e)
 {
-    if ((e->buttons() & Qt::LeftButton) && (e->modifiers() & Qt::ControlModifier) && mCarInfo.size() > 0) {
-        LocPoint pos = mCarInfo[0].getLocation();
-        QPoint p = getMousePosRelative();
-        pos.setXY(p.x() / 1000.0, p.y() / 1000.0);
-        mCarInfo[0].setLocation(pos);
-        emit posSet(pos);
-        repaintAfterEvents();
+    if (mSelectedCar >= 0 && (e->buttons() & Qt::LeftButton) && (e->modifiers() & Qt::ControlModifier)) {
+        for (int i = 0;i < mCarInfo.size();i++) {
+            CarInfo &carInfo = mCarInfo[i];
+            if (carInfo.getId() == mSelectedCar) {
+                LocPoint pos = carInfo.getLocation();
+                QPoint p = getMousePosRelative();
+                pos.setXY(p.x() / 1000.0, p.y() / 1000.0);
+                carInfo.setLocation(pos);
+                emit posSet(pos);
+                repaintAfterEvents();
+            }
+        }
     }
 }
 
@@ -447,14 +459,19 @@ void MapWidget::mouseReleaseEvent(QMouseEvent *e)
 
 void MapWidget::wheelEvent(QWheelEvent *e)
 {
-    if (e->modifiers() & Qt::ControlModifier && mCarInfo.size() > 0) {
-        LocPoint pos = mCarInfo[0].getLocation();
-        double angle = pos.getAlpha() + (double)e->delta() * 0.0005;
-        normalizeAngleRad(angle);
-        pos.setAlpha(angle);
-        mCarInfo[0].setLocation(pos);
-        emit posSet(pos);
-        repaintAfterEvents();
+    if (e->modifiers() & Qt::ControlModifier && mSelectedCar >= 0) {
+        for (int i = 0;i < mCarInfo.size();i++) {
+            CarInfo &carInfo = mCarInfo[i];
+            if (carInfo.getId() == mSelectedCar) {
+                LocPoint pos = carInfo.getLocation();
+                double angle = pos.getAlpha() + (double)e->delta() * 0.0005;
+                normalizeAngleRad(angle);
+                pos.setAlpha(angle);
+                carInfo.setLocation(pos);
+                emit posSet(pos);
+                repaintAfterEvents();
+            }
+        }
     } else {
         int x = e->pos().x();
         int y = e->pos().y();

@@ -134,6 +134,7 @@ void MainWindow::timerSlot()
     } else {
         ui->mapWidget->setTraceCar(-1);
     }
+    ui->mapWidget->setSelectedCar(ui->mapCarBox->value());
 }
 
 void MainWindow::packetDataToSend(QByteArray &data)
