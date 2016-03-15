@@ -87,6 +87,13 @@
            </widget>
           </item>
           <item>
+           <widget class="QPushButton" name="mapZeroButton">
+            <property name="text">
+             <string>Go to Zero</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <spacer name="horizontalSpacer">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
@@ -98,6 +105,30 @@
              </size>
             </property>
            </spacer>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="mapFollowBox">
+            <property name="text">
+             <string>Follow</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="mapTraceBox">
+            <property name="text">
+             <string>Trace</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="mapCarBox">
+            <property name="prefix">
+             <string>Car: </string>
+            </property>
+            <property name="maximum">
+             <number>255</number>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>

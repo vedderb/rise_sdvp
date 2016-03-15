@@ -17,20 +17,37 @@
 
 #include "carinfo.h"
 
-CarInfo::CarInfo(QString id, Qt::GlobalColor color)
+CarInfo::CarInfo(int id, Qt::GlobalColor color)
 {
     mId = id;
     mColor = color;
+    mName = "";
+    mName.sprintf("Car %d", mId);
 }
 
-QString CarInfo::getId()
+int CarInfo::getId()
 {
     return mId;
 }
 
-void CarInfo::setId(QString id)
+void CarInfo::setId(int id, bool changeName = false)
 {
     mId = id;
+
+    if (changeName) {
+        mName = "";
+        mName.sprintf("Car %d", mId);
+    }
+}
+
+QString CarInfo::getName()
+{
+    return mName;
+}
+
+void CarInfo::setName(QString name)
+{
+    mName = name;
 }
 
 void CarInfo::setLocation(LocPoint &point)

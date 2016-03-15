@@ -90,7 +90,7 @@ void pos_get_attitude(float *rpy, float *accel, float *gyro, float *mag) {
 }
 
 static void mpu9150_read(void) {
-	float gyro[3], accel[3], mag[3];
+	float accel[3], gyro[3], mag[3];
 	mpu9150_get_accel_gyro_mag(accel, gyro, mag);
 
 	float dt = (float)TIM6->CNT / (float)ITERATION_TIMER_FREQ;
@@ -105,9 +105,10 @@ static void update_orientation_angles(float *accel, float *gyro, float *mag, flo
 	gyro[2] = gyro[2] * M_PI / 180.0;
 
 	// Swap X and Y to match the accelerometer of the MPU9150
+	// TODO: Is this correct?
 	float mag_tmp[3];
 	mag_tmp[0] = mag[1];
-	mag_tmp[1] = -mag[0];
+	mag_tmp[1] = mag[0];
 	mag_tmp[2] = mag[2];
 
 	m_accel[0] = accel[0];
@@ -124,15 +125,15 @@ static void update_orientation_angles(float *accel, float *gyro, float *mag, flo
 		MahonyAHRSupdateInitialOrientation(accel, mag_tmp, (ATTITUDE_INFO*)&m_att_mag);
 		MahonyAHRSupdateInitialOrientation(accel, mag_tmp, (ATTITUDE_INFO*)&m_att_no_mag);
 		m_attitude_init_done = true;
-	}
-
-	if (mpu9150_mag_updated() && fabsf(m_roll_now) < 25.0 && fabsf(m_pitch_now) < 25.0) {
-		MahonyAHRSupdate(gyro, accel, mag_tmp, dt, (ATTITUDE_INFO*)&m_att_mag);
 	} else {
-		MahonyAHRSupdateIMU(gyro, accel, dt, (ATTITUDE_INFO*)&m_att_mag);
-	}
+		if (mpu9150_mag_updated() && fabsf(m_roll_now) < 25.0 && fabsf(m_pitch_now) < 25.0) {
+			MahonyAHRSupdate(gyro, accel, mag_tmp, dt, (ATTITUDE_INFO*)&m_att_mag);
+		} else {
+			MahonyAHRSupdateIMU(gyro, accel, dt, (ATTITUDE_INFO*)&m_att_mag);
+		}
 
-	MahonyAHRSupdateIMU(gyro, accel, dt, (ATTITUDE_INFO*)&m_att_no_mag);
+		MahonyAHRSupdateIMU(gyro, accel, dt, (ATTITUDE_INFO*)&m_att_no_mag);
+	}
 
 	m_roll_now = MahonyAHRSGetRoll((ATTITUDE_INFO*)&m_att_no_mag) * 180 / M_PI;// - roll_offset;
 	m_pitch_now = MahonyAHRSGetPitch((ATTITUDE_INFO*)&m_att_no_mag) * 180 / M_PI;// - pitch_offset;

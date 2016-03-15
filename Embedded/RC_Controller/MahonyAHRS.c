@@ -305,38 +305,42 @@ void MahonyAHRSupdateIMU(float *gyroXYZ, float *accelXYZ, float dt, ATTITUDE_INF
 }
 
 float MahonyAHRSGetRoll(ATTITUDE_INFO *att) {
-	float gx, gy, gz;
-	gx = 2 * (att->q1 *  att->q3 - att->q0 * att->q2);
-	gy = 2 * (att->q0 * att->q1 + att->q2 * att->q3);
-	gz = att->q0 * att->q0 - att->q1 * att->q1 - att->q2 * att->q2 + att->q3 * att->q3;
+	const float q0 = att->q0;
+	const float q1 = att->q1;
+	const float q2 = att->q2;
+	const float q3 = att->q3;
 
-	return atanf(gx / sqrtf(gy * gy + gz * gz));
+	return -atan2f(q0 * q1 + q2 * q3, 0.5 - (q1 * q1 + q2 * q2));
 }
 
 float MahonyAHRSGetPitch(ATTITUDE_INFO *att) {
-	float gx, gy, gz;
-	gx = 2 * (att->q1 *  att->q3 - att->q0 * att->q2);
-	gy = 2 * (att->q0 * att->q1 + att->q2 * att->q3);
-	gz = att->q0 * att->q0 - att->q1 * att->q1 - att->q2 * att->q2 + att->q3 * att->q3;
+	const float q0 = att->q0;
+	const float q1 = att->q1;
+	const float q2 = att->q2;
+	const float q3 = att->q3;
 
-	return -atanf(gy / sqrtf(gx * gx + gz * gz));
+	return asinf(-2.0 * (q1 * q3 - q0 * q2));
 }
 
 float MahonyAHRSGetYaw(ATTITUDE_INFO *att) {
-	return -atan2f(2 * att->q1 * att->q2 - 2 * att->q0 * att->q3,
-			2 * att->q0 * att->q0 + 2 *att->q1 * att->q1 - 1);
+	const float q0 = att->q0;
+	const float q1 = att->q1;
+	const float q2 = att->q2;
+	const float q3 = att->q3;
+
+	return -atan2f(q0 * q3 + q1 * q2, 0.5 - (q2 * q2 + q3 * q3));
 }
 
 void MahonyAHRSGetRollPitchYaw(float *rpy, ATTITUDE_INFO *att) {
-	float gx, gy, gz;
-	gx = 2 * (att->q1 *  att->q3 - att->q0 * att->q2);
-	gy = 2 * (att->q0 * att->q1 + att->q2 * att->q3);
-	gz = att->q0 * att->q0 - att->q1 * att->q1 - att->q2 * att->q2 + att->q3 * att->q3;
+	// See http://math.stackexchange.com/questions/687964/getting-euler-tait-bryan-angles-from-quaternion-representation
+	const float q0 = att->q0;
+	const float q1 = att->q1;
+	const float q2 = att->q2;
+	const float q3 = att->q3;
 
-	rpy[0] = atanf(gx / sqrtf(gy * gy + gz * gz));
-	rpy[1] = -atanf(gy / sqrtf(gx * gx + gz * gz));
-	rpy[2] = -atan2f(2 * att->q1 * att->q2 - 2 * att->q0 * att->q3,
-			2 * att->q0 * att->q0 + 2 *att->q1 * att->q1 - 1);
+	rpy[0] = -atan2f(q0 * q1 + q2 * q3, 0.5 - (q1 * q1 + q2 * q2));
+	rpy[1] = asinf(-2.0 * (q1 * q3 - q0 * q2));
+	rpy[2] = -atan2f(q0 * q3 + q1 * q2, 0.5 - (q2 * q2 + q3 * q3));
 }
 
 // Fast inverse square-root

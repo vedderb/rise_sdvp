@@ -31,6 +31,7 @@ public:
     double getAlpha();
     double getSpeed();
     QPointF getPoint();
+    QPointF getPointMm();
     double getRadius();
     double getSigma();
 

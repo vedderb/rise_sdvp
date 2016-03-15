@@ -20,6 +20,7 @@
 
 #include <QGLWidget>
 #include <QtOpenGL/QGLFunctions>
+#include <QTimer>
 
 class OrientationWidget : public QGLWidget, protected QGLFunctions
 {
@@ -32,6 +33,7 @@ public:
     QSize minimumSizeHint() const;
     QSize sizeHint() const;
     void setRollPitchYaw(float roll, float pitch, float yaw);
+    void setYawOffset(float offset);
 
     typedef struct {
         QVector<float> vertexArray;
@@ -46,6 +48,7 @@ public slots:
     void setXRotation(float angle);
     void setYRotation(float angle);
     void setZRotation(float angle);
+    void updateTimerSlot();
 
 signals:
     void xRotationChanged(float angle);
@@ -66,10 +69,14 @@ private:
     float xRotOfs;
     float yRotOfs;
     float zRotOfs;
+    float zRotOfsCar;
     float scale;
     QPoint lastPos;
     QColor bgColor;
     QVector<MESHDATA_t> quadMeshes;
+    QTimer *updateTimer;
+
+    void updateUsingTimer();
 
 };
 

@@ -94,11 +94,15 @@ OrientationWidget::OrientationWidget(QWidget *parent)
     zRot = 0;
 
     // Set these to get the rotation of this particular model right
-    xRotOfs = 270.0;
-    yRotOfs = 0.0;
+    xRotOfs = 0.0;
+    yRotOfs = 90.0;
     zRotOfs = 90.0;
 
     bgColor = palette().color(QPalette::Window);
+
+    updateTimer = new QTimer(this);
+    updateTimer->setSingleShot(true);
+    connect(updateTimer, SIGNAL(timeout()), this, SLOT(updateTimerSlot()));
 
     Assimp::Importer importer;
     QString path = "Models/car.3ds";
@@ -190,16 +194,16 @@ QSize OrientationWidget::sizeHint() const
 
 void OrientationWidget::setRollPitchYaw(float roll, float pitch, float yaw)
 {
-    // There is probably a better way to handle this...
-    xRot = sin(-yaw * M_PI / 180.0) * roll + cos(-yaw * M_PI / 180.0) * pitch;
-    yRot = cos(-yaw * M_PI / 180.0) * roll - sin(-yaw * M_PI / 180.0) * pitch;
-    zRot = yaw;
+    xRot = roll;
+    yRot = -pitch;
+    zRot = -yaw;
+    updateUsingTimer();
+}
 
-    qNormalizeAngle(xRot);
-    qNormalizeAngle(yRot);
-    qNormalizeAngle(zRot);
-
-    updateGL();
+void OrientationWidget::setYawOffset(float offset)
+{
+    zRotOfsCar = offset;
+    updateUsingTimer();
 }
 
 void OrientationWidget::setXRotation(float angle)
@@ -208,7 +212,7 @@ void OrientationWidget::setXRotation(float angle)
     if (angle != xRot) {
         xRot = angle;
         emit xRotationChanged(angle);
-        updateGL();
+        updateUsingTimer();
     }
 }
 
@@ -218,7 +222,7 @@ void OrientationWidget::setYRotation(float angle)
     if (angle != yRot) {
         yRot = angle;
         emit yRotationChanged(angle);
-        updateGL();
+        updateUsingTimer();
     }
 }
 
@@ -228,8 +232,13 @@ void OrientationWidget::setZRotation(float angle)
     if (angle != zRot) {
         zRot = angle;
         emit zRotationChanged(angle);
-        updateGL();
+        updateUsingTimer();
     }
+}
+
+void OrientationWidget::updateTimerSlot()
+{
+    updateGL();
 }
 
 void OrientationWidget::initializeGL()
@@ -252,9 +261,16 @@ void OrientationWidget::paintGL()
     glLoadIdentity();
     glTranslatef(0.0, 0.0, -10.0);
     glScalef(scale, scale, scale);
-    glRotatef(xRot + xRotOfs, 1.0, 0.0, 0.0);
-    glRotatef(yRot + yRotOfs, 0.0, 1.0, 0.0);
-    glRotatef(zRot + zRotOfs, 0.0, 0.0, 1.0);
+
+    // Rotate world
+    glRotatef(zRotOfs, 0.0, 0.0, 1.0);
+    glRotatef(yRotOfs, 0.0, 1.0, 0.0);
+    glRotatef(xRotOfs, 1.0, 0.0, 0.0);
+
+    // Rotate car
+    glRotatef(zRot + zRotOfsCar, 0.0, 0.0, 1.0);
+    glRotatef(yRot, 0.0, 1.0, 0.0);
+    glRotatef(xRot, 1.0, 0.0, 0.0);
 
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_NORMAL_ARRAY);
@@ -308,11 +324,18 @@ void OrientationWidget::mouseMoveEvent(QMouseEvent *event)
     int dy = event->y() - lastPos.y();
 
     if (event->buttons() & Qt::LeftButton) {
-        setXRotation(xRot + 0.5 * (float)dy);
-        setYRotation(yRot + 0.5 * (float)dx);
+        setXRotation(xRot + 0.5 * (float)dx);
+        setYRotation(yRot + 0.5 * (float)-dy);
     } else if (event->buttons() & Qt::RightButton) {
-        setXRotation(xRot + 0.5 * (float)dy);
+        setYRotation(yRot + 0.5 * (float)-dy);
         setZRotation(zRot + 0.5 * (float)dx);
     }
     lastPos = event->pos();
+}
+
+void OrientationWidget::updateUsingTimer()
+{
+    if (!updateTimer->isActive()) {
+        updateTimer->start();
+    }
 }

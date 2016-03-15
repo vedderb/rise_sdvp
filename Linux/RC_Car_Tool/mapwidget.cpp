@@ -21,6 +21,18 @@
 
 #include "mapwidget.h"
 
+namespace
+{
+static void normalizeAngleRad(double &angle)
+{
+    angle = fmod(angle, 2.0 * M_PI);
+
+    if (angle < 0.0) {
+        angle += 2.0 * M_PI;
+    }
+}
+}
+
 MapWidget::MapWidget(QWidget *parent) :
     MapWidgetType(parent)
 {
@@ -35,21 +47,40 @@ MapWidget::MapWidget(QWidget *parent) :
     yRealPos = 0;
     mCarInfo.clear();
     mCarTrace.clear();
+    mPaintTimer = new QTimer(this);
+    mPaintTimer->setSingleShot(true);
+
+    connect(mPaintTimer, SIGNAL(timeout()), this, SLOT(paintTimerSlot()));
 }
 
 CarInfo *MapWidget::getCarInfo(int car)
 {
-    if (car < mCarInfo.size()) {
-        return &mCarInfo[car];
-    } else {
-        return 0;
+    for (int i = 0;i < mCarInfo.size();i++) {
+        if (mCarInfo[i].getId() == car) {
+            return &mCarInfo[i];
+        }
     }
+
+    return 0;
 }
 
 void MapWidget::addCar(CarInfo car)
 {
     mCarInfo.append(car);
-    repaint();
+    repaintAfterEvents();
+}
+
+bool MapWidget::removeCar(int carId)
+{
+    QMutableListIterator<CarInfo> i(mCarInfo);
+    while (i.hasNext()) {
+        if (i.next().getId() == carId) {
+            i.remove();
+            return true;
+        }
+    }
+
+    return false;
 }
 
 void MapWidget::setScaleFactor(double scale)
@@ -58,31 +89,31 @@ void MapWidget::setScaleFactor(double scale)
     mScaleFactor = scale;
     mXOffset *= scaleDiff;
     mYOffset *= scaleDiff;
-    repaint();
+    repaintAfterEvents();
 }
 
 void MapWidget::setRotation(double rotation)
 {
     mRotation = rotation;
-    repaint();
+    repaintAfterEvents();
 }
 
 void MapWidget::setXOffset(double offset)
 {
     mXOffset = offset;
-    repaint();
+    repaintAfterEvents();
 }
 
 void MapWidget::setYOffset(double offset)
 {
     mYOffset = offset;
-    repaint();
+    repaintAfterEvents();
 }
 
 void MapWidget::clearTrace()
 {
     mCarTrace.clear();
-    repaint();
+    repaintAfterEvents();
 }
 
 void MapWidget::addPerspectivePixmap(PerspectivePixmap map)
@@ -93,7 +124,7 @@ void MapWidget::addPerspectivePixmap(PerspectivePixmap map)
 void MapWidget::clearPerspectivePixmaps()
 {
     mPerspectivePixmaps.clear();
-    repaint();
+    repaintAfterEvents();
 }
 
 QPoint MapWidget::getMousePosRelative()
@@ -104,10 +135,31 @@ QPoint MapWidget::getMousePosRelative()
     return p;
 }
 
+void MapWidget::repaintAfterEvents()
+{
+    if (!mPaintTimer->isActive()) {
+        mPaintTimer->start();
+    }
+}
+
+void MapWidget::paintTimerSlot()
+{
+    repaint();
+}
+
 void MapWidget::setFollowCar(int car)
 {
+    int oldCar = mFollowCar;
     mFollowCar = car;
-    repaint();
+
+    if (oldCar != mFollowCar) {
+        repaintAfterEvents();
+    }
+}
+
+void MapWidget::setTraceCar(int car)
+{
+    mTraceCar = car;
 }
 
 void MapWidget::paintEvent(QPaintEvent *event)
@@ -115,9 +167,8 @@ void MapWidget::paintEvent(QPaintEvent *event)
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
 
-    const double scaleMax = 5;
-    const double scaleMin = 0.0001;
-    const double offsetViewMaxFact = 8;
+    const double scaleMax = 20;
+    const double scaleMin = 0.00001;
 
     // Make sure scale and offsetappend is reasonable
     if (mScaleFactor < scaleMin)
@@ -134,37 +185,24 @@ void MapWidget::paintEvent(QPaintEvent *event)
         mYOffset *= scaleDiff;
     }
 
-    if (mXOffset < -(width() * offsetViewMaxFact))
-    {
-        mXOffset = -(width() * offsetViewMaxFact);
-    } else if (mXOffset > (width() * offsetViewMaxFact))
-    {
-        mXOffset = (width() * offsetViewMaxFact);
-    }
+    if (mFollowCar >= 0) {
+        for (int i = 0;i < mCarInfo.size();i++) {
+            CarInfo &carInfo = mCarInfo[i];
+            if (carInfo.getId() == mFollowCar) {
+                LocPoint followLoc = carInfo.getLocation();
+                mXOffset = -followLoc.getX() * 1000.0 * mScaleFactor;
+                mYOffset = -followLoc.getY() * 1000.0 * mScaleFactor;
+            }
 
-    if (mYOffset < -(height() * offsetViewMaxFact))
-    {
-        mYOffset = -(height() * offsetViewMaxFact);
-    } else if (mYOffset > (height() * offsetViewMaxFact))
-    {
-        mYOffset = (height() * offsetViewMaxFact);
-    }
-
-    if (mFollowCar >= 0)
-    {
-        if (mCarInfo.size() > mFollowCar) {
-            LocPoint followLoc = mCarInfo[mFollowCar].getLocation();
-            mXOffset = -followLoc.getX() * mScaleFactor;
-            mYOffset = -followLoc.getY() * mScaleFactor;
         }
     }
 
     // Paint begins here
     painter.fillRect(event->rect(), QBrush(Qt::transparent));
 
-    const double car_w = 180;
-    const double car_h = 100;
-    const double car_corner = 12;
+    const double car_w = 800;
+    const double car_h = 335;
+    const double car_corner = 20;
     double angle, x, y;
     QString txt;
     QPointF pt_txt;
@@ -175,7 +213,7 @@ void MapWidget::paintEvent(QPaintEvent *event)
     // Map coordinate transforms
     QTransform drawTrans;
     drawTrans.translate(event->rect().width() / 2 + mXOffset, event->rect().height() / 2 - mYOffset);
-    drawTrans.scale( mScaleFactor, -mScaleFactor );
+    drawTrans.scale(mScaleFactor, -mScaleFactor);
     drawTrans.rotate(mRotation);
 
     // Text coordinates
@@ -189,15 +227,17 @@ void MapWidget::paintEvent(QPaintEvent *event)
     painter.setFont(font);
 
     // Axis parameters
-    const double scaleMult = ceil((1 / ((mScaleFactor * 100) / 50)));
+    const double scaleMult = 0.1 * ceil((1.0 / ((mScaleFactor * 10.0) / 50.0)));
     const double step = 100 * scaleMult;
     const double zeroAxisWidth = 3;
     const QColor zeroAxisColor = Qt::red;
     const QColor firstAxisColor = Qt::gray;
     const QColor secondAxisColor = Qt::blue;
     const QColor textColor = QPalette::Foreground;
-    const double xStepFact = ceil(width() * offsetViewMaxFact / step / mScaleFactor);
-    const double yStepFact = ceil(height() * offsetViewMaxFact / step / mScaleFactor);
+    const double xStart = -ceil(width() / step / mScaleFactor) * step - ceil(mXOffset / step / mScaleFactor) * step;
+    const double xEnd = ceil(width() / step / mScaleFactor) * step - floor(mXOffset / step / mScaleFactor) * step;
+    const double yStart = -ceil(height() / step / mScaleFactor) * step - ceil(mYOffset / step / mScaleFactor) * step;
+    const double yEnd = ceil(height() / step / mScaleFactor) * step - floor(mYOffset / step / mScaleFactor) * step;
 
     // Draw perspective pixmaps first
     painter.setTransform(drawTrans);
@@ -206,12 +246,17 @@ void MapWidget::paintEvent(QPaintEvent *event)
     }
 
     // Draw Y-axis segments
-    for (double i = -xStepFact * step;i < xStepFact * step;i += step)
-    {
+    for (double i = xStart;i < xEnd;i += step) {
+        if (fabs(i) < 1e-3) {
+            i = 0.0;
+        }
+
         if ((int)(i / step) % 2) {
-            painter.setPen(firstAxisColor);
+            pen.setWidth(0);
+            pen.setColor(firstAxisColor);
+            painter.setPen(pen);
         } else {
-            txt.sprintf("%.0f", i);
+            txt.sprintf("%.3f", i / 1000.0);
             pt_txt.setX(i);
             pt_txt.setY(0);
             painter.setTransform(txtTrans);
@@ -221,12 +266,10 @@ void MapWidget::paintEvent(QPaintEvent *event)
             painter.setPen(QPen(textColor));
             painter.drawText(pt_txt, txt);
 
-            if (i == 0)
-            {
+            if (fabs(i) < 1e-3) {
                 pen.setWidthF(zeroAxisWidth / mScaleFactor);
                 pen.setColor(zeroAxisColor);
-            } else
-            {
+            } else {
                 pen.setWidth(0);
                 pen.setColor(secondAxisColor);
             }
@@ -234,16 +277,21 @@ void MapWidget::paintEvent(QPaintEvent *event)
         }
 
         painter.setTransform(drawTrans);
-        painter.drawLine(i, -yStepFact * step, i, yStepFact * step);
+        painter.drawLine(i, yStart, i, yEnd);
     }
 
     // Draw X-axis segments
-    for (double i = -yStepFact * step;i < yStepFact * step;i += step)
-    {
+    for (double i = yStart;i < yEnd;i += step) {
+        if (fabs(i) < 1e-3) {
+            i = 0.0;
+        }
+
         if ((int)(i / step) % 2) {
-            painter.setPen(firstAxisColor);
+            pen.setWidth(0);
+            pen.setColor(firstAxisColor);
+            painter.setPen(pen);
         } else {
-            txt.sprintf("%.0f", i);
+            txt.sprintf("%.3f", i / 1000.0);
             pt_txt.setY(i);
             painter.setTransform(txtTrans);
             pt_txt = drawTrans.map(pt_txt);
@@ -252,50 +300,52 @@ void MapWidget::paintEvent(QPaintEvent *event)
             painter.setPen(QPen(textColor));
             painter.drawText(pt_txt, txt);
 
-            if (i == 0)
-            {
+            if (fabs(i) < 1e-3) {
                 pen.setWidthF(zeroAxisWidth / mScaleFactor);
                 pen.setColor(zeroAxisColor);
-            } else
-            {
+            } else {
                 pen.setWidth(0);
                 pen.setColor(secondAxisColor);
             }
             painter.setPen(pen);
         }
         painter.setTransform(drawTrans);
-        painter.drawLine(-xStepFact * step, i, xStepFact * step, i);
+        painter.drawLine(xStart, i, xEnd, i);
     }
 
-    // Handle and draw trace for first car
-    if (!mCarInfo.isEmpty()) {
-        CarInfo carInfo = mCarInfo.at(0);
+    // Store trace for the selected car
+    if (mTraceCar >= 0) {
+        for (int i = 0;i < mCarInfo.size();i++) {
+            CarInfo &carInfo = mCarInfo[i];
+            if (carInfo.getId() == mTraceCar) {
+                if (mCarTrace.isEmpty()) {
+                    mCarTrace.append(carInfo.getLocation());
+                }
 
-        if (mCarTrace.isEmpty()) {
-            mCarTrace.append(carInfo.getLocation());
+                if (mCarTrace.last().getDistanceTo(carInfo.getLocation()) > 0.05) {
+                    mCarTrace.append(carInfo.getLocation());
+                }
+            }
         }
+    }
 
-        if (mCarTrace.last().getDistanceTo(carInfo.getLocation()) > 50.0) {
-            mCarTrace.append(carInfo.getLocation());
-        }
-
-        pen.setWidth(30);
-        pen.setColor(Qt::red);
-        painter.setTransform(drawTrans);
-        for (int i = 1;i < mCarTrace.size();i++) {
-            painter.setPen(pen);
-            painter.drawLine(mCarTrace[i - 1].getX(), mCarTrace[i - 1].getY(),
-                             mCarTrace[i].getX(), mCarTrace[i].getY());
-        }
+    // Draw trace for the selected car
+    pen.setWidthF(5.0 / mScaleFactor);
+    pen.setColor(Qt::red);
+    painter.setTransform(drawTrans);
+    for (int i = 1;i < mCarTrace.size();i++) {
+        painter.setPen(pen);
+        painter.drawLine(mCarTrace[i - 1].getX() * 1000.0, mCarTrace[i - 1].getY() * 1000.0,
+                mCarTrace[i].getX() * 1000.0, mCarTrace[i].getY() * 1000.0);
     }
 
     // Draw cars
     painter.setPen(QPen(textColor));
-    for(QVector<CarInfo>::Iterator it_car = mCarInfo.begin();it_car < mCarInfo.end();it_car++) {
-        CarInfo *carInfo = it_car;
-        LocPoint pos = carInfo->getLocation();
-        x = pos.getX();
-        y = pos.getY();
+    for(int i = 0;i < mCarInfo.size();i++) {
+        CarInfo &carInfo = mCarInfo[i];
+        LocPoint pos = carInfo.getLocation();
+        x = pos.getX() * 1000.0;
+        y = pos.getY() * 1000.0;
         angle = pos.getAlpha() * 180.0 / M_PI;
         painter.setTransform(drawTrans);
 
@@ -303,7 +353,7 @@ void MapWidget::paintEvent(QPaintEvent *event)
         QColor col = Qt::red;
         col.setAlphaF(0.2);
         painter.setBrush(QBrush(col));
-        painter.drawEllipse(pos.getPoint(), pos.getSigma(), pos.getSigma());
+        painter.drawEllipse(pos.getPointMm(), pos.getSigma() * 1000.0, pos.getSigma() * 1000.0);
 
         // Draw car
         painter.setBrush(QBrush(Qt::black));
@@ -311,22 +361,22 @@ void MapWidget::paintEvent(QPaintEvent *event)
         painter.translate(x, y);
         painter.rotate(angle);
         // Wheels
-        painter.drawRoundedRect(-20,-(car_h / 2), 40, car_h, car_corner / 3, car_corner / 3);
-        painter.drawRoundedRect(80,-(car_h / 2), 40, car_h, car_corner / 3, car_corner / 3);
+        painter.drawRoundedRect(-car_w / 12.0,-(car_h / 2), car_w / 6.0, car_h, car_corner / 3, car_corner / 3);
+        painter.drawRoundedRect(car_w - car_w / 2.5,-(car_h / 2), car_w / 6.0, car_h, car_corner / 3, car_corner / 3);
         // Front bumper
         painter.setBrush(QBrush(Qt::green));
-        painter.drawRoundedRect(-40, -42, car_w, 84, car_corner, car_corner);
+        painter.drawRoundedRect(-car_w / 6.0, -((car_h - car_w / 20.0) / 2.0), car_w, car_h - car_w / 20.0, car_corner, car_corner);
         // Hull
-        painter.setBrush(QBrush(carInfo->getColor()));
-        painter.drawRoundedRect(-40,-42, car_w-15, 84, car_corner, car_corner);
+        painter.setBrush(QBrush(carInfo.getColor()));
+        painter.drawRoundedRect(-car_w / 6.0, -((car_h - car_w / 20.0) / 2.0), car_w - (car_w / 20.0), car_h - car_w / 20.0, car_corner, car_corner);
         painter.restore();
         // Center
-        painter.setBrush(QBrush(Qt::red));
-        painter.drawEllipse(QPoint(x, y), 10, 10);
+        painter.setBrush(QBrush(Qt::blue));
+        painter.drawEllipse(QPointF(x, y), car_h / 15.0, car_h / 15.0);
 
         // Print data
-        txt.sprintf("%s\n(%.0f, %.0f, %.0f)", carInfo->getId().toLocal8Bit().data(),
-                    x, y, angle);
+        txt.sprintf("%s\n(%.3f, %.3f, %.0f)", carInfo.getName().toLocal8Bit().data(),
+                    pos.getX(), pos.getY(), angle);
         pt_txt.setX(x + 120 + (car_w - 190) * ((cos(pos.getAlpha()) + 1) / 2));
         pt_txt.setY(y);
         painter.setTransform(txtTrans);
@@ -336,11 +386,11 @@ void MapWidget::paintEvent(QPaintEvent *event)
         painter.drawText(rect_txt, txt);
     }
 
-    // Draw units (mm)
+    // Draw units (m)
     painter.setTransform(txtTrans);
     font.setPointSize(16);
     painter.setFont(font);
-    txt = "(mm)";
+    txt = "(m)";
     painter.drawText(width() - 50, 35, txt);
 
     painter.end();
@@ -357,7 +407,7 @@ void MapWidget::mouseMoveEvent(QMouseEvent *e)
         {
             int diffx = x - mMouseLastX;
             mXOffset += diffx;
-            repaint();
+            repaintAfterEvents();
         }
 
         if (mMouseLastY < 100000)
@@ -365,8 +415,8 @@ void MapWidget::mouseMoveEvent(QMouseEvent *e)
             int diffy = y - mMouseLastY;
             mYOffset -= diffy;
 
-            Q_EMIT(offsetChanged(mXOffset, mYOffset));
-            repaint();
+            emit offsetChanged(mXOffset, mYOffset);
+            repaintAfterEvents();
         }
 
         mMouseLastX = x;
@@ -379,10 +429,10 @@ void MapWidget::mousePressEvent(QMouseEvent *e)
     if ((e->buttons() & Qt::LeftButton) && (e->modifiers() & Qt::ControlModifier) && mCarInfo.size() > 0) {
         LocPoint pos = mCarInfo[0].getLocation();
         QPoint p = getMousePosRelative();
-        pos.setXY(p.x(), p.y());
+        pos.setXY(p.x() / 1000.0, p.y() / 1000.0);
         mCarInfo[0].setLocation(pos);
         emit posSet(pos);
-        repaint();
+        repaintAfterEvents();
     }
 }
 
@@ -399,10 +449,12 @@ void MapWidget::wheelEvent(QWheelEvent *e)
 {
     if (e->modifiers() & Qt::ControlModifier && mCarInfo.size() > 0) {
         LocPoint pos = mCarInfo[0].getLocation();
-        pos.setAlpha(pos.getAlpha() + (double)e->delta() * 0.0005);
+        double angle = pos.getAlpha() + (double)e->delta() * 0.0005;
+        normalizeAngleRad(angle);
+        pos.setAlpha(angle);
         mCarInfo[0].setLocation(pos);
         emit posSet(pos);
-        repaint();
+        repaintAfterEvents();
     } else {
         int x = e->pos().x();
         int y = e->pos().y();
@@ -424,8 +476,8 @@ void MapWidget::wheelEvent(QWheelEvent *e)
         mXOffset += mXOffset * scaleDiff;
         mYOffset += mYOffset * scaleDiff;
 
-        Q_EMIT(scaleChanged(mScaleFactor));
-        Q_EMIT(offsetChanged(mXOffset, mYOffset));
-        repaint();
+        emit scaleChanged(mScaleFactor);
+        emit offsetChanged(mXOffset, mYOffset);
+        repaintAfterEvents();
     }
 }

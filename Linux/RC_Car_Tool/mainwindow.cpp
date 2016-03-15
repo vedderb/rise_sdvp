@@ -122,6 +122,18 @@ void MainWindow::timerSlot()
             mPacketInterface->getImu(car->getId());
         }
     }
+
+    // Update map settings
+    if (ui->mapFollowBox->isChecked()) {
+        ui->mapWidget->setFollowCar(ui->mapCarBox->value());
+    } else {
+        ui->mapWidget->setFollowCar(-1);
+    }
+    if (ui->mapTraceBox->isChecked()) {
+        ui->mapWidget->setTraceCar(ui->mapCarBox->value());
+    } else {
+        ui->mapWidget->setTraceCar(-1);
+    }
 }
 
 void MainWindow::packetDataToSend(QByteArray &data)
@@ -150,6 +162,7 @@ void MainWindow::on_carAddButton_clicked()
     name.sprintf("Car %d", id);
     car->setID(id);
     ui->carsWidget->addTab(car, name);
+    car->setMap(ui->mapWidget);
 
     connect(car, SIGNAL(terminalCmd(quint8,QString)),
             mPacketInterface, SLOT(sendTerminalCmd(quint8,QString)));
@@ -254,4 +267,10 @@ void MainWindow::on_udpConnectButton_clicked()
     } else {
         showStatusInfo("Invalid IP address", false);
     }
+}
+
+void MainWindow::on_mapZeroButton_clicked()
+{
+    ui->mapWidget->setXOffset(0);
+    ui->mapWidget->setYOffset(0);
 }

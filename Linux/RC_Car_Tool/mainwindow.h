@@ -53,6 +53,7 @@ private slots:
     void on_mapRemoveTraceButton_clicked();
     void on_MapRemovePixmapsButton_clicked();
     void on_udpConnectButton_clicked();
+    void on_mapZeroButton_clicked();
 
 private:
     Ui::MainWindow *ui;

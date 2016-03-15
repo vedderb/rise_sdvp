@@ -49,6 +49,11 @@ QPointF LocPoint::getPoint()
     return QPointF(mX, mY);
 }
 
+QPointF LocPoint::getPointMm()
+{
+    return QPointF(mX * 1000.0, mY * 1000.0);
+}
+
 double LocPoint::getRadius()
 {
     return mRadius;

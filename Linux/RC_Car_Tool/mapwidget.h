@@ -26,8 +26,9 @@
 #include <QFont>
 #include <QPen>
 #include <QPalette>
-#include <QVector>
+#include <QList>
 #include <QInputDialog>
+#include <QTimer>
 
 #include "locpoint.h"
 #include "carinfo.h"
@@ -39,11 +40,14 @@
 class MapWidget : public MapWidgetType
 {
     Q_OBJECT
+
 public:
     explicit MapWidget(QWidget *parent = 0);
     CarInfo* getCarInfo(int car);
     void setFollowCar(int car);
+    void setTraceCar(int car);
     void addCar(CarInfo car);
+    bool removeCar(int carId);
     void setScaleFactor(double scale);
     void setRotation(double rotation);
     void setXOffset(double offset);
@@ -52,13 +56,15 @@ public:
     void addPerspectivePixmap(PerspectivePixmap map);
     void clearPerspectivePixmaps();
     QPoint getMousePosRelative();
+    void repaintAfterEvents();
 
-Q_SIGNALS:
+signals:
     void scaleChanged(double newScale);
     void offsetChanged(double newXOffset, double newYOffset);
     void posSet(LocPoint pos);
 
-public Q_SLOTS:
+public slots:
+    void paintTimerSlot();
 
 protected:
     void paintEvent(QPaintEvent *event);
@@ -68,9 +74,9 @@ protected:
     void wheelEvent(QWheelEvent * e);
 
 private:
-    QVector<CarInfo> mCarInfo;
-    QVector<LocPoint> mCarTrace;
-    QVector<PerspectivePixmap> mPerspectivePixmaps;
+    QList<CarInfo> mCarInfo;
+    QList<LocPoint> mCarTrace;
+    QList<PerspectivePixmap> mPerspectivePixmaps;
     double mScaleFactor;
     double mRotation;
     double mXOffset;
@@ -78,8 +84,10 @@ private:
     int mMouseLastX;
     int mMouseLastY;
     int mFollowCar;
+    int mTraceCar;
     double xRealPos;
     double yRealPos;
+    QTimer *mPaintTimer;
 };
 
 #endif // MAPWIDGET_H

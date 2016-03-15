@@ -1,5 +1,6 @@
 #include "carinterface.h"
 #include "ui_carinterface.h"
+#include "carinfo.h"
 
 CarInterface::CarInterface(QWidget *parent) :
     QWidget(parent),
@@ -27,6 +28,18 @@ CarInterface::CarInterface(QWidget *parent) :
     for(int i = 0;i < accelGyroMagXAxis.size();i++) {
         accelGyroMagXAxis[i] = (20.0 / 1000.0 * i);
     }
+
+    mMap = 0;
+    mId = 0;
+}
+
+CarInterface::~CarInterface()
+{
+    delete ui;
+
+    if (mMap) {
+        mMap->removeCar(mId);
+    }
 }
 
 void CarInterface::setID(int id)
@@ -36,7 +49,7 @@ void CarInterface::setID(int id)
 
 int CarInterface::getId()
 {
-    return ui->idBox->value();
+    return mId;
 }
 
 bool CarInterface::pollData()
@@ -46,6 +59,9 @@ bool CarInterface::pollData()
 
 void CarInterface::setOrientation(double roll, double pitch, double yaw)
 {
+    ui->rollBar->setValue(roll);
+    ui->pitchBar->setValue(pitch);
+    ui->yawBar->setValue(yaw);
     ui->orientationWidget->setRollPitchYaw(roll, pitch, yaw);
 }
 
@@ -129,28 +145,45 @@ void CarInterface::setImuData(IMU_DATA data)
     ui->magPlot->legend->setVisible(true);
     ui->magPlot->replot();
 
-    ui->orientationWidget->setRollPitchYaw(data.roll, data.pitch, data.yaw);
+    setOrientation(data.roll, data.pitch, data.yaw);
+}
+
+void CarInterface::setMap(MapWidget *map)
+{
+    mMap = map;
+    CarInfo car(mId);
+    mMap->addCar(car);
 }
 
 void CarInterface::terminalPrint(quint8 id, QString str)
 {
-    if (id == ui->idBox->value()) {
+    if (id == mId) {
         ui->terminalBrowser->append(str);
     }
 }
 
-CarInterface::~CarInterface()
-{
-    delete ui;
-}
-
 void CarInterface::on_terminalSendButton_clicked()
 {
-    emit terminalCmd(ui->idBox->value(), ui->terminalEdit->text());
+    emit terminalCmd(mId, ui->terminalEdit->text());
     ui->terminalEdit->clear();
 }
 
 void CarInterface::on_terminalClearButton_clicked()
 {
     ui->terminalBrowser->clear();
+}
+
+void CarInterface::on_yawOffsetSlider_valueChanged(int value)
+{
+    ui->orientationWidget->setYawOffset(value);
+}
+
+void CarInterface::on_idBox_valueChanged(int arg1)
+{
+    if (mMap) {
+        CarInfo *car = mMap->getCarInfo(mId);
+        car->setId(arg1, true);
+    }
+
+    mId = arg1;
 }
