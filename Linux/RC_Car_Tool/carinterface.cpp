@@ -35,11 +35,11 @@ CarInterface::CarInterface(QWidget *parent) :
 
 CarInterface::~CarInterface()
 {
-    delete ui;
-
     if (mMap) {
         mMap->removeCar(mId);
     }
+
+    delete ui;
 }
 
 void CarInterface::setID(int id)
@@ -146,6 +146,14 @@ void CarInterface::setImuData(IMU_DATA data)
     ui->magPlot->replot();
 
     setOrientation(data.roll, data.pitch, data.yaw);
+
+    if (mMap) {
+        CarInfo *car = mMap->getCarInfo(mId);
+        LocPoint loc = car->getLocation();
+        loc.setAlpha(data.yaw * M_PI / 180.0);
+        car->setLocation(loc);
+        mMap->repaintAfterEvents();
+    }
 }
 
 void CarInterface::setMap(MapWidget *map)

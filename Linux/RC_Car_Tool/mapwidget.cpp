@@ -178,20 +178,19 @@ void MapWidget::paintEvent(QPaintEvent *event)
     const double scaleMin = 0.00001;
 
     // Make sure scale and offsetappend is reasonable
-    if (mScaleFactor < scaleMin)
-    {
+    if (mScaleFactor < scaleMin) {
         double scaleDiff = scaleMin / mScaleFactor;
         mScaleFactor = scaleMin;
         mXOffset *= scaleDiff;
         mYOffset *= scaleDiff;
-    } else if (mScaleFactor > scaleMax)
-    {
+    } else if (mScaleFactor > scaleMax) {
         double scaleDiff = scaleMax / mScaleFactor;
         mScaleFactor = scaleMax;
         mXOffset *= scaleDiff;
         mYOffset *= scaleDiff;
     }
 
+    // Optionally follow a car
     if (mFollowCar >= 0) {
         for (int i = 0;i < mCarInfo.size();i++) {
             CarInfo &carInfo = mCarInfo[i];
@@ -202,6 +201,20 @@ void MapWidget::paintEvent(QPaintEvent *event)
             }
 
         }
+    }
+
+    // Limit the offset to avoid overflow at 2^31 mm
+    double lim = 2000000000.0 * mScaleFactor;
+    if (mXOffset > lim) {
+        mXOffset = lim;
+    } else if (mXOffset < -lim) {
+        mXOffset = -lim;
+    }
+
+    if (mYOffset > lim) {
+        mYOffset = lim;
+    } else if (mYOffset < -lim) {
+        mYOffset = -lim;
     }
 
     // Paint begins here
@@ -252,6 +265,8 @@ void MapWidget::paintEvent(QPaintEvent *event)
         mPerspectivePixmaps[i].drawUsingPainter(painter);
     }
 
+    painter.setTransform(txtTrans);
+
     // Draw Y-axis segments
     for (double i = xStart;i < xEnd;i += step) {
         if (fabs(i) < 1e-3) {
@@ -266,7 +281,6 @@ void MapWidget::paintEvent(QPaintEvent *event)
             txt.sprintf("%.3f", i / 1000.0);
             pt_txt.setX(i);
             pt_txt.setY(0);
-            painter.setTransform(txtTrans);
             pt_txt = drawTrans.map(pt_txt);
             pt_txt.setX(pt_txt.x() + 5);
             pt_txt.setY(height() - 10);
@@ -274,7 +288,7 @@ void MapWidget::paintEvent(QPaintEvent *event)
             painter.drawText(pt_txt, txt);
 
             if (fabs(i) < 1e-3) {
-                pen.setWidthF(zeroAxisWidth / mScaleFactor);
+                pen.setWidthF(zeroAxisWidth);
                 pen.setColor(zeroAxisColor);
             } else {
                 pen.setWidth(0);
@@ -283,8 +297,11 @@ void MapWidget::paintEvent(QPaintEvent *event)
             painter.setPen(pen);
         }
 
-        painter.setTransform(drawTrans);
-        painter.drawLine(i, yStart, i, yEnd);
+        QPointF pt_start(i, yStart);
+        QPointF pt_end(i, yEnd);
+        pt_start = drawTrans.map(pt_start);
+        pt_end = drawTrans.map(pt_end);
+        painter.drawLine(pt_start, pt_end);
     }
 
     // Draw X-axis segments
@@ -300,7 +317,7 @@ void MapWidget::paintEvent(QPaintEvent *event)
         } else {
             txt.sprintf("%.3f", i / 1000.0);
             pt_txt.setY(i);
-            painter.setTransform(txtTrans);
+
             pt_txt = drawTrans.map(pt_txt);
             pt_txt.setX(10);
             pt_txt.setY(pt_txt.y() - 5);
@@ -308,7 +325,7 @@ void MapWidget::paintEvent(QPaintEvent *event)
             painter.drawText(pt_txt, txt);
 
             if (fabs(i) < 1e-3) {
-                pen.setWidthF(zeroAxisWidth / mScaleFactor);
+                pen.setWidthF(zeroAxisWidth);
                 pen.setColor(zeroAxisColor);
             } else {
                 pen.setWidth(0);
@@ -316,8 +333,12 @@ void MapWidget::paintEvent(QPaintEvent *event)
             }
             painter.setPen(pen);
         }
-        painter.setTransform(drawTrans);
-        painter.drawLine(xStart, i, xEnd, i);
+
+        QPointF pt_start(xStart, i);
+        QPointF pt_end(xEnd, i);
+        pt_start = drawTrans.map(pt_start);
+        pt_end = drawTrans.map(pt_end);
+        painter.drawLine(pt_start, pt_end);
     }
 
     // Store trace for the selected car

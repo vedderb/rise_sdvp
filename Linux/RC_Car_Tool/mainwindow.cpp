@@ -50,6 +50,15 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+    // Remove all cars before this window is destroyed to not get segfaults
+    // in their destructors.
+    while (mCars.size() > 0) {
+        CarInterface *car = (CarInterface*)ui->carsWidget->currentWidget();
+        ui->carsWidget->removeTab(ui->carsWidget->currentIndex());
+        mCars.removeOne(car);
+        delete car;
+    }
+
     delete ui;
 }
 
