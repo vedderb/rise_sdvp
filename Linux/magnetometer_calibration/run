@@ -1,0 +1,4 @@
+#!/bin/bash
+
+octave --no-gui --persist magnetometer_calibration.m
+

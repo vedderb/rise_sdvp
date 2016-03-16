@@ -387,7 +387,7 @@ void MapWidget::paintEvent(QPaintEvent *event)
         painter.setBrush(QBrush(Qt::black));
         painter.save();
         painter.translate(x, y);
-        painter.rotate(angle);
+        painter.rotate(-angle);
         // Wheels
         painter.drawRoundedRect(-car_w / 12.0,-(car_h / 2), car_w / 6.0, car_h, car_corner / 3, car_corner / 3);
         painter.drawRoundedRect(car_w - car_w / 2.5,-(car_h / 2), car_w / 6.0, car_h, car_corner / 3, car_corner / 3);

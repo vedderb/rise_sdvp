@@ -39,7 +39,7 @@
 
 // General settings
 #define ID_ALL						255
-#define MAG_COMPENSATE				0 // Should be 0 when capturing samples for the calibration
+#define MAG_COMPENSATE				1 // Should be 0 when capturing samples for the calibration
 
 // Global variables
 extern MAIN_CONFIG main_config;

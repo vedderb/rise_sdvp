@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QVector>
+#include <QTimer>
 #include "datatypes.h"
 #include "mapwidget.h"
 
@@ -28,13 +29,15 @@ signals:
     void terminalCmd(quint8 id, QString cmd);
 
 private slots:
+    void timerSlot();
     void terminalPrint(quint8 id, QString str);
 
     void on_terminalSendButton_clicked();
     void on_terminalClearButton_clicked();
     void on_yawOffsetSlider_valueChanged(int value);
-
     void on_idBox_valueChanged(int arg1);
+    void on_magSampleClearButton_clicked();
+    void on_magSampleSaveButton_clicked();
 
 private:
     Ui::CarInterface *ui;
@@ -51,6 +54,8 @@ private:
     int maxSampleSize;
     MapWidget *mMap;
     int mId;
+    QVector<QVector<double> > mMagSamples;
+    QTimer *mTimer;
 
 };
 

@@ -43,4 +43,43 @@ void conf_general_init(void) {
 	chThdSleepMilliseconds(10);
 
 	main_config.id = (~(palReadPort(GPIOE) >> 8)) & 0x0F;
+
+	// Magnetometer compensation
+	switch (main_config.id) {
+	case 0:
+		main_config.mag_cal_cx = 6.67419;
+		main_config.mag_cal_cy = -6.24658;
+		main_config.mag_cal_cz = 5.05975;
+
+		main_config.mag_cal_xx = 0.934036;
+		main_config.mag_cal_xy = -0.00158248;
+		main_config.mag_cal_xz = 0.00402214;
+
+		main_config.mag_cal_yx = -0.00158248;
+		main_config.mag_cal_yy = 0.949697;
+		main_config.mag_cal_yz = -0.00586774;
+
+		main_config.mag_cal_zx = 0.00402214;
+		main_config.mag_cal_zy = -0.00586774;
+		main_config.mag_cal_zz = 0.999047;
+		break;
+
+	default:
+		main_config.mag_cal_cx = 0.0;
+		main_config.mag_cal_cy = 0.0;
+		main_config.mag_cal_cz = 0.0;
+
+		main_config.mag_cal_xx = 1.0;
+		main_config.mag_cal_xy = 0.0;
+		main_config.mag_cal_xz = 0.0;
+
+		main_config.mag_cal_yx = 0.0;
+		main_config.mag_cal_yy = 1.0;
+		main_config.mag_cal_yz = 0.0;
+
+		main_config.mag_cal_zx = 0.0;
+		main_config.mag_cal_zy = 0.0;
+		main_config.mag_cal_zz = 1.0;
+		break;
+	}
 }

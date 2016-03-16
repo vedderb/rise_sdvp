@@ -56,6 +56,18 @@ typedef enum {
 
 typedef struct {
 	int id;
+	float mag_cal_cx;
+	float mag_cal_cy;
+	float mag_cal_cz;
+	float mag_cal_xx;
+	float mag_cal_xy;
+	float mag_cal_xz;
+	float mag_cal_yx;
+	float mag_cal_yy;
+	float mag_cal_yz;
+	float mag_cal_zx;
+	float mag_cal_zy;
+	float mag_cal_zz;
 } MAIN_CONFIG;
 
 #endif /* DATATYPES_H_ */

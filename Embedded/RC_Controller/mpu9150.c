@@ -246,16 +246,16 @@ void mpu9150_get_accel_gyro_mag(float *accel, float *gyro, float *mag) {
 	 * y_calibrated = scalefactor_y[1] * xt_raw + scalefactor_y[2] * yt_raw + scalefactor_y[3] * zt_raw;
 	 * z_calibrated = scalefactor_z[1] * xt_raw + scalefactor_z[2] * yt_raw + scalefactor_z[3] * zt_raw;
 	 */
-#ifdef MAG_COMPENSATE
+#if MAG_COMPENSATE
 	float mag_t[3];
 
-	mag_t[0] = mag[0] - quad_config.mag_cal_cx;
-	mag_t[1] = mag[1] - quad_config.mag_cal_cy;
-	mag_t[2] = mag[2] - quad_config.mag_cal_cz;
+	mag_t[0] = mag[0] - main_config.mag_cal_cx;
+	mag_t[1] = mag[1] - main_config.mag_cal_cy;
+	mag_t[2] = mag[2] - main_config.mag_cal_cz;
 
-	mag[0] = quad_config.mag_cal_xx * mag_t[0] + quad_config.mag_cal_xy * mag_t[1] + quad_config.mag_cal_xz * mag_t[2];
-	mag[1] = quad_config.mag_cal_yx * mag_t[0] + quad_config.mag_cal_yy * mag_t[1] + quad_config.mag_cal_yz * mag_t[2];
-	mag[2] = quad_config.mag_cal_zx * mag_t[0] + quad_config.mag_cal_zy * mag_t[1] + quad_config.mag_cal_zz * mag_t[2];
+	mag[0] = main_config.mag_cal_xx * mag_t[0] + main_config.mag_cal_xy * mag_t[1] + main_config.mag_cal_xz * mag_t[2];
+	mag[1] = main_config.mag_cal_yx * mag_t[0] + main_config.mag_cal_yy * mag_t[1] + main_config.mag_cal_yz * mag_t[2];
+	mag[2] = main_config.mag_cal_zx * mag_t[0] + main_config.mag_cal_zy * mag_t[1] + main_config.mag_cal_zz * mag_t[2];
 #endif
 
 #else

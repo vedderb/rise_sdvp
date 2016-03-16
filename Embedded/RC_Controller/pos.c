@@ -104,22 +104,21 @@ static void update_orientation_angles(float *accel, float *gyro, float *mag, flo
 	gyro[1] = gyro[1] * M_PI / 180.0;
 	gyro[2] = gyro[2] * M_PI / 180.0;
 
-	// Swap X and Y to match the accelerometer of the MPU9150
-	// TODO: Is this correct?
-	float mag_tmp[3];
-	mag_tmp[0] = mag[1];
-	mag_tmp[1] = mag[0];
-	mag_tmp[2] = mag[2];
-
 	m_accel[0] = accel[0];
 	m_accel[1] = accel[1];
 	m_accel[2] = accel[2];
 	m_gyro[0] = gyro[0];
 	m_gyro[1] = gyro[1];
 	m_gyro[2] = gyro[2];
-	m_mag[0] = mag_tmp[0];
-	m_mag[1] = mag_tmp[1];
-	m_mag[2] = mag_tmp[2];
+	m_mag[0] = mag[0];
+	m_mag[1] = mag[1];
+	m_mag[2] = mag[2];
+
+	// Swap X and Y to match the accelerometer of the MPU9150
+	float mag_tmp[3];
+	mag_tmp[0] = mag[1];
+	mag_tmp[1] = mag[0];
+	mag_tmp[2] = mag[2];
 
 	if (!m_attitude_init_done) {
 		MahonyAHRSupdateInitialOrientation(accel, mag_tmp, (ATTITUDE_INFO*)&m_att_mag);

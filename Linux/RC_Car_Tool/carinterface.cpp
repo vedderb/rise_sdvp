@@ -1,6 +1,7 @@
 #include "carinterface.h"
 #include "ui_carinterface.h"
 #include "carinfo.h"
+#include <QFileDialog>
 
 CarInterface::CarInterface(QWidget *parent) :
     QWidget(parent),
@@ -31,6 +32,11 @@ CarInterface::CarInterface(QWidget *parent) :
 
     mMap = 0;
     mId = 0;
+
+    mTimer = new QTimer(this);
+    mTimer->start(20);
+
+    connect(mTimer, SIGNAL(timeout()), this, SLOT(timerSlot()));
 }
 
 CarInterface::~CarInterface()
@@ -154,6 +160,15 @@ void CarInterface::setImuData(IMU_DATA data)
         car->setLocation(loc);
         mMap->repaintAfterEvents();
     }
+
+    QVector<double> magXYZ;
+    magXYZ.append(data.mag[0]);
+    magXYZ.append(data.mag[1]);
+    magXYZ.append(data.mag[2]);
+
+    if (ui->magSampleStoreBox->isChecked()) {
+        mMagSamples.append(magXYZ);
+    }
 }
 
 void CarInterface::setMap(MapWidget *map)
@@ -161,6 +176,16 @@ void CarInterface::setMap(MapWidget *map)
     mMap = map;
     CarInfo car(mId);
     mMap->addCar(car);
+}
+
+void CarInterface::timerSlot()
+{
+    // Update mag sample label
+    static int lastMagSamples = 0;
+    if (mMagSamples.size() != lastMagSamples) {
+        ui->magSampleLabel->setText(QString::number(mMagSamples.size()) + " Samples");
+    }
+    lastMagSamples = mMagSamples.size();
 }
 
 void CarInterface::terminalPrint(quint8 id, QString str)
@@ -194,4 +219,30 @@ void CarInterface::on_idBox_valueChanged(int arg1)
     }
 
     mId = arg1;
+}
+
+void CarInterface::on_magSampleClearButton_clicked()
+{
+    mMagSamples.clear();
+}
+
+void CarInterface::on_magSampleSaveButton_clicked()
+{
+    QString path;
+    path = QFileDialog::getSaveFileName(this, tr("Choose where to save the magnetometer samples"));
+    if (path.isNull()) {
+        return;
+    }
+
+    QFile file(path);
+    file.open(QIODevice::WriteOnly | QIODevice::Text);
+    QTextStream out(&file);
+
+    QVectorIterator<QVector<double> > i(mMagSamples);
+    while (i.hasNext()) {
+        QVector<double> element = i.next();
+        out << element[0] << "\t" << element[1] << "\t" << element[2] << "\n";
+    }
+
+    file.close();
 }
