@@ -233,7 +233,7 @@ static THD_FUNCTION(rx_thread, arg) {
 static THD_FUNCTION(tx_thread, arg) {
 	(void)arg;
 
-	chRegSetThreadName("CC2520 Tx");
+	chRegSetThreadName("CC2520 TX");
 
 	tx_tp = chThdGetSelfX();
 
