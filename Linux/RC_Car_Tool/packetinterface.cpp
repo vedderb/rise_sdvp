@@ -253,18 +253,18 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
     data++;
     len--;
 
-    COMM_PACKET_ID cmd = (COMM_PACKET_ID)(quint8)data[0];
+    CMD_PACKET cmd = (CMD_PACKET)(quint8)data[0];
     data++;
     len--;
 
     switch (cmd) {
-    case COMM_PRINTF: {
+    case CMD_PRINTF: {
         QByteArray tmpArray = QByteArray::fromRawData((char*)data, len);
         tmpArray[len] = '\0';
         emit printReceived(id, QString::fromLatin1(tmpArray));
     } break;
 
-    case COMM_GET_IMU: {
+    case CMD_GET_IMU: {
         IMU_DATA imu;
         int32_t ind = 0;
 
@@ -280,8 +280,16 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         imu.mag[0] = utility::buffer_get_double32(data, 1e6, &ind);
         imu.mag[1] = utility::buffer_get_double32(data, 1e6, &ind);
         imu.mag[2] = utility::buffer_get_double32(data, 1e6, &ind);
+        imu.q[0] = utility::buffer_get_double32(data, 1e8, &ind);
+        imu.q[1] = utility::buffer_get_double32(data, 1e8, &ind);
+        imu.q[2] = utility::buffer_get_double32(data, 1e8, &ind);
+        imu.q[3] = utility::buffer_get_double32(data, 1e8, &ind);
         emit imuReceived(id, imu);
     } break;
+
+    case CMD_VESC_FWD:
+        emit vescFwdReceived(id, QByteArray::fromRawData((char*)data, len));
+        break;
 
     default:
         break;
@@ -308,20 +316,30 @@ bool PacketInterface::isUdpConnected()
     return QString::compare(mHostAddress.toString(), "0.0.0.0") != 0;
 }
 
-void PacketInterface::getImu(quint8 car)
+void PacketInterface::getImu(quint8 id)
 {
     QByteArray packet;
-    packet.append(car);
-    packet.append(COMM_GET_IMU);
+    packet.append(id);
+    packet.append(CMD_GET_IMU);
     sendPacket(packet);
 }
 
-void PacketInterface::sendTerminalCmd(quint8 car, QString cmd)
+void PacketInterface::sendTerminalCmd(quint8 id, QString cmd)
 {
     QByteArray packet;
     packet.clear();
-    packet.append(car);
-    packet.append((char)COMM_TERMINAL_CMD);
+    packet.append(id);
+    packet.append((char)CMD_TERMINAL_CMD);
     packet.append(cmd.toLatin1());
+    sendPacket(packet);
+}
+
+void PacketInterface::forwardVesc(quint8 id, QByteArray data)
+{
+    QByteArray packet;
+    packet.clear();
+    packet.append(id);
+    packet.append((char)CMD_VESC_FWD);
+    packet.append(data);
     sendPacket(packet);
 }

@@ -178,6 +178,10 @@ void MainWindow::on_carAddButton_clicked()
             mPacketInterface, SLOT(sendTerminalCmd(quint8,QString)));
     connect(mPacketInterface, SIGNAL(printReceived(quint8,QString)),
             car, SLOT(terminalPrint(quint8,QString)));
+    connect(car, SIGNAL(forwardVesc(quint8,QByteArray)),
+            mPacketInterface, SLOT(forwardVesc(quint8,QByteArray)));
+    connect(mPacketInterface, SIGNAL(vescFwdReceived(quint8,QByteArray)),
+            car, SLOT(vescFwdReceived(quint8,QByteArray)));
 }
 
 void MainWindow::on_carRemoveButton_clicked()

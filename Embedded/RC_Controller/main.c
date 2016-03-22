@@ -36,6 +36,7 @@
 #include "led.h"
 #include "packet.h"
 #include "pos.h"
+#include "comm_can.h"
 
 /*
  * TODO: Update this...
@@ -65,6 +66,7 @@ int main(void) {
 	pos_init();
 	comm_cc2520_init();
 	commands_set_send_func(comm_cc2520_send_buffer);
+	comm_can_init();
 
 //	for(;;) {
 //		commands_printf("Hello World\n");

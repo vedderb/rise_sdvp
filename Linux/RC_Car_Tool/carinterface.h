@@ -27,10 +27,12 @@ public:
 
 signals:
     void terminalCmd(quint8 id, QString cmd);
+    void forwardVesc(quint8 id, QByteArray data);
 
 private slots:
     void timerSlot();
     void terminalPrint(quint8 id, QString str);
+    void vescFwdReceived(quint8 id, QByteArray data);
 
     void on_terminalSendButton_clicked();
     void on_terminalClearButton_clicked();

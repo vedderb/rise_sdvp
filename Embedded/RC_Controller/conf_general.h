@@ -40,6 +40,7 @@
 // General settings
 #define ID_ALL						255
 #define MAG_COMPENSATE				1 // Should be 0 when capturing samples for the calibration
+#define VESC_ID						ID_ALL // id, or ID_ALL for any VESC
 
 // Global variables
 extern MAIN_CONFIG main_config;

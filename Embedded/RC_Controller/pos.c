@@ -27,7 +27,7 @@
 #define ITERATION_TIMER_FREQ			50000
 
 // Private variables
-static ATTITUDE_INFO m_att_no_mag, m_att_mag;
+static ATTITUDE_INFO m_att;
 static float m_roll_now, m_pitch_now, m_yaw_now;
 static bool m_attitude_init_done;
 static float m_accel[3];
@@ -39,8 +39,7 @@ static void mpu9150_read(void);
 static void update_orientation_angles(float *accel, float *gyro, float *mag, float dt);
 
 void pos_init(void) {
-	MahonyAHRSInitAttitudeInfo(&m_att_mag);
-	MahonyAHRSInitAttitudeInfo(&m_att_no_mag);
+	MahonyAHRSInitAttitudeInfo(&m_att);
 	m_attitude_init_done = false;
 
 	mpu9150_init();
@@ -89,6 +88,13 @@ void pos_get_attitude(float *rpy, float *accel, float *gyro, float *mag) {
 	}
 }
 
+void pos_get_quaternions(float *q) {
+	q[0] = m_att.q0;
+	q[1] = m_att.q1;
+	q[2] = m_att.q2;
+	q[3] = m_att.q3;
+}
+
 static void mpu9150_read(void) {
 	float accel[3], gyro[3], mag[3];
 	mpu9150_get_accel_gyro_mag(accel, gyro, mag);
@@ -121,20 +127,17 @@ static void update_orientation_angles(float *accel, float *gyro, float *mag, flo
 	mag_tmp[2] = mag[2];
 
 	if (!m_attitude_init_done) {
-		MahonyAHRSupdateInitialOrientation(accel, mag_tmp, (ATTITUDE_INFO*)&m_att_mag);
-		MahonyAHRSupdateInitialOrientation(accel, mag_tmp, (ATTITUDE_INFO*)&m_att_no_mag);
+		MahonyAHRSupdateInitialOrientation(accel, mag_tmp, (ATTITUDE_INFO*)&m_att);
 		m_attitude_init_done = true;
 	} else {
 		if (mpu9150_mag_updated() && fabsf(m_roll_now) < 25.0 && fabsf(m_pitch_now) < 25.0) {
-			MahonyAHRSupdate(gyro, accel, mag_tmp, dt, (ATTITUDE_INFO*)&m_att_mag);
+			MahonyAHRSupdate(gyro, accel, mag_tmp, dt, (ATTITUDE_INFO*)&m_att);
 		} else {
-			MahonyAHRSupdateIMU(gyro, accel, dt, (ATTITUDE_INFO*)&m_att_mag);
+			MahonyAHRSupdateIMU(gyro, accel, dt, (ATTITUDE_INFO*)&m_att);
 		}
-
-		MahonyAHRSupdateIMU(gyro, accel, dt, (ATTITUDE_INFO*)&m_att_no_mag);
 	}
 
-	m_roll_now = MahonyAHRSGetRoll((ATTITUDE_INFO*)&m_att_no_mag) * 180 / M_PI;// - roll_offset;
-	m_pitch_now = MahonyAHRSGetPitch((ATTITUDE_INFO*)&m_att_no_mag) * 180 / M_PI;// - pitch_offset;
-	m_yaw_now = MahonyAHRSGetYaw((ATTITUDE_INFO*)&m_att_mag) * 180 / M_PI;// - yaw_offset;
+	m_roll_now = MahonyAHRSGetRoll((ATTITUDE_INFO*)&m_att) * 180 / M_PI;// - roll_offset;
+	m_pitch_now = MahonyAHRSGetPitch((ATTITUDE_INFO*)&m_att) * 180 / M_PI;// - pitch_offset;
+	m_yaw_now = MahonyAHRSGetYaw((ATTITUDE_INFO*)&m_att) * 180 / M_PI;// - yaw_offset;
 }

@@ -138,7 +138,9 @@ CSRC = $(STARTUPSRC) \
        commands.c \
        conf_general.c \
        pos.c \
-       terminal.c
+       terminal.c \
+       comm_can.c \
+       bldc_interface.c
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.

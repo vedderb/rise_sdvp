@@ -48,6 +48,7 @@ typedef struct {
     double accel[3];
     double gyro[3];
     double mag[3];
+    double q[4];
 } IMU_DATA;
 
 typedef enum {
@@ -58,10 +59,11 @@ typedef enum {
 } MOTE_PACKET;
 
 typedef enum {
-	COMM_PRINTF = 0,
-    COMM_GET_IMU,
-    COMM_TERMINAL_CMD
-} COMM_PACKET_ID;
+    CMD_PRINTF = 0,
+    CMD_GET_IMU,
+    CMD_TERMINAL_CMD,
+    CMD_VESC_FWD
+} CMD_PACKET;
 
 typedef struct {
 	int id;

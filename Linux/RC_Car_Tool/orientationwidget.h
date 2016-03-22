@@ -34,6 +34,7 @@ public:
     QSize sizeHint() const;
     void setRollPitchYaw(float roll, float pitch, float yaw);
     void setYawOffset(float offset);
+    void setQuanternions(float q0, float q1, float q2, float q3);
 
     typedef struct {
         QVector<float> vertexArray;
@@ -63,18 +64,20 @@ protected:
     void mouseMoveEvent(QMouseEvent *event);
 
 private:
-    float xRot;
-    float yRot;
-    float zRot;
-    float xRotOfs;
-    float yRotOfs;
-    float zRotOfs;
-    float zRotOfsCar;
-    float scale;
-    QPoint lastPos;
-    QColor bgColor;
-    QVector<MESHDATA_t> quadMeshes;
-    QTimer *updateTimer;
+    float mXRot;
+    float mYRot;
+    float mZRot;
+    float mXRotOfs;
+    float mYRotOfs;
+    float mZRotOfs;
+    float mZRotOfsCar;
+    float mScale;
+    float mQ0, mQ1, mQ2, mQ3;
+    bool mUseQuaternions;
+    QPoint mLastPos;
+    QColor mBgColor;
+    QVector<MESHDATA_t> mQuadMeshes;
+    QTimer *mUpdateTimer;
 
     void updateUsingTimer();
 

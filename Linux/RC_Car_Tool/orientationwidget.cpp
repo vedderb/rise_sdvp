@@ -89,20 +89,26 @@ static void get_bounding_box (aiVector3D* min, aiVector3D* max, const aiScene *s
 OrientationWidget::OrientationWidget(QWidget *parent)
     : QGLWidget(QGLFormat(QGL::SampleBuffers), parent)
 {
-    xRot = 0;
-    yRot = 0;
-    zRot = 0;
+    mXRot = 0;
+    mYRot = 0;
+    mZRot = 0;
+
+    mQ0 = 1.0;
+    mQ1 = 0.0;
+    mQ2 = 0.0;
+    mQ3 = 0.0;
+    mUseQuaternions = false;
 
     // Set these to get the rotation of this particular model right
-    xRotOfs = 0.0;
-    yRotOfs = 90.0;
-    zRotOfs = 90.0;
+    mXRotOfs = 0.0;
+    mYRotOfs = 90.0;
+    mZRotOfs = 90.0;
 
-    bgColor = palette().color(QPalette::Window);
+    mBgColor = palette().color(QPalette::Window);
 
-    updateTimer = new QTimer(this);
-    updateTimer->setSingleShot(true);
-    connect(updateTimer, SIGNAL(timeout()), this, SLOT(updateTimerSlot()));
+    mUpdateTimer = new QTimer(this);
+    mUpdateTimer->setSingleShot(true);
+    connect(mUpdateTimer, SIGNAL(timeout()), this, SLOT(updateTimerSlot()));
 
     Assimp::Importer importer;
     QString path = "Models/car.3ds";
@@ -120,12 +126,12 @@ OrientationWidget::OrientationWidget(QWidget *parent)
     tmp = scene_max.x - scene_min.x;
     tmp = scene_max.y - scene_min.y > tmp ? scene_max.y - scene_min.y : tmp;
     tmp = scene_max.z - scene_min.z > tmp ? scene_max.z - scene_min.z : tmp;
-    scale = 0.95 / tmp;
+    mScale = 0.95 / tmp;
 
-    quadMeshes.resize(scene->mNumMeshes);
+    mQuadMeshes.resize(scene->mNumMeshes);
 
     for (unsigned int m = 0;m < scene->mNumMeshes;m++) {
-        MESHDATA_t *mData = &quadMeshes[m];
+        MESHDATA_t *mData = &mQuadMeshes[m];
         aiMesh *mesh = scene->mMeshes[m];
 
         mData->numTriangles = mesh->mNumFaces * 3;
@@ -194,23 +200,34 @@ QSize OrientationWidget::sizeHint() const
 
 void OrientationWidget::setRollPitchYaw(float roll, float pitch, float yaw)
 {
-    xRot = roll;
-    yRot = -pitch;
-    zRot = -yaw;
+    mXRot = roll;
+    mYRot = -pitch;
+    mZRot = -yaw;
+    mUseQuaternions = false;
     updateUsingTimer();
 }
 
 void OrientationWidget::setYawOffset(float offset)
 {
-    zRotOfsCar = offset;
+    mZRotOfsCar = offset;
+    updateUsingTimer();
+}
+
+void OrientationWidget::setQuanternions(float q0, float q1, float q2, float q3)
+{
+    mQ0 = q0;
+    mQ1 = q1;
+    mQ2 = q2;
+    mQ3 = q3;
+    mUseQuaternions = true;
     updateUsingTimer();
 }
 
 void OrientationWidget::setXRotation(float angle)
 {
     qNormalizeAngle(angle);
-    if (angle != xRot) {
-        xRot = angle;
+    if (angle != mXRot) {
+        mXRot = angle;
         emit xRotationChanged(angle);
         updateUsingTimer();
     }
@@ -219,8 +236,8 @@ void OrientationWidget::setXRotation(float angle)
 void OrientationWidget::setYRotation(float angle)
 {
     qNormalizeAngle(angle);
-    if (angle != yRot) {
-        yRot = angle;
+    if (angle != mYRot) {
+        mYRot = angle;
         emit yRotationChanged(angle);
         updateUsingTimer();
     }
@@ -229,8 +246,8 @@ void OrientationWidget::setYRotation(float angle)
 void OrientationWidget::setZRotation(float angle)
 {
     qNormalizeAngle(angle);
-    if (angle != zRot) {
-        zRot = angle;
+    if (angle != mZRot) {
+        mZRot = angle;
         emit zRotationChanged(angle);
         updateUsingTimer();
     }
@@ -243,7 +260,7 @@ void OrientationWidget::updateTimerSlot()
 
 void OrientationWidget::initializeGL()
 {
-    qglClearColor(bgColor);
+    qglClearColor(mBgColor);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glShadeModel(GL_SMOOTH);
@@ -260,23 +277,44 @@ void OrientationWidget::paintGL()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
     glTranslatef(0.0, 0.0, -10.0);
-    glScalef(scale, scale, scale);
+    glScalef(mScale, mScale, mScale);
 
     // Rotate world
-    glRotatef(zRotOfs, 0.0, 0.0, 1.0);
-    glRotatef(yRotOfs, 0.0, 1.0, 0.0);
-    glRotatef(xRotOfs, 1.0, 0.0, 0.0);
+    glRotatef(mZRotOfs, 0.0, 0.0, 1.0);
+    glRotatef(mYRotOfs, 0.0, 1.0, 0.0);
+    glRotatef(mXRotOfs, 1.0, 0.0, 0.0);
 
     // Rotate car
-    glRotatef(zRot + zRotOfsCar, 0.0, 0.0, 1.0);
-    glRotatef(yRot, 0.0, 1.0, 0.0);
-    glRotatef(xRot, 1.0, 0.0, 0.0);
+    if (mUseQuaternions) {
+        float qw = mQ0;
+        float qx = mQ1;
+        float qy = mQ2;
+        float qz = mQ3;
+
+        GLfloat rot[16] = {1.0f - 2.0f*qy*qy - 2.0f*qz*qz, 2.0f*qx*qy - 2.0f*qz*qw, 2.0f*qx*qz + 2.0f*qy*qw, 0.0f,
+                           2.0f*qx*qy + 2.0f*qz*qw, 1.0f - 2.0f*qx*qx - 2.0f*qz*qz, 2.0f*qy*qz - 2.0f*qx*qw, 0.0f,
+                           2.0f*qx*qz - 2.0f*qy*qw, 2.0f*qy*qz + 2.0f*qx*qw, 1.0f - 2.0f*qx*qx - 2.0f*qy*qy, 0.0f,
+                           0.0f, 0.0f, 0.0f, 1.0f};
+
+        GLfloat rot_t[16] = {rot[0], rot[4], rot[8], rot[12],
+                            rot[1], rot[5], rot[9], rot[13],
+                            rot[2], rot[6], rot[10], rot[14],
+                            rot[3], rot[7], rot[11], rot[15]};
+
+        glRotatef(mZRotOfsCar, 0.0, 0.0, 1.0);
+        glMultMatrixf(rot_t);
+        glRotatef(180.0, 0.0, 0.0, 1.0);
+    } else {
+        glRotatef(mZRot + mZRotOfsCar, 0.0, 0.0, 1.0);
+        glRotatef(mYRot, 0.0, 1.0, 0.0);
+        glRotatef(mXRot, 1.0, 0.0, 0.0);
+    }
 
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_NORMAL_ARRAY);
 
-    for (int m = 0;m < quadMeshes.size();m++) {
-        MESHDATA_t *mData = &quadMeshes[m];
+    for (int m = 0;m < mQuadMeshes.size();m++) {
+        MESHDATA_t *mData = &mQuadMeshes[m];
 
         glVertexPointer(3,GL_FLOAT, 0, mData->vertexArray.data());
         glNormalPointer(GL_FLOAT, 0, mData->normalArray.data());
@@ -315,27 +353,27 @@ void OrientationWidget::resizeGL(int width, int height)
 
 void OrientationWidget::mousePressEvent(QMouseEvent *event)
 {
-    lastPos = event->pos();
+    mLastPos = event->pos();
 }
 
 void OrientationWidget::mouseMoveEvent(QMouseEvent *event)
 {
-    int dx = event->x() - lastPos.x();
-    int dy = event->y() - lastPos.y();
+    int dx = event->x() - mLastPos.x();
+    int dy = event->y() - mLastPos.y();
 
     if (event->buttons() & Qt::LeftButton) {
-        setXRotation(xRot + 0.5 * (float)dx);
-        setYRotation(yRot + 0.5 * (float)-dy);
+        setXRotation(mXRot + 0.5 * (float)dx);
+        setYRotation(mYRot + 0.5 * (float)-dy);
     } else if (event->buttons() & Qt::RightButton) {
-        setYRotation(yRot + 0.5 * (float)-dy);
-        setZRotation(zRot + 0.5 * (float)dx);
+        setYRotation(mYRot + 0.5 * (float)-dy);
+        setZRotation(mZRot + 0.5 * (float)dx);
     }
-    lastPos = event->pos();
+    mLastPos = event->pos();
 }
 
 void OrientationWidget::updateUsingTimer()
 {
-    if (!updateTimer->isActive()) {
-        updateTimer->start();
+    if (!mUpdateTimer->isActive()) {
+        mUpdateTimer->start();
     }
 }

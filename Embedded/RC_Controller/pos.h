@@ -23,5 +23,6 @@
 // Functions
 void pos_init(void);
 void pos_get_attitude(float *rpy, float *accel, float *gyro, float *mag);
+void pos_get_quaternions(float *q);
 
 #endif /* POS_H_ */

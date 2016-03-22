@@ -32,5 +32,6 @@ void commands_set_send_func(void(*func)(unsigned char *data, unsigned int len));
 void commands_send_packet(unsigned char *data, unsigned int len);
 void commands_process_packet(unsigned char *data, unsigned int len);
 void commands_printf(char* format, ...);
+void commands_forward_vesc_packet(unsigned char *data, unsigned int len);
 
 #endif /* COMMANDS_H_ */

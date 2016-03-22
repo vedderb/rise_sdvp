@@ -152,6 +152,10 @@ void CarInterface::setImuData(IMU_DATA data)
     ui->magPlot->replot();
 
     setOrientation(data.roll, data.pitch, data.yaw);
+    //ui->orientationWidget->setQuanternions(data.q[0], data.q[1], data.q[2], data.q[3]);
+    //ui->rollBar->setValue(data.roll);
+    //ui->pitchBar->setValue(data.pitch);
+    //ui->yawBar->setValue(data.yaw);
 
     if (mMap) {
         CarInfo *car = mMap->getCarInfo(mId);
@@ -193,6 +197,11 @@ void CarInterface::terminalPrint(quint8 id, QString str)
     if (id == mId) {
         ui->terminalBrowser->append(str);
     }
+}
+
+void CarInterface::vescFwdReceived(quint8 id, QByteArray data)
+{
+
 }
 
 void CarInterface::on_terminalSendButton_clicked()
