@@ -7,13 +7,13 @@
     <x>0</x>
     <y>0</y>
     <width>624</width>
-    <height>274</height>
+    <height>276</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QHBoxLayout" name="horizontalLayout">
+  <layout class="QHBoxLayout" name="horizontalLayout_5">
    <item>
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
@@ -254,12 +254,39 @@
       </widget>
      </item>
      <item>
-      <widget class="QProgressBar" name="batteryBar">
-       <property name="value">
-        <number>24</number>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QProgressBar" name="batteryBar">
+         <property name="value">
+          <number>0</number>
+         </property>
+         <property name="format">
+          <string>Battery</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QProgressBar" name="tempFetBar">
+         <property name="maximum">
+          <number>110</number>
+         </property>
+         <property name="value">
+          <number>24</number>
+         </property>
+         <property name="format">
+          <string>MOSFET Temp: %v°C</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QLabel" name="mcFaultLabel">
+       <property name="text">
+        <string>Fault code...</string>
        </property>
-       <property name="format">
-        <string>Battery Level: %p%</string>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
        </property>
       </widget>
      </item>
@@ -268,16 +295,19 @@
    <item>
     <layout class="QVBoxLayout" name="verticalLayout_2">
      <item>
-      <widget class="QCheckBox" name="pollBox">
-       <property name="text">
-        <string>Poll Data</string>
+      <widget class="QSpinBox" name="idBox">
+       <property name="prefix">
+        <string>Car ID: </string>
+       </property>
+       <property name="maximum">
+        <number>255</number>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QCheckBox" name="bldcToolUdpBox">
+      <widget class="QCheckBox" name="pollBox">
        <property name="text">
-        <string>BLDC Tool UDP Server</string>
+        <string>Poll Data</string>
        </property>
       </widget>
      </item>
@@ -302,12 +332,9 @@
       </spacer>
      </item>
      <item>
-      <widget class="QSpinBox" name="idBox">
-       <property name="prefix">
-        <string>ID: </string>
-       </property>
-       <property name="maximum">
-        <number>255</number>
+      <widget class="QCheckBox" name="bldcToolUdpBox">
+       <property name="text">
+        <string>BLDC Tool UDP Server</string>
        </property>
       </widget>
      </item>

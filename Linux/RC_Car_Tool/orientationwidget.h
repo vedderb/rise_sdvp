@@ -76,7 +76,7 @@ private:
     bool mUseQuaternions;
     QPoint mLastPos;
     QColor mBgColor;
-    QVector<MESHDATA_t> mQuadMeshes;
+    QVector<MESHDATA_t> mMeshes;
     QTimer *mUpdateTimer;
 
     void updateUsingTimer();

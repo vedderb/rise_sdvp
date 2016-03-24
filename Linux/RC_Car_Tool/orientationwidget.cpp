@@ -103,6 +103,7 @@ OrientationWidget::OrientationWidget(QWidget *parent)
     mXRotOfs = 0.0;
     mYRotOfs = 90.0;
     mZRotOfs = 90.0;
+    mZRotOfsCar = 0.0;
 
     mBgColor = palette().color(QPalette::Window);
 
@@ -116,7 +117,7 @@ OrientationWidget::OrientationWidget(QWidget *parent)
                                              aiProcessPreset_TargetRealtime_Quality);
 
     if (!scene) {
-        qDebug() << "Could not load" << path;
+        qWarning() << "Could not load" << path;
         return;
     }
 
@@ -128,10 +129,10 @@ OrientationWidget::OrientationWidget(QWidget *parent)
     tmp = scene_max.z - scene_min.z > tmp ? scene_max.z - scene_min.z : tmp;
     mScale = 0.95 / tmp;
 
-    mQuadMeshes.resize(scene->mNumMeshes);
+    mMeshes.resize(scene->mNumMeshes);
 
     for (unsigned int m = 0;m < scene->mNumMeshes;m++) {
-        MESHDATA_t *mData = &mQuadMeshes[m];
+        MESHDATA_t *mData = &mMeshes[m];
         aiMesh *mesh = scene->mMeshes[m];
 
         mData->numTriangles = mesh->mNumFaces * 3;
@@ -313,8 +314,8 @@ void OrientationWidget::paintGL()
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_NORMAL_ARRAY);
 
-    for (int m = 0;m < mQuadMeshes.size();m++) {
-        MESHDATA_t *mData = &mQuadMeshes[m];
+    for (int m = 0;m < mMeshes.size();m++) {
+        MESHDATA_t *mData = &mMeshes[m];
 
         glVertexPointer(3,GL_FLOAT, 0, mData->vertexArray.data());
         glNormalPointer(GL_FLOAT, 0, mData->normalArray.data());

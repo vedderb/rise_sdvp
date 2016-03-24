@@ -43,8 +43,9 @@ private slots:
     void serialDataAvailable();
     void serialPortError(QSerialPort::SerialPortError error);
     void timerSlot();
+    void showStatusInfo(QString info, bool isGood);
     void packetDataToSend(QByteArray &data);
-    void posReceived(quint8 id, POS_STATE pos);
+    void stateReceived(quint8 id, CAR_STATE state);
     void mapPosSet(quint8 id, LocPoint pos);
 
     void on_carAddButton_clicked();
@@ -72,7 +73,6 @@ private:
     double mThrottle;
     double mSteering;
 
-    void showStatusInfo(QString info, bool isGood);
 };
 
 #endif // MAINWINDOW_H

@@ -264,30 +264,33 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         emit printReceived(id, QString::fromLatin1(tmpArray));
     } break;
 
-    case CMD_GET_SENSORS: {
-        POS_STATE pos;
+    case CMD_GET_STATE: {
+        CAR_STATE state;
         int32_t ind = 0;
 
-        pos.roll = utility::buffer_get_double32(data, 1e6, &ind);
-        pos.pitch = utility::buffer_get_double32(data, 1e6, &ind);
-        pos.yaw = utility::buffer_get_double32(data, 1e6, &ind);
-        pos.accel[0] = utility::buffer_get_double32(data, 1e6, &ind);
-        pos.accel[1] = utility::buffer_get_double32(data, 1e6, &ind);
-        pos.accel[2] = utility::buffer_get_double32(data, 1e6, &ind);
-        pos.gyro[0] = utility::buffer_get_double32(data, 1e6, &ind);
-        pos.gyro[1] = utility::buffer_get_double32(data, 1e6, &ind);
-        pos.gyro[2] = utility::buffer_get_double32(data, 1e6, &ind);
-        pos.mag[0] = utility::buffer_get_double32(data, 1e6, &ind);
-        pos.mag[1] = utility::buffer_get_double32(data, 1e6, &ind);
-        pos.mag[2] = utility::buffer_get_double32(data, 1e6, &ind);
-        pos.q[0] = utility::buffer_get_double32(data, 1e8, &ind);
-        pos.q[1] = utility::buffer_get_double32(data, 1e8, &ind);
-        pos.q[2] = utility::buffer_get_double32(data, 1e8, &ind);
-        pos.q[3] = utility::buffer_get_double32(data, 1e8, &ind);
-        pos.px = utility::buffer_get_double32(data, 1e4, &ind);
-        pos.py = utility::buffer_get_double32(data, 1e4, &ind);
-        pos.speed = utility::buffer_get_double32(data, 1e6, &ind);
-        emit posReceived(id, pos);
+        state.roll = utility::buffer_get_double32(data, 1e6, &ind);
+        state.pitch = utility::buffer_get_double32(data, 1e6, &ind);
+        state.yaw = utility::buffer_get_double32(data, 1e6, &ind);
+        state.accel[0] = utility::buffer_get_double32(data, 1e6, &ind);
+        state.accel[1] = utility::buffer_get_double32(data, 1e6, &ind);
+        state.accel[2] = utility::buffer_get_double32(data, 1e6, &ind);
+        state.gyro[0] = utility::buffer_get_double32(data, 1e6, &ind);
+        state.gyro[1] = utility::buffer_get_double32(data, 1e6, &ind);
+        state.gyro[2] = utility::buffer_get_double32(data, 1e6, &ind);
+        state.mag[0] = utility::buffer_get_double32(data, 1e6, &ind);
+        state.mag[1] = utility::buffer_get_double32(data, 1e6, &ind);
+        state.mag[2] = utility::buffer_get_double32(data, 1e6, &ind);
+        state.q[0] = utility::buffer_get_double32(data, 1e8, &ind);
+        state.q[1] = utility::buffer_get_double32(data, 1e8, &ind);
+        state.q[2] = utility::buffer_get_double32(data, 1e8, &ind);
+        state.q[3] = utility::buffer_get_double32(data, 1e8, &ind);
+        state.px = utility::buffer_get_double32(data, 1e4, &ind);
+        state.py = utility::buffer_get_double32(data, 1e4, &ind);
+        state.speed = utility::buffer_get_double32(data, 1e6, &ind);
+        state.vin = utility::buffer_get_double32(data, 1e6, &ind);
+        state.temp_fet = utility::buffer_get_double32(data, 1e6, &ind);
+        state.mc_fault = (mc_fault_code)data[ind++];
+        emit stateReceived(id, state);
     } break;
 
     case CMD_VESC_FWD:
@@ -319,11 +322,11 @@ bool PacketInterface::isUdpConnected()
     return QString::compare(mHostAddress.toString(), "0.0.0.0") != 0;
 }
 
-void PacketInterface::getPos(quint8 id)
+void PacketInterface::getState(quint8 id)
 {
     QByteArray packet;
     packet.append(id);
-    packet.append(CMD_GET_SENSORS);
+    packet.append(CMD_GET_STATE);
     sendPacket(packet);
 }
 

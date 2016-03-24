@@ -1,8 +1,25 @@
 #include "carinterface.h"
 #include "ui_carinterface.h"
 #include "carinfo.h"
+#include "utility.h"
 #include <QFileDialog>
 #include <QMessageBox>
+
+namespace {
+void faultToStr(mc_fault_code fault, QString &str, bool &isOk)
+{
+    switch (fault) {
+    case FAULT_CODE_NONE: str = "FAULT_CODE_NONE"; isOk = true; break;
+    case FAULT_CODE_OVER_VOLTAGE: str = "FAULT_CODE_OVER_VOLTAGE"; isOk = false; break;
+    case FAULT_CODE_UNDER_VOLTAGE: str = "FAULT_CODE_UNDER_VOLTAGE"; isOk = false; break;
+    case FAULT_CODE_DRV8302: str = "FAULT_CODE_DRV8302"; isOk = false; break;
+    case FAULT_CODE_ABS_OVER_CURRENT: str = "FAULT_CODE_ABS_OVER_CURRENT"; isOk = false; break;
+    case FAULT_CODE_OVER_TEMP_FET: str = "FAULT_CODE_OVER_TEMP_FET"; isOk = false; break;
+    case FAULT_CODE_OVER_TEMP_MOTOR: str = "FAULT_CODE_OVER_TEMP_MOTOR"; isOk = false; break;
+    default: str = "Unknown fault"; isOk = false; break;
+    }
+}
+}
 
 CarInterface::CarInterface(QWidget *parent) :
     QWidget(parent),
@@ -77,7 +94,7 @@ void CarInterface::setOrientation(double roll, double pitch, double yaw)
     ui->orientationWidget->setRollPitchYaw(roll, pitch, yaw);
 }
 
-void CarInterface::setPosData(POS_STATE data)
+void CarInterface::setStateData(CAR_STATE data)
 {
     accelXData.append(data.accel[0]);
     accelXData.remove(0, 1);
@@ -157,13 +174,50 @@ void CarInterface::setPosData(POS_STATE data)
     ui->magPlot->legend->setVisible(true);
     ui->magPlot->replot();
 
+    // Speed bar
+    QString speedTxt;
+    speedTxt.sprintf("Speed: %.2f km/h", data.speed * 3.6);
     ui->speedBar->setValue(fabs(data.speed) * 3.6);
+    ui->speedBar->setFormat(speedTxt);
+
+    // Temp FET bar
+    ui->tempFetBar->setValue(data.temp_fet);
+
+    // Battery bar
+    double battp = utility::map(data.vin, 34.0, 42.0, 0.0, 100.0);
+    if (battp < 0.0) {
+        battp = 0.0;
+    }
+    QString battTxt;
+    battTxt.sprintf("Battery: %.1f %% (%.2f V)", battp, data.vin);
+    if (battp > 100.0) {
+        battp = 100.0;
+    }
+    ui->batteryBar->setValue((int)battp);
+    ui->batteryBar->setFormat(battTxt);
+
+    // Orientation
     setOrientation(data.roll, data.pitch, data.yaw);
     //ui->orientationWidget->setQuanternions(data.q[0], data.q[1], data.q[2], data.q[3]);
     //ui->rollBar->setValue(data.roll);
     //ui->pitchBar->setValue(data.pitch);
     //ui->yawBar->setValue(data.yaw);
 
+    // Fault label
+    QString fault_str;
+    bool isOk;
+    faultToStr(data.mc_fault, fault_str, isOk);
+
+    ui->mcFaultLabel->setText(fault_str);
+    if (isOk) {
+        ui->mcFaultLabel->setStyleSheet("QLabel { background-color : lightgreen; color : black; }");
+    } else {
+        ui->mcFaultLabel->setStyleSheet("QLabel { background-color : red; color : black; }");
+
+        QString msg;
+        msg.sprintf("Car %d: ", mId);
+        emit showStatusInfo(msg + fault_str, false);
+    }
 
     if (mMap) {
         CarInfo *car = mMap->getCarInfo(mId);

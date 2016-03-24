@@ -98,4 +98,8 @@ double buffer_get_double32(const uint8_t *buffer, double scale, int32_t *index) 
     return (double)buffer_get_int32(buffer, index) / scale;
 }
 
+double map(double x, double in_min, double in_max, double out_min, double out_max) {
+    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
 }

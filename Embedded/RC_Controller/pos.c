@@ -37,6 +37,7 @@ static bool m_attitude_init_done;
 static float m_accel[3];
 static float m_gyro[3];
 static float m_mag[3];
+static mc_values m_mc_val;
 
 // Private functions
 static void mpu9150_read(void);
@@ -47,6 +48,7 @@ void pos_init(void) {
 	MahonyAHRSInitAttitudeInfo(&m_att);
 	m_attitude_init_done = false;
 	memset(&m_pos, 0, sizeof(m_pos));
+	memset(&m_mc_val, 0, sizeof(m_mc_val));
 
 	mpu9150_init();
 	chThdSleepMilliseconds(1000);
@@ -104,6 +106,10 @@ void pos_set_xya(float x, float y, float angle) {
 	m_pos.px = x;
 	m_pos.py = y;
 	m_pos.yaw = angle;
+}
+
+void pos_get_mc_val(mc_values *v) {
+	*v = m_mc_val;
 }
 
 static void mpu9150_read(void) {
@@ -183,6 +189,8 @@ static void update_orientation_angles(float *accel, float *gyro, float *mag, flo
 }
 
 static void mc_values_received(mc_values *val) {
+	m_mc_val = *val;
+
 	m_pos.speed = val->rpm * main_config.gear_ratio
 			* (2.0 / main_config.motor_poles) * (1.0 / 60.0)
 			* main_config.wheel_diam * M_PI;

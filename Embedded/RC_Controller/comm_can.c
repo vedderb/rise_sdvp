@@ -25,6 +25,7 @@
 #include "crc.h"
 #include "packet.h"
 #include "bldc_interface.h"
+#include "commands.h"
 
 // Settings
 #define CANDx						CAND1
@@ -61,6 +62,7 @@ static const CANConfig cancfg = {
 
 // Private functions
 static void send_packet_wrapper(unsigned char *data, unsigned int len);
+static void printf_wrapper(char *str);
 
 void comm_can_init(void) {
 	for (int i = 0;i < CAN_STATUS_MSGS_TO_STORE;i++) {
@@ -78,6 +80,7 @@ void comm_can_init(void) {
 	canStart(&CANDx, &cancfg);
 
 	bldc_interface_init(send_packet_wrapper);
+	bldc_interface_set_rx_printf_func(printf_wrapper);
 
 	chThdCreateStatic(cancom_read_thread_wa, sizeof(cancom_read_thread_wa), NORMALPRIO + 1,
 			cancom_read_thread, NULL);
@@ -340,4 +343,8 @@ can_status_msg *comm_can_get_status_msg_id(int id) {
 
 static void send_packet_wrapper(unsigned char *data, unsigned int len) {
 	comm_can_send_buffer(VESC_ID, data, len, false);
+}
+
+static void printf_wrapper(char *str) {
+	commands_printf(str);
 }

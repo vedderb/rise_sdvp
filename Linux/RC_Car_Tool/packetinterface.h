@@ -37,12 +37,12 @@ public:
     void startUdpConnection(QHostAddress ip, int port);
     void stopUdpConnection();
     bool isUdpConnected();
-    void getPos(quint8 id);
+    void getState(quint8 id);
 
 signals:
     void dataToSend(QByteArray &data);
     void printReceived(quint8 id, QString str);
-    void posReceived(quint8 id, POS_STATE pos);
+    void stateReceived(quint8 id, CAR_STATE state);
     void vescFwdReceived(quint8 id, QByteArray data);
     
 public slots:

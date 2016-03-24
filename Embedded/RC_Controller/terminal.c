@@ -20,6 +20,7 @@
 #include "terminal.h"
 #include "commands.h"
 #include "utils.h"
+#include "bldc_interface.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -35,6 +36,8 @@ void terminal_process_string(char *str) {
 		argv[argc++] = p2;
 		p2 = strtok(0, " ");
 	}
+
+	static char buffer[256];
 
 	if (argc == 0) {
 		commands_printf("No command received\n");
@@ -63,6 +66,14 @@ void terminal_process_string(char *str) {
 			tp = chRegNextThread(tp);
 		} while (tp != NULL);
 		commands_printf(" ");
+	} else if (strcmp(argv[0], "vesc") == 0) {
+		buffer[0] = '\0';
+		int ind = 0;
+		for (int i = 1;i < argc;i++) {
+			sprintf(buffer + ind, " %s", argv[i]);
+			ind += strlen(argv[i]) + 1;
+		}
+		bldc_interface_terminal_cmd(buffer);
 	}
 
 	// The help command
@@ -78,7 +89,10 @@ void terminal_process_string(char *str) {
 		commands_printf("  Show memory usage");
 
 		commands_printf("threads");
-		commands_printf("  List all threads\n");
+		commands_printf("  List all threads");
+
+		commands_printf("vesc");
+		commands_printf("  Forward command to VESC\n");
 	} else {
 		commands_printf("Invalid command: %s\n"
 				"type help to list all available commands\n", argv[0]);

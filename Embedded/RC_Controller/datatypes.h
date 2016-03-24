@@ -76,7 +76,7 @@ typedef enum {
 // Commands
 typedef enum {
 	CMD_PRINTF = 0,
-	CMD_GET_SENSORS,
+	CMD_GET_STATE,
 	CMD_TERMINAL_CMD,
 	CMD_VESC_FWD,
 	CMD_RC_CONTROL,

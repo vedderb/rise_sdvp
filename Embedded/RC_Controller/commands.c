@@ -106,17 +106,19 @@ void commands_process_packet(unsigned char *data, unsigned int len) {
 
 	if (id == main_config.id || id == ID_ALL) {
 		switch (packet_id) {
-		case CMD_GET_SENSORS: {
+		case CMD_GET_STATE: {
 			POS_STATE pos;
+			mc_values mcval;
 			float accel[3];
 			float gyro[3];
 			float mag[3];
 
 			pos_get_imu(accel, gyro, mag);
 			pos_get_pos(&pos);
+			pos_get_mc_val(&mcval);
 			int32_t send_index = 0;
 			send_buffer[send_index++] = main_config.id;
-			send_buffer[send_index++] = CMD_GET_SENSORS;
+			send_buffer[send_index++] = CMD_GET_STATE;
 			buffer_append_float32(send_buffer, pos.roll, 1e6, &send_index);
 			buffer_append_float32(send_buffer, pos.pitch, 1e6, &send_index);
 			buffer_append_float32(send_buffer, pos.yaw, 1e6, &send_index);
@@ -136,6 +138,9 @@ void commands_process_packet(unsigned char *data, unsigned int len) {
 			buffer_append_float32(send_buffer, pos.px, 1e4, &send_index);
 			buffer_append_float32(send_buffer, pos.py, 1e4, &send_index);
 			buffer_append_float32(send_buffer, pos.speed, 1e6, &send_index);
+			buffer_append_float32(send_buffer, mcval.v_in, 1e6, &send_index);
+			buffer_append_float32(send_buffer, mcval.temp_mos1, 1e6, &send_index);
+			send_buffer[send_index++] = mcval.fault_code;
 			commands_send_packet(send_buffer, send_index);
 		} break;
 

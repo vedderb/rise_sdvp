@@ -28,6 +28,7 @@ void bldc_interface_process_packet(unsigned char *data, unsigned int len);
 
 // Function pointer setters
 void bldc_interface_set_rx_value_func(void(*func)(mc_values *values));
+void bldc_interface_set_rx_printf_func(void(*func)(char *str));
 void bldc_interface_set_rx_fw_func(void(*func)(int major, int minor));
 void bldc_interface_set_rx_rotor_pos_func(void(*func)(float pos));
 void bldc_interface_set_rx_mcconf_func(void(*func)(mc_configuration *conf));
@@ -41,6 +42,7 @@ void bldc_interface_set_rx_mcconf_received_func(void(*func)(void));
 void bldc_interface_set_rx_appconf_received_func(void(*func)(void));
 
 // Setters
+void bldc_interface_terminal_cmd(char* cmd);
 void bldc_interface_set_duty_cycle(float dutyCycle);
 void bldc_interface_set_current(float current);
 void bldc_interface_set_current_brake(float current);

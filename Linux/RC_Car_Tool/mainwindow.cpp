@@ -61,8 +61,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(mTimer, SIGNAL(timeout()), this, SLOT(timerSlot()));
     connect(mPacketInterface, SIGNAL(dataToSend(QByteArray&)),
             this, SLOT(packetDataToSend(QByteArray&)));
-    connect(mPacketInterface, SIGNAL(posReceived(quint8,POS_STATE)),
-            this, SLOT(posReceived(quint8,POS_STATE)));
+    connect(mPacketInterface, SIGNAL(stateReceived(quint8,CAR_STATE)),
+            this, SLOT(stateReceived(quint8,CAR_STATE)));
     connect(ui->mapWidget, SIGNAL(posSet(quint8,LocPoint)),
             this, SLOT(mapPosSet(quint8,LocPoint)));
 
@@ -169,22 +169,25 @@ void MainWindow::serialPortError(QSerialPort::SerialPortError error)
 
 void MainWindow::timerSlot()
 {
-    const double key_step = 0.02;
+    // Update throttle and steering from keys.
     if (mKeyUp) {
-        stepTowards(mThrottle, 1.0, key_step);
+        stepTowards(mThrottle, 1.0, ui->throttleGainBox->value());
     } else if (mKeyDown) {
-        stepTowards(mThrottle, -1.0, key_step);
+        stepTowards(mThrottle, -1.0, ui->throttleGainBox->value());
     } else {
-        stepTowards(mThrottle, 0.0, key_step);
+        stepTowards(mThrottle, 0.0, ui->throttleGainBox->value());
     }
 
     if (mKeyRight) {
-        stepTowards(mSteering, 1.0, key_step);
+        stepTowards(mSteering, 1.0, ui->steeringGainBox->value());
     } else if (mKeyLeft) {
-        stepTowards(mSteering, -1.0, key_step);
+        stepTowards(mSteering, -1.0, ui->steeringGainBox->value());
     } else {
-        stepTowards(mSteering, 0.0, key_step);
+        stepTowards(mSteering, 0.0, ui->steeringGainBox->value());
     }
+
+    ui->throttleBar->setValue(mThrottle * 100.0);
+    ui->steeringBar->setValue(mSteering * 100.0);
 
     // Notify about key events
     for(QList<CarInterface*>::Iterator it_car = mCars.begin();it_car < mCars.end();it_car++) {
@@ -206,12 +209,27 @@ void MainWindow::timerSlot()
         }
     }
 
-    // Poll data
+    // Poll data (one car per timeslot)
+    static int next_car = 0;
+    int ind = 0;
+    int largest = 0;
+    bool polled = false;
     for(QList<CarInterface*>::Iterator it_car = mCars.begin();it_car < mCars.end();it_car++) {
         CarInterface *car = *it_car;
-        if (car->pollData()) {
-            mPacketInterface->getPos(car->getId());
+        if (car->pollData() && ind >= next_car && !polled) {
+            mPacketInterface->getState(car->getId());
+            next_car = ind + 1;
+            polled = true;
         }
+
+        if (car->pollData() && ind > largest) {
+            largest = ind;
+        }
+
+        ind++;
+    }
+    if (next_car > largest) {
+        next_car = 0;
     }
 
     // Update map settings
@@ -228,6 +246,18 @@ void MainWindow::timerSlot()
     ui->mapWidget->setSelectedCar(ui->mapCarBox->value());
 }
 
+void MainWindow::showStatusInfo(QString info, bool isGood)
+{
+    if (isGood) {
+        mStatusLabel->setStyleSheet("QLabel { background-color : lightgreen; color : black; }");
+    } else {
+        mStatusLabel->setStyleSheet("QLabel { background-color : red; color : black; }");
+    }
+
+    mStatusInfoTime = 80;
+    mStatusLabel->setText(info);
+}
+
 void MainWindow::packetDataToSend(QByteArray &data)
 {
     if (mSerialPort->isOpen()) {
@@ -235,12 +265,12 @@ void MainWindow::packetDataToSend(QByteArray &data)
     }
 }
 
-void MainWindow::posReceived(quint8 id, POS_STATE pos)
+void MainWindow::stateReceived(quint8 id, CAR_STATE state)
 {
     for(QList<CarInterface*>::Iterator it_car = mCars.begin();it_car < mCars.end();it_car++) {
         CarInterface *car = *it_car;
         if (car->getId() == id) {
-            car->setPosData(pos);
+            car->setStateData(state);
         }
     }
 }
@@ -273,6 +303,7 @@ void MainWindow::on_carAddButton_clicked()
             mPacketInterface, SLOT(setRcControlCurrent(quint8,double,double)));
     connect(car, SIGNAL(setRcDuty(quint8,double,double)),
             mPacketInterface, SLOT(setRcControlDuty(quint8,double,double)));
+    connect(car, SIGNAL(showStatusInfo(QString,bool)), this, SLOT(showStatusInfo(QString,bool)));
 }
 
 void MainWindow::on_carRemoveButton_clicked()
@@ -345,18 +376,6 @@ void MainWindow::on_mapRemoveTraceButton_clicked()
 void MainWindow::on_MapRemovePixmapsButton_clicked()
 {
     ui->mapWidget->clearPerspectivePixmaps();
-}
-
-void MainWindow::showStatusInfo(QString info, bool isGood)
-{
-    if (isGood) {
-        mStatusLabel->setStyleSheet("QLabel { background-color : lightgreen; color : black; }");
-    } else {
-        mStatusLabel->setStyleSheet("QLabel { background-color : red; color : black; }");
-    }
-
-    mStatusInfoTime = 80;
-    mStatusLabel->setText(info);
 }
 
 void MainWindow::on_udpConnectButton_clicked()

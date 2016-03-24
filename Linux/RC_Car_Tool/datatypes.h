@@ -41,6 +41,16 @@ typedef struct {
 	int initialUpdateDone;
 } ATTITUDE_INFO;
 
+typedef enum {
+    FAULT_CODE_NONE = 0,
+    FAULT_CODE_OVER_VOLTAGE,
+    FAULT_CODE_UNDER_VOLTAGE,
+    FAULT_CODE_DRV8302,
+    FAULT_CODE_ABS_OVER_CURRENT,
+    FAULT_CODE_OVER_TEMP_FET,
+    FAULT_CODE_OVER_TEMP_MOTOR
+} mc_fault_code;
+
 typedef struct {
     double roll;
     double pitch;
@@ -52,7 +62,10 @@ typedef struct {
     double px;
     double py;
     double speed;
-} POS_STATE;
+    double vin;
+    double temp_fet;
+    mc_fault_code mc_fault;
+} CAR_STATE;
 
 typedef enum {
 	MOTE_PACKET_FILL_RX_BUFFER = 0,
@@ -63,7 +76,7 @@ typedef enum {
 
 typedef enum {
     CMD_PRINTF = 0,
-    CMD_GET_SENSORS,
+    CMD_GET_STATE,
     CMD_TERMINAL_CMD,
     CMD_VESC_FWD,
     CMD_RC_CONTROL,

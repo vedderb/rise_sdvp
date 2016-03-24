@@ -44,7 +44,7 @@ void conf_general_init(void) {
 
 	main_config.id = (~(palReadPort(GPIOE) >> 8)) & 0x0F;
 
-	// Default car parameters
+	// The default parameters
 	main_config.mag_cal_cx = 0.0;
 	main_config.mag_cal_cy = 0.0;
 	main_config.mag_cal_cz = 0.0;

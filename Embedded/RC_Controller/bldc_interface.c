@@ -56,6 +56,7 @@ static void(*forward_func)(unsigned char *data, unsigned int len) = 0;
 
 // Function pointers for received data
 static void(*rx_value_func)(mc_values *values) = 0;
+static void(*rx_printf_func)(char *str) = 0;
 static void(*rx_fw_func)(int major, int minor) = 0;
 static void(*rx_rotor_pos_func)(float pos) = 0;
 static void(*rx_mcconf_func)(mc_configuration *conf) = 0;
@@ -161,7 +162,10 @@ void bldc_interface_process_packet(unsigned char *data, unsigned int len) {
 		break;
 
 	case COMM_PRINT:
-		// TODO
+		if (rx_printf_func) {
+			data[len] = '\0';
+			rx_printf_func((char*)data);
+		}
 		break;
 
 	case COMM_SAMPLE_PRINT:
@@ -435,6 +439,10 @@ void bldc_interface_set_rx_value_func(void(*func)(mc_values *values)) {
 	rx_value_func = func;
 }
 
+void bldc_interface_set_rx_printf_func(void(*func)(char *str)) {
+	rx_printf_func = func;
+}
+
 void bldc_interface_set_rx_fw_func(void(*func)(int major, int minor)) {
 	rx_fw_func = func;
 }
@@ -477,6 +485,13 @@ void bldc_interface_set_rx_appconf_received_func(void(*func)(void)) {
 }
 
 // Setters
+void bldc_interface_terminal_cmd(char* cmd) {
+	int len = strlen(cmd);
+	send_buffer[0] = COMM_TERMINAL_CMD;
+	memcpy(send_buffer + 1, cmd, len);
+	send_packet_no_fwd(send_buffer, len + 1);
+}
+
 void bldc_interface_set_duty_cycle(float dutyCycle) {
 	int32_t send_index = 0;
 	send_buffer[send_index++] = COMM_SET_DUTY;

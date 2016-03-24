@@ -23,7 +23,7 @@ public:
     int getId();
     bool pollData();
     void setOrientation(double roll, double pitch, double yaw);
-    void setPosData(POS_STATE data);
+    void setStateData(CAR_STATE data);
     void setMap(MapWidget *map);
     void setKeyboardValues(double throttle, double steering);
 
@@ -32,6 +32,7 @@ signals:
     void forwardVesc(quint8 id, QByteArray data);
     void setRcCurrent(quint8 id, double current, double steering);
     void setRcDuty(quint8 id, double duty, double steering);
+    void showStatusInfo(QString str, bool isGood);
 
 private slots:
     void timerSlot();
