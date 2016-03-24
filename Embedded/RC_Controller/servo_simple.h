@@ -1,5 +1,5 @@
 /*
-	Copyright 2016 Benjamin Vedder	benjamin@vedder.se
+	Copyright 2012-2015 Benjamin Vedder	benjamin@vedder.se
 
 	This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -13,26 +13,21 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+    */
 
 /*
- * commands.h
+ * servo_simple.h
  *
- *  Created on: 11 mars 2016
+ *  Created on: 31 jul 2015
  *      Author: benjamin
  */
 
-#ifndef COMMANDS_H_
-#define COMMANDS_H_
-
-#include "conf_general.h"
+#ifndef SERVO_SIMPLE_H_
+#define SERVO_SIMPLE_H_
 
 // Functions
-void commands_init(void);
-void commands_set_send_func(void(*func)(unsigned char *data, unsigned int len));
-void commands_send_packet(unsigned char *data, unsigned int len);
-void commands_process_packet(unsigned char *data, unsigned int len);
-void commands_printf(char* format, ...);
-void commands_forward_vesc_packet(unsigned char *data, unsigned int len);
+void servo_simple_init(void);
+void servo_simple_set_output(float out);
+float servo_simple_get_pos_now(void);
 
-#endif /* COMMANDS_H_ */
+#endif /* SERVO_SIMPLE_H_ */

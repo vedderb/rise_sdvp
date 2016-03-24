@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QVector>
 #include <QTimer>
+#include <QUdpSocket>
 #include "datatypes.h"
 #include "mapwidget.h"
 
@@ -22,15 +23,19 @@ public:
     int getId();
     bool pollData();
     void setOrientation(double roll, double pitch, double yaw);
-    void setImuData(IMU_DATA data);
+    void setPosData(POS_STATE data);
     void setMap(MapWidget *map);
+    void setKeyboardValues(double throttle, double steering);
 
 signals:
     void terminalCmd(quint8 id, QString cmd);
     void forwardVesc(quint8 id, QByteArray data);
+    void setRcCurrent(quint8 id, double current, double steering);
+    void setRcDuty(quint8 id, double duty, double steering);
 
 private slots:
     void timerSlot();
+    void udpReadReady();
     void terminalPrint(quint8 id, QString str);
     void vescFwdReceived(quint8 id, QByteArray data);
 
@@ -40,6 +45,8 @@ private slots:
     void on_idBox_valueChanged(int arg1);
     void on_magSampleClearButton_clicked();
     void on_magSampleSaveButton_clicked();
+
+    void on_bldcToolUdpBox_toggled(bool checked);
 
 private:
     Ui::CarInterface *ui;
@@ -58,6 +65,9 @@ private:
     int mId;
     QVector<QVector<double> > mMagSamples;
     QTimer *mTimer;
+    QUdpSocket *mUdpSocket;
+    QHostAddress mLastHostAddress;
+    quint16 mUdpPort;
 
 };
 

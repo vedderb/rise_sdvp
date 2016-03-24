@@ -72,14 +72,8 @@ void comm_can_init(void) {
 
 	chMtxObjectInit(&can_mtx);
 
-	palSetPadMode(GPIOD, 0,
-			PAL_MODE_ALTERNATE(GPIO_AF_CAN1) |
-			PAL_STM32_OTYPE_PUSHPULL |
-			PAL_STM32_OSPEED_MID1);
-	palSetPadMode(GPIOD, 1,
-			PAL_MODE_ALTERNATE(GPIO_AF_CAN1) |
-			PAL_STM32_OTYPE_PUSHPULL |
-			PAL_STM32_OSPEED_MID1);
+	palSetPadMode(GPIOD, 0, PAL_MODE_ALTERNATE(GPIO_AF_CAN1));
+	palSetPadMode(GPIOD, 1, PAL_MODE_ALTERNATE(GPIO_AF_CAN1));
 
 	canStart(&CANDx, &cancfg);
 
@@ -253,7 +247,7 @@ void comm_can_send_buffer(uint8_t controller_id, uint8_t *data, unsigned int len
 
 	if (len <= 6) {
 		uint32_t ind = 0;
-		send_buffer[ind++] = main_config.id;
+		send_buffer[ind++] = main_config.id + 128;
 		send_buffer[ind++] = send;
 		memcpy(send_buffer + ind, data, len);
 		ind += len;
@@ -296,7 +290,7 @@ void comm_can_send_buffer(uint8_t controller_id, uint8_t *data, unsigned int len
 		}
 
 		uint32_t ind = 0;
-		send_buffer[ind++] = main_config.id;
+		send_buffer[ind++] = main_config.id + 128;
 		send_buffer[ind++] = send;
 		send_buffer[ind++] = len >> 8;
 		send_buffer[ind++] = len & 0xFF;
@@ -345,5 +339,5 @@ can_status_msg *comm_can_get_status_msg_id(int id) {
 }
 
 static void send_packet_wrapper(unsigned char *data, unsigned int len) {
-	comm_can_send_buffer(VESC_ID, data, len, true);
+	comm_can_send_buffer(VESC_ID, data, len, false);
 }

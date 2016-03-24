@@ -62,7 +62,7 @@ public:
 signals:
     void scaleChanged(double newScale);
     void offsetChanged(double newXOffset, double newYOffset);
-    void posSet(LocPoint pos);
+    void posSet(quint8 id, LocPoint pos);
 
 public slots:
     void paintTimerSlot();

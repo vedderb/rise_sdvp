@@ -47,6 +47,9 @@ static float dec_adc;
 static float dec_adc_voltage;
 static float dec_chuk;
 
+// Private functions
+void send_packet_no_fwd(unsigned char *data, unsigned int len);
+
 // Function pointers
 static void(*send_func)(unsigned char *data, unsigned int len) = 0;
 static void(*forward_func)(unsigned char *data, unsigned int len) = 0;
@@ -478,42 +481,42 @@ void bldc_interface_set_duty_cycle(float dutyCycle) {
 	int32_t send_index = 0;
 	send_buffer[send_index++] = COMM_SET_DUTY;
 	buffer_append_float32(send_buffer, dutyCycle, 100000.0, &send_index);
-	bldc_interface_send_packet(send_buffer, send_index);
+	send_packet_no_fwd(send_buffer, send_index);
 }
 
 void bldc_interface_set_current(float current) {
 	int32_t send_index = 0;
 	send_buffer[send_index++] = COMM_SET_CURRENT;
 	buffer_append_float32(send_buffer, current, 1000.0, &send_index);
-	bldc_interface_send_packet(send_buffer, send_index);
+	send_packet_no_fwd(send_buffer, send_index);
 }
 
 void bldc_interface_set_current_brake(float current) {
 	int32_t send_index = 0;
 	send_buffer[send_index++] = COMM_SET_CURRENT_BRAKE;
 	buffer_append_float32(send_buffer, current, 1000.0, &send_index);
-	bldc_interface_send_packet(send_buffer, send_index);
+	send_packet_no_fwd(send_buffer, send_index);
 }
 
 void bldc_interface_set_rpm(int rpm) {
 	int32_t send_index = 0;
 	send_buffer[send_index++] = COMM_SET_RPM;
 	buffer_append_int32(send_buffer, rpm, &send_index);
-	bldc_interface_send_packet(send_buffer, send_index);
+	send_packet_no_fwd(send_buffer, send_index);
 }
 
 void bldc_interface_set_pos(float pos) {
 	int32_t send_index = 0;
 	send_buffer[send_index++] = COMM_SET_POS;
 	buffer_append_float32(send_buffer, pos, 1000000.0, &send_index);
-	bldc_interface_send_packet(send_buffer, send_index);
+	send_packet_no_fwd(send_buffer, send_index);
 }
 
 void bldc_interface_set_servo_pos(float pos) {
 	int32_t send_index = 0;
 	send_buffer[send_index++] = COMM_SET_SERVO_POS;
 	buffer_append_float16(send_buffer, pos, 1000.0, &send_index);
-	bldc_interface_send_packet(send_buffer, send_index);
+	send_packet_no_fwd(send_buffer, send_index);
 }
 
 void bldc_interface_set_mcconf(const mc_configuration *mcconf) {
@@ -605,7 +608,7 @@ void bldc_interface_set_mcconf(const mc_configuration *mcconf) {
 	buffer_append_float32(send_buffer,mcconf->m_current_backoff_gain, 1000000, &send_index);
 	buffer_append_uint32(send_buffer, mcconf->m_encoder_counts, &send_index);
 
-	bldc_interface_send_packet(send_buffer, send_index);
+	send_packet_no_fwd(send_buffer, send_index);
 }
 
 void bldc_interface_set_appconf(const app_configuration *appconf) {
@@ -671,50 +674,50 @@ void bldc_interface_set_appconf(const app_configuration *appconf) {
 	send_index += 3;
 	send_buffer[send_index++] = appconf->app_nrf_conf.send_crc_ack;
 
-	bldc_interface_send_packet(send_buffer, send_index);
+	send_packet_no_fwd(send_buffer, send_index);
 }
 
 // Getters
 void bldc_interface_get_fw_version(void) {
 	int32_t send_index = 0;
 	send_buffer[send_index++] = COMM_FW_VERSION;
-	bldc_interface_send_packet(send_buffer, send_index);
+	send_packet_no_fwd(send_buffer, send_index);
 }
 
 void bldc_interface_get_values(void) {
 	int32_t send_index = 0;
 	send_buffer[send_index++] = COMM_GET_VALUES;
-	bldc_interface_send_packet(send_buffer, send_index);
+	send_packet_no_fwd(send_buffer, send_index);
 }
 
 void bldc_interface_get_mcconf(void) {
 	int32_t send_index = 0;
 	send_buffer[send_index++] = COMM_GET_MCCONF;
-	bldc_interface_send_packet(send_buffer, send_index);
+	send_packet_no_fwd(send_buffer, send_index);
 }
 
 void bldc_interface_get_appconf(void) {
 	int32_t send_index = 0;
 	send_buffer[send_index++] = COMM_GET_APPCONF;
-	bldc_interface_send_packet(send_buffer, send_index);
+	send_packet_no_fwd(send_buffer, send_index);
 }
 
 void bldc_interface_get_decoded_ppm(void) {
 	int32_t send_index = 0;
 	send_buffer[send_index++] = COMM_GET_DECODED_PPM;
-	bldc_interface_send_packet(send_buffer, send_index);
+	send_packet_no_fwd(send_buffer, send_index);
 }
 
 void bldc_interface_get_decoded_adc(void) {
 	int32_t send_index = 0;
 	send_buffer[send_index++] = COMM_GET_DECODED_ADC;
-	bldc_interface_send_packet(send_buffer, send_index);
+	send_packet_no_fwd(send_buffer, send_index);
 }
 
 void bldc_interface_get_decoded_chuk(void) {
 	int32_t send_index = 0;
 	send_buffer[send_index++] = COMM_GET_DECODED_CHUK;
-	bldc_interface_send_packet(send_buffer, send_index);
+	send_packet_no_fwd(send_buffer, send_index);
 }
 
 // Other functions
@@ -724,19 +727,19 @@ void bldc_interface_detect_motor_param(float current, float min_rpm, float low_d
 	buffer_append_float32(send_buffer, current, 1000.0, &send_index);
 	buffer_append_float32(send_buffer, min_rpm, 1000.0, &send_index);
 	buffer_append_float32(send_buffer, low_duty, 1000.0, &send_index);
-	bldc_interface_send_packet(send_buffer, send_index);
+	send_packet_no_fwd(send_buffer, send_index);
 }
 
 void bldc_interface_reboot(void) {
 	int32_t send_index = 0;
 	send_buffer[send_index++] = COMM_REBOOT;
-	bldc_interface_send_packet(send_buffer, send_index);
+	send_packet_no_fwd(send_buffer, send_index);
 }
 
 void bldc_interface_send_alive(void) {
 	int32_t send_index = 0;
 	send_buffer[send_index++] = COMM_ALIVE;
-	bldc_interface_send_packet(send_buffer, send_index);
+	send_packet_no_fwd(send_buffer, send_index);
 }
 
 // Helpers
@@ -750,5 +753,12 @@ const char* bldc_interface_fault_to_string(mc_fault_code fault) {
 	case FAULT_CODE_OVER_TEMP_FET: return "FAULT_CODE_OVER_TEMP_FET";
 	case FAULT_CODE_OVER_TEMP_MOTOR: return "FAULT_CODE_OVER_TEMP_MOTOR";
 	default: return "Unknown fault";
+	}
+}
+
+// Private functions
+void send_packet_no_fwd(unsigned char *data, unsigned int len) {
+	if (!forward_func) {
+		bldc_interface_send_packet(data, len);
 	}
 }

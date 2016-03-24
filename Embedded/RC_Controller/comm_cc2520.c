@@ -70,6 +70,8 @@ void comm_cc2520_init(void) {
 
 	basicRfReceiveOn();
 
+	chVTObjectInit(&vt);
+
 	chThdCreateStatic(rx_thread_wa, sizeof(rx_thread_wa),
 			NORMALPRIO, rx_thread, NULL);
 	chThdCreateStatic(tx_thread_wa, sizeof(tx_thread_wa),

@@ -51,16 +51,19 @@ float utils_calc_ratio(float low, float high, float val) {
 }
 
 /**
- * Make sure that 0 <= angle < 360
+ * Make sure that -180 <= angle < 180
  *
  * @param angle
- * The angle to normalize.
+ * The angle to normalize in degrees.
+ * WARNING: Don't use too large angles.
  */
 void utils_norm_angle(float *angle) {
-	*angle = fmodf(*angle, 360.0);
-
-	if (*angle < 0.0) {
+	while (*angle < -180.0) {
 		*angle += 360.0;
+	}
+
+	while (*angle >  180.0) {
+		*angle -= 360.0;
 	}
 }
 

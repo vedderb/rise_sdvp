@@ -42,6 +42,11 @@
 #define MAG_COMPENSATE				1 // Should be 0 when capturing samples for the calibration
 #define VESC_ID						ID_ALL // id, or ID_ALL for any VESC
 
+// Servo settings
+#define SERVO_OUT_RATE_HZ			50
+#define SERVO_OUT_PULSE_MIN_US		1000
+#define SERVO_OUT_PULSE_MAX_US		2000
+
 // Global variables
 extern MAIN_CONFIG main_config;
 

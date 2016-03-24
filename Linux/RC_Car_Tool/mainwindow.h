@@ -37,13 +37,15 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
+    bool eventFilter(QObject *object, QEvent *e);
 
 private slots:
     void serialDataAvailable();
     void serialPortError(QSerialPort::SerialPortError error);
     void timerSlot();
     void packetDataToSend(QByteArray &data);
-    void imuReceived(quint8 id, IMU_DATA imu);
+    void posReceived(quint8 id, POS_STATE pos);
+    void mapPosSet(quint8 id, LocPoint pos);
 
     void on_carAddButton_clicked();
     void on_carRemoveButton_clicked();
@@ -63,6 +65,12 @@ private:
     QList<CarInterface*> mCars;
     QLabel *mStatusLabel;
     int mStatusInfoTime;
+    bool mKeyUp;
+    bool mKeyDown;
+    bool mKeyRight;
+    bool mKeyLeft;
+    double mThrottle;
+    double mSteering;
 
     void showStatusInfo(QString info, bool isGood);
 };

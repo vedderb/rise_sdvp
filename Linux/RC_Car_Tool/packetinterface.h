@@ -37,12 +37,12 @@ public:
     void startUdpConnection(QHostAddress ip, int port);
     void stopUdpConnection();
     bool isUdpConnected();
-    void getImu(quint8 id);
+    void getPos(quint8 id);
 
 signals:
     void dataToSend(QByteArray &data);
     void printReceived(quint8 id, QString str);
-    void imuReceived(quint8 id, IMU_DATA imu);
+    void posReceived(quint8 id, POS_STATE pos);
     void vescFwdReceived(quint8 id, QByteArray data);
     
 public slots:
@@ -50,6 +50,9 @@ public slots:
     void readPendingDatagrams();
     void sendTerminalCmd(quint8 id, QString cmd);
     void forwardVesc(quint8 id, QByteArray data);
+    void setRcControlCurrent(quint8 id, double duty, double steering);
+    void setRcControlDuty(quint8 id, double duty, double steering);
+    void setPos(quint8 id, double x, double y, double angle);
 
 private:
     unsigned short crc16(const unsigned char *buf, unsigned int len);

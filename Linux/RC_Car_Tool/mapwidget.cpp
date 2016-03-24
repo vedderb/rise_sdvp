@@ -462,7 +462,7 @@ void MapWidget::mousePressEvent(QMouseEvent *e)
                 QPoint p = getMousePosRelative();
                 pos.setXY(p.x() / 1000.0, p.y() / 1000.0);
                 carInfo.setLocation(pos);
-                emit posSet(pos);
+                emit posSet(mSelectedCar, pos);
                 repaintAfterEvents();
             }
         }
@@ -489,7 +489,7 @@ void MapWidget::wheelEvent(QWheelEvent *e)
                 normalizeAngleRad(angle);
                 pos.setAlpha(angle);
                 carInfo.setLocation(pos);
-                emit posSet(pos);
+                emit posSet(mSelectedCar, pos);
                 repaintAfterEvents();
             }
         }

@@ -2,6 +2,7 @@
 #include "ui_carinterface.h"
 #include "carinfo.h"
 #include <QFileDialog>
+#include <QMessageBox>
 
 CarInterface::CarInterface(QWidget *parent) :
     QWidget(parent),
@@ -36,7 +37,12 @@ CarInterface::CarInterface(QWidget *parent) :
     mTimer = new QTimer(this);
     mTimer->start(20);
 
+    mUdpSocket = new QUdpSocket(this);
+    mLastHostAddress.clear();
+    mUdpPort = 27800;
+
     connect(mTimer, SIGNAL(timeout()), this, SLOT(timerSlot()));
+    connect(mUdpSocket, SIGNAL(readyRead()), this, SLOT(udpReadReady()));
 }
 
 CarInterface::~CarInterface()
@@ -71,7 +77,7 @@ void CarInterface::setOrientation(double roll, double pitch, double yaw)
     ui->orientationWidget->setRollPitchYaw(roll, pitch, yaw);
 }
 
-void CarInterface::setImuData(IMU_DATA data)
+void CarInterface::setPosData(POS_STATE data)
 {
     accelXData.append(data.accel[0]);
     accelXData.remove(0, 1);
@@ -151,16 +157,20 @@ void CarInterface::setImuData(IMU_DATA data)
     ui->magPlot->legend->setVisible(true);
     ui->magPlot->replot();
 
+    ui->speedBar->setValue(fabs(data.speed) * 3.6);
     setOrientation(data.roll, data.pitch, data.yaw);
     //ui->orientationWidget->setQuanternions(data.q[0], data.q[1], data.q[2], data.q[3]);
     //ui->rollBar->setValue(data.roll);
     //ui->pitchBar->setValue(data.pitch);
     //ui->yawBar->setValue(data.yaw);
 
+
     if (mMap) {
         CarInfo *car = mMap->getCarInfo(mId);
         LocPoint loc = car->getLocation();
         loc.setAlpha(data.yaw * M_PI / 180.0);
+        loc.setX(data.px);
+        loc.setY(data.py);
         car->setLocation(loc);
         mMap->repaintAfterEvents();
     }
@@ -182,6 +192,17 @@ void CarInterface::setMap(MapWidget *map)
     mMap->addCar(car);
 }
 
+void CarInterface::setKeyboardValues(double throttle, double steering)
+{
+    if (ui->keyboardControlBox->isChecked()) {
+        if (fabs(throttle) < 0.01) {
+            emit setRcCurrent(mId, 0.0, steering);
+        } else {
+            emit setRcDuty(mId, throttle * 0.15, steering);
+        }
+    }
+}
+
 void CarInterface::timerSlot()
 {
     // Update mag sample label
@@ -190,6 +211,22 @@ void CarInterface::timerSlot()
         ui->magSampleLabel->setText(QString::number(mMagSamples.size()) + " Samples");
     }
     lastMagSamples = mMagSamples.size();
+}
+
+void CarInterface::udpReadReady()
+{
+    while (mUdpSocket->hasPendingDatagrams()) {
+        QByteArray datagram;
+        datagram.resize(mUdpSocket->pendingDatagramSize());
+        QHostAddress sender;
+        quint16 senderPort;
+
+        mUdpSocket->readDatagram(datagram.data(), datagram.size(),
+                                 &sender, &senderPort);
+        mLastHostAddress = sender;
+
+        emit forwardVesc(mId, datagram);
+    }
 }
 
 void CarInterface::terminalPrint(quint8 id, QString str)
@@ -201,7 +238,9 @@ void CarInterface::terminalPrint(quint8 id, QString str)
 
 void CarInterface::vescFwdReceived(quint8 id, QByteArray data)
 {
-
+    if (id == mId && QString::compare(mLastHostAddress.toString(), "0.0.0.0") != 0) {
+        mUdpSocket->writeDatagram(data, mLastHostAddress, mUdpPort + 1);
+    }
 }
 
 void CarInterface::on_terminalSendButton_clicked()
@@ -254,4 +293,19 @@ void CarInterface::on_magSampleSaveButton_clicked()
     }
 
     file.close();
+}
+
+void CarInterface::on_bldcToolUdpBox_toggled(bool checked)
+{
+    if (checked) {
+        if (!mUdpSocket->bind(QHostAddress::Any, mUdpPort)) {
+            qWarning() << "Binding UDP socket failed.";
+            QMessageBox::warning(this, "UDP Server Error",
+                                 "Creating UDP server failed. Make sure that the port is not "
+                                 "already in use.");
+            ui->bldcToolUdpBox->setChecked(false);
+        }
+    } else {
+        mUdpSocket->close();
+    }
 }

@@ -140,7 +140,8 @@ CSRC = $(STARTUPSRC) \
        pos.c \
        terminal.c \
        comm_can.c \
-       bldc_interface.c
+       bldc_interface.c \
+       servo_simple.c
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.

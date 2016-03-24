@@ -16,19 +16,23 @@
  */
 
 #include <math.h>
+#include <string.h>
 #include "ch.h"
 #include "hal.h"
 #include "stm32f4xx_conf.h"
 #include "led.h"
 #include "mpu9150.h"
 #include "MahonyAHRS.h"
+#include "bldc_interface.h"
+#include "utils.h"
+#include "servo_simple.h"
 
 // Defines
 #define ITERATION_TIMER_FREQ			50000
 
 // Private variables
 static ATTITUDE_INFO m_att;
-static float m_roll_now, m_pitch_now, m_yaw_now;
+static POS_STATE m_pos;
 static bool m_attitude_init_done;
 static float m_accel[3];
 static float m_gyro[3];
@@ -37,10 +41,12 @@ static float m_mag[3];
 // Private functions
 static void mpu9150_read(void);
 static void update_orientation_angles(float *accel, float *gyro, float *mag, float dt);
+static void mc_values_received(mc_values *val);
 
 void pos_init(void) {
 	MahonyAHRSInitAttitudeInfo(&m_att);
 	m_attitude_init_done = false;
+	memset(&m_pos, 0, sizeof(m_pos));
 
 	mpu9150_init();
 	chThdSleepMilliseconds(1000);
@@ -60,15 +66,10 @@ void pos_init(void) {
 	TIM_Cmd(TIM6, ENABLE);
 
 	mpu9150_set_read_callback(mpu9150_read);
+	bldc_interface_set_rx_value_func(mc_values_received);
 }
 
-void pos_get_attitude(float *rpy, float *accel, float *gyro, float *mag) {
-	if (rpy) {
-		rpy[0] = m_roll_now;
-		rpy[1] = m_pitch_now;
-		rpy[2] = m_yaw_now;
-	}
-
+void pos_get_imu(float *accel, float *gyro, float *mag) {
 	if (accel) {
 		accel[0] = m_accel[0];
 		accel[1] = m_accel[1];
@@ -89,10 +90,20 @@ void pos_get_attitude(float *rpy, float *accel, float *gyro, float *mag) {
 }
 
 void pos_get_quaternions(float *q) {
-	q[0] = m_att.q0;
-	q[1] = m_att.q1;
-	q[2] = m_att.q2;
-	q[3] = m_att.q3;
+	q[0] = m_pos.q0;
+	q[1] = m_pos.q1;
+	q[2] = m_pos.q2;
+	q[3] = m_pos.q3;
+}
+
+void pos_get_pos(POS_STATE *p) {
+	*p = m_pos;
+}
+
+void pos_set_xya(float x, float y, float angle) {
+	m_pos.px = x;
+	m_pos.py = y;
+	m_pos.yaw = angle;
 }
 
 static void mpu9150_read(void) {
@@ -103,6 +114,14 @@ static void mpu9150_read(void) {
 	TIM6->CNT = 0;
 
 	update_orientation_angles(accel, gyro, mag, dt);
+
+	// Read MC values every 10 iterations (should be 100 Hz)
+	static int mc_read_cnt = 0;
+	mc_read_cnt++;
+	if (mc_read_cnt >= 10) {
+		mc_read_cnt = 0;
+		bldc_interface_get_values();
+	}
 }
 
 static void update_orientation_angles(float *accel, float *gyro, float *mag, float dt) {
@@ -130,14 +149,86 @@ static void update_orientation_angles(float *accel, float *gyro, float *mag, flo
 		MahonyAHRSupdateInitialOrientation(accel, mag_tmp, (ATTITUDE_INFO*)&m_att);
 		m_attitude_init_done = true;
 	} else {
-		if (mpu9150_mag_updated() && fabsf(m_roll_now) < 25.0 && fabsf(m_pitch_now) < 25.0) {
+		if (mpu9150_mag_updated()) {
 			MahonyAHRSupdate(gyro, accel, mag_tmp, dt, (ATTITUDE_INFO*)&m_att);
 		} else {
 			MahonyAHRSupdateIMU(gyro, accel, dt, (ATTITUDE_INFO*)&m_att);
 		}
 	}
 
-	m_roll_now = MahonyAHRSGetRoll((ATTITUDE_INFO*)&m_att) * 180 / M_PI;// - roll_offset;
-	m_pitch_now = MahonyAHRSGetPitch((ATTITUDE_INFO*)&m_att) * 180 / M_PI;// - pitch_offset;
-	m_yaw_now = MahonyAHRSGetYaw((ATTITUDE_INFO*)&m_att) * 180 / M_PI;// - yaw_offset;
+	m_pos.roll = MahonyAHRSGetRoll((ATTITUDE_INFO*)&m_att) * 180.0 / M_PI;// - roll_offset;
+	m_pos.pitch = MahonyAHRSGetPitch((ATTITUDE_INFO*)&m_att) * 180.0 / M_PI;// - pitch_offset;
+	const float yaw = MahonyAHRSGetYaw((ATTITUDE_INFO*)&m_att) * 180.0 / M_PI;// - yaw_offset;
+	m_pos.roll_rate = -gyro[0] * 180.0 / M_PI;
+	m_pos.pitch_rate = gyro[1] * 180.0 / M_PI;
+	m_pos.yaw_rate = -gyro[2] * 180.0 / M_PI;
+
+	// Correct yaw
+	if (main_config.yaw_imu_gain > 1e-10) {
+		float ang_diff = utils_angle_difference(m_pos.yaw, yaw);
+
+		if (ang_diff > 1.2 * main_config.yaw_imu_gain) {
+			m_pos.yaw -= main_config.yaw_imu_gain;
+			utils_norm_angle(&m_pos.yaw);
+		} else if (ang_diff < -1.2 * main_config.yaw_imu_gain) {
+			m_pos.yaw += main_config.yaw_imu_gain;
+			utils_norm_angle(&m_pos.yaw);
+		}
+	}
+
+	m_pos.q0 = m_att.q0;
+	m_pos.q1 = m_att.q1;
+	m_pos.q2 = m_att.q2;
+	m_pos.q3 = m_att.q3;
+}
+
+static void mc_values_received(mc_values *val) {
+	m_pos.speed = val->rpm * main_config.gear_ratio
+			* (2.0 / main_config.motor_poles) * (1.0 / 60.0)
+			* main_config.wheel_diam * M_PI;
+
+	static int32_t last_tacho = 0;
+
+	// Reset tacho the first time.
+	static bool tacho_read = false;
+	if (!tacho_read) {
+		tacho_read = true;
+		last_tacho = val->tachometer;
+	}
+
+	float distance = (float)(val->tachometer - last_tacho) * main_config.gear_ratio
+			* (2.0 / main_config.motor_poles) * (1.0 / 6.0) * main_config.wheel_diam * M_PI;
+	last_tacho = val->tachometer;
+
+	float steering_angle = (servo_simple_get_pos_now()
+			- main_config.steering_center)
+			* ((2.0 * main_config.steering_max_angle_rad)
+					/ (main_config.steering_left - main_config.steering_right));
+
+	if (fabsf(distance) > 1e-6) {
+		float angle_rad = -m_pos.yaw * M_PI / 180.0;
+
+		if (fabsf(steering_angle) < 0.00001) {
+			m_pos.px += cosf(angle_rad) * distance;
+			m_pos.py += sinf(angle_rad) * distance;
+		} else {
+			const float turn_rad_rear = main_config.axis_distance / tanf(steering_angle);
+			float turn_rad_front = sqrtf(
+					main_config.axis_distance * main_config.axis_distance
+					+ turn_rad_rear * turn_rad_rear);
+
+			if (turn_rad_rear < 0) {
+				turn_rad_front = -turn_rad_front;
+			}
+
+			const float angle_diff = (distance * 2.0) / (turn_rad_rear + turn_rad_front);
+
+			m_pos.px += turn_rad_rear * (sinf(angle_rad + angle_diff) - sinf(angle_rad));
+			m_pos.py += turn_rad_rear * (cosf(angle_rad - angle_diff) - cosf(angle_rad));
+			angle_rad += angle_diff;
+			utils_norm_angle_rad(&angle_rad);
+
+			m_pos.yaw = -angle_rad * 180.0 / M_PI;
+		}
+	}
 }

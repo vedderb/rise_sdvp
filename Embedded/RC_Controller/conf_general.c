@@ -44,7 +44,31 @@ void conf_general_init(void) {
 
 	main_config.id = (~(palReadPort(GPIOE) >> 8)) & 0x0F;
 
-	// Magnetometer compensation
+	// Default car parameters
+	main_config.mag_cal_cx = 0.0;
+	main_config.mag_cal_cy = 0.0;
+	main_config.mag_cal_cz = 0.0;
+	main_config.mag_cal_xx = 1.0;
+	main_config.mag_cal_xy = 0.0;
+	main_config.mag_cal_xz = 0.0;
+	main_config.mag_cal_yx = 0.0;
+	main_config.mag_cal_yy = 1.0;
+	main_config.mag_cal_yz = 0.0;
+	main_config.mag_cal_zx = 0.0;
+	main_config.mag_cal_zy = 0.0;
+	main_config.mag_cal_zz = 1.0;
+
+	main_config.gear_ratio = (1.0 / 3.0) * (21.0 / 37.0);
+	main_config.wheel_diam = 0.12;
+	main_config.motor_poles = 4.0;
+	main_config.steering_max_angle_rad = 0.4; // TODO!
+	main_config.steering_center = 0.5; // TODO!
+	main_config.steering_left = 0.75; // TODO!
+	main_config.steering_right = 0.25; // TODO!
+	main_config.axis_distance = 0.475;
+	main_config.yaw_imu_gain = 0.0; // 3e-3?
+
+	// Custom parameters based on car ID
 	switch (main_config.id) {
 	case 0:
 		main_config.mag_cal_cx = 6.67419;
@@ -65,21 +89,6 @@ void conf_general_init(void) {
 		break;
 
 	default:
-		main_config.mag_cal_cx = 0.0;
-		main_config.mag_cal_cy = 0.0;
-		main_config.mag_cal_cz = 0.0;
-
-		main_config.mag_cal_xx = 1.0;
-		main_config.mag_cal_xy = 0.0;
-		main_config.mag_cal_xz = 0.0;
-
-		main_config.mag_cal_yx = 0.0;
-		main_config.mag_cal_yy = 1.0;
-		main_config.mag_cal_yz = 0.0;
-
-		main_config.mag_cal_zx = 0.0;
-		main_config.mag_cal_zy = 0.0;
-		main_config.mag_cal_zz = 1.0;
 		break;
 	}
 }

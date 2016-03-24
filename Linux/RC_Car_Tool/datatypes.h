@@ -49,7 +49,10 @@ typedef struct {
     double gyro[3];
     double mag[3];
     double q[4];
-} IMU_DATA;
+    double px;
+    double py;
+    double speed;
+} POS_STATE;
 
 typedef enum {
 	MOTE_PACKET_FILL_RX_BUFFER = 0,
@@ -60,13 +63,18 @@ typedef enum {
 
 typedef enum {
     CMD_PRINTF = 0,
-    CMD_GET_IMU,
+    CMD_GET_SENSORS,
     CMD_TERMINAL_CMD,
-    CMD_VESC_FWD
+    CMD_VESC_FWD,
+    CMD_RC_CONTROL,
+    CMD_SET_POS
 } CMD_PACKET;
 
-typedef struct {
-	int id;
-} MAIN_CONFIG;
+// RC control modes
+typedef enum {
+    RC_MODE_CURRENT = 0,
+    RC_MODE_DUTY,
+    RC_MODE_PID
+} RC_MODE;
 
 #endif /* DATATYPES_H_ */

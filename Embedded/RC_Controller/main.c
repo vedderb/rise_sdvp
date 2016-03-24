@@ -37,20 +37,21 @@
 #include "packet.h"
 #include "pos.h"
 #include "comm_can.h"
+#include "servo_simple.h"
 
 /*
- * TODO: Update this...
- *
  * Timers used:
  * TIM6: Pos
+ * TIM3: servo_simple
  *
  * DMA/Stream	Device		Usage
- * 2, 4			ADC1		Battery voltage measurement
- * 1, 0			I2C1		MPU9150
- * 1, 6			I2C1		MPU9150
+ * 2, 4			ADC1		adconv
+ * 1, 0			I2C1		I2C Port
+ * 1, 6			I2C1		I2C Port
+ * 1, 2			I2C2		MPU9150
+ * 1, 7			I2C2		MPU9150
  * 1, 3			SPI2		CC2520
  * 1, 4			SPI2		CC2520
- * 1, 7			TIM4		WS2811 LEDs
  *
  */
 
@@ -65,13 +66,10 @@ int main(void) {
 	ext_cb_init();
 	pos_init();
 	comm_cc2520_init();
+	commands_init();
 	commands_set_send_func(comm_cc2520_send_buffer);
 	comm_can_init();
-
-//	for(;;) {
-//		commands_printf("Hello World\n");
-//		chThdSleepMilliseconds(500);
-//	}
+	servo_simple_init();
 
 	for(;;) {
 		chThdSleepMilliseconds(2);

@@ -19,6 +19,25 @@
 #include "ui_mainwindow.h"
 #include <QSerialPortInfo>
 #include <QDebug>
+#include <cmath>
+
+namespace {
+void stepTowards(double &value, double goal, double step) {
+    if (value < goal) {
+        if ((value + step) < goal) {
+            value += step;
+        } else {
+            value = goal;
+        }
+    } else if (value > goal) {
+        if ((value - step) > goal) {
+            value -= step;
+        } else {
+            value = goal;
+        }
+    }
+}
+}
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -42,10 +61,14 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(mTimer, SIGNAL(timeout()), this, SLOT(timerSlot()));
     connect(mPacketInterface, SIGNAL(dataToSend(QByteArray&)),
             this, SLOT(packetDataToSend(QByteArray&)));
-    connect(mPacketInterface, SIGNAL(imuReceived(quint8,IMU_DATA)),
-            this, SLOT(imuReceived(quint8,IMU_DATA)));
+    connect(mPacketInterface, SIGNAL(posReceived(quint8,POS_STATE)),
+            this, SLOT(posReceived(quint8,POS_STATE)));
+    connect(ui->mapWidget, SIGNAL(posSet(quint8,LocPoint)),
+            this, SLOT(mapPosSet(quint8,LocPoint)));
 
     on_serialRefreshButton_clicked();
+
+    qApp->installEventFilter(this);
 }
 
 MainWindow::~MainWindow()
@@ -60,6 +83,42 @@ MainWindow::~MainWindow()
     }
 
     delete ui;
+}
+
+bool MainWindow::eventFilter(QObject *object, QEvent *e)
+{
+    Q_UNUSED(object);
+
+    if (e->type() == QEvent::KeyPress || e->type() == QEvent::KeyRelease) {
+        QKeyEvent *keyEvent = static_cast<QKeyEvent *>(e);
+        bool isPress = e->type() == QEvent::KeyPress;
+
+        switch(keyEvent->key()) {
+        case Qt::Key_Up:
+        case Qt::Key_Down:
+        case Qt::Key_Left:
+        case Qt::Key_Right:
+            break;
+
+        default:
+            return false;
+        }
+
+        switch(keyEvent->key()) {
+        case Qt::Key_Up: mKeyUp = isPress; break;
+        case Qt::Key_Down: mKeyDown = isPress; break;
+        case Qt::Key_Left: mKeyLeft = isPress; break;
+        case Qt::Key_Right: mKeyRight = isPress; break;
+
+        default:
+            break;
+        }
+
+        // Return true to not pass the key event on
+        return true;
+    }
+
+    return false;
 }
 
 void MainWindow::serialDataAvailable()
@@ -110,6 +169,29 @@ void MainWindow::serialPortError(QSerialPort::SerialPortError error)
 
 void MainWindow::timerSlot()
 {
+    const double key_step = 0.02;
+    if (mKeyUp) {
+        stepTowards(mThrottle, 1.0, key_step);
+    } else if (mKeyDown) {
+        stepTowards(mThrottle, -1.0, key_step);
+    } else {
+        stepTowards(mThrottle, 0.0, key_step);
+    }
+
+    if (mKeyRight) {
+        stepTowards(mSteering, 1.0, key_step);
+    } else if (mKeyLeft) {
+        stepTowards(mSteering, -1.0, key_step);
+    } else {
+        stepTowards(mSteering, 0.0, key_step);
+    }
+
+    // Notify about key events
+    for(QList<CarInterface*>::Iterator it_car = mCars.begin();it_car < mCars.end();it_car++) {
+        CarInterface *car = *it_car;
+        car->setKeyboardValues(mThrottle, mSteering);
+    }
+
     // Update status label
     if (mStatusInfoTime) {
         mStatusInfoTime--;
@@ -128,7 +210,7 @@ void MainWindow::timerSlot()
     for(QList<CarInterface*>::Iterator it_car = mCars.begin();it_car < mCars.end();it_car++) {
         CarInterface *car = *it_car;
         if (car->pollData()) {
-            mPacketInterface->getImu(car->getId());
+            mPacketInterface->getPos(car->getId());
         }
     }
 
@@ -153,14 +235,19 @@ void MainWindow::packetDataToSend(QByteArray &data)
     }
 }
 
-void MainWindow::imuReceived(quint8 id, IMU_DATA imu)
+void MainWindow::posReceived(quint8 id, POS_STATE pos)
 {
     for(QList<CarInterface*>::Iterator it_car = mCars.begin();it_car < mCars.end();it_car++) {
         CarInterface *car = *it_car;
         if (car->getId() == id) {
-            car->setImuData(imu);
+            car->setPosData(pos);
         }
     }
+}
+
+void MainWindow::mapPosSet(quint8 id, LocPoint pos)
+{
+    mPacketInterface->setPos(id, pos.getX(), pos.getY(), pos.getAlpha() * 180.0 / M_PI);
 }
 
 void MainWindow::on_carAddButton_clicked()
@@ -182,6 +269,10 @@ void MainWindow::on_carAddButton_clicked()
             mPacketInterface, SLOT(forwardVesc(quint8,QByteArray)));
     connect(mPacketInterface, SIGNAL(vescFwdReceived(quint8,QByteArray)),
             car, SLOT(vescFwdReceived(quint8,QByteArray)));
+    connect(car, SIGNAL(setRcCurrent(quint8,double,double)),
+            mPacketInterface, SLOT(setRcControlCurrent(quint8,double,double)));
+    connect(car, SIGNAL(setRcDuty(quint8,double,double)),
+            mPacketInterface, SLOT(setRcControlDuty(quint8,double,double)));
 }
 
 void MainWindow::on_carRemoveButton_clicked()

@@ -41,6 +41,22 @@ typedef struct {
 	int initialUpdateDone;
 } ATTITUDE_INFO;
 
+typedef struct {
+	float px; // Meters
+	float py; // Meters
+	float speed; // Meters / second
+	float roll; // Degrees
+	float pitch; // Degrees
+	float yaw; // Degrees
+	float roll_rate; // Degrees / second
+	float pitch_rate; // Degrees / second
+	float yaw_rate; // Degrees / second
+	float q0;
+	float q1;
+	float q2;
+	float q3;
+} POS_STATE;
+
 typedef enum {
 	MOTE_PACKET_FILL_RX_BUFFER = 0,
 	MOTE_PACKET_FILL_RX_BUFFER_LONG,
@@ -57,24 +73,28 @@ typedef enum {
 	CAN_PACKET_STATUS
 } CAN_PACKET_ID;
 
-// CAN status sent by VESC
-typedef struct {
-	int id;
-	uint32_t rx_time;
-	float rpm;
-	float current;
-	float duty;
-} can_status_msg;
-
+// Commands
 typedef enum {
 	CMD_PRINTF = 0,
-	CMD_GET_IMU,
+	CMD_GET_SENSORS,
 	CMD_TERMINAL_CMD,
-	CMD_VESC_FWD
+	CMD_VESC_FWD,
+	CMD_RC_CONTROL,
+	CMD_SET_POS
 } CMD_PACKET;
 
+// RC control modes
+typedef enum {
+	RC_MODE_CURRENT = 0,
+	RC_MODE_DUTY,
+	RC_MODE_PID
+} RC_MODE;
+
+// Car configuration
 typedef struct {
 	int id;
+
+	// Magnetometer calibration
 	float mag_cal_cx;
 	float mag_cal_cy;
 	float mag_cal_cz;
@@ -87,9 +107,29 @@ typedef struct {
 	float mag_cal_zx;
 	float mag_cal_zy;
 	float mag_cal_zz;
+
+	// Car parameters
+	float gear_ratio;
+	float wheel_diam;
+	float motor_poles;
+	float steering_max_angle_rad; // = arctan(axist_distance / turn_radius_at_maximum_steering_angle)
+	float steering_center;
+	float steering_left;
+	float steering_right;
+	float axis_distance;
+	float yaw_imu_gain;
 } MAIN_CONFIG;
 
 // ============== VESC Datatypes ================== //
+
+// CAN status sent by VESC
+typedef struct {
+	int id;
+	uint32_t rx_time;
+	float rpm;
+	float current;
+	float duty;
+} can_status_msg;
 
 typedef enum {
 	PWM_MODE_NONSYNCHRONOUS_HISW = 0, // This mode is not recommended
@@ -148,7 +188,7 @@ typedef struct {
     float amp_hours_charged;
     float watt_hours;
     float watt_hours_charged;
-    int tachometer;
+    int32_t tachometer;
     int tachometer_abs;
     mc_fault_code fault_code;
 } mc_values;

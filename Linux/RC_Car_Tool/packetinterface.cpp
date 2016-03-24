@@ -264,27 +264,30 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         emit printReceived(id, QString::fromLatin1(tmpArray));
     } break;
 
-    case CMD_GET_IMU: {
-        IMU_DATA imu;
+    case CMD_GET_SENSORS: {
+        POS_STATE pos;
         int32_t ind = 0;
 
-        imu.roll = utility::buffer_get_double32(data, 1e6, &ind);
-        imu.pitch = utility::buffer_get_double32(data, 1e6, &ind);
-        imu.yaw = utility::buffer_get_double32(data, 1e6, &ind);
-        imu.accel[0] = utility::buffer_get_double32(data, 1e6, &ind);
-        imu.accel[1] = utility::buffer_get_double32(data, 1e6, &ind);
-        imu.accel[2] = utility::buffer_get_double32(data, 1e6, &ind);
-        imu.gyro[0] = utility::buffer_get_double32(data, 1e6, &ind);
-        imu.gyro[1] = utility::buffer_get_double32(data, 1e6, &ind);
-        imu.gyro[2] = utility::buffer_get_double32(data, 1e6, &ind);
-        imu.mag[0] = utility::buffer_get_double32(data, 1e6, &ind);
-        imu.mag[1] = utility::buffer_get_double32(data, 1e6, &ind);
-        imu.mag[2] = utility::buffer_get_double32(data, 1e6, &ind);
-        imu.q[0] = utility::buffer_get_double32(data, 1e8, &ind);
-        imu.q[1] = utility::buffer_get_double32(data, 1e8, &ind);
-        imu.q[2] = utility::buffer_get_double32(data, 1e8, &ind);
-        imu.q[3] = utility::buffer_get_double32(data, 1e8, &ind);
-        emit imuReceived(id, imu);
+        pos.roll = utility::buffer_get_double32(data, 1e6, &ind);
+        pos.pitch = utility::buffer_get_double32(data, 1e6, &ind);
+        pos.yaw = utility::buffer_get_double32(data, 1e6, &ind);
+        pos.accel[0] = utility::buffer_get_double32(data, 1e6, &ind);
+        pos.accel[1] = utility::buffer_get_double32(data, 1e6, &ind);
+        pos.accel[2] = utility::buffer_get_double32(data, 1e6, &ind);
+        pos.gyro[0] = utility::buffer_get_double32(data, 1e6, &ind);
+        pos.gyro[1] = utility::buffer_get_double32(data, 1e6, &ind);
+        pos.gyro[2] = utility::buffer_get_double32(data, 1e6, &ind);
+        pos.mag[0] = utility::buffer_get_double32(data, 1e6, &ind);
+        pos.mag[1] = utility::buffer_get_double32(data, 1e6, &ind);
+        pos.mag[2] = utility::buffer_get_double32(data, 1e6, &ind);
+        pos.q[0] = utility::buffer_get_double32(data, 1e8, &ind);
+        pos.q[1] = utility::buffer_get_double32(data, 1e8, &ind);
+        pos.q[2] = utility::buffer_get_double32(data, 1e8, &ind);
+        pos.q[3] = utility::buffer_get_double32(data, 1e8, &ind);
+        pos.px = utility::buffer_get_double32(data, 1e4, &ind);
+        pos.py = utility::buffer_get_double32(data, 1e4, &ind);
+        pos.speed = utility::buffer_get_double32(data, 1e6, &ind);
+        emit posReceived(id, pos);
     } break;
 
     case CMD_VESC_FWD:
@@ -316,11 +319,11 @@ bool PacketInterface::isUdpConnected()
     return QString::compare(mHostAddress.toString(), "0.0.0.0") != 0;
 }
 
-void PacketInterface::getImu(quint8 id)
+void PacketInterface::getPos(quint8 id)
 {
     QByteArray packet;
     packet.append(id);
-    packet.append(CMD_GET_IMU);
+    packet.append(CMD_GET_SENSORS);
     sendPacket(packet);
 }
 
@@ -342,4 +345,37 @@ void PacketInterface::forwardVesc(quint8 id, QByteArray data)
     packet.append((char)CMD_VESC_FWD);
     packet.append(data);
     sendPacket(packet);
+}
+
+void PacketInterface::setRcControlCurrent(quint8 id, double duty, double steering)
+{
+    qint32 send_index = 0;
+    mSendBuffer[send_index++] = id;
+    mSendBuffer[send_index++] = CMD_RC_CONTROL;
+    mSendBuffer[send_index++] = RC_MODE_CURRENT;
+    utility::buffer_append_double32(mSendBuffer, duty, 1e4, &send_index);
+    utility::buffer_append_double32(mSendBuffer, steering, 1e6, &send_index);
+    sendPacket(mSendBuffer, send_index);
+}
+
+void PacketInterface::setRcControlDuty(quint8 id, double duty, double steering)
+{
+    qint32 send_index = 0;
+    mSendBuffer[send_index++] = id;
+    mSendBuffer[send_index++] = CMD_RC_CONTROL;
+    mSendBuffer[send_index++] = RC_MODE_DUTY;
+    utility::buffer_append_double32(mSendBuffer, duty, 1e4, &send_index);
+    utility::buffer_append_double32(mSendBuffer, steering, 1e6, &send_index);
+    sendPacket(mSendBuffer, send_index);
+}
+
+void PacketInterface::setPos(quint8 id, double x, double y, double angle)
+{
+    qint32 send_index = 0;
+    mSendBuffer[send_index++] = id;
+    mSendBuffer[send_index++] = CMD_SET_POS;
+    utility::buffer_append_double32(mSendBuffer, x, 1e4, &send_index);
+    utility::buffer_append_double32(mSendBuffer, y, 1e4, &send_index);
+    utility::buffer_append_double32(mSendBuffer, angle, 1e6, &send_index);
+    sendPacket(mSendBuffer, send_index);
 }

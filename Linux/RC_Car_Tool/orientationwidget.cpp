@@ -209,7 +209,7 @@ void OrientationWidget::setRollPitchYaw(float roll, float pitch, float yaw)
 
 void OrientationWidget::setYawOffset(float offset)
 {
-    mZRotOfsCar = offset;
+    mZRotOfsCar = -offset;
     updateUsingTimer();
 }
 
