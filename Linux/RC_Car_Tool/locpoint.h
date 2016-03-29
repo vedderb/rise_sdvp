@@ -25,6 +25,7 @@ class LocPoint
 public:
     LocPoint(double x = 0, double y = 0, double alpha = 0,
              double speed = 0.5, double radius = 0, double sigma = 0);
+    LocPoint(const LocPoint &point);
 
     double getX();
     double getY();

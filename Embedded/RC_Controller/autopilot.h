@@ -13,27 +13,18 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+    */
 
-/*
- * commands.h
- *
- *  Created on: 11 mars 2016
- *      Author: benjamin
- */
-
-#ifndef COMMANDS_H_
-#define COMMANDS_H_
+#ifndef AUTOPILOT_H_
+#define AUTOPILOT_H_
 
 #include "conf_general.h"
 
 // Functions
-void commands_init(void);
-void commands_set_send_func(void(*func)(unsigned char *data, unsigned int len));
-void commands_send_packet(unsigned char *data, unsigned int len);
-void commands_process_packet(unsigned char *data, unsigned int len,
-		void (*func)(unsigned char *data, unsigned int len));
-void commands_printf(char* format, ...);
-void commands_forward_vesc_packet(unsigned char *data, unsigned int len);
+void autopilot_init(void);
+void autopilot_add_point(ROUTE_POINT *p);
+void autopilot_clear_route(void);
+void autopilot_set_active(bool active);
+bool autopilot_is_active(void);
 
-#endif /* COMMANDS_H_ */
+#endif /* AUTOPILOT_H_ */

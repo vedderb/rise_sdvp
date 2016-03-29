@@ -31,15 +31,22 @@
 
 // Settings
 #define TIM_CLOCK				1000000 // Hz
+#define RAMP_LOOP_HZ			100 // Hz
 
 // Private variables
-static float pos_now;
+static float m_pos_now;
+static float m_pos_set;
+static THD_WORKING_AREA(ramp_thread_wa, 128);
+
+// Private functions
+static THD_FUNCTION(ramp_thread, arg);
 
 void servo_simple_init(void) {
 	TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
 	TIM_OCInitTypeDef  TIM_OCInitStructure;
 
-	pos_now = 0.5;
+	m_pos_now = 0.5;
+	m_pos_set = 0.5;
 
 	palSetPadMode(GPIOB, 0, PAL_MODE_ALTERNATE(GPIO_AF_TIM3) |
 			PAL_STM32_OSPEED_HIGHEST | PAL_STM32_PUDR_FLOATING);
@@ -63,20 +70,52 @@ void servo_simple_init(void) {
 
 	TIM_ARRPreloadConfig(TIM3, ENABLE);
 
-	servo_simple_set_output(0.5);
+	servo_simple_set_pos(0.5);
 
 	TIM_Cmd(TIM3, ENABLE);
+
+	chThdCreateStatic(ramp_thread_wa, sizeof(ramp_thread_wa),
+			NORMALPRIO, ramp_thread, NULL);
 }
 
-void servo_simple_set_output(float out) {
-	utils_truncate_number(&out, 0.0, 1.0);
-	pos_now = out;
+void servo_simple_set_pos(float pos) {
+	utils_truncate_number(&pos, 0.0, 1.0);
+	m_pos_now = pos;
+	m_pos_set = pos;
 
-	float us = (float)SERVO_OUT_PULSE_MIN_US + out * (float)(SERVO_OUT_PULSE_MAX_US - SERVO_OUT_PULSE_MIN_US);
+	float us = (float)SERVO_OUT_PULSE_MIN_US + pos * (float)(SERVO_OUT_PULSE_MAX_US - SERVO_OUT_PULSE_MIN_US);
 	us *= (float)TIM_CLOCK / 1000000.0;
 	TIM3->CCR3 = (uint32_t)us;
 }
 
+void servo_simple_set_pos_ramp(float pos) {
+	utils_truncate_number(&pos, 0.0, 1.0);
+	m_pos_set = pos;
+}
+
 float servo_simple_get_pos_now(void) {
-	return pos_now;
+	return m_pos_now;
+}
+
+float servo_simple_get_pos_set(void) {
+	return m_pos_set;
+}
+
+static THD_FUNCTION(ramp_thread, arg) {
+	(void)arg;
+
+	chRegSetThreadName("Servo ramp");
+
+	for(;;) {
+		float pos_prev = m_pos_now;
+		utils_step_towards(&m_pos_now, m_pos_set, main_config.steering_ramp_time / (float)RAMP_LOOP_HZ);
+
+		if (m_pos_now != pos_prev) {
+			float us = (float)SERVO_OUT_PULSE_MIN_US + m_pos_now * (float)(SERVO_OUT_PULSE_MAX_US - SERVO_OUT_PULSE_MIN_US);
+			us *= (float)TIM_CLOCK / 1000000.0;
+			TIM3->CCR3 = (uint32_t)us;
+		}
+
+		chThdSleep(CH_CFG_ST_FREQUENCY / RAMP_LOOP_HZ);
+	}
 }

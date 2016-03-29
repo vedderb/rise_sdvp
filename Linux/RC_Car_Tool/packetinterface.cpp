@@ -19,6 +19,7 @@
 #include "utility.h"
 #include <QDebug>
 #include <math.h>
+#include <QEventLoop>
 
 namespace {
 // CRC Table
@@ -247,6 +248,65 @@ bool PacketInterface::sendPacket(QByteArray data)
     return sendPacket((const unsigned char*)data.data(), data.size());
 }
 
+/**
+ * @brief PacketInterface::sendPacketAck
+ * Send packet and wait for acknoledgement.
+ *
+ * @param data
+ * The data to be sent.
+ *
+ * @param len_packet
+ * Size of the data.
+ *
+ * @param retries
+ * The maximum number of retries before giving up.
+ *
+ * @param timeoutMs
+ * Time to wait before trying again.
+ *
+ * @return
+ * True for success, false otherwise.
+ */
+bool PacketInterface::sendPacketAck(const unsigned char *data, unsigned int len_packet,
+                                    int retries, int timeoutMs)
+{
+    static bool waiting = false;
+
+    if (waiting) {
+        qDebug() << "Already waiting for packet";
+        return false;
+    }
+
+    waiting = true;
+
+    unsigned char *buffer = new unsigned char[mMaxBufferLen];
+    bool ok = false;
+    memcpy(buffer, data, len_packet);
+
+    for (int i = 0;i < retries;i++) {
+        QEventLoop loop;
+        QTimer timeoutTimer;
+        timeoutTimer.setSingleShot(true);
+        timeoutTimer.start(timeoutMs);
+        connect(this, SIGNAL(ackReceived(quint8, CMD_PACKET, QString)), &loop, SLOT(quit()));
+        connect(&timeoutTimer, SIGNAL(timeout()), &loop, SLOT(quit()));
+
+        sendPacket(buffer, len_packet);
+        loop.exec();
+
+        if (timeoutTimer.isActive()) {
+            ok = true;
+            break;
+        }
+
+        qDebug() << "Retrying to send packet...";
+    }
+
+    waiting = false;
+    delete buffer;
+    return ok;
+}
+
 void PacketInterface::processPacket(const unsigned char *data, int len)
 {
     unsigned char id = data[0];
@@ -268,6 +328,8 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         CAR_STATE state;
         int32_t ind = 0;
 
+        state.fw_major = data[ind++];
+        state.fw_minor = data[ind++];
         state.roll = utility::buffer_get_double32(data, 1e6, &ind);
         state.pitch = utility::buffer_get_double32(data, 1e6, &ind);
         state.yaw = utility::buffer_get_double32(data, 1e6, &ind);
@@ -295,6 +357,16 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
 
     case CMD_VESC_FWD:
         emit vescFwdReceived(id, QByteArray::fromRawData((char*)data, len));
+        break;
+
+    case CMD_AP_ADD_POINTS:
+        emit ackReceived(id, cmd, "CMD_AP_ADD_POINTS");
+        break;
+    case CMD_AP_CLEAR_POINTS:
+        emit ackReceived(id, cmd, "CMD_AP_CLEAR_POINTS");
+        break;
+    case CMD_AP_SET_ACTIVE:
+        emit ackReceived(id, cmd, "CMD_AP_SET_ACTIVE");
         break;
 
     default:
@@ -328,6 +400,41 @@ void PacketInterface::getState(quint8 id)
     packet.append(id);
     packet.append(CMD_GET_STATE);
     sendPacket(packet);
+}
+
+bool PacketInterface::setRoutePoints(quint8 id, QList<LocPoint> points, int retries)
+{
+    qint32 send_index = 0;
+    mSendBuffer[send_index++] = id;
+    mSendBuffer[send_index++] = CMD_AP_ADD_POINTS;
+
+    for (int i = 0;i < points.size();i++) {
+        LocPoint *p = &points[i];
+        utility::buffer_append_double32(mSendBuffer, p->getX(), 1e4, &send_index);
+        utility::buffer_append_double32(mSendBuffer, p->getY(), 1e4, &send_index);
+        utility::buffer_append_double32(mSendBuffer, p->getSpeed(), 1e6, &send_index);
+    }
+
+    return sendPacketAck(mSendBuffer, send_index, retries);
+}
+
+bool PacketInterface::clearRoute(quint8 id, int retries)
+{
+    qint32 send_index = 0;
+    mSendBuffer[send_index++] = id;
+    mSendBuffer[send_index++] = CMD_AP_CLEAR_POINTS;
+
+    return sendPacketAck(mSendBuffer, send_index, retries);
+}
+
+bool PacketInterface::setApActive(quint8 id, bool active, int retries)
+{
+    qint32 send_index = 0;
+    mSendBuffer[send_index++] = id;
+    mSendBuffer[send_index++] = CMD_AP_SET_ACTIVE;
+    mSendBuffer[send_index++] = active ? 1 : 0;
+
+    return sendPacketAck(mSendBuffer, send_index, retries);
 }
 
 void PacketInterface::sendTerminalCmd(quint8 id, QString cmd)

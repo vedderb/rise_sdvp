@@ -47,6 +47,9 @@
 #define SERVO_OUT_PULSE_MIN_US		1000
 #define SERVO_OUT_PULSE_MAX_US		2000
 
+// Autopilot settings
+#define AP_ROUTE_SIZE				500
+
 // Global variables
 extern MAIN_CONFIG main_config;
 

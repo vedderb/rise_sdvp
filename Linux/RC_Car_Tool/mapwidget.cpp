@@ -51,6 +51,7 @@ MapWidget::MapWidget(QWidget *parent) :
     mCarTrace.clear();
     mPaintTimer = new QTimer(this);
     mPaintTimer->setSingleShot(true);
+    mRoutePointSpeed = 1.0;
 
     connect(mPaintTimer, SIGNAL(timeout()), this, SLOT(paintTimerSlot()));
 }
@@ -116,6 +117,17 @@ void MapWidget::clearTrace()
 {
     mCarTrace.clear();
     repaintAfterEvents();
+}
+
+void MapWidget::clearRoute()
+{
+    mRoute.clear();
+    repaintAfterEvents();
+}
+
+void MapWidget::setRoutePointSpeed(double speed)
+{
+    mRoutePointSpeed = speed;
 }
 
 void MapWidget::addPerspectivePixmap(PerspectivePixmap map)
@@ -360,11 +372,40 @@ void MapWidget::paintEvent(QPaintEvent *event)
     // Draw trace for the selected car
     pen.setWidthF(5.0 / mScaleFactor);
     pen.setColor(Qt::red);
+    painter.setPen(pen);
     painter.setTransform(drawTrans);
     for (int i = 1;i < mCarTrace.size();i++) {
-        painter.setPen(pen);
         painter.drawLine(mCarTrace[i - 1].getX() * 1000.0, mCarTrace[i - 1].getY() * 1000.0,
                 mCarTrace[i].getX() * 1000.0, mCarTrace[i].getY() * 1000.0);
+    }
+
+    // Draw route
+    pen.setWidthF(5.0 / mScaleFactor);
+    pen.setColor(Qt::darkYellow);
+    painter.setPen(pen);
+    painter.setBrush(Qt::yellow);
+    painter.setTransform(drawTrans);
+    for (int i = 1;i < mRoute.size();i++) {
+        painter.drawLine(mRoute[i - 1].getX() * 1000.0, mRoute[i - 1].getY() * 1000.0,
+                mRoute[i].getX() * 1000.0, mRoute[i].getY() * 1000.0);
+    }
+    for (int i = 0;i < mRoute.size();i++) {
+        QPointF p = mRoute[i].getPointMm();
+        painter.setTransform(drawTrans);
+        pen.setColor(Qt::darkYellow);
+        painter.setPen(pen);
+        painter.drawEllipse(p, 10 / mScaleFactor, 10 / mScaleFactor);
+
+        txt.sprintf("%.1f km/h", mRoute[i].getSpeed() * 3.6);
+        pt_txt.setX(p.x() + 10 / mScaleFactor);
+        pt_txt.setY(p.y());
+        painter.setTransform(txtTrans);
+        pt_txt = drawTrans.map(pt_txt);
+        pen.setColor(Qt::black);
+        painter.setPen(pen);
+        rect_txt.setCoords(pt_txt.x(), pt_txt.y() - 20,
+                           pt_txt.x() + 150, pt_txt.y() + 25);
+        painter.drawText(rect_txt, txt);
     }
 
     // Draw cars
@@ -426,7 +467,7 @@ void MapWidget::paintEvent(QPaintEvent *event)
 
 void MapWidget::mouseMoveEvent(QMouseEvent *e)
 {
-    if (e->buttons() & Qt::LeftButton && !(e->modifiers() & Qt::ControlModifier))
+    if (e->buttons() & Qt::LeftButton && !(e->modifiers() & (Qt::ControlModifier | Qt::ShiftModifier)))
     {
         int x = e->pos().x();
         int y = e->pos().y();
@@ -466,6 +507,14 @@ void MapWidget::mousePressEvent(QMouseEvent *e)
                 repaintAfterEvents();
             }
         }
+    } else if ((e->buttons() & Qt::LeftButton) && (e->modifiers() & Qt::ShiftModifier)) {
+        LocPoint pos;
+        QPoint p = getMousePosRelative();
+        pos.setXY(p.x() / 1000.0, p.y() / 1000.0);
+        pos.setSpeed(mRoutePointSpeed);
+        mRoute.append(pos);
+        emit routePointAdded(pos);
+        repaintAfterEvents();
     }
 }
 

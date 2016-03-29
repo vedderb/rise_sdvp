@@ -116,8 +116,7 @@ static THD_FUNCTION(serial_process_thread, arg) {
 }
 
 static void process_packet(unsigned char *data, unsigned int len) {
-	commands_set_send_func(comm_usb_send_packet);
-	commands_process_packet(data, len);
+	commands_process_packet(data, len, comm_usb_send_packet);
 }
 
 static void send_packet(unsigned char *buffer, unsigned int len) {

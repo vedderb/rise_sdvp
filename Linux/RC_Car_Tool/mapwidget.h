@@ -54,6 +54,8 @@ public:
     void setXOffset(double offset);
     void setYOffset(double offset);
     void clearTrace();
+    void clearRoute();
+    void setRoutePointSpeed(double speed);
     void addPerspectivePixmap(PerspectivePixmap map);
     void clearPerspectivePixmaps();
     QPoint getMousePosRelative();
@@ -63,6 +65,7 @@ signals:
     void scaleChanged(double newScale);
     void offsetChanged(double newXOffset, double newYOffset);
     void posSet(quint8 id, LocPoint pos);
+    void routePointAdded(LocPoint pos);
 
 public slots:
     void paintTimerSlot();
@@ -77,7 +80,9 @@ protected:
 private:
     QList<CarInfo> mCarInfo;
     QList<LocPoint> mCarTrace;
+    QList<LocPoint> mRoute;
     QList<PerspectivePixmap> mPerspectivePixmaps;
+    double mRoutePointSpeed;
     double mScaleFactor;
     double mRotation;
     double mXOffset;

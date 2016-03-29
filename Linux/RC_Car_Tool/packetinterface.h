@@ -23,6 +23,7 @@
 #include <QVector>
 #include <QUdpSocket>
 #include "datatypes.h"
+#include "locpoint.h"
 
 class PacketInterface : public QObject
 {
@@ -33,17 +34,23 @@ public:
 
     bool sendPacket(const unsigned char *data, unsigned int len_packet);
     bool sendPacket(QByteArray data);
+    bool sendPacketAck(const unsigned char *data, unsigned int len_packet,
+                       int retries, int timeoutMs = 200);
     void processData(QByteArray &data);
     void startUdpConnection(QHostAddress ip, int port);
     void stopUdpConnection();
     bool isUdpConnected();
     void getState(quint8 id);
+    bool setRoutePoints(quint8 id, QList<LocPoint> points, int retries = 10);
+    bool clearRoute(quint8 id, int retries = 10);
+    bool setApActive(quint8 id, bool active, int retries = 10);
 
 signals:
     void dataToSend(QByteArray &data);
     void printReceived(quint8 id, QString str);
     void stateReceived(quint8 id, CAR_STATE state);
     void vescFwdReceived(quint8 id, QByteArray data);
+    void ackReceived(quint8 id, CMD_PACKET cmd, QString msg);
     
 public slots:
     void timerSlot();

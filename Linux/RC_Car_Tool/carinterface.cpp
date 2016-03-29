@@ -49,6 +49,7 @@ CarInterface::CarInterface(QWidget *parent) :
     }
 
     mMap = 0;
+    mPacketInterface = 0;
     mId = 0;
 
     mTimer = new QTimer(this);
@@ -174,6 +175,11 @@ void CarInterface::setStateData(CAR_STATE data)
     ui->magPlot->legend->setVisible(true);
     ui->magPlot->replot();
 
+    // Firmware label
+    QString fwStr;
+    fwStr.sprintf("FW %d.%d", data.fw_major, data.fw_minor);
+    ui->fwLabel->setText(fwStr);
+
     // Speed bar
     QString speedTxt;
     speedTxt.sprintf("Speed: %.2f km/h", data.speed * 3.6);
@@ -244,6 +250,27 @@ void CarInterface::setMap(MapWidget *map)
     mMap = map;
     CarInfo car(mId);
     mMap->addCar(car);
+
+    connect(mMap, SIGNAL(routePointAdded(LocPoint)),
+            this, SLOT(routePointSet(LocPoint)));
+}
+
+void CarInterface::setPacketInterface(PacketInterface *packetInterface)
+{
+    mPacketInterface = packetInterface;
+
+    connect(this, SIGNAL(terminalCmd(quint8,QString)),
+            mPacketInterface, SLOT(sendTerminalCmd(quint8,QString)));
+    connect(mPacketInterface, SIGNAL(printReceived(quint8,QString)),
+            this, SLOT(terminalPrint(quint8,QString)));
+    connect(this, SIGNAL(forwardVesc(quint8,QByteArray)),
+            mPacketInterface, SLOT(forwardVesc(quint8,QByteArray)));
+    connect(mPacketInterface, SIGNAL(vescFwdReceived(quint8,QByteArray)),
+            this, SLOT(vescFwdReceived(quint8,QByteArray)));
+    connect(this, SIGNAL(setRcCurrent(quint8,double,double)),
+            mPacketInterface, SLOT(setRcControlCurrent(quint8,double,double)));
+    connect(this, SIGNAL(setRcDuty(quint8,double,double)),
+            mPacketInterface, SLOT(setRcControlDuty(quint8,double,double)));
 }
 
 void CarInterface::setKeyboardValues(double throttle, double steering)
@@ -294,6 +321,23 @@ void CarInterface::vescFwdReceived(quint8 id, QByteArray data)
 {
     if (id == mId && QString::compare(mLastHostAddress.toString(), "0.0.0.0") != 0) {
         mUdpSocket->writeDatagram(data, mLastHostAddress, mUdpPort + 1);
+    }
+}
+
+void CarInterface::routePointSet(LocPoint pos)
+{
+    if (mMap && ui->updateRouteFromMapBox->isChecked()) {
+        QList<LocPoint> points;
+        points.append(pos);
+
+        mMap->setEnabled(false);
+        bool ok = mPacketInterface->setRoutePoints(0, points);
+        mMap->setEnabled(true);
+
+        if (!ok) {
+            QMessageBox::warning(this, "Autopilot",
+                                 "No ack received, so the the last route point was most likely not set.");
+        }
     }
 }
 
@@ -361,5 +405,39 @@ void CarInterface::on_bldcToolUdpBox_toggled(bool checked)
         }
     } else {
         mUdpSocket->close();
+    }
+}
+
+void CarInterface::on_autopilotBox_toggled(bool checked)
+{
+    if (!ui->autopilotBox->isEnabled()) {
+        return;
+    }
+
+    if (mPacketInterface) {
+        ui->autopilotBox->setEnabled(false);
+        bool ok = mPacketInterface->setApActive(mId, checked);
+
+        if (!ok) {
+            ui->autopilotBox->setChecked(!checked);
+            QMessageBox::warning(this, "Autopilot",
+                                 "No ack received, so the autopilot state is unknown.");
+        }
+
+        ui->autopilotBox->setEnabled(true);
+    }
+}
+
+void CarInterface::on_clearRouteButton_clicked()
+{
+    if (mPacketInterface) {
+        ui->clearRouteButton->setEnabled(false);
+        bool ok = mPacketInterface->clearRoute(mId);
+        ui->clearRouteButton->setEnabled(true);
+
+        if (!ok) {
+            QMessageBox::warning(this, "Autopilot",
+                                 "No ack received on clear route, so the route is most likely not cleared.");
+        }
     }
 }

@@ -52,6 +52,8 @@ typedef enum {
 } mc_fault_code;
 
 typedef struct {
+    uint8_t fw_major;
+    uint8_t fw_minor;
     double roll;
     double pitch;
     double yaw;
@@ -80,7 +82,10 @@ typedef enum {
     CMD_TERMINAL_CMD,
     CMD_VESC_FWD,
     CMD_RC_CONTROL,
-    CMD_SET_POS
+    CMD_SET_POS,
+    CMD_AP_ADD_POINTS,
+    CMD_AP_CLEAR_POINTS,
+    CMD_AP_SET_ACTIVE
 } CMD_PACKET;
 
 // RC control modes

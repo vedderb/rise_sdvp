@@ -38,6 +38,7 @@
 #include "pos.h"
 #include "comm_can.h"
 #include "servo_simple.h"
+#include "autopilot.h"
 
 /*
  * Timers used:
@@ -64,12 +65,13 @@ int main(void) {
 	adconv_init();
 	comm_usb_init();
 	ext_cb_init();
+	servo_simple_init();
 	pos_init();
 	comm_cc2520_init();
 	commands_init();
 	commands_set_send_func(comm_cc2520_send_buffer);
 	comm_can_init();
-	servo_simple_init();
+	autopilot_init();
 
 	for(;;) {
 		chThdSleepMilliseconds(2);

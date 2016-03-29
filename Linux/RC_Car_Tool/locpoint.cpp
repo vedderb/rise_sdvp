@@ -24,6 +24,11 @@ LocPoint::LocPoint(double x, double y, double alpha, double speed, double radius
 
 }
 
+LocPoint::LocPoint(const LocPoint &point)
+{
+    *this = point;
+}
+
 double LocPoint::getX()
 {
     return mX;

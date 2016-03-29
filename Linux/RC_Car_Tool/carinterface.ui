@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>624</width>
-    <height>276</height>
+    <height>299</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -256,6 +256,13 @@
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
+        <widget class="QLabel" name="fwLabel">
+         <property name="text">
+          <string>FW x.y</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QProgressBar" name="batteryBar">
          <property name="value">
           <number>0</number>
@@ -315,6 +322,27 @@
       <widget class="QCheckBox" name="keyboardControlBox">
        <property name="text">
         <string>Keyboard Control</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="autopilotBox">
+       <property name="text">
+        <string>AutoPilot</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="updateRouteFromMapBox">
+       <property name="text">
+        <string>Update Route from Map</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="clearRouteButton">
+       <property name="text">
+        <string>Clear Route</string>
        </property>
       </widget>
      </item>

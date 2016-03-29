@@ -32,6 +32,7 @@
 #include "bldc_interface.h"
 #include "servo_simple.h"
 #include "utils.h"
+#include "autopilot.h"
 
 #include <math.h>
 #include <string.h>
@@ -42,15 +43,15 @@
 #define FWD_TIME		5000
 
 // Private variables
-static uint8_t send_buffer[PACKET_MAX_PL_LEN];
-static void(*send_func)(unsigned char *data, unsigned int len) = 0;
+static uint8_t m_send_buffer[PACKET_MAX_PL_LEN];
+static void(*m_send_func)(unsigned char *data, unsigned int len) = 0;
 static virtual_timer_t vt;
 
 // Private functions
 static void stop_forward(void *p);
 
 void commands_init(void) {
-	send_func = 0;
+	m_send_func = 0;
 	chVTObjectInit(&vt);
 }
 
@@ -61,7 +62,7 @@ void commands_init(void) {
  * A pointer to the packet sending function.
  */
 void commands_set_send_func(void(*func)(unsigned char *data, unsigned int len)) {
-	send_func = func;
+	m_send_func = func;
 }
 
 /**
@@ -74,8 +75,8 @@ void commands_set_send_func(void(*func)(unsigned char *data, unsigned int len)) 
  * The data length.
  */
 void commands_send_packet(unsigned char *data, unsigned int len) {
-	if (send_func) {
-		send_func(data, len);
+	if (m_send_func) {
+		m_send_func(data, len);
 	}
 }
 
@@ -87,8 +88,12 @@ void commands_send_packet(unsigned char *data, unsigned int len) {
  *
  * @param len
  * The length of the buffer.
+ *
+ * @param func
+ * A pointer to the packet sending function.
  */
-void commands_process_packet(unsigned char *data, unsigned int len) {
+void commands_process_packet(unsigned char *data, unsigned int len,
+		void (*func)(unsigned char *data, unsigned int len)) {
 	if (!len) {
 		return;
 	}
@@ -112,44 +117,50 @@ void commands_process_packet(unsigned char *data, unsigned int len) {
 			float accel[3];
 			float gyro[3];
 			float mag[3];
+			
+			m_send_func = func;
 
 			pos_get_imu(accel, gyro, mag);
 			pos_get_pos(&pos);
 			pos_get_mc_val(&mcval);
 			int32_t send_index = 0;
-			send_buffer[send_index++] = main_config.id;
-			send_buffer[send_index++] = CMD_GET_STATE;
-			buffer_append_float32(send_buffer, pos.roll, 1e6, &send_index);
-			buffer_append_float32(send_buffer, pos.pitch, 1e6, &send_index);
-			buffer_append_float32(send_buffer, pos.yaw, 1e6, &send_index);
-			buffer_append_float32(send_buffer, accel[0], 1e6, &send_index);
-			buffer_append_float32(send_buffer, accel[1], 1e6, &send_index);
-			buffer_append_float32(send_buffer, accel[2], 1e6, &send_index);
-			buffer_append_float32(send_buffer, gyro[0], 1e6, &send_index);
-			buffer_append_float32(send_buffer, gyro[1], 1e6, &send_index);
-			buffer_append_float32(send_buffer, gyro[2], 1e6, &send_index);
-			buffer_append_float32(send_buffer, mag[0], 1e6, &send_index);
-			buffer_append_float32(send_buffer, mag[1], 1e6, &send_index);
-			buffer_append_float32(send_buffer, mag[2], 1e6, &send_index);
-			buffer_append_float32(send_buffer, pos.q0, 1e8, &send_index);
-			buffer_append_float32(send_buffer, pos.q1, 1e8, &send_index);
-			buffer_append_float32(send_buffer, pos.q2, 1e8, &send_index);
-			buffer_append_float32(send_buffer, pos.q3, 1e8, &send_index);
-			buffer_append_float32(send_buffer, pos.px, 1e4, &send_index);
-			buffer_append_float32(send_buffer, pos.py, 1e4, &send_index);
-			buffer_append_float32(send_buffer, pos.speed, 1e6, &send_index);
-			buffer_append_float32(send_buffer, mcval.v_in, 1e6, &send_index);
-			buffer_append_float32(send_buffer, mcval.temp_mos1, 1e6, &send_index);
-			send_buffer[send_index++] = mcval.fault_code;
-			commands_send_packet(send_buffer, send_index);
+			m_send_buffer[send_index++] = main_config.id;
+			m_send_buffer[send_index++] = CMD_GET_STATE;
+			m_send_buffer[send_index++] = FW_VERSION_MAJOR;
+			m_send_buffer[send_index++] = FW_VERSION_MINOR;
+			buffer_append_float32(m_send_buffer, pos.roll, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, pos.pitch, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, pos.yaw, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, accel[0], 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, accel[1], 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, accel[2], 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, gyro[0], 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, gyro[1], 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, gyro[2], 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, mag[0], 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, mag[1], 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, mag[2], 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, pos.q0, 1e8, &send_index);
+			buffer_append_float32(m_send_buffer, pos.q1, 1e8, &send_index);
+			buffer_append_float32(m_send_buffer, pos.q2, 1e8, &send_index);
+			buffer_append_float32(m_send_buffer, pos.q3, 1e8, &send_index);
+			buffer_append_float32(m_send_buffer, pos.px, 1e4, &send_index);
+			buffer_append_float32(m_send_buffer, pos.py, 1e4, &send_index);
+			buffer_append_float32(m_send_buffer, pos.speed, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, mcval.v_in, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, mcval.temp_mos1, 1e6, &send_index);
+			m_send_buffer[send_index++] = mcval.fault_code;
+			commands_send_packet(m_send_buffer, send_index);
 		} break;
 
 		case CMD_TERMINAL_CMD:
+			m_send_func = func;
 			data[len] = '\0';
 			terminal_process_string((char*)data);
 			break;
 
 		case CMD_VESC_FWD:
+			m_send_func = func;
 			bldc_interface_set_forward_func(commands_forward_vesc_packet);
 			bldc_interface_send_packet(data, len);
 			chVTSet(&vt, MS2ST(FWD_TIME), stop_forward, NULL);
@@ -186,7 +197,7 @@ void commands_process_packet(unsigned char *data, unsigned int len) {
 
 			utils_truncate_number(&steering, -1.0, 1.0);
 			steering = utils_map(steering, -1.0, 1.0, main_config.steering_left, main_config.steering_right);
-			servo_simple_set_output(steering);
+			servo_simple_set_pos_ramp(steering);
 		} break;
 
 		case CMD_SET_POS: {
@@ -196,6 +207,45 @@ void commands_process_packet(unsigned char *data, unsigned int len) {
 			y = buffer_get_float32(data, 1e4, &ind);
 			angle = buffer_get_float32(data, 1e6, &ind);
 			pos_set_xya(x, y, angle);
+		} break;
+
+		case CMD_AP_ADD_POINTS: {
+			m_send_func = func;
+			int32_t ind = 0;
+
+			while (ind < (int32_t)len) {
+				ROUTE_POINT p;
+				p.px = buffer_get_float32(data, 1e4, &ind);
+				p.py = buffer_get_float32(data, 1e4, &ind);
+				p.speed = buffer_get_float32(data, 1e6, &ind);
+				autopilot_add_point(&p);
+			}
+
+			// Send ack
+			int32_t send_index = 0;
+			m_send_buffer[send_index++] = main_config.id;
+			m_send_buffer[send_index++] = packet_id;
+			commands_send_packet(m_send_buffer, send_index);
+		} break;
+
+		case CMD_AP_CLEAR_POINTS: {
+			autopilot_clear_route();
+
+			// Send ack
+			int32_t send_index = 0;
+			m_send_buffer[send_index++] = main_config.id;
+			m_send_buffer[send_index++] = packet_id;
+			commands_send_packet(m_send_buffer, send_index);
+		} break;
+
+		case CMD_AP_SET_ACTIVE: {
+			autopilot_set_active(data[0]);
+
+			// Send ack
+			int32_t send_index = 0;
+			m_send_buffer[send_index++] = main_config.id;
+			m_send_buffer[send_index++] = packet_id;
+			commands_send_packet(m_send_buffer, send_index);
 		} break;
 
 		default:
@@ -221,10 +271,10 @@ void commands_printf(char* format, ...) {
 }
 
 void commands_forward_vesc_packet(unsigned char *data, unsigned int len) {
-	send_buffer[0] = main_config.id;
-	send_buffer[1] = CMD_VESC_FWD;
-	memcpy(send_buffer + 2, data, len);
-	commands_send_packet((unsigned char*)send_buffer, len + 2);
+	m_send_buffer[0] = main_config.id;
+	m_send_buffer[1] = CMD_VESC_FWD;
+	memcpy(m_send_buffer + 2, data, len);
+	commands_send_packet((unsigned char*)m_send_buffer, len + 2);
 }
 
 static void stop_forward(void *p) {

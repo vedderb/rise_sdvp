@@ -212,15 +212,13 @@ static THD_FUNCTION(rx_thread, arg) {
 						== ((unsigned short) crc_high << 8
 								| (unsigned short) crc_low)) {
 
-					commands_set_send_func(comm_cc2520_send_buffer);
-					commands_process_packet(rx_buffer, rxbuf_len);
+					commands_process_packet(rx_buffer, rxbuf_len, comm_cc2520_send_buffer);
 				}
 			}
 			break;
 
 			case MOTE_PACKET_PROCESS_SHORT_BUFFER:
-				commands_set_send_func(comm_cc2520_send_buffer);
-				commands_process_packet(buf + 1, len - 1);
+				commands_process_packet(buf + 1, len - 1, comm_cc2520_send_buffer);
 				break;
 
 			default:

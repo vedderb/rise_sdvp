@@ -45,6 +45,8 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    qRegisterMetaType<LocPoint>("LocPoint");
+
     mTimer = new QTimer(this);
     mTimer->start(20);
     mStatusLabel = new QLabel(this);
@@ -52,6 +54,7 @@ MainWindow::MainWindow(QWidget *parent) :
     mStatusInfoTime = 0;
     mPacketInterface = new PacketInterface(this);
     mSerialPort = new QSerialPort(this);
+    ui->mapWidget->setRoutePointSpeed(ui->mapRouteSpeedBox->value() / 3.6);
 
     connect(mTimer, SIGNAL(timeout()), this, SLOT(timerSlot()));
     connect(mSerialPort, SIGNAL(readyRead()),
@@ -65,6 +68,8 @@ MainWindow::MainWindow(QWidget *parent) :
             this, SLOT(stateReceived(quint8,CAR_STATE)));
     connect(ui->mapWidget, SIGNAL(posSet(quint8,LocPoint)),
             this, SLOT(mapPosSet(quint8,LocPoint)));
+    connect(mPacketInterface, SIGNAL(ackReceived(quint8,CMD_PACKET,QString)),
+            this, SLOT(ackReceived(quint8,CMD_PACKET,QString)));
 
     on_serialRefreshButton_clicked();
 
@@ -280,6 +285,15 @@ void MainWindow::mapPosSet(quint8 id, LocPoint pos)
     mPacketInterface->setPos(id, pos.getX(), pos.getY(), pos.getAlpha() * 180.0 / M_PI);
 }
 
+void MainWindow::ackReceived(quint8 id, CMD_PACKET cmd, QString msg)
+{
+    (void)cmd;
+    QString str;
+    str.sprintf("Car %d ack: ", id);
+    str += msg;
+    showStatusInfo(str, true);
+}
+
 void MainWindow::on_carAddButton_clicked()
 {
     CarInterface *car = new CarInterface(this);
@@ -290,19 +304,8 @@ void MainWindow::on_carAddButton_clicked()
     car->setID(id);
     ui->carsWidget->addTab(car, name);
     car->setMap(ui->mapWidget);
+    car->setPacketInterface(mPacketInterface);
 
-    connect(car, SIGNAL(terminalCmd(quint8,QString)),
-            mPacketInterface, SLOT(sendTerminalCmd(quint8,QString)));
-    connect(mPacketInterface, SIGNAL(printReceived(quint8,QString)),
-            car, SLOT(terminalPrint(quint8,QString)));
-    connect(car, SIGNAL(forwardVesc(quint8,QByteArray)),
-            mPacketInterface, SLOT(forwardVesc(quint8,QByteArray)));
-    connect(mPacketInterface, SIGNAL(vescFwdReceived(quint8,QByteArray)),
-            car, SLOT(vescFwdReceived(quint8,QByteArray)));
-    connect(car, SIGNAL(setRcCurrent(quint8,double,double)),
-            mPacketInterface, SLOT(setRcControlCurrent(quint8,double,double)));
-    connect(car, SIGNAL(setRcDuty(quint8,double,double)),
-            mPacketInterface, SLOT(setRcControlDuty(quint8,double,double)));
     connect(car, SIGNAL(showStatusInfo(QString,bool)), this, SLOT(showStatusInfo(QString,bool)));
 }
 
@@ -397,4 +400,31 @@ void MainWindow::on_mapZeroButton_clicked()
 {
     ui->mapWidget->setXOffset(0);
     ui->mapWidget->setYOffset(0);
+}
+
+void MainWindow::on_testButton_clicked()
+{
+    QList<LocPoint> points;
+    LocPoint p;
+    p.setXY(2, 3);
+    p.setSpeed(5);
+    points.append(p);
+
+    ui->testButton->setEnabled(false);
+    ui->mapWidget->setEnabled(false);
+    bool ok = mPacketInterface->setRoutePoints(0, points);
+    ui->testButton->setEnabled(true);
+    ui->mapWidget->setEnabled(true);
+
+    qDebug() << "setRoutePoints:" << ok;
+}
+
+void MainWindow::on_mapRemoveRouteButton_clicked()
+{
+    ui->mapWidget->clearRoute();
+}
+
+void MainWindow::on_mapRouteSpeedBox_valueChanged(double arg1)
+{
+    ui->mapWidget->setRoutePointSpeed(arg1 / 3.6);
 }

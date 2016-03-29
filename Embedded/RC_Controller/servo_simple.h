@@ -27,7 +27,9 @@
 
 // Functions
 void servo_simple_init(void);
-void servo_simple_set_output(float out);
+void servo_simple_set_pos(float pos);
+void servo_simple_set_pos_ramp(float pos);
 float servo_simple_get_pos_now(void);
+float servo_simple_get_pos_set(void);
 
 #endif /* SERVO_SIMPLE_H_ */

@@ -47,6 +47,7 @@ private slots:
     void packetDataToSend(QByteArray &data);
     void stateReceived(quint8 id, CAR_STATE state);
     void mapPosSet(quint8 id, LocPoint pos);
+    void ackReceived(quint8 id, CMD_PACKET cmd, QString msg);
 
     void on_carAddButton_clicked();
     void on_carRemoveButton_clicked();
@@ -57,6 +58,9 @@ private slots:
     void on_MapRemovePixmapsButton_clicked();
     void on_udpConnectButton_clicked();
     void on_mapZeroButton_clicked();
+    void on_testButton_clicked();
+    void on_mapRemoveRouteButton_clicked();
+    void on_mapRouteSpeedBox_valueChanged(double arg1);
 
 private:
     Ui::MainWindow *ui;

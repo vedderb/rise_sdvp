@@ -7,6 +7,7 @@
 #include <QUdpSocket>
 #include "datatypes.h"
 #include "mapwidget.h"
+#include "packetinterface.h"
 
 namespace Ui {
 class CarInterface;
@@ -25,6 +26,7 @@ public:
     void setOrientation(double roll, double pitch, double yaw);
     void setStateData(CAR_STATE data);
     void setMap(MapWidget *map);
+    void setPacketInterface(PacketInterface *packetInterface);
     void setKeyboardValues(double throttle, double steering);
 
 signals:
@@ -39,6 +41,7 @@ private slots:
     void udpReadReady();
     void terminalPrint(quint8 id, QString str);
     void vescFwdReceived(quint8 id, QByteArray data);
+    void routePointSet(LocPoint pos);
 
     void on_terminalSendButton_clicked();
     void on_terminalClearButton_clicked();
@@ -46,8 +49,9 @@ private slots:
     void on_idBox_valueChanged(int arg1);
     void on_magSampleClearButton_clicked();
     void on_magSampleSaveButton_clicked();
-
     void on_bldcToolUdpBox_toggled(bool checked);
+    void on_autopilotBox_toggled(bool checked);
+    void on_clearRouteButton_clicked();
 
 private:
     Ui::CarInterface *ui;
@@ -63,6 +67,8 @@ private:
     QVector<double> accelGyroMagXAxis;
     int maxSampleSize;
     MapWidget *mMap;
+    PacketInterface *mPacketInterface;
+
     int mId;
     QVector<QVector<double> > mMagSamples;
     QTimer *mTimer;

@@ -41,6 +41,7 @@ typedef struct {
 	int initialUpdateDone;
 } ATTITUDE_INFO;
 
+// Position and orientation state
 typedef struct {
 	float px; // Meters
 	float py; // Meters
@@ -56,6 +57,13 @@ typedef struct {
 	float q2;
 	float q3;
 } POS_STATE;
+
+// Autopilot map point
+typedef struct {
+	float px;
+	float py;
+	float speed;
+} ROUTE_POINT;
 
 typedef enum {
 	MOTE_PACKET_FILL_RX_BUFFER = 0,
@@ -80,7 +88,10 @@ typedef enum {
 	CMD_TERMINAL_CMD,
 	CMD_VESC_FWD,
 	CMD_RC_CONTROL,
-	CMD_SET_POS
+	CMD_SET_POS,
+	CMD_AP_ADD_POINTS,
+	CMD_AP_CLEAR_POINTS,
+	CMD_AP_SET_ACTIVE
 } CMD_PACKET;
 
 // RC control modes
@@ -116,6 +127,7 @@ typedef struct {
 	float steering_center;
 	float steering_left;
 	float steering_right;
+	float steering_ramp_time; // Ramp time constant for the steering servo in seconds.
 	float axis_distance;
 	float yaw_imu_gain;
 } MAIN_CONFIG;
