@@ -61,11 +61,11 @@ void conf_general_init(void) {
 	main_config.gear_ratio = (1.0 / 3.0) * (21.0 / 37.0);
 	main_config.wheel_diam = 0.12;
 	main_config.motor_poles = 4.0;
-	main_config.steering_max_angle_rad = 0.4; // TODO!
-	main_config.steering_center = 0.5; // TODO!
-	main_config.steering_left = 0.75; // TODO!
-	main_config.steering_right = 0.25; // TODO!
-	main_config.steering_ramp_time = 0.5;
+	main_config.steering_max_angle_rad = 0.42041;
+	main_config.steering_center = 0.46;
+	main_config.steering_left = 0.75;
+	main_config.steering_right = 0.17;
+	main_config.steering_ramp_time = 0.6;
 	main_config.axis_distance = 0.475;
 	main_config.yaw_imu_gain = 0.0; // 3e-3?
 

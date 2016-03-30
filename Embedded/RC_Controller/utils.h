@@ -45,6 +45,7 @@ float utils_fast_atan2(float y, float x);
 bool utils_saturate_vector_2d(float *x, float *y, float max);
 void utils_fast_sincos(float angle, float *sin, float *cos);
 void utils_fast_sincos_better(float angle, float *sin, float *cos);
+float utils_point_distance(float x1, float y1, float x2, float y2);
 void utils_sys_lock_cnt(void);
 void utils_sys_unlock_cnt(void);
 

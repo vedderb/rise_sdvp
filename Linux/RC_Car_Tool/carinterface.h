@@ -35,6 +35,7 @@ signals:
     void setRcCurrent(quint8 id, double current, double steering);
     void setRcDuty(quint8 id, double duty, double steering);
     void showStatusInfo(QString str, bool isGood);
+    void setServoDirect(quint8 id, double value);
 
 private slots:
     void timerSlot();
@@ -52,6 +53,8 @@ private slots:
     void on_bldcToolUdpBox_toggled(bool checked);
     void on_autopilotBox_toggled(bool checked);
     void on_clearRouteButton_clicked();
+    void on_servoDirectSlider_valueChanged(int value);
+    void on_servoMappedSlider_valueChanged(int value);
 
 private:
     Ui::CarInterface *ui;

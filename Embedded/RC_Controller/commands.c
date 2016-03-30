@@ -185,10 +185,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 					break;
 
 				case RC_MODE_PID: // In m/s
-					throttle = throttle / (main_config.gear_ratio
-							* (2.0 / main_config.motor_poles) * (1.0 / 60.0)
-							* main_config.wheel_diam * M_PI);
-					bldc_interface_set_rpm(throttle);
+					autopilot_set_motor_speed(throttle);
 					break;
 
 				default:
@@ -246,6 +243,13 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			m_send_buffer[send_index++] = main_config.id;
 			m_send_buffer[send_index++] = packet_id;
 			commands_send_packet(m_send_buffer, send_index);
+		} break;
+
+		case CMD_SET_SERVO_DIRECT: {
+			int32_t ind = 0;
+			float steering = buffer_get_float32(data, 1e6, &ind);
+			utils_truncate_number(&steering, 0.0, 1.0);
+			servo_simple_set_pos_ramp(steering);
 		} break;
 
 		default:

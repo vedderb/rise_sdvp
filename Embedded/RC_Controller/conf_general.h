@@ -15,13 +15,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
- * conf_general.h
- *
- *  Created on: 10 mars 2016
- *      Author: benjamin
- */
-
 #ifndef CONF_GENERAL_H_
 #define CONF_GENERAL_H_
 
@@ -49,6 +42,7 @@
 
 // Autopilot settings
 #define AP_ROUTE_SIZE				500
+#define AP_DISTANCE_TRES			0.3
 
 // Global variables
 extern MAIN_CONFIG main_config;

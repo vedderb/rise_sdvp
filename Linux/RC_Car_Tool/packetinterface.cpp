@@ -489,3 +489,12 @@ void PacketInterface::setPos(quint8 id, double x, double y, double angle)
     utility::buffer_append_double32(mSendBuffer, angle, 1e6, &send_index);
     sendPacket(mSendBuffer, send_index);
 }
+
+void PacketInterface::setServoDirect(quint8 id, double value)
+{
+    qint32 send_index = 0;
+    mSendBuffer[send_index++] = id;
+    mSendBuffer[send_index++] = CMD_SET_SERVO_DIRECT;
+    utility::buffer_append_double32(mSendBuffer, value, 1e6, &send_index);
+    sendPacket(mSendBuffer, send_index);
+}

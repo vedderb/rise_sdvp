@@ -182,6 +182,8 @@ static void update_orientation_angles(float *accel, float *gyro, float *mag, flo
 		}
 	}
 
+//	m_pos.yaw = yaw;
+
 	m_pos.q0 = m_att.q0;
 	m_pos.q1 = m_att.q1;
 	m_pos.q2 = m_att.q2;

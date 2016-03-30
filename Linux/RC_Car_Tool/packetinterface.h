@@ -60,6 +60,7 @@ public slots:
     void setRcControlCurrent(quint8 id, double duty, double steering);
     void setRcControlDuty(quint8 id, double duty, double steering);
     void setPos(quint8 id, double x, double y, double angle);
+    void setServoDirect(quint8 id, double value);
 
 private:
     unsigned short crc16(const unsigned char *buf, unsigned int len);

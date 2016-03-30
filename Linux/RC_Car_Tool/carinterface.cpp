@@ -271,6 +271,8 @@ void CarInterface::setPacketInterface(PacketInterface *packetInterface)
             mPacketInterface, SLOT(setRcControlCurrent(quint8,double,double)));
     connect(this, SIGNAL(setRcDuty(quint8,double,double)),
             mPacketInterface, SLOT(setRcControlDuty(quint8,double,double)));
+    connect(this, SIGNAL(setServoDirect(quint8,double)),
+            mPacketInterface, SLOT(setServoDirect(quint8,double)));
 }
 
 void CarInterface::setKeyboardValues(double throttle, double steering)
@@ -440,4 +442,18 @@ void CarInterface::on_clearRouteButton_clicked()
                                  "No ack received on clear route, so the route is most likely not cleared.");
         }
     }
+}
+
+void CarInterface::on_servoDirectSlider_valueChanged(int value)
+{
+    double val_mapped = (double)value / 1000.0;
+    ui->servoDirectNumber->display(val_mapped);
+    emit setServoDirect(mId, val_mapped);
+}
+
+void CarInterface::on_servoMappedSlider_valueChanged(int value)
+{
+    double val_mapped = (double)value / 1000.0;
+    ui->servoMappedNumber->display(val_mapped);
+    emit setRcCurrent(mId, 0.0, val_mapped);
 }

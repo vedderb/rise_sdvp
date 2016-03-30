@@ -457,6 +457,30 @@ void utils_fast_sincos_better(float angle, float *sin, float *cos) {
 }
 
 /**
+ * Calculate the distance between two points.
+ *
+ * @param x1
+ * Point 1 x coordinate.
+ *
+ * @param y1
+ * Point 1 y coordinate.
+ *
+ * @param x2
+ * Point 2 x coordinate.
+ *
+ * @param y2
+ * Point 2 y coordinate.
+ *
+ * @return
+ * The distance between the points.
+ */
+float utils_point_distance(float x1, float y1, float x2, float y2) {
+	float dx = x2 - x1;
+	float dy = y2 - y1;
+	return sqrtf(dx * dx + dy * dy);
+}
+
+/**
  * A system locking function with a counter. For every lock, a corresponding unlock must
  * exist to unlock the system. That means, if lock is called five times, unlock has to
  * be called five times as well. Note that chSysLock and chSysLockFromIsr are the same
