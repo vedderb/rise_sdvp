@@ -33,6 +33,8 @@
 #include "servo_simple.h"
 #include "utils.h"
 #include "autopilot.h"
+#include "comm_cc2520.h"
+#include "comm_usb.h"
 
 #include <math.h>
 #include <string.h>
@@ -250,6 +252,25 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			float steering = buffer_get_float32(data, 1e6, &ind);
 			utils_truncate_number(&steering, 0.0, 1.0);
 			servo_simple_set_pos_ramp(steering);
+		} break;
+
+		case CMD_SEND_RTCM_USB: {
+			int32_t send_index = 0;
+			m_send_buffer[send_index++] = main_config.id;
+			m_send_buffer[send_index++] = packet_id;
+			memcpy(m_send_buffer + send_index, data, len);
+			send_index += len;
+			comm_usb_send_packet(m_send_buffer, send_index);
+		} break;
+
+		case CMD_SEND_NMEA_RADIO: {
+			int32_t send_index = 0;
+			m_send_buffer[send_index++] = main_config.id;
+			m_send_buffer[send_index++] = packet_id;
+			memcpy(m_send_buffer + send_index, data, len);
+			send_index += len;
+			comm_cc2520_send_buffer(m_send_buffer, send_index);
+			commands_printf("NMEA");
 		} break;
 
 		default:

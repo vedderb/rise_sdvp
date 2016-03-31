@@ -59,6 +59,8 @@ CarInterface::CarInterface(QWidget *parent) :
     mLastHostAddress.clear();
     mUdpPort = 27800;
 
+    mNmeaForwardServer = new TcpBroadcast(this);
+
     connect(mTimer, SIGNAL(timeout()), this, SLOT(timerSlot()));
     connect(mUdpSocket, SIGNAL(readyRead()), this, SLOT(udpReadReady()));
 }
@@ -273,6 +275,8 @@ void CarInterface::setPacketInterface(PacketInterface *packetInterface)
             mPacketInterface, SLOT(setRcControlDuty(quint8,double,double)));
     connect(this, SIGNAL(setServoDirect(quint8,double)),
             mPacketInterface, SLOT(setServoDirect(quint8,double)));
+    connect(mPacketInterface, SIGNAL(nmeaRadioReceived(quint8,QByteArray)),
+            this, SLOT(nmeaReceived(quint8,QByteArray)));
 }
 
 void CarInterface::setKeyboardValues(double throttle, double steering)
@@ -341,6 +345,15 @@ void CarInterface::routePointSet(LocPoint pos)
                                  "No ack received, so the the last route point was most likely not set.");
         }
     }
+}
+
+void CarInterface::nmeaReceived(quint8 id, QByteArray nmea_msg)
+{
+    if (id == mId) {
+        ui->nmeaBrowser->append(QString::fromLocal8Bit(nmea_msg));
+    }
+
+    mNmeaForwardServer->broadcastData(nmea_msg);
 }
 
 void CarInterface::on_terminalSendButton_clicked()
@@ -456,4 +469,18 @@ void CarInterface::on_servoMappedSlider_valueChanged(int value)
     double val_mapped = (double)value / 1000.0;
     ui->servoMappedNumber->display(val_mapped);
     emit setRcCurrent(mId, 0.0, val_mapped);
+}
+
+void CarInterface::on_nmeaServerActiveBox_toggled(bool checked)
+{
+    if (checked) {
+        if (!mNmeaForwardServer->startTcpServer(ui->nmeaServerPortBox->value())) {
+            QMessageBox::warning(this, "TCP Server Error",
+                                 "Creating TCP server for NMEA data failed. Make sure that the port is not "
+                                 "already in use.");
+            ui->nmeaServerActiveBox->setChecked(false);
+        }
+    } else {
+        mNmeaForwardServer->stopServer();
+    }
 }

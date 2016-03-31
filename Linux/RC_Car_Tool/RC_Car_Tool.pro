@@ -29,7 +29,12 @@ SOURCES += main.cpp\
     locpoint.cpp \
     perspectivepixmap.cpp \
     carinterface.cpp \
-    orientationwidget.cpp
+    orientationwidget.cpp \
+    nmeaserver.cpp \
+    rtcm3_simple.c \
+    rtcmclient.cpp \
+    tcpbroadcast.cpp \
+    rtcmwidget.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
@@ -41,7 +46,13 @@ HEADERS  += mainwindow.h \
     locpoint.h \
     perspectivepixmap.h \
     carinterface.h \
-    orientationwidget.h
+    orientationwidget.h \
+    nmeaserver.h \
+    rtcm3_simple.h \
+    rtcmclient.h \
+    tcpbroadcast.h \
+    rtcmwidget.h
 
 FORMS    += mainwindow.ui \
-    carinterface.ui
+    carinterface.ui \
+    rtcmwidget.ui

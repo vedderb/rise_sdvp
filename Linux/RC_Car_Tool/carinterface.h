@@ -8,6 +8,7 @@
 #include "datatypes.h"
 #include "mapwidget.h"
 #include "packetinterface.h"
+#include "tcpbroadcast.h"
 
 namespace Ui {
 class CarInterface;
@@ -43,6 +44,7 @@ private slots:
     void terminalPrint(quint8 id, QString str);
     void vescFwdReceived(quint8 id, QByteArray data);
     void routePointSet(LocPoint pos);
+    void nmeaReceived(quint8 id, QByteArray nmea_msg);
 
     void on_terminalSendButton_clicked();
     void on_terminalClearButton_clicked();
@@ -55,6 +57,7 @@ private slots:
     void on_clearRouteButton_clicked();
     void on_servoDirectSlider_valueChanged(int value);
     void on_servoMappedSlider_valueChanged(int value);
+    void on_nmeaServerActiveBox_toggled(bool checked);
 
 private:
     Ui::CarInterface *ui;
@@ -78,6 +81,7 @@ private:
     QUdpSocket *mUdpSocket;
     QHostAddress mLastHostAddress;
     quint16 mUdpPort;
+    TcpBroadcast *mNmeaForwardServer;
 
 };
 

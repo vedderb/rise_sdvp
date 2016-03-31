@@ -70,6 +70,8 @@ MainWindow::MainWindow(QWidget *parent) :
             this, SLOT(mapPosSet(quint8,LocPoint)));
     connect(mPacketInterface, SIGNAL(ackReceived(quint8,CMD_PACKET,QString)),
             this, SLOT(ackReceived(quint8,CMD_PACKET,QString)));
+    connect(ui->rtcmWidget, SIGNAL(rtcmReceived(QByteArray,int)),
+            this, SLOT(rtcmReceived(QByteArray,int)));
 
     on_serialRefreshButton_clicked();
 
@@ -292,6 +294,25 @@ void MainWindow::ackReceived(quint8 id, CMD_PACKET cmd, QString msg)
     str.sprintf("Car %d ack: ", id);
     str += msg;
     showStatusInfo(str, true);
+}
+
+void MainWindow::rtcmReceived(QByteArray data, int type)
+{
+    // Only send GPS observations and base station position
+    // to save bandwidth.
+    switch (type) {
+    case 1001:
+    case 1002:
+    case 1003:
+    case 1004:
+    case 1005:
+    case 1006:
+        mPacketInterface->sendRtcmUsb(255, data);
+        break;
+
+    default:
+        break;
+    }
 }
 
 void MainWindow::on_carAddButton_clicked()

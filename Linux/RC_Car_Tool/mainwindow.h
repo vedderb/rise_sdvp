@@ -48,6 +48,7 @@ private slots:
     void stateReceived(quint8 id, CAR_STATE state);
     void mapPosSet(quint8 id, LocPoint pos);
     void ackReceived(quint8 id, CMD_PACKET cmd, QString msg);
+    void rtcmReceived(QByteArray data, int type);
 
     void on_carAddButton_clicked();
     void on_carRemoveButton_clicked();
