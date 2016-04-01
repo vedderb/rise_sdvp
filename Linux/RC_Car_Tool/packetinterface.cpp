@@ -369,6 +369,40 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         emit nmeaRadioReceived(id, tmpArray);
     } break;
 
+    case CMD_GET_MAIN_CONFIG:
+    case CMD_GET_MAIN_CONFIG_DEFAULT: {
+        MAIN_CONFIG conf;
+
+        int32_t ind = 0;
+        conf.mag_comp = data[ind++];
+        conf.yaw_imu_gain = utility::buffer_get_double32(data, 1e6, &ind);
+
+        conf.mag_cal_cx = utility::buffer_get_double32(data, 1e6, &ind);
+        conf.mag_cal_cy = utility::buffer_get_double32(data, 1e6, &ind);
+        conf.mag_cal_cz = utility::buffer_get_double32(data, 1e6, &ind);
+        conf.mag_cal_xx = utility::buffer_get_double32(data, 1e6, &ind);
+        conf.mag_cal_xy = utility::buffer_get_double32(data, 1e6, &ind);
+        conf.mag_cal_xz = utility::buffer_get_double32(data, 1e6, &ind);
+        conf.mag_cal_yx = utility::buffer_get_double32(data, 1e6, &ind);
+        conf.mag_cal_yy = utility::buffer_get_double32(data, 1e6, &ind);
+        conf.mag_cal_yz = utility::buffer_get_double32(data, 1e6, &ind);
+        conf.mag_cal_zx = utility::buffer_get_double32(data, 1e6, &ind);
+        conf.mag_cal_zy = utility::buffer_get_double32(data, 1e6, &ind);
+        conf.mag_cal_zz = utility::buffer_get_double32(data, 1e6, &ind);
+
+        conf.gear_ratio = utility::buffer_get_double32(data, 1e6, &ind);
+        conf.wheel_diam = utility::buffer_get_double32(data, 1e6, &ind);
+        conf.motor_poles = utility::buffer_get_double32(data, 1e6, &ind);
+        conf.steering_max_angle_rad = utility::buffer_get_double32(data, 1e6, &ind);
+        conf.steering_center = utility::buffer_get_double32(data, 1e6, &ind);
+        conf.steering_left = utility::buffer_get_double32(data, 1e6, &ind);
+        conf.steering_right = utility::buffer_get_double32(data, 1e6, &ind);
+        conf.steering_ramp_time = utility::buffer_get_double32(data, 1e6, &ind);
+        conf.axis_distance = utility::buffer_get_double32(data, 1e6, &ind);
+
+        emit configurationReceived(id, conf);
+    } break;
+
         // Acks
     case CMD_AP_ADD_POINTS:
         emit ackReceived(id, cmd, "CMD_AP_ADD_POINTS");
@@ -378,6 +412,9 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         break;
     case CMD_AP_SET_ACTIVE:
         emit ackReceived(id, cmd, "CMD_AP_SET_ACTIVE");
+        break;
+    case CMD_SET_MAIN_CONFIG:
+        emit ackReceived(id, cmd, "CMD_SET_MAIN_CONFIG");
         break;
 
     default:
@@ -446,6 +483,41 @@ bool PacketInterface::setApActive(quint8 id, bool active, int retries)
     mSendBuffer[send_index++] = active ? 1 : 0;
 
     return sendPacketAck(mSendBuffer, send_index, retries);
+}
+
+bool PacketInterface::setConfiguration(quint8 id, MAIN_CONFIG &conf, int retries)
+{
+    qint32 send_index = 0;
+    mSendBuffer[send_index++] = id;
+    mSendBuffer[send_index++] = CMD_SET_MAIN_CONFIG;
+
+    mSendBuffer[send_index++] = conf.mag_comp;
+    utility::buffer_append_double32(mSendBuffer, conf.yaw_imu_gain, 1e6, &send_index);
+
+    utility::buffer_append_double32(mSendBuffer, conf.mag_cal_cx, 1e6, &send_index);
+    utility::buffer_append_double32(mSendBuffer, conf.mag_cal_cy, 1e6, &send_index);
+    utility::buffer_append_double32(mSendBuffer, conf.mag_cal_cz, 1e6, &send_index);
+    utility::buffer_append_double32(mSendBuffer, conf.mag_cal_xx, 1e6, &send_index);
+    utility::buffer_append_double32(mSendBuffer, conf.mag_cal_xy, 1e6, &send_index);
+    utility::buffer_append_double32(mSendBuffer, conf.mag_cal_xz, 1e6, &send_index);
+    utility::buffer_append_double32(mSendBuffer, conf.mag_cal_yx, 1e6, &send_index);
+    utility::buffer_append_double32(mSendBuffer, conf.mag_cal_yy, 1e6, &send_index);
+    utility::buffer_append_double32(mSendBuffer, conf.mag_cal_yz, 1e6, &send_index);
+    utility::buffer_append_double32(mSendBuffer, conf.mag_cal_zx, 1e6, &send_index);
+    utility::buffer_append_double32(mSendBuffer, conf.mag_cal_zy, 1e6, &send_index);
+    utility::buffer_append_double32(mSendBuffer, conf.mag_cal_zz, 1e6, &send_index);
+
+    utility::buffer_append_double32(mSendBuffer, conf.gear_ratio, 1e6, &send_index);
+    utility::buffer_append_double32(mSendBuffer, conf.wheel_diam, 1e6, &send_index);
+    utility::buffer_append_double32(mSendBuffer, conf.motor_poles, 1e6, &send_index);
+    utility::buffer_append_double32(mSendBuffer, conf.steering_max_angle_rad, 1e6, &send_index);
+    utility::buffer_append_double32(mSendBuffer, conf.steering_center, 1e6, &send_index);
+    utility::buffer_append_double32(mSendBuffer, conf.steering_left, 1e6, &send_index);
+    utility::buffer_append_double32(mSendBuffer, conf.steering_right, 1e6, &send_index);
+    utility::buffer_append_double32(mSendBuffer, conf.steering_ramp_time, 1e6, &send_index);
+    utility::buffer_append_double32(mSendBuffer, conf.axis_distance, 1e6, &send_index);
+
+    return sendPacketAck(mSendBuffer, send_index, retries, 2000);
 }
 
 void PacketInterface::sendTerminalCmd(quint8 id, QString cmd)
@@ -527,5 +599,23 @@ void PacketInterface::sendNmeaRadio(quint8 id, QByteArray nmea_msg)
     packet.append(id);
     packet.append((char)CMD_SEND_NMEA_RADIO);
     packet.append(nmea_msg);
+    sendPacket(packet);
+}
+
+void PacketInterface::getConfiguration(quint8 id)
+{
+    QByteArray packet;
+    packet.clear();
+    packet.append(id);
+    packet.append((char)CMD_GET_MAIN_CONFIG);
+    sendPacket(packet);
+}
+
+void PacketInterface::getDefaultConfiguration(quint8 id)
+{
+    QByteArray packet;
+    packet.clear();
+    packet.append(id);
+    packet.append((char)CMD_GET_MAIN_CONFIG_DEFAULT);
     sendPacket(packet);
 }

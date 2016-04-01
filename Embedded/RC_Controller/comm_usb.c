@@ -31,21 +31,28 @@
 
 // Settings
 #define PACKET_HANDLER				0
+#define SERIAL_RX_BUFFER_SIZE		2048
+#define SERIAL_TX_BUFFER_SIZE		2048
 
 // Private variables
-#define SERIAL_RX_BUFFER_SIZE		2048
 static uint8_t serial_rx_buffer[SERIAL_RX_BUFFER_SIZE];
-static int serial_rx_read_pos = 0;
-static int serial_rx_write_pos = 0;
+static uint8_t serial_tx_buffer[SERIAL_RX_BUFFER_SIZE];
+static volatile int serial_rx_read_pos = 0;
+static volatile int serial_rx_write_pos = 0;
+static volatile int serial_tx_read_pos = 0;
+static volatile int serial_tx_write_pos = 0;
 static THD_WORKING_AREA(serial_read_thread_wa, 512);
+static THD_WORKING_AREA(serial_write_thread_wa, 512);
 static THD_WORKING_AREA(serial_process_thread_wa, 4096);
 static mutex_t send_mutex;
 static thread_t *process_tp;
+static thread_t *write_tp;
 
 // Private functions
 static void process_packet(unsigned char *data, unsigned int len);
 static void send_packet(unsigned char *buffer, unsigned int len);
 static THD_FUNCTION(serial_read_thread, arg);
+static THD_FUNCTION(serial_write_thread, arg);
 static THD_FUNCTION(serial_process_thread, arg);
 
 void comm_usb_init(void) {
@@ -56,6 +63,7 @@ void comm_usb_init(void) {
 
 	// Threads
 	chThdCreateStatic(serial_read_thread_wa, sizeof(serial_read_thread_wa), NORMALPRIO, serial_read_thread, NULL);
+	chThdCreateStatic(serial_write_thread_wa, sizeof(serial_write_thread_wa), NORMALPRIO, serial_write_thread, NULL);
 	chThdCreateStatic(serial_process_thread_wa, sizeof(serial_process_thread_wa), NORMALPRIO, serial_process_thread, NULL);
 }
 
@@ -115,10 +123,59 @@ static THD_FUNCTION(serial_process_thread, arg) {
 	}
 }
 
+static THD_FUNCTION(serial_write_thread, arg) {
+	(void)arg;
+
+	chRegSetThreadName("USB-Serial write");
+
+	write_tp = chThdGetSelfX();
+
+	for(;;) {
+		chEvtWaitAny((eventmask_t) 1);
+
+		while (serial_tx_read_pos != serial_tx_write_pos) {
+			chSequentialStreamWrite(&SDU1, serial_tx_buffer + serial_tx_read_pos, 1);
+			serial_tx_read_pos++;
+
+			if (serial_tx_read_pos == SERIAL_TX_BUFFER_SIZE) {
+				serial_tx_read_pos = 0;
+			}
+		}
+	}
+}
+
 static void process_packet(unsigned char *data, unsigned int len) {
 	commands_process_packet(data, len, comm_usb_send_packet);
 }
 
 static void send_packet(unsigned char *buffer, unsigned int len) {
-	chSequentialStreamWrite(&SDU1, buffer, len);
+	unsigned int remaining = (serial_tx_write_pos > serial_tx_read_pos) ?
+					serial_tx_write_pos - serial_tx_read_pos :
+					SERIAL_TX_BUFFER_SIZE - serial_tx_read_pos + serial_tx_write_pos;
+	remaining -= 1;
+
+	systime_t timeout = 10;
+	while(len > remaining) {
+		chThdSleepMilliseconds(1);
+
+		remaining = (serial_tx_write_pos >= serial_tx_read_pos) ?
+					serial_tx_write_pos - serial_tx_read_pos :
+					SERIAL_TX_BUFFER_SIZE - serial_tx_read_pos + serial_tx_write_pos;
+		remaining -= 1;
+
+		timeout--;
+		if (timeout == 0) {
+			return;
+		}
+	}
+
+	for (unsigned int i = 0;i < len;i++) {
+		serial_tx_buffer[serial_tx_write_pos++] = buffer[i];
+
+		if (serial_tx_write_pos == SERIAL_TX_BUFFER_SIZE) {
+			serial_tx_write_pos = 0;
+		}
+	}
+
+	chEvtSignal(write_tp, (eventmask_t) 1);
 }

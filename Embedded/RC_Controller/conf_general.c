@@ -26,9 +26,17 @@
 #include "ch.h"
 #include "hal.h"
 #include "stm32f4xx_conf.h"
+#include "eeprom.h"
+#include "utils.h"
+#include <string.h>
+
+// Settings
+#define EEPROM_BASE_MAINCONF		1000
 
 // Global variables
 MAIN_CONFIG main_config;
+int main_id;
+uint16_t VirtAddVarTab[NB_OF_VAR];
 
 void conf_general_init(void) {
 	palSetPadMode(GPIOE, 8, PAL_MODE_INPUT_PULLUP);
@@ -42,54 +50,137 @@ void conf_general_init(void) {
 
 	chThdSleepMilliseconds(10);
 
-	main_config.id = (~(palReadPort(GPIOE) >> 8)) & 0x0F;
+	// Read address from switches
+	main_id = (~(palReadPort(GPIOE) >> 8)) & 0x0F;
 
-	// The default parameters
-	main_config.mag_cal_cx = 0.0;
-	main_config.mag_cal_cy = 0.0;
-	main_config.mag_cal_cz = 0.0;
-	main_config.mag_cal_xx = 1.0;
-	main_config.mag_cal_xy = 0.0;
-	main_config.mag_cal_xz = 0.0;
-	main_config.mag_cal_yx = 0.0;
-	main_config.mag_cal_yy = 1.0;
-	main_config.mag_cal_yz = 0.0;
-	main_config.mag_cal_zx = 0.0;
-	main_config.mag_cal_zy = 0.0;
-	main_config.mag_cal_zz = 1.0;
+	memset(VirtAddVarTab, 0, sizeof(VirtAddVarTab));
 
-	main_config.gear_ratio = (1.0 / 3.0) * (21.0 / 37.0);
-	main_config.wheel_diam = 0.12;
-	main_config.motor_poles = 4.0;
-	main_config.steering_max_angle_rad = 0.42041;
-	main_config.steering_center = 0.46;
-	main_config.steering_left = 0.75;
-	main_config.steering_right = 0.17;
-	main_config.steering_ramp_time = 0.6;
-	main_config.axis_distance = 0.475;
-	main_config.yaw_imu_gain = 0.0; // 3e-3?
+	for (unsigned int i = 0;i < (sizeof(MAIN_CONFIG) / 2);i++) {
+		VirtAddVarTab[i] = EEPROM_BASE_MAINCONF + i;
+	}
+
+	FLASH_Unlock();
+	FLASH_ClearFlag(FLASH_FLAG_OPERR | FLASH_FLAG_WRPERR | FLASH_FLAG_PGAERR |
+			FLASH_FLAG_PGPERR | FLASH_FLAG_PGSERR);
+	EE_Init();
+
+	conf_general_read_main_conf(&main_config);
+}
+
+/**
+ * Load the compiled default app_configuration.
+ *
+ * @param conf
+ * A pointer to store the default configuration to.
+ */
+void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
+	conf->mag_comp = true;
+	conf->yaw_imu_gain = 0.0; // 3e-3?
+
+	conf->mag_cal_cx = 0.0;
+	conf->mag_cal_cy = 0.0;
+	conf->mag_cal_cz = 0.0;
+	conf->mag_cal_xx = 1.0;
+	conf->mag_cal_xy = 0.0;
+	conf->mag_cal_xz = 0.0;
+	conf->mag_cal_yx = 0.0;
+	conf->mag_cal_yy = 1.0;
+	conf->mag_cal_yz = 0.0;
+	conf->mag_cal_zx = 0.0;
+	conf->mag_cal_zy = 0.0;
+	conf->mag_cal_zz = 1.0;
+
+	conf->gear_ratio = (1.0 / 3.0) * (21.0 / 37.0);
+	conf->wheel_diam = 0.12;
+	conf->motor_poles = 4.0;
+	conf->steering_max_angle_rad = 0.42041;
+	conf->steering_center = 0.46;
+	conf->steering_left = 0.75;
+	conf->steering_right = 0.17;
+	conf->steering_ramp_time = 0.6;
+	conf->axis_distance = 0.475;
 
 	// Custom parameters based on car ID
-	switch (main_config.id) {
+	switch (main_id) {
 	case 0:
-		main_config.mag_cal_cx = 6.67419;
-		main_config.mag_cal_cy = -6.24658;
-		main_config.mag_cal_cz = 5.05975;
+		conf->mag_cal_cx = 6.67419;
+		conf->mag_cal_cy = -6.24658;
+		conf->mag_cal_cz = 5.05975;
 
-		main_config.mag_cal_xx = 0.934036;
-		main_config.mag_cal_xy = -0.00158248;
-		main_config.mag_cal_xz = 0.00402214;
+		conf->mag_cal_xx = 0.934036;
+		conf->mag_cal_xy = -0.00158248;
+		conf->mag_cal_xz = 0.00402214;
 
-		main_config.mag_cal_yx = -0.00158248;
-		main_config.mag_cal_yy = 0.949697;
-		main_config.mag_cal_yz = -0.00586774;
+		conf->mag_cal_yx = -0.00158248;
+		conf->mag_cal_yy = 0.949697;
+		conf->mag_cal_yz = -0.00586774;
 
-		main_config.mag_cal_zx = 0.00402214;
-		main_config.mag_cal_zy = -0.00586774;
-		main_config.mag_cal_zz = 0.999047;
+		conf->mag_cal_zx = 0.00402214;
+		conf->mag_cal_zy = -0.00586774;
+		conf->mag_cal_zz = 0.999047;
 		break;
 
 	default:
 		break;
 	}
+}
+
+/**
+ * Read MAIN_CONFIG from EEPROM. If this fails, default values will be used.
+ *
+ * @param conf
+ * A pointer to a MAIN_CONFIG struct to write the configuration to.
+ */
+void conf_general_read_main_conf(MAIN_CONFIG *conf) {
+	bool is_ok = true;
+	uint8_t *conf_addr = (uint8_t*)conf;
+	uint16_t var;
+
+	for (unsigned int i = 0;i < (sizeof(MAIN_CONFIG) / 2);i++) {
+		if (EE_ReadVariable(EEPROM_BASE_MAINCONF + i, &var) == 0) {
+			conf_addr[2 * i] = (var >> 8) & 0xFF;
+			conf_addr[2 * i + 1] = var & 0xFF;
+		} else {
+			is_ok = false;
+			break;
+		}
+	}
+
+	// Set the default configuration
+	if (!is_ok) {
+		conf_general_get_default_main_config(conf);
+	}
+}
+
+/**
+ * Write MAIN_CONFIG to EEPROM.
+ *
+ * @param conf
+ * A pointer to the configuration that should be stored.
+ */
+bool conf_general_store_main_config(MAIN_CONFIG *conf) {
+	utils_sys_lock_cnt();
+//	RCC_APB1PeriphClockCmd(RCC_APB1Periph_WWDG, DISABLE);
+
+	bool is_ok = true;
+	uint8_t *conf_addr = (uint8_t*)conf;
+	uint16_t var;
+
+	FLASH_ClearFlag(FLASH_FLAG_OPERR | FLASH_FLAG_WRPERR | FLASH_FLAG_PGAERR |
+			FLASH_FLAG_PGPERR | FLASH_FLAG_PGSERR);
+
+	for (unsigned int i = 0;i < (sizeof(MAIN_CONFIG) / 2);i++) {
+		var = (conf_addr[2 * i] << 8) & 0xFF00;
+		var |= conf_addr[2 * i + 1] & 0xFF;
+
+		if (EE_WriteVariable(EEPROM_BASE_MAINCONF + i, var) != FLASH_COMPLETE) {
+			is_ok = false;
+			break;
+		}
+	}
+
+//	RCC_APB1PeriphClockCmd(RCC_APB1Periph_WWDG, ENABLE);
+	utils_sys_unlock_cnt();
+
+	return is_ok;
 }

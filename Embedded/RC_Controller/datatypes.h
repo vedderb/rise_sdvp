@@ -94,7 +94,10 @@ typedef enum {
 	CMD_AP_SET_ACTIVE,
 	CMD_SET_SERVO_DIRECT,
 	CMD_SEND_RTCM_USB,
-	CMD_SEND_NMEA_RADIO
+	CMD_SEND_NMEA_RADIO,
+	CMD_SET_MAIN_CONFIG,
+	CMD_GET_MAIN_CONFIG,
+	CMD_GET_MAIN_CONFIG_DEFAULT
 } CMD_PACKET;
 
 // RC control modes
@@ -106,7 +109,9 @@ typedef enum {
 
 // Car configuration
 typedef struct {
-	int id;
+	// Settings
+	bool mag_comp; // Should be 0 when capturing samples for the calibration
+	float yaw_imu_gain;
 
 	// Magnetometer calibration
 	float mag_cal_cx;
@@ -132,7 +137,6 @@ typedef struct {
 	float steering_right;
 	float steering_ramp_time; // Ramp time constant for the steering servo in seconds.
 	float axis_distance;
-	float yaw_imu_gain;
 } MAIN_CONFIG;
 
 // ============== VESC Datatypes ================== //

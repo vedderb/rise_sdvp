@@ -102,6 +102,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 	CMD_PACKET packet_id;
 	uint8_t id = 0;
+	MAIN_CONFIG main_cfg_tmp;
 
 	id = data[0];
 	data++;
@@ -111,7 +112,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 	data++;
 	len--;
 
-	if (id == main_config.id || id == ID_ALL) {
+	if (id == main_id || id == ID_ALL) {
 		switch (packet_id) {
 		case CMD_GET_STATE: {
 			POS_STATE pos;
@@ -126,7 +127,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			pos_get_pos(&pos);
 			pos_get_mc_val(&mcval);
 			int32_t send_index = 0;
-			m_send_buffer[send_index++] = main_config.id;
+			m_send_buffer[send_index++] = main_id;
 			m_send_buffer[send_index++] = CMD_GET_STATE;
 			m_send_buffer[send_index++] = FW_VERSION_MAJOR;
 			m_send_buffer[send_index++] = FW_VERSION_MINOR;
@@ -222,7 +223,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 			// Send ack
 			int32_t send_index = 0;
-			m_send_buffer[send_index++] = main_config.id;
+			m_send_buffer[send_index++] = main_id;
 			m_send_buffer[send_index++] = packet_id;
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
@@ -232,7 +233,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 			// Send ack
 			int32_t send_index = 0;
-			m_send_buffer[send_index++] = main_config.id;
+			m_send_buffer[send_index++] = main_id;
 			m_send_buffer[send_index++] = packet_id;
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
@@ -242,7 +243,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 			// Send ack
 			int32_t send_index = 0;
-			m_send_buffer[send_index++] = main_config.id;
+			m_send_buffer[send_index++] = main_id;
 			m_send_buffer[send_index++] = packet_id;
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
@@ -256,7 +257,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 		case CMD_SEND_RTCM_USB: {
 			int32_t send_index = 0;
-			m_send_buffer[send_index++] = main_config.id;
+			m_send_buffer[send_index++] = main_id;
 			m_send_buffer[send_index++] = packet_id;
 			memcpy(m_send_buffer + send_index, data, len);
 			send_index += len;
@@ -265,12 +266,89 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 		case CMD_SEND_NMEA_RADIO: {
 			int32_t send_index = 0;
-			m_send_buffer[send_index++] = main_config.id;
+			m_send_buffer[send_index++] = main_id;
 			m_send_buffer[send_index++] = packet_id;
 			memcpy(m_send_buffer + send_index, data, len);
 			send_index += len;
 			comm_cc2520_send_buffer(m_send_buffer, send_index);
-			commands_printf("NMEA");
+		} break;
+
+		case CMD_SET_MAIN_CONFIG: {
+			int32_t ind = 0;
+			main_config.mag_comp = data[ind++];
+			main_config.yaw_imu_gain = buffer_get_float32(data, 1e6, &ind);
+
+			main_config.mag_cal_cx = buffer_get_float32(data, 1e6, &ind);
+			main_config.mag_cal_cy = buffer_get_float32(data, 1e6, &ind);
+			main_config.mag_cal_cz = buffer_get_float32(data, 1e6, &ind);
+			main_config.mag_cal_xx = buffer_get_float32(data, 1e6, &ind);
+			main_config.mag_cal_xy = buffer_get_float32(data, 1e6, &ind);
+			main_config.mag_cal_xz = buffer_get_float32(data, 1e6, &ind);
+			main_config.mag_cal_yx = buffer_get_float32(data, 1e6, &ind);
+			main_config.mag_cal_yy = buffer_get_float32(data, 1e6, &ind);
+			main_config.mag_cal_yz = buffer_get_float32(data, 1e6, &ind);
+			main_config.mag_cal_zx = buffer_get_float32(data, 1e6, &ind);
+			main_config.mag_cal_zy = buffer_get_float32(data, 1e6, &ind);
+			main_config.mag_cal_zz = buffer_get_float32(data, 1e6, &ind);
+
+			main_config.gear_ratio = buffer_get_float32(data, 1e6, &ind);
+			main_config.wheel_diam = buffer_get_float32(data, 1e6, &ind);
+			main_config.motor_poles = buffer_get_float32(data, 1e6, &ind);
+			main_config.steering_max_angle_rad = buffer_get_float32(data, 1e6, &ind);
+			main_config.steering_center = buffer_get_float32(data, 1e6, &ind);
+			main_config.steering_left = buffer_get_float32(data, 1e6, &ind);
+			main_config.steering_right = buffer_get_float32(data, 1e6, &ind);
+			main_config.steering_ramp_time = buffer_get_float32(data, 1e6, &ind);
+			main_config.axis_distance = buffer_get_float32(data, 1e6, &ind);
+
+			conf_general_store_main_config(&main_config);
+
+			// Send ack
+			int32_t send_index = 0;
+			m_send_buffer[send_index++] = main_id;
+			m_send_buffer[send_index++] = packet_id;
+			commands_send_packet(m_send_buffer, send_index);
+		} break;
+
+		case CMD_GET_MAIN_CONFIG:
+		case CMD_GET_MAIN_CONFIG_DEFAULT: {
+			if (packet_id == CMD_GET_MAIN_CONFIG) {
+				main_cfg_tmp = main_config;
+			} else {
+				conf_general_get_default_main_config(&main_cfg_tmp);
+			}
+
+			int32_t send_index = 0;
+			m_send_buffer[send_index++] = main_id;
+			m_send_buffer[send_index++] = packet_id;
+
+			m_send_buffer[send_index++] = main_cfg_tmp.mag_comp;
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.yaw_imu_gain, 1e6, &send_index);
+
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_cx, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_cy, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_cz, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_xx, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_xy, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_xz, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_yx, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_yy, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_yz, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_zx, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_zy, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_zz, 1e6, &send_index);
+
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.gear_ratio, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.wheel_diam, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.motor_poles, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.steering_max_angle_rad, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.steering_center, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.steering_left, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.steering_right, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.steering_ramp_time, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.axis_distance, 1e6, &send_index);
+
+			commands_send_packet(m_send_buffer, send_index);
 		} break;
 
 		default:
@@ -285,7 +363,7 @@ void commands_printf(char* format, ...) {
 	int len;
 	static char print_buffer[255];
 
-	print_buffer[0] = main_config.id;
+	print_buffer[0] = main_id;
 	print_buffer[1] = CMD_PRINTF;
 	len = vsnprintf(print_buffer + 2, 253, format, arg);
 	va_end (arg);
@@ -296,7 +374,7 @@ void commands_printf(char* format, ...) {
 }
 
 void commands_forward_vesc_packet(unsigned char *data, unsigned int len) {
-	m_send_buffer[0] = main_config.id;
+	m_send_buffer[0] = main_id;
 	m_send_buffer[1] = CMD_VESC_FWD;
 	memcpy(m_send_buffer + 2, data, len);
 	commands_send_packet((unsigned char*)m_send_buffer, len + 2);

@@ -4,6 +4,7 @@
 #include "utility.h"
 #include <QFileDialog>
 #include <QMessageBox>
+#include <cmath>
 
 namespace {
 void faultToStr(mc_fault_code fault, QString &str, bool &isOk)
@@ -277,6 +278,8 @@ void CarInterface::setPacketInterface(PacketInterface *packetInterface)
             mPacketInterface, SLOT(setServoDirect(quint8,double)));
     connect(mPacketInterface, SIGNAL(nmeaRadioReceived(quint8,QByteArray)),
             this, SLOT(nmeaReceived(quint8,QByteArray)));
+    connect(mPacketInterface, SIGNAL(configurationReceived(quint8,MAIN_CONFIG)),
+            this, SLOT(configurationReceived(quint8,MAIN_CONFIG)));
 }
 
 void CarInterface::setKeyboardValues(double throttle, double steering)
@@ -354,6 +357,16 @@ void CarInterface::nmeaReceived(quint8 id, QByteArray nmea_msg)
     }
 
     mNmeaForwardServer->broadcastData(nmea_msg);
+}
+
+void CarInterface::configurationReceived(quint8 id, MAIN_CONFIG config)
+{
+    if (id == mId) {
+        setConfGui(config);
+        QString str;
+        str.sprintf("Car %d: Configuration Received", id);
+        emit showStatusInfo(str, true);
+    }
 }
 
 void CarInterface::on_terminalSendButton_clicked()
@@ -483,4 +496,94 @@ void CarInterface::on_nmeaServerActiveBox_toggled(bool checked)
     } else {
         mNmeaForwardServer->stopServer();
     }
+}
+
+void CarInterface::on_confReadButton_clicked()
+{
+    if (mPacketInterface) {
+        mPacketInterface->getConfiguration(mId);
+    }
+}
+
+void CarInterface::on_confReadDefaultButton_clicked()
+{
+    if (mPacketInterface) {
+        mPacketInterface->getDefaultConfiguration(mId);
+    }
+}
+
+void CarInterface::on_confWriteButton_clicked()
+{
+    if (mPacketInterface) {
+        MAIN_CONFIG conf;
+        getConfGui(conf);
+        ui->confWriteButton->setEnabled(false);
+        bool ok = mPacketInterface->setConfiguration(mId, conf, 5);
+        ui->confWriteButton->setEnabled(true);
+
+        if (!ok) {
+            QMessageBox::warning(this, "Configuration",
+                                 "Could not write configuration.");
+        }
+    }
+}
+
+void CarInterface::getConfGui(MAIN_CONFIG &conf)
+{
+    conf.mag_comp = ui->confMagCompBox->isChecked();
+    conf.yaw_imu_gain = ui->confYawImuGainBox->value();
+
+    conf.mag_cal_cx = ui->confMagCxBox->value();
+    conf.mag_cal_cy = ui->confMagCyBox->value();
+    conf.mag_cal_cz = ui->confMagCzBox->value();
+    conf.mag_cal_xx = ui->confMagXxBox->value();
+    conf.mag_cal_xy = ui->confMagXyBox->value();
+    conf.mag_cal_xz = ui->confMagXzBox->value();
+    conf.mag_cal_yx = ui->confMagYxBox->value();
+    conf.mag_cal_yy = ui->confMagYyBox->value();
+    conf.mag_cal_yz = ui->confMagYzBox->value();
+    conf.mag_cal_zx = ui->confMagZxBox->value();
+    conf.mag_cal_zy = ui->confMagZyBox->value();
+    conf.mag_cal_zz = ui->confMagZzBox->value();
+
+    conf.gear_ratio = ui->confGearRatioBox->value();
+    conf.wheel_diam = ui->confWheelDiamBox->value();
+    conf.motor_poles = ui->confMotorPoleBox->value();
+    conf.steering_center = ui->confServoCenterBox->value();
+    conf.steering_left = ui->confServoLeftBox->value();
+    conf.steering_right = ui->confServoRightBox->value();
+    conf.steering_ramp_time = ui->confSteeringRampBox->value();
+    conf.axis_distance = ui->confAxisDistanceBox->value();
+
+    conf.steering_max_angle_rad = atan(ui->confAxisDistanceBox->value() / ui->confTurnRadBox->value());
+}
+
+void CarInterface::setConfGui(MAIN_CONFIG &conf)
+{
+    ui->confMagCompBox->setChecked(conf.mag_comp);
+    ui->confYawImuGainBox->setValue(conf.yaw_imu_gain);
+
+    ui->confMagCxBox->setValue(conf.mag_cal_cx);
+    ui->confMagCyBox->setValue(conf.mag_cal_cy);
+    ui->confMagCzBox->setValue(conf.mag_cal_cz);
+    ui->confMagXxBox->setValue(conf.mag_cal_xx);
+    ui->confMagXyBox->setValue(conf.mag_cal_xy);
+    ui->confMagXzBox->setValue(conf.mag_cal_xz);
+    ui->confMagYzBox->setValue(conf.mag_cal_yx);
+    ui->confMagYyBox->setValue(conf.mag_cal_yy);
+    ui->confMagYzBox->setValue(conf.mag_cal_yz);
+    ui->confMagZxBox->setValue(conf.mag_cal_zx);
+    ui->confMagZyBox->setValue(conf.mag_cal_zy);
+    ui->confMagZzBox->setValue(conf.mag_cal_zz);
+
+    ui->confGearRatioBox->setValue(conf.gear_ratio);
+    ui->confWheelDiamBox->setValue(conf.wheel_diam);
+    ui->confMotorPoleBox->setValue(conf.motor_poles);
+    ui->confServoCenterBox->setValue(conf.steering_center);
+    ui->confServoLeftBox->setValue(conf.steering_left);
+    ui->confServoRightBox->setValue(conf.steering_right);
+    ui->confSteeringRampBox->setValue(conf.steering_ramp_time);
+    ui->confAxisDistanceBox->setValue(conf.axis_distance);
+
+    ui->confTurnRadBox->setValue(conf.axis_distance / tan(conf.steering_max_angle_rad));
 }

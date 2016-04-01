@@ -45,6 +45,7 @@ private slots:
     void vescFwdReceived(quint8 id, QByteArray data);
     void routePointSet(LocPoint pos);
     void nmeaReceived(quint8 id, QByteArray nmea_msg);
+    void configurationReceived(quint8 id, MAIN_CONFIG config);
 
     void on_terminalSendButton_clicked();
     void on_terminalClearButton_clicked();
@@ -58,6 +59,9 @@ private slots:
     void on_servoDirectSlider_valueChanged(int value);
     void on_servoMappedSlider_valueChanged(int value);
     void on_nmeaServerActiveBox_toggled(bool checked);
+    void on_confReadButton_clicked();
+    void on_confReadDefaultButton_clicked();
+    void on_confWriteButton_clicked();
 
 private:
     Ui::CarInterface *ui;
@@ -82,6 +86,9 @@ private:
     QHostAddress mLastHostAddress;
     quint16 mUdpPort;
     TcpBroadcast *mNmeaForwardServer;
+
+    void getConfGui(MAIN_CONFIG &conf);
+    void setConfGui(MAIN_CONFIG &conf);
 
 };
 

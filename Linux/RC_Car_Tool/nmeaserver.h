@@ -5,6 +5,7 @@
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QFile>
+#include "tcpbroadcast.h"
 
 class NmeaServer : public QObject
 {
@@ -36,23 +37,12 @@ public:
     bool sendNmeaGga(nmea_gga_info_t &nmea);
     bool sendNmeaZda(quint16 wn, double tow);
     bool sendNmeaRmc(nmea_rmc_info_t &nmea);
-    bool sendNmeaCustom(QString msg);
+    bool sendNmeaRaw(QString msg);
     bool logToFile(QString file);
     void logStop();
 
-signals:
-
-public slots:
-
-private slots:
-    void newTcpConnection();
-    void tcpDisconnected();
-    void tcpDataAvailable();
-
 private:
-    QTcpServer *mTcpServer;
-    QTcpSocket *mTcpSocket;
-    bool mTcpIsConnected;
+    TcpBroadcast *mTcpBroadcast;
     QFile mLog;
 
 };

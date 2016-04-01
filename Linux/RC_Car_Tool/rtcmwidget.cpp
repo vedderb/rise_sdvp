@@ -1,5 +1,6 @@
 #include "rtcmwidget.h"
 #include "ui_rtcmwidget.h"
+#include <QSerialPortInfo>
 
 RtcmWidget::RtcmWidget(QWidget *parent) :
     QWidget(parent),
@@ -14,6 +15,8 @@ RtcmWidget::RtcmWidget(QWidget *parent) :
             this, SLOT(rtcmRx(QByteArray,int)));
     connect(mTimer, SIGNAL(timeout()),
             this, SLOT(timerSlot()));
+
+    on_rtcmSerialRefreshButton_clicked();
 }
 
 RtcmWidget::~RtcmWidget()
@@ -25,13 +28,25 @@ void RtcmWidget::timerSlot()
 {
     // Update ntrip connected label
     static bool wasNtripConnected = false;
-    if (wasNtripConnected != mRtcm->isNtripConnected()) {
-        wasNtripConnected = mRtcm->isNtripConnected();
+    if (wasNtripConnected != mRtcm->isTcpConnected()) {
+        wasNtripConnected = mRtcm->isTcpConnected();
 
         if (wasNtripConnected) {
             ui->ntripConnectedLabel->setText("Connected");
         } else {
             ui->ntripConnectedLabel->setText("Not connected");
+        }
+    }
+
+    // Update serial connected label
+    static bool wasSerialConnected = false;
+    if (wasSerialConnected != mRtcm->isSerialConnected()) {
+        wasSerialConnected = mRtcm->isSerialConnected();
+
+        if (wasSerialConnected) {
+            ui->rtcmSerialConnectedLabel->setText("Connected");
+        } else {
+            ui->rtcmSerialConnectedLabel->setText("Not connected");
         }
     }
 }
@@ -63,11 +78,15 @@ void RtcmWidget::rtcmRx(QByteArray data, int type)
 
 void RtcmWidget::on_ntripConnectButton_clicked()
 {
-    mRtcm->connectNtrip(ui->ntripServerEdit->text(),
-                        ui->ntripStreamEdit->text(),
-                        ui->ntripUserEdit->text(),
-                        ui->ntripPasswordEdit->text(),
-                        ui->ntripPortBox->value());
+    if (ui->ntripBox->isChecked()) {
+        mRtcm->connectNtrip(ui->ntripServerEdit->text(),
+                            ui->ntripStreamEdit->text(),
+                            ui->ntripUserEdit->text(),
+                            ui->ntripPasswordEdit->text(),
+                            ui->ntripPortBox->value());
+    } else {
+        mRtcm->connectTcp(ui->ntripServerEdit->text(), ui->ntripPortBox->value());
+    }
 }
 
 void RtcmWidget::on_ntripDisconnectButton_clicked()
@@ -92,4 +111,40 @@ void RtcmWidget::on_resetAllCountersButton_clicked()
 
     ui->rtcm1019Number->display(0);
     ui->rtcm1020Number->display(0);
+}
+
+void RtcmWidget::on_ntripBox_toggled(bool checked)
+{
+    if (checked) {
+        ui->ntripUserEdit->setEnabled(true);
+        ui->ntripPasswordEdit->setEnabled(true);
+        ui->ntripStreamEdit->setEnabled(true);
+    } else {
+        ui->ntripUserEdit->setEnabled(false);
+        ui->ntripPasswordEdit->setEnabled(false);
+        ui->ntripStreamEdit->setEnabled(false);
+    }
+}
+
+void RtcmWidget::on_rtcmSerialRefreshButton_clicked()
+{
+    ui->rtcmSerialPortBox->clear();
+
+    QList<QSerialPortInfo> ports = QSerialPortInfo::availablePorts();
+    foreach(const QSerialPortInfo &port, ports) {
+        ui->rtcmSerialPortBox->addItem(port.portName(), port.systemLocation());
+    }
+
+    ui->rtcmSerialPortBox->setCurrentIndex(0);
+}
+
+void RtcmWidget::on_rtcmSerialDisconnectButton_clicked()
+{
+    mRtcm->disconnectSerial();
+}
+
+void RtcmWidget::on_rtcmSerialConnectButton_clicked()
+{
+    mRtcm->connectSerial(ui->rtcmSerialPortBox->currentData().toString(),
+                         ui->rtcmSerialBaudBox->value());
 }

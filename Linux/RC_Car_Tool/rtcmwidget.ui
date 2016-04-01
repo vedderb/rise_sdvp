@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>536</width>
-    <height>330</height>
+    <width>768</width>
+    <height>463</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,33 +17,33 @@
    <item>
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
-      <string>NTRIP</string>
+      <string>TCP / NTRIP</string>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
-       <layout class="QGridLayout" name="gridLayout">
-        <item row="0" column="0">
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
          <widget class="QLabel" name="label">
           <property name="text">
            <string>Server</string>
           </property>
          </widget>
         </item>
-        <item row="0" column="1">
+        <item>
          <widget class="QLineEdit" name="ntripServerEdit">
           <property name="text">
            <string>www.igs-ip.net</string>
           </property>
          </widget>
         </item>
-        <item row="0" column="2">
+        <item>
          <widget class="QLabel" name="label_2">
           <property name="text">
            <string>Port</string>
           </property>
          </widget>
         </item>
-        <item row="0" column="3">
+        <item>
          <widget class="QSpinBox" name="ntripPortBox">
           <property name="maximum">
            <number>65535</number>
@@ -53,45 +53,42 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="4" colspan="2">
-         <widget class="QLabel" name="label_5">
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <widget class="QCheckBox" name="ntripBox">
           <property name="text">
-           <string>Stream</string>
+           <string>NTRIP</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
           </property>
          </widget>
         </item>
-        <item row="0" column="6">
-         <widget class="QLineEdit" name="ntripStreamEdit">
-          <property name="text">
-           <string>SPT00</string>
-          </property>
-          <property name="echoMode">
-           <enum>QLineEdit::Normal</enum>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
+        <item>
          <widget class="QLabel" name="label_3">
           <property name="text">
            <string>User</string>
           </property>
          </widget>
         </item>
-        <item row="1" column="1" colspan="2">
+        <item>
          <widget class="QLineEdit" name="ntripUserEdit">
           <property name="text">
            <string>vedderb</string>
           </property>
          </widget>
         </item>
-        <item row="1" column="3" colspan="2">
+        <item>
          <widget class="QLabel" name="label_4">
           <property name="text">
            <string>Password</string>
           </property>
          </widget>
         </item>
-        <item row="1" column="5" colspan="2">
+        <item>
          <widget class="QLineEdit" name="ntripPasswordEdit">
           <property name="text">
            <string>abc123</string>
@@ -101,17 +98,27 @@
           </property>
          </widget>
         </item>
+        <item>
+         <widget class="QLabel" name="label_5">
+          <property name="text">
+           <string>Stream</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="ntripStreamEdit">
+          <property name="text">
+           <string>SPT00</string>
+          </property>
+          <property name="echoMode">
+           <enum>QLineEdit::Normal</enum>
+          </property>
+         </widget>
+        </item>
        </layout>
       </item>
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout">
-        <item>
-         <widget class="QLabel" name="ntripConnectedLabel">
-          <property name="text">
-           <string>Not connected</string>
-          </property>
-         </widget>
-        </item>
         <item>
          <spacer name="horizontalSpacer">
           <property name="orientation">
@@ -124,6 +131,13 @@
            </size>
           </property>
          </spacer>
+        </item>
+        <item>
+         <widget class="QLabel" name="ntripConnectedLabel">
+          <property name="text">
+           <string>Not connected</string>
+          </property>
+         </widget>
         </item>
         <item>
          <widget class="QPushButton" name="ntripDisconnectButton">
@@ -142,6 +156,81 @@
        </layout>
       </item>
      </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox_3">
+     <property name="title">
+      <string>Serial</string>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_4">
+      <item>
+       <widget class="QPushButton" name="rtcmSerialRefreshButton">
+        <property name="text">
+         <string>Refresh</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="rtcmSerialPortBox"/>
+      </item>
+      <item>
+       <widget class="QSpinBox" name="rtcmSerialBaudBox">
+        <property name="suffix">
+         <string/>
+        </property>
+        <property name="prefix">
+         <string>Baud: </string>
+        </property>
+        <property name="maximum">
+         <number>4000000</number>
+        </property>
+        <property name="value">
+         <number>115200</number>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>17</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QLabel" name="rtcmSerialConnectedLabel">
+        <property name="text">
+         <string>Not Connected</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="rtcmSerialDisconnectButton">
+        <property name="text">
+         <string>Disconnect</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="rtcmSerialConnectButton">
+        <property name="text">
+         <string>Connect</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+     <zorder>rtcmSerialPortBox</zorder>
+     <zorder>rtcmSerialDisconnectButton</zorder>
+     <zorder>rtcmSerialConnectButton</zorder>
+     <zorder>rtcmSerialBaudBox</zorder>
+     <zorder>rtcmSerialRefreshButton</zorder>
+     <zorder>rtcmSerialConnectedLabel</zorder>
     </widget>
    </item>
    <item>
@@ -173,6 +262,9 @@
           <property name="text">
            <string>1020</string>
           </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
          </widget>
         </item>
         <item row="1" column="3">
@@ -189,6 +281,9 @@
          <widget class="QLabel" name="label_17">
           <property name="text">
            <string>1019</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
           </property>
          </widget>
         </item>
@@ -240,12 +335,18 @@
           <property name="text">
            <string>1005</string>
           </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
          </widget>
         </item>
         <item row="1" column="2">
          <widget class="QLabel" name="label_11">
           <property name="text">
            <string>1006</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
           </property>
          </widget>
         </item>
@@ -272,6 +373,116 @@
           </property>
           <property name="alignment">
            <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="2" column="0" colspan="2">
+       <widget class="QPushButton" name="resetAllCountersButton">
+        <property name="text">
+         <string>Reset All</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <layout class="QGridLayout" name="gridLayout_3">
+        <property name="leftMargin">
+         <number>10</number>
+        </property>
+        <item row="1" column="1">
+         <widget class="QLCDNumber" name="rtcm1009Number">
+          <property name="digitCount">
+           <number>6</number>
+          </property>
+          <property name="segmentStyle">
+           <enum>QLCDNumber::Flat</enum>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QLCDNumber" name="rtcm1010Number">
+          <property name="digitCount">
+           <number>6</number>
+          </property>
+          <property name="segmentStyle">
+           <enum>QLCDNumber::Flat</enum>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="3">
+         <widget class="QLCDNumber" name="rtcm1011Number">
+          <property name="digitCount">
+           <number>6</number>
+          </property>
+          <property name="segmentStyle">
+           <enum>QLCDNumber::Flat</enum>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="2">
+         <widget class="QLabel" name="label_14">
+          <property name="text">
+           <string>1011</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="2">
+         <widget class="QLabel" name="label_13">
+          <property name="text">
+           <string>1012</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0" colspan="4">
+         <widget class="QLabel" name="label_19">
+          <property name="font">
+           <font>
+            <weight>50</weight>
+            <bold>false</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>GLONASS Observaions</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_15">
+          <property name="text">
+           <string>1010</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_12">
+          <property name="text">
+           <string>1009</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="3">
+         <widget class="QLCDNumber" name="rtcm1012Number">
+          <property name="digitCount">
+           <number>6</number>
+          </property>
+          <property name="segmentStyle">
+           <enum>QLCDNumber::Flat</enum>
           </property>
          </widget>
         </item>
@@ -307,6 +518,9 @@
           <property name="text">
            <string>1002</string>
           </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
          </widget>
         </item>
         <item row="2" column="1">
@@ -334,6 +548,9 @@
           <property name="text">
            <string>1001</string>
           </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
          </widget>
         </item>
         <item row="2" column="2">
@@ -341,12 +558,18 @@
           <property name="text">
            <string>1004</string>
           </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
          </widget>
         </item>
         <item row="1" column="2">
          <widget class="QLabel" name="label_7">
           <property name="text">
            <string>1003</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
           </property>
          </widget>
         </item>
@@ -368,103 +591,18 @@
         </item>
        </layout>
       </item>
-      <item row="0" column="1">
-       <layout class="QGridLayout" name="gridLayout_3">
-        <property name="leftMargin">
-         <number>10</number>
+      <item row="1" column="2">
+       <spacer name="horizontalSpacer_3">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
         </property>
-        <item row="1" column="2">
-         <widget class="QLabel" name="label_14">
-          <property name="text">
-           <string>1011</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1">
-         <widget class="QLCDNumber" name="rtcm1010Number">
-          <property name="digitCount">
-           <number>6</number>
-          </property>
-          <property name="segmentStyle">
-           <enum>QLCDNumber::Flat</enum>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="3">
-         <widget class="QLCDNumber" name="rtcm1012Number">
-          <property name="digitCount">
-           <number>6</number>
-          </property>
-          <property name="segmentStyle">
-           <enum>QLCDNumber::Flat</enum>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="QLCDNumber" name="rtcm1009Number">
-          <property name="digitCount">
-           <number>6</number>
-          </property>
-          <property name="segmentStyle">
-           <enum>QLCDNumber::Flat</enum>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="2">
-         <widget class="QLabel" name="label_13">
-          <property name="text">
-           <string>1012</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QLabel" name="label_12">
-          <property name="text">
-           <string>1009</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="3">
-         <widget class="QLCDNumber" name="rtcm1011Number">
-          <property name="digitCount">
-           <number>6</number>
-          </property>
-          <property name="segmentStyle">
-           <enum>QLCDNumber::Flat</enum>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="0">
-         <widget class="QLabel" name="label_15">
-          <property name="text">
-           <string>1010</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0" colspan="4">
-         <widget class="QLabel" name="label_19">
-          <property name="font">
-           <font>
-            <weight>50</weight>
-            <bold>false</bold>
-           </font>
-          </property>
-          <property name="text">
-           <string>GLONASS Observaions</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item row="2" column="0" colspan="2">
-       <widget class="QPushButton" name="resetAllCountersButton">
-        <property name="text">
-         <string>Reset All</string>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
         </property>
-       </widget>
+       </spacer>
       </item>
      </layout>
     </widget>

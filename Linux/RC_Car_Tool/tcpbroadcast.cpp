@@ -21,6 +21,11 @@ bool TcpBroadcast::startTcpServer(int port)
     return true;
 }
 
+QString TcpBroadcast::getLastError()
+{
+    return mTcpServer->errorString();
+}
+
 void TcpBroadcast::stopServer()
 {
     mTcpServer->close();

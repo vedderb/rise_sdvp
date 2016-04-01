@@ -76,6 +76,38 @@ typedef enum {
 	MOTE_PACKET_PROCESS_SHORT_BUFFER,
 } MOTE_PACKET;
 
+// Car configuration
+typedef struct {
+    // Settings
+    bool mag_comp; // Should be 0 when capturing samples for the calibration
+    float yaw_imu_gain;
+
+    // Magnetometer calibration
+    float mag_cal_cx;
+    float mag_cal_cy;
+    float mag_cal_cz;
+    float mag_cal_xx;
+    float mag_cal_xy;
+    float mag_cal_xz;
+    float mag_cal_yx;
+    float mag_cal_yy;
+    float mag_cal_yz;
+    float mag_cal_zx;
+    float mag_cal_zy;
+    float mag_cal_zz;
+
+    // Car parameters
+    float gear_ratio;
+    float wheel_diam;
+    float motor_poles;
+    float steering_max_angle_rad; // = arctan(axist_distance / turn_radius_at_maximum_steering_angle)
+    float steering_center;
+    float steering_left;
+    float steering_right;
+    float steering_ramp_time; // Ramp time constant for the steering servo in seconds.
+    float axis_distance;
+} MAIN_CONFIG;
+
 typedef enum {
     CMD_PRINTF = 0,
     CMD_GET_STATE,
@@ -88,7 +120,10 @@ typedef enum {
     CMD_AP_SET_ACTIVE,
     CMD_SET_SERVO_DIRECT,
     CMD_SEND_RTCM_USB,
-    CMD_SEND_NMEA_RADIO
+    CMD_SEND_NMEA_RADIO,
+    CMD_SET_MAIN_CONFIG,
+    CMD_GET_MAIN_CONFIG,
+    CMD_GET_MAIN_CONFIG_DEFAULT
 } CMD_PACKET;
 
 // RC control modes

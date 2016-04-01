@@ -194,7 +194,7 @@ static THD_FUNCTION(ap_thread, arg) {
 		autopilot_set_motor_speed(speed);
 
 		// Check it it is time to go to the next point
-		if (distance < AP_DISTANCE_TRES || (max_steering > 25 && distance < 3.0)) {
+		if (distance < 0.3 || (max_steering > 25 && distance < 3.0)) {
 			max_steering = 0;
 
 			m_point_now++;

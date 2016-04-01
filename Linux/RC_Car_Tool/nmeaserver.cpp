@@ -41,10 +41,7 @@ static void nmea_append_checksum(char *s, size_t size) {
 
 NmeaServer::NmeaServer(QObject *parent) : QObject(parent)
 {
-    mTcpServer = new QTcpServer(this);
-    mTcpIsConnected = false;
-
-    connect(mTcpServer, SIGNAL(newConnection()), this, SLOT(newTcpConnection()));
+    mTcpBroadcast = new TcpBroadcast(this);
 }
 
 NmeaServer::~NmeaServer()
@@ -54,8 +51,8 @@ NmeaServer::~NmeaServer()
 
 bool NmeaServer::startTcpServer(int port)
 {
-    if (!mTcpServer->listen(QHostAddress::Any,  port)) {
-        qWarning() << "Unable to start TCP server: " << mTcpServer->errorString();
+    if (!mTcpBroadcast->startTcpServer(port)) {
+        qWarning() << "Unable to start TCP server: " << mTcpBroadcast->getLastError();
         return false;
     }
 
@@ -98,11 +95,7 @@ bool NmeaServer::sendNmeaGga(NmeaServer::nmea_gga_info_t &nmea)
         mLog.write(nmea_bytes);
     }
 
-    if (!mTcpIsConnected) {
-        return false;
-    }
-
-    mTcpSocket->write(nmea_bytes);
+    mTcpBroadcast->broadcastData(nmea_bytes);
 
     return true;
 }
@@ -143,11 +136,7 @@ bool NmeaServer::sendNmeaZda(quint16 wn, double tow)
         mLog.write(nmea_bytes);
     }
 
-    if (!mTcpIsConnected) {
-        return false;
-    }
-
-    mTcpSocket->write(nmea_bytes);
+    mTcpBroadcast->broadcastData(nmea_bytes);
 
     return true;
 }
@@ -209,16 +198,12 @@ bool NmeaServer::sendNmeaRmc(NmeaServer::nmea_rmc_info_t &nmea)
         mLog.write(nmea_bytes);
     }
 
-    if (!mTcpIsConnected) {
-        return false;
-    }
-
-    mTcpSocket->write(nmea_bytes);
+    mTcpBroadcast->broadcastData(nmea_bytes);
 
     return true;
 }
 
-bool NmeaServer::sendNmeaCustom(QString msg)
+bool NmeaServer::sendNmeaRaw(QString msg)
 {
     QByteArray nmea_bytes = msg.toLocal8Bit();
 
@@ -226,11 +211,7 @@ bool NmeaServer::sendNmeaCustom(QString msg)
         mLog.write(nmea_bytes);
     }
 
-    if (!mTcpIsConnected) {
-        return false;
-    }
-
-    mTcpSocket->write(nmea_bytes);
+    mTcpBroadcast->broadcastData(nmea_bytes);
 
     return true;
 }
@@ -254,38 +235,3 @@ void NmeaServer::logStop()
         qDebug() << "Log not open";
     }
 }
-
-void NmeaServer::newTcpConnection()
-{
-    if (mTcpIsConnected) {
-        mTcpSocket->abort();
-    }
-
-    mTcpSocket = mTcpServer->nextPendingConnection();
-    connect(mTcpSocket, SIGNAL(disconnected()),
-            this, SLOT(tcpDisconnected()));
-    connect(mTcpSocket, SIGNAL(readyRead()),
-            this, SLOT(tcpDataAvailable()));
-    mTcpIsConnected = true;
-
-    qDebug() << "NMEA TCP connection accepted";
-}
-
-void NmeaServer::tcpDisconnected()
-{
-    qDebug() << "NMEA TCP disconnected";
-    mTcpIsConnected = false;
-    mTcpSocket->deleteLater();
-}
-
-void NmeaServer::tcpDataAvailable()
-{
-    QByteArray data =  mTcpSocket->readAll();
-
-    qDebug() << "NMEA TCP data received";
-
-    for(int i = 0;i < data.length();i++) {
-        qDebug() << (int)data[i];
-    }
-}
-

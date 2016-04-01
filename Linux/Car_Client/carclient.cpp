@@ -3,11 +3,17 @@
 
 CarClient::CarClient(QObject *parent) : QObject(parent)
 {
+    mSettings.nmeaConnect = false;
+    mSettings.serialConnect = false;
+
     mSerialPort = new QSerialPort(this);
     mPacketInterface = new PacketInterface(this);
     mRtcmBroadcaster = new TcpBroadcast(this);
     mTcpSocket = new QTcpSocket(this);
     mCarId = 255;
+    mReconnectTimer = new QTimer(this);
+    mReconnectTimer->start(2000);
+    mTcpConnected = false;
 
     connect(mSerialPort, SIGNAL(readyRead()),
             this, SLOT(serialDataAvailable()));
@@ -20,20 +26,28 @@ CarClient::CarClient(QObject *parent) : QObject(parent)
             this, SLOT(rtcmUsbRx(quint8,QByteArray)));
     connect(mPacketInterface, SIGNAL(dataToSend(QByteArray&)),
             this, SLOT(packetDataToSend(QByteArray&)));
+    connect(mReconnectTimer, SIGNAL(timeout()),
+            this, SLOT(reconnectTimerSlot()));
 }
 
 void CarClient::connectSerial(QString port, int baudrate)
 {
     if(mSerialPort->isOpen()) {
-        return;
+        mSerialPort->close();
     }
 
     mSerialPort->setPortName(port);
     mSerialPort->open(QIODevice::ReadWrite);
 
+    mSettings.serialConnect = true;
+    mSettings.serialPort = port;
+    mSettings.serialBaud = baudrate;
+
     if(!mSerialPort->isOpen()) {
         return;
     }
+
+    qDebug() << "Serial port connected";
 
     mSerialPort->setBaudRate(baudrate);
     mSerialPort->setDataBits(QSerialPort::Data8);
@@ -51,7 +65,12 @@ void CarClient::startRtcmServer(int port)
 
 void CarClient::connectNmea(QString server, int port)
 {
+    mTcpSocket->close();
     mTcpSocket->connectToHost(server, port);
+
+    mSettings.nmeaConnect = true;
+    mSettings.nmeaServer = server;
+    mSettings.nmeaPort = port;
 }
 
 void CarClient::serialDataAvailable()
@@ -87,12 +106,12 @@ void CarClient::serialPortError(QSerialPort::SerialPortError error)
         message = tr("Unknown error");
         break;
     default:
-        message = "Serial port error: " + QString::number(error);
+        message = "Error number: " + QString::number(error);
         break;
     }
 
     if(!message.isEmpty()) {
-        qDebug() << message;
+        qDebug() << "Serial error:" << message;
 
         if(mSerialPort->isOpen()) {
             mSerialPort->close();
@@ -118,12 +137,14 @@ void CarClient::tcpDataAvailable()
 
 void CarClient::tcpConnected()
 {
-    qDebug() << "TCP Connected";
+    qDebug() << "NMEA TCP Connected";
+    mTcpConnected = true;
 }
 
 void CarClient::tcpDisconnected()
 {
-    qDebug() << "TCP Disconnected";
+    qDebug() << "NMEA TCP Disconnected";
+    mTcpConnected = false;
 }
 
 void CarClient::rtcmUsbRx(quint8 id, QByteArray data)
@@ -132,3 +153,16 @@ void CarClient::rtcmUsbRx(quint8 id, QByteArray data)
     mRtcmBroadcaster->broadcastData(data);
 }
 
+void CarClient::reconnectTimerSlot()
+{
+    // Try to reconnect if the connections are lost
+    if (mSettings.serialConnect && !mSerialPort->isOpen()) {
+        qDebug() << "Trying to reconnect serial...";
+        connectSerial(mSettings.serialPort, mSettings.serialBaud);
+    }
+
+    if (mSettings.nmeaConnect && !mTcpConnected) {
+        qDebug() << "Trying to reconnect nmea tcp...";
+        connectNmea(mSettings.nmeaServer, mSettings.nmeaPort);
+    }
+}

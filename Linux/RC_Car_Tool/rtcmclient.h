@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QTcpSocket>
+#include <QSerialPort>
 
 class RtcmClient : public QObject
 {
@@ -13,9 +14,11 @@ public:
     explicit RtcmClient(QObject *parent = 0);
     bool connectNtrip(QString server, QString stream, QString user = "", QString pass = "", int port = 80);
     bool connectTcp(QString server, int port = 80);
-    bool isNtripConnected();
+    bool connectSerial(QString port, int baudrate = 115200);
     bool isTcpConnected();
+    bool isSerialConnected();
     void disconnectTcpNtrip();
+    void disconnectSerial();
 
     void emitRtcmReceived(QByteArray data, int type);
 
@@ -27,6 +30,8 @@ public slots:
     void tcpInputDisconnected();
     void tcpInputDataAvailable();
     void tcpInputError(QAbstractSocket::SocketError socketError);
+    void serialDataAvailable();
+    void serialPortError(QSerialPort::SerialPortError error);
 
 private:
     QString mNtripUser;
@@ -34,6 +39,7 @@ private:
     QString mNtripServer;
     QString mNtripStream;
     QTcpSocket *mTcpSocket;
+    QSerialPort *mSerialPort;
 
 };
 

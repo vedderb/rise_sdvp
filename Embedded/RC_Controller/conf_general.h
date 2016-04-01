@@ -32,7 +32,6 @@
 
 // General settings
 #define ID_ALL						255
-#define MAG_COMPENSATE				1 // Should be 0 when capturing samples for the calibration
 #define VESC_ID						ID_ALL // id, or ID_ALL for any VESC
 
 // Servo settings
@@ -42,12 +41,15 @@
 
 // Autopilot settings
 #define AP_ROUTE_SIZE				500
-#define AP_DISTANCE_TRES			0.3
 
 // Global variables
 extern MAIN_CONFIG main_config;
+extern int main_id;
 
 // Functions
 void conf_general_init(void);
+void conf_general_get_default_main_config(MAIN_CONFIG *conf);
+void conf_general_read_main_conf(MAIN_CONFIG *conf);
+bool conf_general_store_main_config(MAIN_CONFIG *conf);
 
 #endif /* CONF_GENERAL_H_ */

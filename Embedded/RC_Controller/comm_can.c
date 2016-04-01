@@ -250,7 +250,7 @@ void comm_can_send_buffer(uint8_t controller_id, uint8_t *data, unsigned int len
 
 	if (len <= 6) {
 		uint32_t ind = 0;
-		send_buffer[ind++] = main_config.id + 128;
+		send_buffer[ind++] = main_id + 128;
 		send_buffer[ind++] = send;
 		memcpy(send_buffer + ind, data, len);
 		ind += len;
@@ -293,7 +293,7 @@ void comm_can_send_buffer(uint8_t controller_id, uint8_t *data, unsigned int len
 		}
 
 		uint32_t ind = 0;
-		send_buffer[ind++] = main_config.id + 128;
+		send_buffer[ind++] = main_id + 128;
 		send_buffer[ind++] = send;
 		send_buffer[ind++] = len >> 8;
 		send_buffer[ind++] = len & 0xFF;

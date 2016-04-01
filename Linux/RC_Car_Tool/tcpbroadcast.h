@@ -15,6 +15,7 @@ public:
     explicit TcpBroadcast(QObject *parent = 0);
     ~TcpBroadcast();
     bool startTcpServer(int port);
+    QString getLastError();
     void stopServer();
     void broadcastData(QByteArray data);
     bool logToFile(QString file);

@@ -26,8 +26,11 @@ private slots:
 
     void on_ntripConnectButton_clicked();
     void on_ntripDisconnectButton_clicked();
-
     void on_resetAllCountersButton_clicked();
+    void on_ntripBox_toggled(bool checked);
+    void on_rtcmSerialRefreshButton_clicked();
+    void on_rtcmSerialDisconnectButton_clicked();
+    void on_rtcmSerialConnectButton_clicked();
 
 private:
     Ui::RtcmWidget *ui;

@@ -17,6 +17,17 @@ RtcmClient *RtcmClient::currentMsgHandler = 0;
 RtcmClient::RtcmClient(QObject *parent) : QObject(parent)
 {
     mTcpSocket = new QTcpSocket(this);
+    mSerialPort = new QSerialPort(this);
+
+    connect(mTcpSocket, SIGNAL(readyRead()), this, SLOT(tcpInputDataAvailable()));
+    connect(mTcpSocket, SIGNAL(connected()), this, SLOT(tcpInputConnected()));
+    connect(mTcpSocket, SIGNAL(disconnected()),
+            this, SLOT(tcpInputDisconnected()));
+    connect(mTcpSocket, SIGNAL(error(QAbstractSocket::SocketError)),
+            this, SLOT(tcpInputError(QAbstractSocket::SocketError)));
+    connect(mSerialPort, SIGNAL(readyRead()), this, SLOT(serialDataAvailable()));
+    connect(mSerialPort, SIGNAL(error(QSerialPort::SerialPortError)),
+            this, SLOT(serialPortError(QSerialPort::SerialPortError)));
 }
 
 bool RtcmClient::connectNtrip(QString server, QString stream, QString user, QString pass, int port)
@@ -30,13 +41,6 @@ bool RtcmClient::connectNtrip(QString server, QString stream, QString user, QStr
 
     mTcpSocket->abort();
     mTcpSocket->connectToHost(server, port);
-
-    connect(mTcpSocket, SIGNAL(readyRead()), this, SLOT(tcpInputDataAvailable()));
-    connect(mTcpSocket, SIGNAL(connected()), this, SLOT(tcpInputConnected()));
-    connect(mTcpSocket, SIGNAL(disconnected()),
-            this, SLOT(tcpInputDisconnected()));
-    connect(mTcpSocket, SIGNAL(error(QAbstractSocket::SocketError)),
-            this, SLOT(tcpInputError(QAbstractSocket::SocketError)));
 
     rtcm3_set_rx_callback(rtcm_rx);
 
@@ -56,29 +60,47 @@ bool RtcmClient::connectTcp(QString server, int port)
     return true;
 }
 
-bool RtcmClient::isNtripConnected()
+bool RtcmClient::connectSerial(QString port, int baudrate)
 {
-    // If no stream is selected we have simply connected to a TCP server.
-    if (mNtripStream.size() > 0) {
-        return mTcpSocket->isOpen();
+    if(mSerialPort->isOpen()) {
+        mSerialPort->close();
     }
 
-    return false;
+    mSerialPort->setPortName(port);
+    mSerialPort->open(QIODevice::ReadWrite);
+
+    if(!mSerialPort->isOpen()) {
+        return false;
+    }
+
+    mSerialPort->setBaudRate(baudrate);
+    mSerialPort->setDataBits(QSerialPort::Data8);
+    mSerialPort->setParity(QSerialPort::NoParity);
+    mSerialPort->setStopBits(QSerialPort::OneStop);
+    mSerialPort->setFlowControl(QSerialPort::NoFlowControl);
+
+    return true;
 }
 
 bool RtcmClient::isTcpConnected()
 {
     // If no stream is selected we have simply connected to a TCP server.
-    if (mNtripStream.size() == 0) {
-        return mTcpSocket->isOpen();
-    }
+    return mTcpSocket->isOpen();
+}
 
-    return false;
+bool RtcmClient::isSerialConnected()
+{
+    return mSerialPort->isOpen();
 }
 
 void RtcmClient::disconnectTcpNtrip()
 {
     mTcpSocket->close();
+}
+
+void RtcmClient::disconnectSerial()
+{
+    mSerialPort->close();
 }
 
 void RtcmClient::emitRtcmReceived(QByteArray data, int type)
@@ -141,6 +163,58 @@ void RtcmClient::tcpInputError(QAbstractSocket::SocketError socketError)
         break;
     default:
         qWarning() << "TcpError:" << mTcpSocket->errorString();
+    }
+}
+
+void RtcmClient::serialDataAvailable()
+{
+    while (mSerialPort->bytesAvailable() > 0) {
+        QByteArray data = mSerialPort->readAll();
+
+        for (int i = 0;i < data.size();i++) {
+            int ret = rtcm3_input_data(data.at(i));
+            if (ret == -1 || ret == -2) {
+                //qWarning() << "RTCM decode error:" <<  ret;
+            }
+        }
+    }
+}
+
+void RtcmClient::serialPortError(QSerialPort::SerialPortError error)
+{
+    QString message;
+    switch (error) {
+    case QSerialPort::NoError:
+        break;
+    case QSerialPort::DeviceNotFoundError:
+        message = tr("Device not found");
+        break;
+    case QSerialPort::OpenError:
+        message = tr("Can't open device");
+        break;
+    case QSerialPort::NotOpenError:
+        message = tr("Not open error");
+        break;
+    case QSerialPort::ResourceError:
+        message = tr("Port disconnected");
+        break;
+    case QSerialPort::PermissionError:
+        message = tr("Permission error");
+        break;
+    case QSerialPort::UnknownError:
+        message = tr("Unknown error");
+        break;
+    default:
+        message = "Error number: " + QString::number(error);
+        break;
+    }
+
+    if(!message.isEmpty()) {
+        qDebug() << "Serial error:" << message;
+
+        if(mSerialPort->isOpen()) {
+            mSerialPort->close();
+        }
     }
 }
 
