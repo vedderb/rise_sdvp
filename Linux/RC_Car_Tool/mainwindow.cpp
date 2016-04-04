@@ -307,12 +307,15 @@ void MainWindow::rtcmReceived(QByteArray data, int type)
     case 1004:
     case 1005:
     case 1006:
+    case 1019:
         mPacketInterface->sendRtcmUsb(255, data);
         break;
 
     default:
         break;
     }
+
+//    mPacketInterface->sendRtcmUsb(255, data);
 }
 
 void MainWindow::on_carAddButton_clicked()

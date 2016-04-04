@@ -17,6 +17,7 @@ RtcmWidget::RtcmWidget(QWidget *parent) :
             this, SLOT(timerSlot()));
 
     on_rtcmSerialRefreshButton_clicked();
+    on_ntripBox_toggled(ui->ntripBox->isChecked());
 }
 
 RtcmWidget::~RtcmWidget()

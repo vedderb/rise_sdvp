@@ -19,6 +19,9 @@ RtcmClient::RtcmClient(QObject *parent) : QObject(parent)
     mTcpSocket = new QTcpSocket(this);
     mSerialPort = new QSerialPort(this);
 
+    currentMsgHandler = this;
+    rtcm3_set_rx_callback(rtcm_rx);
+
     connect(mTcpSocket, SIGNAL(readyRead()), this, SLOT(tcpInputDataAvailable()));
     connect(mTcpSocket, SIGNAL(connected()), this, SLOT(tcpInputConnected()));
     connect(mTcpSocket, SIGNAL(disconnected()),
@@ -32,8 +35,6 @@ RtcmClient::RtcmClient(QObject *parent) : QObject(parent)
 
 bool RtcmClient::connectNtrip(QString server, QString stream, QString user, QString pass, int port)
 {
-    currentMsgHandler = this;
-
     mNtripUser = user;
     mNtripPassword = pass;
     mNtripStream = stream;
@@ -41,8 +42,6 @@ bool RtcmClient::connectNtrip(QString server, QString stream, QString user, QStr
 
     mTcpSocket->abort();
     mTcpSocket->connectToHost(server, port);
-
-    rtcm3_set_rx_callback(rtcm_rx);
 
     return true;
 }

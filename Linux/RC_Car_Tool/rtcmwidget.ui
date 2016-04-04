@@ -32,7 +32,7 @@
         <item>
          <widget class="QLineEdit" name="ntripServerEdit">
           <property name="text">
-           <string>www.igs-ip.net</string>
+           <string>localhost</string>
           </property>
          </widget>
         </item>
@@ -49,7 +49,7 @@
            <number>65535</number>
           </property>
           <property name="value">
-           <number>80</number>
+           <number>65300</number>
           </property>
          </widget>
         </item>
@@ -63,7 +63,7 @@
            <string>NTRIP</string>
           </property>
           <property name="checked">
-           <bool>true</bool>
+           <bool>false</bool>
           </property>
          </widget>
         </item>
@@ -77,7 +77,7 @@
         <item>
          <widget class="QLineEdit" name="ntripUserEdit">
           <property name="text">
-           <string>vedderb</string>
+           <string/>
           </property>
          </widget>
         </item>
@@ -91,7 +91,7 @@
         <item>
          <widget class="QLineEdit" name="ntripPasswordEdit">
           <property name="text">
-           <string>abc123</string>
+           <string/>
           </property>
           <property name="echoMode">
            <enum>QLineEdit::Password</enum>
