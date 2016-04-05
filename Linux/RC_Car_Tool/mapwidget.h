@@ -66,6 +66,7 @@ signals:
     void offsetChanged(double newXOffset, double newYOffset);
     void posSet(quint8 id, LocPoint pos);
     void routePointAdded(LocPoint pos);
+    void lastRoutePointRemoved(LocPoint pos);
 
 public slots:
     void paintTimerSlot();

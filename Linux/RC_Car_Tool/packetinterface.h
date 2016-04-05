@@ -42,6 +42,7 @@ public:
     bool isUdpConnected();
     void getState(quint8 id);
     bool setRoutePoints(quint8 id, QList<LocPoint> points, int retries = 10);
+    bool removeLastRoutePoint(quint8 id, int retries = 10);
     bool clearRoute(quint8 id, int retries = 10);
     bool setApActive(quint8 id, bool active, int retries = 10);
     bool setConfiguration(quint8 id, MAIN_CONFIG &conf, int retries = 10);

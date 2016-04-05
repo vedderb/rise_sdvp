@@ -80,6 +80,15 @@ void autopilot_add_point(ROUTE_POINT *p) {
 	}
 }
 
+void autopilot_remove_last_point(void) {
+	if (m_point_last != m_point_now) {
+		m_point_last --;
+		if (m_point_last < 0) {
+			m_point_last = AP_ROUTE_SIZE - 1;
+		}
+	}
+}
+
 void autopilot_clear_route(void) {
 	m_is_active = false;
 	m_has_prev_point = false;

@@ -42,8 +42,10 @@ public:
     bool isUdpConnected();
     void getState(quint8 id);
     bool setRoutePoints(quint8 id, QList<LocPoint> points, int retries = 10);
+    bool removeLastRoutePoint(quint8 id, int retries = 10);
     bool clearRoute(quint8 id, int retries = 10);
     bool setApActive(quint8 id, bool active, int retries = 10);
+    bool setConfiguration(quint8 id, MAIN_CONFIG &conf, int retries = 10);
 
 signals:
     void dataToSend(QByteArray &data);
@@ -53,6 +55,7 @@ signals:
     void ackReceived(quint8 id, CMD_PACKET cmd, QString msg);
     void rtcmUsbReceived(quint8 id, QByteArray data);
     void nmeaRadioReceived(quint8 id, QByteArray data);
+    void configurationReceived(quint8 id, MAIN_CONFIG conf);
     
 public slots:
     void timerSlot();
@@ -65,6 +68,8 @@ public slots:
     void setServoDirect(quint8 id, double value);
     void sendRtcmUsb(quint8 id, QByteArray rtcm_msg);
     void sendNmeaRadio(quint8 id, QByteArray nmea_msg);
+    void getConfiguration(quint8 id);
+    void getDefaultConfiguration(quint8 id);
 
 private:
     unsigned short crc16(const unsigned char *buf, unsigned int len);

@@ -407,6 +407,9 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
     case CMD_AP_ADD_POINTS:
         emit ackReceived(id, cmd, "CMD_AP_ADD_POINTS");
         break;
+    case CMD_AP_REMOVE_LAST_POINT:
+        emit ackReceived(id, cmd, "CMD_AP_REMOVE_LAST_POINT");
+        break;
     case CMD_AP_CLEAR_POINTS:
         emit ackReceived(id, cmd, "CMD_AP_CLEAR_POINTS");
         break;
@@ -462,6 +465,15 @@ bool PacketInterface::setRoutePoints(quint8 id, QList<LocPoint> points, int retr
         utility::buffer_append_double32(mSendBuffer, p->getY(), 1e4, &send_index);
         utility::buffer_append_double32(mSendBuffer, p->getSpeed(), 1e6, &send_index);
     }
+
+    return sendPacketAck(mSendBuffer, send_index, retries);
+}
+
+bool PacketInterface::removeLastRoutePoint(quint8 id, int retries)
+{
+    qint32 send_index = 0;
+    mSendBuffer[send_index++] = id;
+    mSendBuffer[send_index++] = CMD_AP_REMOVE_LAST_POINT;
 
     return sendPacketAck(mSendBuffer, send_index, retries);
 }

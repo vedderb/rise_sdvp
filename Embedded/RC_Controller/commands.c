@@ -228,6 +228,16 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
 
+		case CMD_AP_REMOVE_LAST_POINT: {
+			autopilot_remove_last_point();
+
+			// Send ack
+			int32_t send_index = 0;
+			m_send_buffer[send_index++] = main_id;
+			m_send_buffer[send_index++] = packet_id;
+			commands_send_packet(m_send_buffer, send_index);
+		} break;
+
 		case CMD_AP_CLEAR_POINTS: {
 			autopilot_clear_route();
 

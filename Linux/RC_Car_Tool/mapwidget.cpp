@@ -507,13 +507,22 @@ void MapWidget::mousePressEvent(QMouseEvent *e)
                 repaintAfterEvents();
             }
         }
-    } else if ((e->buttons() & Qt::LeftButton) && (e->modifiers() & Qt::ShiftModifier)) {
-        LocPoint pos;
-        QPoint p = getMousePosRelative();
-        pos.setXY(p.x() / 1000.0, p.y() / 1000.0);
-        pos.setSpeed(mRoutePointSpeed);
-        mRoute.append(pos);
-        emit routePointAdded(pos);
+    } else if (e->modifiers() & Qt::ShiftModifier) {
+        if (e->buttons() & Qt::LeftButton) {
+            LocPoint pos;
+            QPoint p = getMousePosRelative();
+            pos.setXY(p.x() / 1000.0, p.y() / 1000.0);
+            pos.setSpeed(mRoutePointSpeed);
+            mRoute.append(pos);
+            emit routePointAdded(pos);
+        } else if (e->buttons() & Qt::RightButton) {
+            LocPoint pos;
+            if (mRoute.size() > 0) {
+                pos = mRoute.last();
+                mRoute.removeLast();
+            }
+            emit lastRoutePointRemoved(pos);
+        }
         repaintAfterEvents();
     }
 }

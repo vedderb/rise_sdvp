@@ -44,6 +44,7 @@ private slots:
     void terminalPrint(quint8 id, QString str);
     void vescFwdReceived(quint8 id, QByteArray data);
     void routePointSet(LocPoint pos);
+    void lastRoutePointRemoved();
     void nmeaReceived(quint8 id, QByteArray nmea_msg);
     void configurationReceived(quint8 id, MAIN_CONFIG config);
 

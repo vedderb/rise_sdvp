@@ -256,6 +256,8 @@ void CarInterface::setMap(MapWidget *map)
 
     connect(mMap, SIGNAL(routePointAdded(LocPoint)),
             this, SLOT(routePointSet(LocPoint)));
+    connect(mMap, SIGNAL(lastRoutePointRemoved(LocPoint)),
+            this, SLOT(lastRoutePointRemoved()));
 }
 
 void CarInterface::setPacketInterface(PacketInterface *packetInterface)
@@ -339,17 +341,31 @@ void CarInterface::vescFwdReceived(quint8 id, QByteArray data)
 
 void CarInterface::routePointSet(LocPoint pos)
 {
-    if (mMap && ui->updateRouteFromMapBox->isChecked()) {
+    if (mMap && mPacketInterface && ui->updateRouteFromMapBox->isChecked()) {
         QList<LocPoint> points;
         points.append(pos);
 
         mMap->setEnabled(false);
-        bool ok = mPacketInterface->setRoutePoints(0, points);
+        bool ok = mPacketInterface->setRoutePoints(mId, points);
         mMap->setEnabled(true);
 
         if (!ok) {
             QMessageBox::warning(this, "Autopilot",
                                  "No ack received, so the the last route point was most likely not set.");
+        }
+    }
+}
+
+void CarInterface::lastRoutePointRemoved()
+{
+    if (mMap && mPacketInterface && ui->updateRouteFromMapBox->isChecked()) {
+        mMap->setEnabled(false);
+        bool ok = mPacketInterface->removeLastRoutePoint(mId);
+        mMap->setEnabled(true);
+
+        if (!ok) {
+            QMessageBox::warning(this, "Autopilot",
+                                 "No ack received, so the the last route point was most likely not removed.");
         }
     }
 }
