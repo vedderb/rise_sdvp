@@ -25,6 +25,7 @@
 #include <QLabel>
 #include "carinterface.h"
 #include "packetinterface.h"
+#include "joystick.h"
 
 namespace Ui {
 class MainWindow;
@@ -59,15 +60,17 @@ private slots:
     void on_MapRemovePixmapsButton_clicked();
     void on_udpConnectButton_clicked();
     void on_mapZeroButton_clicked();
-    void on_testButton_clicked();
     void on_mapRemoveRouteButton_clicked();
     void on_mapRouteSpeedBox_valueChanged(double arg1);
+    void on_jsConnectButton_clicked();
+    void on_jsDisconnectButton_clicked();
 
 private:
     Ui::MainWindow *ui;
     QTimer *mTimer;
     QSerialPort *mSerialPort;
     PacketInterface *mPacketInterface;
+    Joystick *mJoystick;
     QList<CarInterface*> mCars;
     QLabel *mStatusLabel;
     int mStatusInfoTime;

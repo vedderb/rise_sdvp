@@ -37,6 +37,20 @@ void stepTowards(double &value, double goal, double step) {
         }
     }
 }
+
+void deadband(double &value, double tres, double max) {
+    if (fabs(value) < tres) {
+        value = 0.0;
+    } else {
+        double k = max / (max - tres);
+        if (value > 0.0) {
+            value = k * value + max * (1.0 - k);
+        } else {
+            value = -(k * -value + max * (1.0 - k));
+        }
+
+    }
+}
 }
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -54,6 +68,8 @@ MainWindow::MainWindow(QWidget *parent) :
     mStatusInfoTime = 0;
     mPacketInterface = new PacketInterface(this);
     mSerialPort = new QSerialPort(this);
+    mJoystick = new Joystick(this);
+
     ui->mapWidget->setRoutePointSpeed(ui->mapRouteSpeedBox->value() / 3.6);
 
     connect(mTimer, SIGNAL(timeout()), this, SLOT(timerSlot()));
@@ -95,6 +111,10 @@ MainWindow::~MainWindow()
 bool MainWindow::eventFilter(QObject *object, QEvent *e)
 {
     Q_UNUSED(object);
+
+    if (mJoystick->isConnected()) {
+        return false;
+    }
 
     if (e->type() == QEvent::KeyPress || e->type() == QEvent::KeyRelease) {
         QKeyEvent *keyEvent = static_cast<QKeyEvent *>(e);
@@ -177,20 +197,26 @@ void MainWindow::serialPortError(QSerialPort::SerialPortError error)
 void MainWindow::timerSlot()
 {
     // Update throttle and steering from keys.
-    if (mKeyUp) {
-        stepTowards(mThrottle, 1.0, ui->throttleGainBox->value());
-    } else if (mKeyDown) {
-        stepTowards(mThrottle, -1.0, ui->throttleGainBox->value());
+    if (mJoystick->isConnected()) {
+        mThrottle = (double)mJoystick->getAxis(2) / 32768.0;
+        deadband(mThrottle,0.1, 1.0);
+        mSteering = -(double)mJoystick->getAxis(0) / 32768.0;
     } else {
-        stepTowards(mThrottle, 0.0, ui->throttleGainBox->value());
-    }
+        if (mKeyUp) {
+            stepTowards(mThrottle, 1.0, ui->throttleGainBox->value());
+        } else if (mKeyDown) {
+            stepTowards(mThrottle, -1.0, ui->throttleGainBox->value());
+        } else {
+            stepTowards(mThrottle, 0.0, ui->throttleGainBox->value());
+        }
 
-    if (mKeyRight) {
-        stepTowards(mSteering, 1.0, ui->steeringGainBox->value());
-    } else if (mKeyLeft) {
-        stepTowards(mSteering, -1.0, ui->steeringGainBox->value());
-    } else {
-        stepTowards(mSteering, 0.0, ui->steeringGainBox->value());
+        if (mKeyRight) {
+            stepTowards(mSteering, 1.0, ui->steeringGainBox->value());
+        } else if (mKeyLeft) {
+            stepTowards(mSteering, -1.0, ui->steeringGainBox->value());
+        } else {
+            stepTowards(mSteering, 0.0, ui->steeringGainBox->value());
+        }
     }
 
     ui->throttleBar->setValue(mThrottle * 100.0);
@@ -199,7 +225,7 @@ void MainWindow::timerSlot()
     // Notify about key events
     for(QList<CarInterface*>::Iterator it_car = mCars.begin();it_car < mCars.end();it_car++) {
         CarInterface *car = *it_car;
-        car->setKeyboardValues(mThrottle, mSteering);
+        car->setControlValues(mThrottle, mSteering, ui->throttleMaxBox->value(), ui->throttleCurrentButton->isChecked());
     }
 
     // Update status label
@@ -251,6 +277,18 @@ void MainWindow::timerSlot()
         ui->mapWidget->setTraceCar(-1);
     }
     ui->mapWidget->setSelectedCar(ui->mapCarBox->value());
+
+    // Joystick connected
+    static bool jsWasconn = false;
+    if (mJoystick->isConnected() != jsWasconn) {
+        jsWasconn = mJoystick->isConnected();
+
+        if (jsWasconn) {
+            ui->jsConnectedLabel->setText("Connected");
+        } else {
+            ui->jsConnectedLabel->setText("Not connected");
+        }
+    }
 }
 
 void MainWindow::showStatusInfo(QString info, bool isGood)
@@ -426,23 +464,6 @@ void MainWindow::on_mapZeroButton_clicked()
     ui->mapWidget->setYOffset(0);
 }
 
-void MainWindow::on_testButton_clicked()
-{
-    QList<LocPoint> points;
-    LocPoint p;
-    p.setXY(2, 3);
-    p.setSpeed(5);
-    points.append(p);
-
-    ui->testButton->setEnabled(false);
-    ui->mapWidget->setEnabled(false);
-    bool ok = mPacketInterface->setRoutePoints(0, points);
-    ui->testButton->setEnabled(true);
-    ui->mapWidget->setEnabled(true);
-
-    qDebug() << "setRoutePoints:" << ok;
-}
-
 void MainWindow::on_mapRemoveRouteButton_clicked()
 {
     ui->mapWidget->clearRoute();
@@ -451,4 +472,20 @@ void MainWindow::on_mapRemoveRouteButton_clicked()
 void MainWindow::on_mapRouteSpeedBox_valueChanged(double arg1)
 {
     ui->mapWidget->setRoutePointSpeed(arg1 / 3.6);
+}
+
+void MainWindow::on_jsConnectButton_clicked()
+{
+    if (mJoystick->init(ui->jsPortEdit->text()) == 0) {
+        qDebug() << "Axes:" << mJoystick->numAxes();
+        qDebug() << "Buttons:" << mJoystick->numButtons();
+        qDebug() << "Name:" << mJoystick->getName();
+    } else {
+        qWarning() << "Opening joystick failed.";
+    }
+}
+
+void MainWindow::on_jsDisconnectButton_clicked()
+{
+    mJoystick->stop();
 }

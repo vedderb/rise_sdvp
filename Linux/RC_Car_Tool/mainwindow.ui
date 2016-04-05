@@ -242,7 +242,7 @@
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>193</width>
+           <width>300</width>
            <height>78</height>
           </rect>
          </property>
@@ -308,15 +308,45 @@
        </spacer>
       </item>
       <item>
-       <widget class="QPushButton" name="testButton">
-        <property name="text">
-         <string>Test</string>
+       <widget class="QGroupBox" name="groupBox">
+        <property name="title">
+         <string>Joystick</string>
         </property>
+        <layout class="QGridLayout" name="gridLayout_4">
+         <item row="0" column="0" colspan="2">
+          <widget class="QLineEdit" name="jsPortEdit">
+           <property name="text">
+            <string>/dev/input/js0</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <widget class="QLabel" name="jsConnectedLabel">
+           <property name="text">
+            <string>Not connected</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QPushButton" name="jsDisconnectButton">
+           <property name="text">
+            <string>Disconnect</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1" colspan="2">
+          <widget class="QPushButton" name="jsConnectButton">
+           <property name="text">
+            <string>Connect</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </widget>
       </item>
       <item>
        <layout class="QGridLayout" name="gridLayout_3">
-        <item row="0" column="0">
+        <item row="2" column="0">
          <widget class="QProgressBar" name="throttleBar">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -335,7 +365,29 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="1">
+        <item row="3" column="1">
+         <widget class="QDoubleSpinBox" name="steeringGainBox">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="prefix">
+           <string>G: </string>
+          </property>
+          <property name="decimals">
+           <number>3</number>
+          </property>
+          <property name="singleStep">
+           <double>0.005000000000000</double>
+          </property>
+          <property name="value">
+           <double>0.080000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
          <widget class="QDoubleSpinBox" name="throttleGainBox">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -357,7 +409,7 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="0">
+        <item row="3" column="0">
          <widget class="QProgressBar" name="steeringBar">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -376,25 +428,36 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="1">
-         <widget class="QDoubleSpinBox" name="steeringGainBox">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
+        <item row="1" column="0" colspan="2">
+         <widget class="QDoubleSpinBox" name="throttleMaxBox">
           <property name="prefix">
-           <string>G: </string>
+           <string>Max: </string>
           </property>
-          <property name="decimals">
-           <number>3</number>
+          <property name="maximum">
+           <double>1.000000000000000</double>
           </property>
           <property name="singleStep">
-           <double>0.005000000000000</double>
+           <double>0.010000000000000</double>
           </property>
           <property name="value">
-           <double>0.050000000000000</double>
+           <double>0.150000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QRadioButton" name="throttleDutyButton">
+          <property name="text">
+           <string>Duty</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QRadioButton" name="throttleCurrentButton">
+          <property name="text">
+           <string>Current</string>
           </property>
          </widget>
         </item>

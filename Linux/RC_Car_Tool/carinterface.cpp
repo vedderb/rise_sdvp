@@ -282,13 +282,17 @@ void CarInterface::setPacketInterface(PacketInterface *packetInterface)
             this, SLOT(configurationReceived(quint8,MAIN_CONFIG)));
 }
 
-void CarInterface::setKeyboardValues(double throttle, double steering)
+void CarInterface::setControlValues(double throttle, double steering, double max, bool currentMode)
 {
     if (ui->keyboardControlBox->isChecked()) {
-        if (fabs(throttle) < 0.01) {
+        if (fabs(throttle) < 0.005) {
             emit setRcCurrent(mId, 0.0, steering);
         } else {
-            emit setRcDuty(mId, throttle * 0.15, steering);
+            if (currentMode) {
+                emit setRcCurrent(mId, throttle * 80.0 * max, steering);
+            } else {
+                emit setRcDuty(mId, throttle * max, steering);
+            }
         }
     }
 }

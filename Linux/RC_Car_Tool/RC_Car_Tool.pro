@@ -34,7 +34,8 @@ SOURCES += main.cpp\
     rtcm3_simple.c \
     rtcmclient.cpp \
     tcpbroadcast.cpp \
-    rtcmwidget.cpp
+    rtcmwidget.cpp \
+    joystick.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
@@ -51,7 +52,8 @@ HEADERS  += mainwindow.h \
     rtcm3_simple.h \
     rtcmclient.h \
     tcpbroadcast.h \
-    rtcmwidget.h
+    rtcmwidget.h \
+    joystick.h
 
 FORMS    += mainwindow.ui \
     carinterface.ui \

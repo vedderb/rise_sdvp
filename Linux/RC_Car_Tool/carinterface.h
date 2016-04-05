@@ -28,7 +28,7 @@ public:
     void setStateData(CAR_STATE data);
     void setMap(MapWidget *map);
     void setPacketInterface(PacketInterface *packetInterface);
-    void setKeyboardValues(double throttle, double steering);
+    void setControlValues(double throttle, double steering, double max, bool currentMode);
 
 signals:
     void terminalCmd(quint8 id, QString cmd);
