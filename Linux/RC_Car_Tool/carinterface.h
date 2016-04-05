@@ -63,6 +63,8 @@ private slots:
     void on_confReadButton_clicked();
     void on_confReadDefaultButton_clicked();
     void on_confWriteButton_clicked();
+    void on_nmeaLogChooseButton_clicked();
+    void on_nmeaLogActiveBox_toggled(bool checked);
 
 private:
     Ui::CarInterface *ui;

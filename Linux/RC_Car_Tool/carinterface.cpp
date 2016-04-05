@@ -374,9 +374,8 @@ void CarInterface::nmeaReceived(quint8 id, QByteArray nmea_msg)
 {
     if (id == mId) {
         ui->nmeaBrowser->append(QString::fromLocal8Bit(nmea_msg));
+        mNmeaForwardServer->broadcastData(nmea_msg);
     }
-
-    mNmeaForwardServer->broadcastData(nmea_msg);
 }
 
 void CarInterface::configurationReceived(quint8 id, MAIN_CONFIG config)
@@ -606,4 +605,30 @@ void CarInterface::setConfGui(MAIN_CONFIG &conf)
     ui->confAxisDistanceBox->setValue(conf.axis_distance);
 
     ui->confTurnRadBox->setValue(conf.axis_distance / tan(conf.steering_max_angle_rad));
+}
+
+void CarInterface::on_nmeaLogChooseButton_clicked()
+{
+    QString path;
+    path = QFileDialog::getSaveFileName(this, tr("Choose where to save the NMEA log"));
+    if (path.isNull()) {
+        return;
+    }
+
+    ui->nmeaLogEdit->setText(path);
+}
+
+void CarInterface::on_nmeaLogActiveBox_toggled(bool checked)
+{
+    if (checked) {
+        bool ok = mNmeaForwardServer->logToFile(ui->nmeaLogEdit->text());
+
+        if (!ok) {
+            QMessageBox::warning(this, "NMEA Log",
+                                 "Could not open log file.");
+            ui->nmeaLogActiveBox->setChecked(false);
+        }
+    } else {
+        mNmeaForwardServer->logStop();
+    }
 }
