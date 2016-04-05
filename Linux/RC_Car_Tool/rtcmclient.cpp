@@ -9,6 +9,13 @@ void rtcm_rx(uint8_t *data, int len, int type) {
         RtcmClient::currentMsgHandler->emitRtcmReceived(rtcm_data, type);
     }
 }
+
+void rtcm_rx_1006(rtcm_ref_sta_pos_t *pos) {
+    if (RtcmClient::currentMsgHandler) {
+        RtcmClient::currentMsgHandler->emitRefPosReceived(
+                    pos->lat, pos->lon, pos->height, pos->ant_height);
+    }
+}
 }
 
 // Static member initialization
@@ -21,6 +28,7 @@ RtcmClient::RtcmClient(QObject *parent) : QObject(parent)
 
     currentMsgHandler = this;
     rtcm3_set_rx_callback(rtcm_rx);
+    rtcm3_set_rx_callback_1005_1006(rtcm_rx_1006);
 
     connect(mTcpSocket, SIGNAL(readyRead()), this, SLOT(tcpInputDataAvailable()));
     connect(mTcpSocket, SIGNAL(connected()), this, SLOT(tcpInputConnected()));
@@ -105,6 +113,29 @@ void RtcmClient::disconnectSerial()
 void RtcmClient::emitRtcmReceived(QByteArray data, int type)
 {
     emit rtcmReceived(data, type);
+}
+
+void RtcmClient::emitRefPosReceived(double lat, double lon, double height, double antenna_height)
+{
+    emit refPosReceived(lat, lon, height, antenna_height);
+}
+
+QByteArray RtcmClient::encodeBasePos(double lat, double lon, double height, double antenna_height)
+{
+    rtcm_ref_sta_pos_t pos;
+    int len;
+
+    pos.staid = 0;
+    pos.lat = lat;
+    pos.lon = lon;
+    pos.height = height;
+    pos.ant_height = antenna_height;
+
+    quint8 buffer[40];
+    rtcm3_encode_1006(pos, buffer, &len);
+
+    QByteArray rtcm_data((const char*)buffer, len);
+    return rtcm_data;
 }
 
 void RtcmClient::tcpInputConnected()

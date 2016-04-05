@@ -23,6 +23,8 @@
 #define CODE_L2P        19                  // obs code: L2P,G2P    (GPS,GLO)
 #define CODE_L2W        20                  // obs code: L2 Z-track (GPS)
 #define MAXOBS          64                  // max number of obs in an epoch
+#define FE_WGS84        (1.0/298.257223563) // earth flattening (WGS84)
+#define RE_WGS84        6378137.0           // earth semimajor axis (WGS84) (m)
 
 #define P2_5        0.03125                 // 2^-5
 #define P2_19       1.907348632812500E-06   // 2^-19
@@ -51,16 +53,21 @@ static int decode_head1001(rtcm_obs_header_t *header, int *nsat, uint8_t *buffer
 static int encode_end(uint8_t *buffer, int nbit);
 static int decode_1002(uint8_t *buffer, int len);
 static int decode_1004(uint8_t *buffer, int len);
+static int decode_1005(uint8_t *buffer, int len);
+static int decode_1006(uint8_t *buffer, int len);
 static int decode_1019(uint8_t *buffer, int len);
 static double cp_pr(double cp, double pr_cyc);
 static void setbitu(uint8_t *buff, int pos, int len, unsigned int data);
 static void setbits(unsigned char *buff, int pos, int len, int data);
+static void set38bits(unsigned char *buff, int pos, double value);
 static unsigned int getbitu(const unsigned char *buff, int pos, int len);
 static int getbits(const unsigned char *buff, int pos, int len);
+static double getbits_38(const unsigned char *buff, int pos);
 static unsigned int crc24q(const unsigned char *buff, int len);
 
 // Callbacks
 static void(*rx_rtcm_obs_gps)(rtcm_obs_header_t *header, rtcm_obs_gps_t *obs, int obs_num) = 0;
+static void(*rx_rtcm_1005_1006)(rtcm_ref_sta_pos_t *pos) = 0;
 static void(*rx_rtcm_1019)(rtcm_ephemeris_t *eph) = 0;
 static void(*rx_rtcm)(uint8_t *data, int len, int type) = 0;
 
@@ -70,6 +77,14 @@ static void(*rx_rtcm)(uint8_t *data, int len, int type) = 0;
  */
 void rtcm3_set_rx_callback_obs_gps(void(*func)(rtcm_obs_header_t *header, rtcm_obs_gps_t *obs, int obs_num)) {
     rx_rtcm_obs_gps = func;
+}
+
+/**
+ * @brief rtcm3_set_rx_callback_1006
+ * Set a function to be called when a 1006 packet is received.
+ */
+void rtcm3_set_rx_callback_1005_1006(void(*func)(rtcm_ref_sta_pos_t *pos)) {
+    rx_rtcm_1005_1006 = func;
 }
 
 /**
@@ -146,6 +161,8 @@ int rtcm3_input_data(uint8_t data) {
     switch (type) {
     case 1002: return decode_1002(input_buffer, input_len);
     case 1004: return decode_1004(input_buffer, input_len);
+    case 1005: return decode_1005(input_buffer, input_len);
+    case 1006: return decode_1006(input_buffer, input_len);
     case 1019: return decode_1019(input_buffer, input_len);
     default: return -3; // Not supported
     }
@@ -212,6 +229,63 @@ int rtcm3_encode_1002(rtcm_obs_header_t *header, rtcm_obs_gps_t *obs,
         setbitu(buffer,i, 8,amb  ); i+= 8;
         setbitu(buffer,i, 8,cnr1 ); i+= 8;
     }
+
+    *buffer_len = encode_end(buffer, i);
+
+    return *buffer_len > 0;
+}
+
+/**
+ * @brief rtcm3_encode_1006
+ * Encode RTCM3 reference station position with extended information.
+ *
+ * @param pos
+ * The reference station position.
+ *
+ * @param buffer
+ * Buffer to store the RTCM stream to.
+ *
+ * @param buffer_len
+ * Length of the buffer.
+ *
+ * @return
+ * 1 for success, <= 0 otherwise.
+ */
+int rtcm3_encode_1006(rtcm_ref_sta_pos_t pos, uint8_t *buffer, int *buffer_len) {
+    int i=0;
+    int hgt = ROUND(pos.ant_height / 0.0001);
+
+    // Convert llh to ecef
+    double sinp = sin(pos.lat * M_PI / 180.0);
+    double cosp = cos(pos.lat * M_PI / 180.0);
+    double sinl = sin(pos.lon * M_PI / 180.0);
+    double cosl = cos(pos.lon * M_PI / 180.0);
+    double e2 = FE_WGS84 * (2.0 - FE_WGS84);
+    double v = RE_WGS84 / sqrt(1.0 - e2 * sinp * sinp);
+
+    double p0 = (v + pos.height) * cosp * cosl;
+    double p1 = (v + pos.height) * cosp * sinl;
+    double p2 = (v * (1.0 - e2) + pos.height) * sinp;
+
+    // set preamble and reserved
+    setbitu(buffer,i, 8, RTCM3PREAMB); i+= 8;
+    setbitu(buffer,i, 6, 0); i+= 6;
+    setbitu(buffer, i, 10, 0); i+=10;
+
+    setbitu(buffer,i,12,1006       ); i+=12; // message no
+    setbitu(buffer,i,12,pos.staid  ); i+=12; // ref station id
+    setbitu(buffer,i, 6,0          ); i+= 6; // itrf realization year
+    setbitu(buffer,i, 1,1          ); i+= 1; // gps indicator
+    setbitu(buffer,i, 1,1          ); i+= 1; // glonass indicator
+    setbitu(buffer,i, 1,0          ); i+= 1; // galileo indicator
+    setbitu(buffer,i, 1,0          ); i+= 1; // ref station indicator
+    set38bits(buffer,i,p0 / 0.0001 ); i+=38; // antenna ref point ecef-x
+    setbitu(buffer,i, 1,1          ); i+= 1; // oscillator indicator
+    setbitu(buffer,i, 1,0          ); i+= 1; // reserved
+    set38bits(buffer,i,p1 / 0.0001 ); i+=38; // antenna ref point ecef-y
+    setbitu(buffer,i, 2,0          ); i+= 2; // quarter cycle indicator
+    set38bits(buffer,i,p2 / 0.0001 ); i+=38; // antenna ref point ecef-z
+    setbitu(buffer,i,16,hgt        ); i+=16; // antenna height
 
     *buffer_len = encode_end(buffer, i);
 
@@ -466,6 +540,112 @@ static int decode_1004(uint8_t *buffer, int len) {
     return 1004;
 }
 
+static int decode_1005(uint8_t *buffer, int len) {
+    static rtcm_ref_sta_pos_t pos;
+
+    double p0 = 0.0;
+    double p1 = 0.0;
+    double p2 = 0.0;
+    int i = 24 + 12;
+    int staid;
+    int itrf;
+
+    if (i + 140 <= len * 8) {
+        staid = getbitu(buffer, i, 12); i+=12;
+        itrf  = getbitu(buffer, i, 6);  i+= 6+4;
+        p0    = getbits_38(buffer, i);  i+=38+2;
+        p1    = getbits_38(buffer, i);  i+=38+2;
+        p2    = getbits_38(buffer, i);
+
+        p0 *= 0.0001;
+        p1 *= 0.0001;
+        p2 *= 0.0001;
+
+        (void)itrf;
+        pos.ant_height = 0.0;
+        pos.staid = staid;
+
+        // Convert ecef to llh
+        double e2 = FE_WGS84 * (2.0 - FE_WGS84);
+        double r2 = p0 * p0 + p1 * p1;
+        double z = p2;
+        double zk = 0.0;
+        double sinp = 0.0;
+        double v = RE_WGS84;
+
+        while (fabs(z - zk) >= 1E-4) {
+            zk = z;
+            sinp = z / sqrt(r2 + z * z);
+            v = RE_WGS84 / sqrt(1.0 - e2 * sinp * sinp);
+            z = p2 + v * e2 * sinp;
+        }
+
+        pos.lat = (r2 > 1E-12 ? atan(z / sqrt(r2)) : (p2 > 0.0 ? M_PI / 2.0 : -M_PI / 2.0)) * 180.0 / M_PI;
+        pos.lon = (r2 > 1E-12 ? atan2(p1, p0) : 0.0) * 180.0 / M_PI;
+        pos.height = sqrt(r2 + z * z) - v;
+
+        if (rx_rtcm_1005_1006) {
+            rx_rtcm_1005_1006(&pos);
+        }
+    }
+
+    return 1005;
+}
+
+static int decode_1006(uint8_t *buffer, int len) {
+    static rtcm_ref_sta_pos_t pos;
+
+    double p0 = 0.0;
+    double p1 = 0.0;
+    double p2 = 0.0;
+    double anth;
+    int i = 24 + 12;
+    int staid;
+    int itrf;
+
+    if (i + 156 <= len * 8) {
+        staid = getbitu(buffer, i, 12); i+=12;
+        itrf  = getbitu(buffer, i, 6);  i+= 6+4;
+        p0    = getbits_38(buffer, i);  i+=38+2;
+        p1    = getbits_38(buffer, i);  i+=38+2;
+        p2    = getbits_38(buffer, i);  i+=38;
+        anth  = getbitu(buffer, i, 16);
+
+        p0 *= 0.0001;
+        p1 *= 0.0001;
+        p2 *= 0.0001;
+
+        (void)itrf;
+        pos.ant_height = anth * 0.0001;
+        pos.staid = staid;
+
+        // Convert ecef to llh
+        double e2 = FE_WGS84 * (2.0 - FE_WGS84);
+        double r2 = p0 * p0 + p1 * p1;
+        double z = p2;
+        double zk = 0.0;
+        double sinp = 0.0;
+        double v = RE_WGS84;
+
+        while (fabs(z - zk) >= 1E-4) {
+            zk = z;
+            sinp = z / sqrt(r2 + z * z);
+            v = RE_WGS84 / sqrt(1.0 - e2 * sinp * sinp);
+            z = p2 + v * e2 * sinp;
+        }
+
+        pos.lat = (r2 > 1E-12 ? atan(z / sqrt(r2)) : (p2 > 0.0 ? M_PI / 2.0 : -M_PI / 2.0)) * 180.0 / M_PI;
+        pos.lon = (r2 > 1E-12 ? atan2(p1, p0) : 0.0) * 180.0 / M_PI;
+        pos.height = sqrt(r2 + z * z) - v;
+
+        if (rx_rtcm_1005_1006) {
+            rx_rtcm_1005_1006(&pos);
+        }
+    }
+
+    return 1006;
+}
+
 static int decode_1019(uint8_t *buffer, int len) {
     static rtcm_ephemeris_t eph;
 
@@ -550,6 +730,14 @@ static void setbits(unsigned char *buff, int pos, int len, int data) {
     setbitu(buff,pos,len,(unsigned int)data);
 }
 
+// set signed 38 bit field
+static void set38bits(unsigned char *buff, int pos, double value) {
+    int word_h = (int)floor(value / 64.0);
+    unsigned int word_l = (unsigned int)(value - word_h * 64.0);
+    setbits(buff, pos  , 32, word_h);
+    setbitu(buff, pos + 32, 6, word_l);
+}
+
 static unsigned int getbitu(const unsigned char *buff, int pos, int len) {
     unsigned int bits=0;
     int i;
@@ -569,6 +757,11 @@ static int getbits(const unsigned char *buff, int pos, int len) {
     }
 
     return (int)(bits | (~0u << len)); // extend sign
+}
+
+// get signed 38bit field
+static double getbits_38(const unsigned char *buff, int pos) {
+    return (double)getbits(buff, pos, 32) * 64.0 + getbitu(buff, pos + 32, 6);
 }
 
 static const unsigned int tbl_CRC24Q[]={

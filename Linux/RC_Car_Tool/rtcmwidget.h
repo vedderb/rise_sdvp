@@ -23,6 +23,7 @@ signals:
 private slots:
     void timerSlot();
     void rtcmRx(QByteArray data, int type);
+    void refPosRx(double lat, double lon, double height, double antenna_height);
 
     void on_ntripConnectButton_clicked();
     void on_ntripDisconnectButton_clicked();

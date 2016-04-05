@@ -21,9 +21,13 @@ public:
     void disconnectSerial();
 
     void emitRtcmReceived(QByteArray data, int type);
+    void emitRefPosReceived(double lat, double lon, double height, double antenna_height);
+
+    static QByteArray encodeBasePos(double lat, double lon, double height, double antenna_height = 0);
 
 signals:
     void rtcmReceived(QByteArray data, int type);
+    void refPosReceived(double lat, double lon, double height, double antenna_height);
 
 public slots:
     void tcpInputConnected();

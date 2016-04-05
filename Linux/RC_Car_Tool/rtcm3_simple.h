@@ -26,6 +26,14 @@ typedef struct {
 } rtcm_obs_gps_t;
 
 typedef struct {
+    int staid;
+    double lat;
+    double lon;
+    double height;
+    double ant_height;
+} rtcm_ref_sta_pos_t;
+
+typedef struct {
   double tgd;           // Group delay differential between L1 and L2 [s]
   double c_rs;          // Amplitude of the sine harmonic correction term to the orbit radius [m]
   double c_rc;          // Amplitude of the cosine harmonic correction term to the orbit radius [m]
@@ -59,11 +67,13 @@ typedef struct {
 } rtcm_ephemeris_t;
 
 void rtcm3_set_rx_callback_obs_gps(void(*func)(rtcm_obs_header_t *header, rtcm_obs_gps_t *obs, int obs_num));
+void rtcm3_set_rx_callback_1005_1006(void(*func)(rtcm_ref_sta_pos_t *pos));
 void rtcm3_set_rx_callback_1019(void(*func)(rtcm_ephemeris_t *eph));
 void rtcm3_set_rx_callback(void(*func)(uint8_t *data, int len, int type));
 int rtcm3_input_data(uint8_t data);
 int rtcm3_encode_1002(rtcm_obs_header_t *header, rtcm_obs_gps_t *obs,
                        int obs_num, uint8_t *buffer, int *buffer_len);
+int rtcm3_encode_1006(rtcm_ref_sta_pos_t pos, uint8_t *buffer, int *buffer_len);
 int rtcm3_encode_1019(rtcm_ephemeris_t *eph, uint8_t *buffer, int *buffer_len);
 
 #ifdef __cplusplus
