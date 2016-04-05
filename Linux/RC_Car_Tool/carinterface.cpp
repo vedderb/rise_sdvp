@@ -305,8 +305,8 @@ void CarInterface::timerSlot()
     static int lastMagSamples = 0;
     if (mMagSamples.size() != lastMagSamples) {
         ui->magSampleLabel->setText(QString::number(mMagSamples.size()) + " Samples");
+        lastMagSamples = mMagSamples.size();
     }
-    lastMagSamples = mMagSamples.size();
 }
 
 void CarInterface::udpReadReady()
