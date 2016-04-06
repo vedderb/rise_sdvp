@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>917</width>
-    <height>502</height>
+    <height>505</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -27,6 +27,9 @@
        <property name="currentIndex">
         <number>0</number>
        </property>
+       <property name="tabsClosable">
+        <bool>false</bool>
+       </property>
        <widget class="QWidget" name="tab">
         <attribute name="title">
          <string>Orientation</string>
@@ -41,33 +44,6 @@
             </sizepolicy>
            </property>
           </widget>
-         </item>
-         <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_3">
-           <item>
-            <widget class="QLabel" name="label">
-             <property name="text">
-              <string>Yaw Offset</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QSlider" name="yawOffsetSlider">
-             <property name="minimum">
-              <number>-180</number>
-             </property>
-             <property name="maximum">
-              <number>180</number>
-             </property>
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="tickPosition">
-              <enum>QSlider::NoTicks</enum>
-             </property>
-            </widget>
-           </item>
-          </layout>
          </item>
          <item>
           <widget class="QProgressBar" name="rollBar">
@@ -865,7 +841,7 @@
                <double>1000.000000000000000</double>
               </property>
               <property name="singleStep">
-               <double>0.100000000000000</double>
+               <double>0.010000000000000</double>
               </property>
              </widget>
             </item>
@@ -1067,12 +1043,12 @@
    <slot>click()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>120</x>
-     <y>59</y>
+     <x>133</x>
+     <y>391</y>
     </hint>
     <hint type="destinationlabel">
-     <x>120</x>
-     <y>59</y>
+     <x>600</x>
+     <y>391</y>
     </hint>
    </hints>
   </connection>
@@ -1083,12 +1059,12 @@
    <slot>clear()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>387</x>
-     <y>547</y>
+     <x>399</x>
+     <y>392</y>
     </hint>
     <hint type="destinationlabel">
-     <x>389</x>
-     <y>448</y>
+     <x>401</x>
+     <y>359</y>
     </hint>
    </hints>
   </connection>

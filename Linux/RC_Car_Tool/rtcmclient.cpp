@@ -1,6 +1,7 @@
 #include "rtcmclient.h"
 #include "rtcm3_simple.h"
 #include <QDebug>
+#include <QMessageBox>
 
 namespace {
 void rtcm_rx(uint8_t *data, int len, int type) {
@@ -16,6 +17,15 @@ void rtcm_rx_1006(rtcm_ref_sta_pos_t *pos) {
                     pos->lat, pos->lon, pos->height, pos->ant_height);
     }
 }
+
+void rtcm_rx_obs_gps(rtcm_obs_header_t *header, rtcm_obs_gps_t *obs, int obs_num) {
+    (void)header;
+    qDebug() << "Observations" << obs_num;
+
+    for (int i = 0;i < obs_num;i++) {
+        qDebug() << obs[i].prn;
+    }
+}
 }
 
 // Static member initialization
@@ -26,9 +36,13 @@ RtcmClient::RtcmClient(QObject *parent) : QObject(parent)
     mTcpSocket = new QTcpSocket(this);
     mSerialPort = new QSerialPort(this);
 
+    qRegisterMetaType<rtcm_obs_header_t>("rtcm_obs_header_t");
+    qRegisterMetaType<rtcm_obs_gps_t>("rtcm_obs_gps_t");
+
     currentMsgHandler = this;
     rtcm3_set_rx_callback(rtcm_rx);
     rtcm3_set_rx_callback_1005_1006(rtcm_rx_1006);
+    //rtcm3_set_rx_callback_obs_gps(rtcm_rx_obs_gps);
 
     connect(mTcpSocket, SIGNAL(readyRead()), this, SLOT(tcpInputDataAvailable()));
     connect(mTcpSocket, SIGNAL(connected()), this, SLOT(tcpInputConnected()));
@@ -181,19 +195,13 @@ void RtcmClient::tcpInputDataAvailable()
 
 void RtcmClient::tcpInputError(QAbstractSocket::SocketError socketError)
 {
-    switch (socketError) {
-    case QAbstractSocket::RemoteHostClosedError:
-        qWarning() << "TcpError: connection Closed";
-        break;
-    case QAbstractSocket::HostNotFoundError:
-        qWarning() << "TcpError: host not found";
-        break;
-    case QAbstractSocket::ConnectionRefusedError:
-        qWarning() << "TcpError: connection refused";
-        break;
-    default:
-        qWarning() << "TcpError:" << mTcpSocket->errorString();
-    }
+    (void)socketError;
+
+    QString errorStr = mTcpSocket->errorString();
+    qWarning() << "TcpError:" << errorStr;
+    QMessageBox::warning(0, "TCP Error", errorStr);
+
+    mTcpSocket->close();
 }
 
 void RtcmClient::serialDataAvailable()

@@ -38,6 +38,8 @@ static float m_accel[3];
 static float m_gyro[3];
 static float m_mag[3];
 static mc_values m_mc_val;
+static float m_imu_yaw;
+static float m_yaw_offset;
 
 // Private functions
 static void mpu9150_read(void);
@@ -49,6 +51,8 @@ void pos_init(void) {
 	m_attitude_init_done = false;
 	memset(&m_pos, 0, sizeof(m_pos));
 	memset(&m_mc_val, 0, sizeof(m_mc_val));
+	m_imu_yaw = 0.0;
+	m_yaw_offset = 0.0;
 
 	mpu9150_init();
 	chThdSleepMilliseconds(1000);
@@ -106,6 +110,8 @@ void pos_set_xya(float x, float y, float angle) {
 	m_pos.px = x;
 	m_pos.py = y;
 	m_pos.yaw = angle;
+
+	m_yaw_offset = m_imu_yaw - angle;
 }
 
 void pos_get_mc_val(mc_values *v) {
@@ -162,16 +168,17 @@ static void update_orientation_angles(float *accel, float *gyro, float *mag, flo
 		}
 	}
 
-	m_pos.roll = MahonyAHRSGetRoll((ATTITUDE_INFO*)&m_att) * 180.0 / M_PI;// - roll_offset;
-	m_pos.pitch = MahonyAHRSGetPitch((ATTITUDE_INFO*)&m_att) * 180.0 / M_PI;// - pitch_offset;
-	const float yaw = MahonyAHRSGetYaw((ATTITUDE_INFO*)&m_att) * 180.0 / M_PI;// - yaw_offset;
+	m_pos.roll = MahonyAHRSGetRoll((ATTITUDE_INFO*)&m_att) * 180.0 / M_PI;
+	m_pos.pitch = MahonyAHRSGetPitch((ATTITUDE_INFO*)&m_att) * 180.0 / M_PI;
+	m_imu_yaw = MahonyAHRSGetYaw((ATTITUDE_INFO*)&m_att) * 180.0 / M_PI;
+	utils_norm_angle(&m_imu_yaw);
 	m_pos.roll_rate = -gyro[0] * 180.0 / M_PI;
 	m_pos.pitch_rate = gyro[1] * 180.0 / M_PI;
 	m_pos.yaw_rate = -gyro[2] * 180.0 / M_PI;
 
 	// Correct yaw
 	if (main_config.yaw_imu_gain > 1e-10) {
-		float ang_diff = utils_angle_difference(m_pos.yaw, yaw);
+		float ang_diff = utils_angle_difference(m_pos.yaw, m_imu_yaw - m_yaw_offset);
 
 		if (ang_diff > 1.2 * main_config.yaw_imu_gain) {
 			m_pos.yaw -= main_config.yaw_imu_gain;

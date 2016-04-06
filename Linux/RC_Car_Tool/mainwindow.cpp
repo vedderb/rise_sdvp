@@ -62,7 +62,7 @@ MainWindow::MainWindow(QWidget *parent) :
     qRegisterMetaType<LocPoint>("LocPoint");
 
     mTimer = new QTimer(this);
-    mTimer->start(20);
+    mTimer->start(40);
     mStatusLabel = new QLabel(this);
     ui->statusBar->addPermanentWidget(mStatusLabel);
     mStatusInfoTime = 0;
@@ -338,22 +338,23 @@ void MainWindow::rtcmReceived(QByteArray data, int type)
 {
     // Only send GPS observations and base station position
     // to save bandwidth.
-    switch (type) {
-    case 1001:
-    case 1002:
-    case 1003:
-    case 1004:
-    case 1005:
-    case 1006:
-    case 1019:
-        mPacketInterface->sendRtcmUsb(255, data);
-        break;
+//    switch (type) {
+//    case 1001:
+//    case 1002:
+//    case 1003:
+//    case 1004:
+//    case 1005:
+//    case 1006:
+//    case 1019:
+//        mPacketInterface->sendRtcmUsb(255, data);
+//        break;
+//    default:
+//        break;
+//    }
 
-    default:
-        break;
-    }
-
-//    mPacketInterface->sendRtcmUsb(255, data);
+    // For some reason rtklib refuses to work without glonass observations...
+    (void)type;
+    mPacketInterface->sendRtcmUsb(255, data);
 }
 
 void MainWindow::on_carAddButton_clicked()
@@ -480,12 +481,29 @@ void MainWindow::on_jsConnectButton_clicked()
         qDebug() << "Axes:" << mJoystick->numAxes();
         qDebug() << "Buttons:" << mJoystick->numButtons();
         qDebug() << "Name:" << mJoystick->getName();
+        showStatusInfo("Connected to joystick!", true);
     } else {
         qWarning() << "Opening joystick failed.";
+        showStatusInfo("Opening joystick failed.", false);
     }
 }
 
 void MainWindow::on_jsDisconnectButton_clicked()
 {
     mJoystick->stop();
+}
+
+void MainWindow::on_mapAntialiasBox_toggled(bool checked)
+{
+    ui->mapWidget->setAntialiasing(checked);
+}
+
+void MainWindow::on_carsWidget_tabCloseRequested(int index)
+{
+    if (mCars.size() > 0) {
+        CarInterface *car = (CarInterface*)ui->carsWidget->widget(index);
+        ui->carsWidget->removeTab(index);
+        mCars.removeOne(car);
+        delete car;
+    }
 }

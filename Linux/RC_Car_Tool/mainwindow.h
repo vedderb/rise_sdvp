@@ -65,6 +65,10 @@ private slots:
     void on_jsConnectButton_clicked();
     void on_jsDisconnectButton_clicked();
 
+    void on_mapAntialiasBox_toggled(bool checked);
+
+    void on_carsWidget_tabCloseRequested(int index);
+
 private:
     Ui::MainWindow *ui;
     QTimer *mTimer;

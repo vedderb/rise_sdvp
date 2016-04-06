@@ -50,7 +50,6 @@ private slots:
 
     void on_terminalSendButton_clicked();
     void on_terminalClearButton_clicked();
-    void on_yawOffsetSlider_valueChanged(int value);
     void on_idBox_valueChanged(int arg1);
     void on_magSampleClearButton_clicked();
     void on_magSampleSaveButton_clicked();

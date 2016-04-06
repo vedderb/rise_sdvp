@@ -60,6 +60,7 @@ public:
     void clearPerspectivePixmaps();
     QPoint getMousePosRelative();
     void repaintAfterEvents();
+    void setAntialiasing(bool antialias);
 
 signals:
     void scaleChanged(double newScale);
@@ -96,6 +97,7 @@ private:
     double xRealPos;
     double yRealPos;
     QTimer *mPaintTimer;
+    bool mAntialias;
 };
 
 #endif // MAPWIDGET_H

@@ -21,9 +21,10 @@ RtcmWidget::RtcmWidget(QWidget *parent) :
     on_rtcmSerialRefreshButton_clicked();
     on_ntripBox_toggled(ui->ntripBox->isChecked());
 
-    ui->refSendLatBox->setValue(57.71631912);
-    ui->refSendLonBox->setValue(12.89206013);
-    ui->refSendHBox->setValue(186.0);
+    // SPT00 default
+    ui->refSendLatBox->setValue(57.71495867);
+    ui->refSendLonBox->setValue(12.89134921);
+    ui->refSendHBox->setValue(219.0);
 }
 
 RtcmWidget::~RtcmWidget()

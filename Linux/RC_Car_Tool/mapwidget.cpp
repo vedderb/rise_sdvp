@@ -52,6 +52,7 @@ MapWidget::MapWidget(QWidget *parent) :
     mPaintTimer = new QTimer(this);
     mPaintTimer->setSingleShot(true);
     mRoutePointSpeed = 1.0;
+    mAntialias = false;
 
     connect(mPaintTimer, SIGNAL(timeout()), this, SLOT(paintTimerSlot()));
 }
@@ -156,9 +157,15 @@ void MapWidget::repaintAfterEvents()
     }
 }
 
+void MapWidget::setAntialiasing(bool antialias)
+{
+    mAntialias = antialias;
+    repaintAfterEvents();
+}
+
 void MapWidget::paintTimerSlot()
 {
-    repaint();
+    update();
 }
 
 void MapWidget::setFollowCar(int car)
@@ -184,7 +191,10 @@ void MapWidget::setSelectedCar(int car)
 void MapWidget::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
-    painter.setRenderHint(QPainter::Antialiasing);
+
+    if (mAntialias) {
+        painter.setRenderHint(QPainter::Antialiasing);
+    }
 
     const double scaleMax = 20;
     const double scaleMin = 0.00001;

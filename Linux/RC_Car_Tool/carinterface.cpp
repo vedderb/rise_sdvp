@@ -46,7 +46,7 @@ CarInterface::CarInterface(QWidget *parent) :
     magZData.resize(maxSampleSize);
     accelGyroMagXAxis.resize(maxSampleSize);
     for(int i = 0;i < accelGyroMagXAxis.size();i++) {
-        accelGyroMagXAxis[i] = (20.0 / 1000.0 * i);
+        accelGyroMagXAxis[accelGyroMagXAxis.size() - i - 1] = (40.0 / 1000.0 * i);
     }
 
     mMap = 0;
@@ -64,6 +64,66 @@ CarInterface::CarInterface(QWidget *parent) :
 
     connect(mTimer, SIGNAL(timeout()), this, SLOT(timerSlot()));
     connect(mUdpSocket, SIGNAL(readyRead()), this, SLOT(udpReadReady()));
+
+    ui->accelPlot->clearGraphs();
+    ui->accelPlot->addGraph();
+    ui->accelPlot->xAxis->setRangeReversed(true);
+    ui->accelPlot->graph()->setPen(QPen(Qt::black));
+    ui->accelPlot->graph()->setData(accelGyroMagXAxis, accelXData);
+    ui->accelPlot->graph()->setName(tr("X"));
+    ui->accelPlot->addGraph();
+    ui->accelPlot->graph()->setPen(QPen(Qt::green));
+    ui->accelPlot->graph()->setData(accelGyroMagXAxis, accelYData);
+    ui->accelPlot->graph()->setName(tr("Y"));
+    ui->accelPlot->addGraph();
+    ui->accelPlot->graph()->setPen(QPen(Qt::blue));
+    ui->accelPlot->graph()->setData(accelGyroMagXAxis, accelZData);
+    ui->accelPlot->graph()->setName(tr("Z"));
+    ui->accelPlot->rescaleAxes();
+    ui->accelPlot->xAxis->setLabel("Seconds");
+    ui->accelPlot->yAxis->setLabel("G");
+    ui->accelPlot->legend->setVisible(true);
+    ui->accelPlot->replot();
+
+    ui->gyroPlot->clearGraphs();
+    ui->gyroPlot->addGraph();
+    ui->gyroPlot->xAxis->setRangeReversed(true);
+    ui->gyroPlot->graph()->setPen(QPen(Qt::black));
+    ui->gyroPlot->graph()->setData(accelGyroMagXAxis, gyroXData);
+    ui->gyroPlot->graph()->setName(tr("X"));
+    ui->gyroPlot->addGraph();
+    ui->gyroPlot->graph()->setPen(QPen(Qt::green));
+    ui->gyroPlot->graph()->setData(accelGyroMagXAxis, gyroYData);
+    ui->gyroPlot->graph()->setName(tr("Y"));
+    ui->gyroPlot->addGraph();
+    ui->gyroPlot->graph()->setPen(QPen(Qt::blue));
+    ui->gyroPlot->graph()->setData(accelGyroMagXAxis, gyroZData);
+    ui->gyroPlot->graph()->setName(tr("Z"));
+    ui->gyroPlot->rescaleAxes();
+    ui->gyroPlot->xAxis->setLabel("Seconds");
+    ui->gyroPlot->yAxis->setLabel("deg/s");
+    ui->gyroPlot->legend->setVisible(true);
+    ui->gyroPlot->replot();
+
+    ui->magPlot->clearGraphs();
+    ui->magPlot->addGraph();
+    ui->magPlot->xAxis->setRangeReversed(true);
+    ui->magPlot->graph()->setPen(QPen(Qt::black));
+    ui->magPlot->graph()->setData(accelGyroMagXAxis, magXData);
+    ui->magPlot->graph()->setName(tr("X"));
+    ui->magPlot->addGraph();
+    ui->magPlot->graph()->setPen(QPen(Qt::green));
+    ui->magPlot->graph()->setData(accelGyroMagXAxis, magYData);
+    ui->magPlot->graph()->setName(tr("Y"));
+    ui->magPlot->addGraph();
+    ui->magPlot->graph()->setPen(QPen(Qt::blue));
+    ui->magPlot->graph()->setData(accelGyroMagXAxis, magZData);
+    ui->magPlot->graph()->setName(tr("Z"));
+    ui->magPlot->rescaleAxes();
+    ui->magPlot->xAxis->setLabel("Seconds");
+    ui->magPlot->yAxis->setLabel("uT");
+    ui->magPlot->legend->setVisible(true);
+    ui->magPlot->replot();
 }
 
 CarInterface::~CarInterface()
@@ -107,23 +167,10 @@ void CarInterface::setStateData(CAR_STATE data)
     accelZData.append(data.accel[2]);
     accelZData.remove(0, 1);
 
-    ui->accelPlot->clearGraphs();
-    ui->accelPlot->addGraph();
-    ui->accelPlot->graph()->setPen(QPen(Qt::black));
-    ui->accelPlot->graph()->setData(accelGyroMagXAxis, accelXData);
-    ui->accelPlot->graph()->setName(tr("X"));
-    ui->accelPlot->addGraph();
-    ui->accelPlot->graph()->setPen(QPen(Qt::green));
-    ui->accelPlot->graph()->setData(accelGyroMagXAxis, accelYData);
-    ui->accelPlot->graph()->setName(tr("Y"));
-    ui->accelPlot->addGraph();
-    ui->accelPlot->graph()->setPen(QPen(Qt::blue));
-    ui->accelPlot->graph()->setData(accelGyroMagXAxis, accelZData);
-    ui->accelPlot->graph()->setName(tr("Z"));
+    ui->accelPlot->graph(0)->setData(accelGyroMagXAxis, accelXData);
+    ui->accelPlot->graph(1)->setData(accelGyroMagXAxis, accelYData);
+    ui->accelPlot->graph(2)->setData(accelGyroMagXAxis, accelZData);
     ui->accelPlot->rescaleAxes();
-    ui->accelPlot->xAxis->setLabel("Seconds");
-    ui->accelPlot->yAxis->setLabel("G");
-    ui->accelPlot->legend->setVisible(true);
     ui->accelPlot->replot();
 
     gyroXData.append(data.gyro[0] * 180.0 / M_PI);
@@ -133,23 +180,10 @@ void CarInterface::setStateData(CAR_STATE data)
     gyroZData.append(data.gyro[2] * 180.0 / M_PI);
     gyroZData.remove(0, 1);
 
-    ui->gyroPlot->clearGraphs();
-    ui->gyroPlot->addGraph();
-    ui->gyroPlot->graph()->setPen(QPen(Qt::black));
-    ui->gyroPlot->graph()->setData(accelGyroMagXAxis, gyroXData);
-    ui->gyroPlot->graph()->setName(tr("X"));
-    ui->gyroPlot->addGraph();
-    ui->gyroPlot->graph()->setPen(QPen(Qt::green));
-    ui->gyroPlot->graph()->setData(accelGyroMagXAxis, gyroYData);
-    ui->gyroPlot->graph()->setName(tr("Y"));
-    ui->gyroPlot->addGraph();
-    ui->gyroPlot->graph()->setPen(QPen(Qt::blue));
-    ui->gyroPlot->graph()->setData(accelGyroMagXAxis, gyroZData);
-    ui->gyroPlot->graph()->setName(tr("Z"));
+    ui->gyroPlot->graph(0)->setData(accelGyroMagXAxis, gyroXData);
+    ui->gyroPlot->graph(1)->setData(accelGyroMagXAxis, gyroYData);
+    ui->gyroPlot->graph(2)->setData(accelGyroMagXAxis, gyroZData);
     ui->gyroPlot->rescaleAxes();
-    ui->gyroPlot->xAxis->setLabel("Seconds");
-    ui->gyroPlot->yAxis->setLabel("deg/s");
-    ui->gyroPlot->legend->setVisible(true);
     ui->gyroPlot->replot();
 
     magXData.append(data.mag[0]);
@@ -159,23 +193,10 @@ void CarInterface::setStateData(CAR_STATE data)
     magZData.append(data.mag[2]);
     magZData.remove(0, 1);
 
-    ui->magPlot->clearGraphs();
-    ui->magPlot->addGraph();
-    ui->magPlot->graph()->setPen(QPen(Qt::black));
     ui->magPlot->graph()->setData(accelGyroMagXAxis, magXData);
-    ui->magPlot->graph()->setName(tr("X"));
-    ui->magPlot->addGraph();
-    ui->magPlot->graph()->setPen(QPen(Qt::green));
     ui->magPlot->graph()->setData(accelGyroMagXAxis, magYData);
-    ui->magPlot->graph()->setName(tr("Y"));
-    ui->magPlot->addGraph();
-    ui->magPlot->graph()->setPen(QPen(Qt::blue));
     ui->magPlot->graph()->setData(accelGyroMagXAxis, magZData);
-    ui->magPlot->graph()->setName(tr("Z"));
     ui->magPlot->rescaleAxes();
-    ui->magPlot->xAxis->setLabel("Seconds");
-    ui->magPlot->yAxis->setLabel("uT");
-    ui->magPlot->legend->setVisible(true);
     ui->magPlot->replot();
 
     // Firmware label
@@ -217,15 +238,19 @@ void CarInterface::setStateData(CAR_STATE data)
     bool isOk;
     faultToStr(data.mc_fault, fault_str, isOk);
 
-    ui->mcFaultLabel->setText(fault_str);
-    if (isOk) {
-        ui->mcFaultLabel->setStyleSheet("QLabel { background-color : lightgreen; color : black; }");
-    } else {
-        ui->mcFaultLabel->setStyleSheet("QLabel { background-color : red; color : black; }");
+    static QString fault_last = "Fault code...";
+    if (fault_last != fault_str) {
+        fault_last = fault_str;
+        ui->mcFaultLabel->setText(fault_str);
+        if (isOk) {
+            ui->mcFaultLabel->setStyleSheet("QLabel { background-color : lightgreen; color : black; }");
+        } else {
+            ui->mcFaultLabel->setStyleSheet("QLabel { background-color : red; color : black; }");
 
-        QString msg;
-        msg.sprintf("Car %d: ", mId);
-        emit showStatusInfo(msg + fault_str, false);
+            QString msg;
+            msg.sprintf("Car %d: ", mId);
+            emit showStatusInfo(msg + fault_str, false);
+        }
     }
 
     if (mMap) {
@@ -397,11 +422,6 @@ void CarInterface::on_terminalSendButton_clicked()
 void CarInterface::on_terminalClearButton_clicked()
 {
     ui->terminalBrowser->clear();
-}
-
-void CarInterface::on_yawOffsetSlider_valueChanged(int value)
-{
-    ui->orientationWidget->setYawOffset(value);
 }
 
 void CarInterface::on_idBox_valueChanged(int arg1)

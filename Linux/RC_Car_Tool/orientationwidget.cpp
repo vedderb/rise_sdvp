@@ -100,9 +100,9 @@ OrientationWidget::OrientationWidget(QWidget *parent)
     mUseQuaternions = false;
 
     // Set these to get the rotation of this particular model right
-    mXRotOfs = 0.0;
-    mYRotOfs = 90.0;
-    mZRotOfs = 90.0;
+    mXRotOfs = 90.0;
+    mYRotOfs = 180.0;
+    mZRotOfs = 180.0;
     mZRotOfsCar = 0.0;
 
     mBgColor = palette().color(QPalette::Window);
