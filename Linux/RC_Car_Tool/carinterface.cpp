@@ -193,9 +193,9 @@ void CarInterface::setStateData(CAR_STATE data)
     magZData.append(data.mag[2]);
     magZData.remove(0, 1);
 
-    ui->magPlot->graph()->setData(accelGyroMagXAxis, magXData);
-    ui->magPlot->graph()->setData(accelGyroMagXAxis, magYData);
-    ui->magPlot->graph()->setData(accelGyroMagXAxis, magZData);
+    ui->magPlot->graph(0)->setData(accelGyroMagXAxis, magXData);
+    ui->magPlot->graph(1)->setData(accelGyroMagXAxis, magYData);
+    ui->magPlot->graph(2)->setData(accelGyroMagXAxis, magZData);
     ui->magPlot->rescaleAxes();
     ui->magPlot->replot();
 
