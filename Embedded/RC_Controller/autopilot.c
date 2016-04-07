@@ -63,6 +63,12 @@ void autopilot_init(void) {
 }
 
 void autopilot_add_point(ROUTE_POINT *p) {
+	// Check if the same point is sent again.
+	ROUTE_POINT *lp = &m_route[m_point_last];
+	if (utils_point_distance(lp->px, lp->py, p->px, p->py) < 1e-4) {
+		return;
+	}
+
 	m_route[m_point_last++] = *p;
 
 	if (m_point_last >= AP_ROUTE_SIZE) {
