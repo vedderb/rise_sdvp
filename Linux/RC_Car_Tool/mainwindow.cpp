@@ -70,6 +70,11 @@ MainWindow::MainWindow(QWidget *parent) :
     mSerialPort = new QSerialPort(this);
     mJoystick = new Joystick(this);
 
+    mKeyUp = false;
+    mKeyDown = false;
+    mKeyLeft = false;
+    mKeyRight = false;
+
     ui->mapWidget->setRoutePointSpeed(ui->mapRouteSpeedBox->value() / 3.6);
 
     connect(mTimer, SIGNAL(timeout()), this, SLOT(timerSlot()));
