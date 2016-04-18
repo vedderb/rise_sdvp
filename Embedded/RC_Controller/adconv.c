@@ -81,7 +81,7 @@ void adconv_init(void) {
 /**
  * Get the raw ADC value from one of the pins on the ADC_GPIO header.
  */
-uint16_t adconv_get_adc_pin(int pin) {
+uint16_t adconv_get_pin(int pin) {
 	if (pin < 0 || pin >= 4) {
 		return 0;
 	}

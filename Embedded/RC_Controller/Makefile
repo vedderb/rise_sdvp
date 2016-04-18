@@ -106,6 +106,7 @@ include $(CHIBIOS)/os/rt/rt.mk
 include $(CHIBIOS)/os/rt/ports/ARMCMx/compilers/GCC/mk/port_v7m.mk
 # Other files (optional).
 include cc2520/cc2520.mk
+include cc1120/cc1120.mk
 
 # Define linker script file here
 LDSCRIPT= ld_eeprom_emu.ld
@@ -122,6 +123,7 @@ CSRC = $(STARTUPSRC) \
        $(CHIBIOS)/os/hal/lib/streams/chprintf.c \
        $(CHIBIOS)/os/various/syscalls.c \
        $(CC2520SRC) \
+       $(CC1120SRC) \
        main.c \
        comm_usb_serial.c \
        utils.c \
@@ -176,7 +178,7 @@ INCDIR = $(STARTUPINC) $(KERNINC) $(PORTINC) $(OSALINC) \
          $(HALINC) $(PLATFORMINC) $(BOARDINC) $(TESTINC) \
          $(CHIBIOS)/os/various \
          $(CHIBIOS)/os/hal/lib/streams \
-         $(CC2520INC)
+         $(CC2520INC) $(CC1120INC)
 
 #
 # Project, sources and paths

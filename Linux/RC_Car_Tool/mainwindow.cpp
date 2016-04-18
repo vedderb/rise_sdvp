@@ -206,6 +206,7 @@ void MainWindow::timerSlot()
         mThrottle = (double)mJoystick->getAxis(2) / 32768.0;
         deadband(mThrottle,0.1, 1.0);
         mSteering = -(double)mJoystick->getAxis(0) / 32768.0;
+        mSteering /= 2.0;
     } else {
         if (mKeyUp) {
             stepTowards(mThrottle, 1.0, ui->throttleGainBox->value());

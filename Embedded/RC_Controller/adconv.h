@@ -24,6 +24,6 @@
 
 // Functions
 void adconv_init(void);
-uint16_t adconv_get_adc_pin(int pin);
+uint16_t adconv_get_pin(int pin);
 
 #endif /* ADCONV_H_ */
