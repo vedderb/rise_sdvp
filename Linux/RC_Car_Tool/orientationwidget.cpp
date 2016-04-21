@@ -23,10 +23,12 @@
 
 #include <math.h>
 
+#ifdef HAS_ASSIMP
 #include <assimp/Importer.hpp>
 #include <assimp/mesh.h>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
+#endif
 
 #include "orientationwidget.h"
 
@@ -35,14 +37,6 @@
 #endif
 
 namespace {
-static void qSetColor(float colorVec[], QColor c)
-{
-    colorVec[0] = c.redF();
-    colorVec[1] = c.greenF();
-    colorVec[2] = c.blueF();
-    colorVec[3] = c.alphaF();
-}
-
 static void qNormalizeAngle(float &angle)
 {
     angle = fmodf(angle, 360.0);
@@ -50,6 +44,15 @@ static void qNormalizeAngle(float &angle)
     if (angle < 0.0) {
         angle += 360.0;
     }
+}
+
+#ifdef HAS_ASSIMP
+static void qSetColor(float colorVec[], QColor c)
+{
+    colorVec[0] = c.redF();
+    colorVec[1] = c.greenF();
+    colorVec[2] = c.blueF();
+    colorVec[3] = c.alphaF();
 }
 
 static void get_bounding_box_for_node (const aiNode* nd,
@@ -84,6 +87,7 @@ static void get_bounding_box (aiVector3D* min, aiVector3D* max, const aiScene *s
     max->x = max->y = max->z = -1e10f;
     get_bounding_box_for_node(scene->mRootNode, min, max, scene->mMeshes);
 }
+#endif
 }
 
 OrientationWidget::OrientationWidget(QWidget *parent)
@@ -111,11 +115,11 @@ OrientationWidget::OrientationWidget(QWidget *parent)
     mUpdateTimer->setSingleShot(true);
     connect(mUpdateTimer, SIGNAL(timeout()), this, SLOT(updateTimerSlot()));
 
+#ifdef HAS_ASSIMP
     Assimp::Importer importer;
     QString path = "Models/car.3ds";
     const aiScene *scene = importer.ReadFile(path.toLocal8Bit().data(),
                                              aiProcessPreset_TargetRealtime_Quality);
-
     if (!scene) {
         qWarning() << "Could not load" << path;
         return;
@@ -183,6 +187,11 @@ OrientationWidget::OrientationWidget(QWidget *parent)
             break;
         }
     }
+
+//    saveModel("car.model");
+#else
+    loadModel("Models/car.model");
+#endif
 }
 
 OrientationWidget::~OrientationWidget()
@@ -222,6 +231,99 @@ void OrientationWidget::setQuanternions(float q0, float q1, float q2, float q3)
     mQ3 = q3;
     mUseQuaternions = true;
     updateUsingTimer();
+}
+
+void OrientationWidget::saveModel(QString path)
+{
+    QFile file(path);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        return;
+    }
+
+    QTextStream out(&file);
+
+    out << mScale << "\n";
+    out << mMeshes.size() << "\n";
+
+    for (int m = 0;m < mMeshes.size();m++) {
+        MESHDATA_t *mData = &mMeshes[m];
+
+        out << mData->numTriangles << "\n";
+        out << mData->numUvCoords << "\n";
+
+        out << mData->faceColor[0] << "\n";
+        out << mData->faceColor[1] << "\n";
+        out << mData->faceColor[2] << "\n";
+        out << mData->faceColor[3] << "\n";
+
+        out << mData->normalArray.size() << "\n";
+        for (int i = 0;i < mData->normalArray.size();i++) {
+            out << mData->normalArray.at(i) << "\n";
+        }
+
+        out << mData->vertexArray.size() << "\n";
+        for (int i = 0;i < mData->vertexArray.size();i++) {
+            out << mData->vertexArray.at(i) << "\n";
+        }
+
+        out << mData->uvArray.size() << "\n";
+        for (int i = 0;i < mData->uvArray.size();i++) {
+            out << mData->uvArray.at(i) << "\n";
+        }
+
+    }
+
+    file.close();
+}
+
+void OrientationWidget::loadModel(QString path)
+{
+    QFile file(path);
+    if (file.exists()) {
+        if (file.open(QIODevice::ReadOnly)) {
+            QTextStream in(&file);
+
+            mMeshes.clear();
+            mScale = in.readLine().toDouble();
+            int len = in.readLine().toInt();
+
+            for (int m = 0;m < len;m++) {
+                MESHDATA_t mData;
+
+                mData.numTriangles = in.readLine().toInt();
+                mData.numUvCoords = in.readLine().toInt();
+
+                mData.faceColor[0] = in.readLine().toDouble();
+                mData.faceColor[1] = in.readLine().toDouble();
+                mData.faceColor[2] = in.readLine().toDouble();
+                mData.faceColor[3] = in.readLine().toDouble();
+
+                int normLen = in.readLine().toInt();
+                for (int i = 0;i < normLen;i++) {
+                    mData.normalArray.append(in.readLine().toDouble());
+                }
+
+                int vertLen = in.readLine().toInt();
+                for (int i = 0;i < vertLen;i++) {
+                    mData.vertexArray.append(in.readLine().toDouble());
+                }
+
+                int uvLen = in.readLine().toInt();
+                for (int i = 0;i < uvLen;i++) {
+                    mData.uvArray.append(in.readLine().toDouble());
+                }
+
+                mMeshes.append(mData);
+            }
+
+            file.close();
+
+            return;
+        }
+    }
+
+    qWarning() << "Could not load" << path;
+    return;
 }
 
 void OrientationWidget::setXRotation(float angle)

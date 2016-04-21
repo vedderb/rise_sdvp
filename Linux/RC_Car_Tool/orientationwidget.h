@@ -35,6 +35,8 @@ public:
     void setRollPitchYaw(float roll, float pitch, float yaw);
     void setYawOffset(float offset);
     void setQuanternions(float q0, float q1, float q2, float q3);
+    void saveModel(QString path);
+    void loadModel(QString path);
 
     typedef struct {
         QVector<float> vertexArray;

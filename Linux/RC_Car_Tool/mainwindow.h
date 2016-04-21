@@ -25,7 +25,10 @@
 #include <QLabel>
 #include "carinterface.h"
 #include "packetinterface.h"
+
+#ifdef HAS_JOYSTICK
 #include "joystick.h"
+#endif
 
 namespace Ui {
 class MainWindow;
@@ -74,7 +77,6 @@ private:
     QTimer *mTimer;
     QSerialPort *mSerialPort;
     PacketInterface *mPacketInterface;
-    Joystick *mJoystick;
     QList<CarInterface*> mCars;
     QLabel *mStatusLabel;
     int mStatusInfoTime;
@@ -84,6 +86,10 @@ private:
     bool mKeyLeft;
     double mThrottle;
     double mSteering;
+
+#ifdef HAS_JOYSTICK
+    Joystick *mJoystick;
+#endif
 
 };
 

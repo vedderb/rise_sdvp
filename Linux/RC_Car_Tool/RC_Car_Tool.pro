@@ -11,13 +11,19 @@ QT       += serialport
 QT       += network
 QT       += opengl
 
-# Req
+# Ubuntu
 # sudo apt-get install libassimp-dev
+#DEFINES += HAS_ASSIMP
+
+# Linux only
+DEFINES += HAS_JOYSTICK
 
 TARGET = RC_Car_Tool
 TEMPLATE = app
 
-LIBS += -lassimp
+contains(DEFINES, HAS_ASSIMP) {
+    LIBS += -lassimp
+}
 
 SOURCES += main.cpp\
         mainwindow.cpp \
@@ -34,8 +40,7 @@ SOURCES += main.cpp\
     rtcm3_simple.c \
     rtcmclient.cpp \
     tcpbroadcast.cpp \
-    rtcmwidget.cpp \
-    joystick.cpp
+    rtcmwidget.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
@@ -52,9 +57,13 @@ HEADERS  += mainwindow.h \
     rtcm3_simple.h \
     rtcmclient.h \
     tcpbroadcast.h \
-    rtcmwidget.h \
-    joystick.h
+    rtcmwidget.h
 
 FORMS    += mainwindow.ui \
     carinterface.ui \
     rtcmwidget.ui
+
+contains(DEFINES, HAS_JOYSTICK) {
+    SOURCES += joystick.cpp
+    HEADERS += joystick.h
+}

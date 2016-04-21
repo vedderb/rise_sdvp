@@ -20,6 +20,7 @@
 #include <QSerialPortInfo>
 #include <QDebug>
 #include <cmath>
+#include <QMessageBox>
 
 namespace {
 void stepTowards(double &value, double goal, double step) {
@@ -68,7 +69,10 @@ MainWindow::MainWindow(QWidget *parent) :
     mStatusInfoTime = 0;
     mPacketInterface = new PacketInterface(this);
     mSerialPort = new QSerialPort(this);
+
+#ifdef HAS_JOYSTICK
     mJoystick = new Joystick(this);
+#endif
 
     mKeyUp = false;
     mKeyDown = false;
@@ -117,9 +121,11 @@ bool MainWindow::eventFilter(QObject *object, QEvent *e)
 {
     Q_UNUSED(object);
 
+#ifdef HAS_JOYSTICK
     if (mJoystick->isConnected()) {
         return false;
     }
+#endif
 
     if (e->type() == QEvent::KeyPress || e->type() == QEvent::KeyRelease) {
         QKeyEvent *keyEvent = static_cast<QKeyEvent *>(e);
@@ -167,26 +173,9 @@ void MainWindow::serialPortError(QSerialPort::SerialPortError error)
     switch (error) {
     case QSerialPort::NoError:
         break;
-    case QSerialPort::DeviceNotFoundError:
-        message = tr("Device not found");
-        break;
-    case QSerialPort::OpenError:
-        message = tr("Can't open device");
-        break;
-    case QSerialPort::NotOpenError:
-        message = tr("Not open error");
-        break;
-    case QSerialPort::ResourceError:
-        message = tr("Port disconnected");
-        break;
-    case QSerialPort::PermissionError:
-        message = tr("Permission error");
-        break;
-    case QSerialPort::UnknownError:
-        message = tr("Unknown error");
-        break;
+
     default:
-        message = "Serial port error: " + QString::number(error);
+        message = "Serial port error: " + mSerialPort->errorString();
         break;
     }
 
@@ -201,12 +190,20 @@ void MainWindow::serialPortError(QSerialPort::SerialPortError error)
 
 void MainWindow::timerSlot()
 {
+    bool js_connected = false;
+
+#ifdef HAS_JOYSTICK
+    js_connected = mJoystick->isConnected();
+#endif
+
     // Update throttle and steering from keys.
-    if (mJoystick->isConnected()) {
+    if (js_connected) {
+#ifdef HAS_JOYSTICK
         mThrottle = (double)mJoystick->getAxis(2) / 32768.0;
         deadband(mThrottle,0.1, 1.0);
         mSteering = -(double)mJoystick->getAxis(0) / 32768.0;
         mSteering /= 2.0;
+#endif
     } else {
         if (mKeyUp) {
             stepTowards(mThrottle, 1.0, ui->throttleGainBox->value());
@@ -285,6 +282,7 @@ void MainWindow::timerSlot()
     ui->mapWidget->setSelectedCar(ui->mapCarBox->value());
 
     // Joystick connected
+#ifdef HAS_JOYSTICK
     static bool jsWasconn = false;
     if (mJoystick->isConnected() != jsWasconn) {
         jsWasconn = mJoystick->isConnected();
@@ -295,6 +293,7 @@ void MainWindow::timerSlot()
             ui->jsConnectedLabel->setText("Not connected");
         }
     }
+#endif
 }
 
 void MainWindow::showStatusInfo(QString info, bool isGood)
@@ -483,6 +482,7 @@ void MainWindow::on_mapRouteSpeedBox_valueChanged(double arg1)
 
 void MainWindow::on_jsConnectButton_clicked()
 {
+#ifdef HAS_JOYSTICK
     if (mJoystick->init(ui->jsPortEdit->text()) == 0) {
         qDebug() << "Axes:" << mJoystick->numAxes();
         qDebug() << "Buttons:" << mJoystick->numButtons();
@@ -492,11 +492,17 @@ void MainWindow::on_jsConnectButton_clicked()
         qWarning() << "Opening joystick failed.";
         showStatusInfo("Opening joystick failed.", false);
     }
+#else
+    QMessageBox::warning(this, "Joystick",
+                         "This build does not have joystick support.");
+#endif
 }
 
 void MainWindow::on_jsDisconnectButton_clicked()
 {
+#ifdef HAS_JOYSTICK
     mJoystick->stop();
+#endif
 }
 
 void MainWindow::on_mapAntialiasBox_toggled(bool checked)
