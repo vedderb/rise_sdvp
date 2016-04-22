@@ -22,7 +22,7 @@
 
 namespace {
 void rtcm_rx(uint8_t *data, int len, int type) {
-    if (RtcmClient::currentMsgHandler) {
+    if (RtcmClient::currentMsgHandler && type != 1002 && type != 1004) {
         QByteArray rtcm_data((const char*)data, len);
         RtcmClient::currentMsgHandler->emitRtcmReceived(rtcm_data, type);
     }
@@ -37,10 +37,19 @@ void rtcm_rx_1006(rtcm_ref_sta_pos_t *pos) {
 
 void rtcm_rx_obs_gps(rtcm_obs_header_t *header, rtcm_obs_gps_t *obs, int obs_num) {
     (void)header;
-    qDebug() << "Observations" << obs_num;
+    (void)obs;
 
-    for (int i = 0;i < obs_num;i++) {
-        qDebug() << obs[i].prn;
+    // Don't send empty observations.
+    if (RtcmClient::currentMsgHandler && obs_num > 0) {
+        const uint8_t *data;
+        int len, type;
+        rtcm3_get_last_decoded_buffer(&data, &len, &type);
+        QByteArray rtcm_data((const char*)data, len);
+        RtcmClient::currentMsgHandler->emitRtcmReceived(rtcm_data, type);
+    }
+
+    if (obs_num == 0) {
+        qDebug() << "Empty observation received";
     }
 }
 }
@@ -59,7 +68,7 @@ RtcmClient::RtcmClient(QObject *parent) : QObject(parent)
     currentMsgHandler = this;
     rtcm3_set_rx_callback(rtcm_rx);
     rtcm3_set_rx_callback_1005_1006(rtcm_rx_1006);
-    //rtcm3_set_rx_callback_obs_gps(rtcm_rx_obs_gps);
+    rtcm3_set_rx_callback_obs_gps(rtcm_rx_obs_gps);
 
     connect(mTcpSocket, SIGNAL(readyRead()), this, SLOT(tcpInputDataAvailable()));
     connect(mTcpSocket, SIGNAL(connected()), this, SLOT(tcpInputConnected()));

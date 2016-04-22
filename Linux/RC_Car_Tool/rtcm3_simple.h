@@ -88,6 +88,7 @@ void rtcm3_set_rx_callback_1005_1006(void(*func)(rtcm_ref_sta_pos_t *pos));
 void rtcm3_set_rx_callback_1019(void(*func)(rtcm_ephemeris_t *eph));
 void rtcm3_set_rx_callback(void(*func)(uint8_t *data, int len, int type));
 int rtcm3_input_data(uint8_t data);
+void rtcm3_get_last_decoded_buffer(const uint8_t **data, int *len, int *type);
 int rtcm3_encode_1002(rtcm_obs_header_t *header, rtcm_obs_gps_t *obs,
                        int obs_num, uint8_t *buffer, int *buffer_len);
 int rtcm3_encode_1006(rtcm_ref_sta_pos_t pos, uint8_t *buffer, int *buffer_len);

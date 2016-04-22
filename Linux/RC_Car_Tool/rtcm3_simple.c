@@ -20,6 +20,7 @@
 
 #include "rtcm3_simple.h"
 #include <math.h>
+#include <string.h>
 
 // Defines
 #define ROUND(x)        ((int)floor((x)+0.5))
@@ -63,6 +64,10 @@ const double lam_carr[] = { // carrier wave length (m)
 
 // TODO: Fix this properly!!
 static int last_wn = 1874;
+
+static uint8_t last_buffer[2048];
+static int last_len = 0;
+static int last_type = 0;
 
 // Private functions
 static int encode_head(rtcm_obs_header_t *header, int nsat, uint8_t *buffer);
@@ -170,9 +175,13 @@ int rtcm3_input_data(uint8_t data) {
     // decode rtcm3 message
     int type = getbitu(input_buffer, 24, 12);
 
+    last_len = input_len + 3;
+    last_type = type;
+    memcpy(last_buffer, input_buffer, last_len);
+
     if (rx_rtcm) {
         // Send buffer with CRC included
-        rx_rtcm(input_buffer, input_len + 3, type);
+        rx_rtcm(input_buffer, last_len, type);
     }
 
     switch (type) {
@@ -183,6 +192,24 @@ int rtcm3_input_data(uint8_t data) {
     case 1019: return decode_1019(input_buffer, input_len);
     default: return -3; // Not supported
     }
+}
+
+/**
+ * @brief rtcm3_get_last_decoded_buffer
+ * Get the RTCM buffer that was decoded the last time.
+ *
+ * @param data
+ * A pointer that will be set to the buffer location. Does not
+ * have to be pre-allocated.
+ *
+ * @param len
+ * The length of the last buffer. 0 if nothing has been decoded yet.
+ */
+void rtcm3_get_last_decoded_buffer(const uint8_t **data, int *len, int *type)
+{
+    *data = last_buffer;
+    *len = last_len;
+    *type = last_type;
 }
 
 /**

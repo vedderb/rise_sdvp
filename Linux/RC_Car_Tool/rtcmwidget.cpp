@@ -169,10 +169,16 @@ void RtcmWidget::on_resetAllCountersButton_clicked()
 void RtcmWidget::on_ntripBox_toggled(bool checked)
 {
     if (checked) {
+        ui->ntripServerEdit->setText("www.igs-ip.net");
+        ui->ntripPortBox->setValue(80);
+
         ui->ntripUserEdit->setEnabled(true);
         ui->ntripPasswordEdit->setEnabled(true);
         ui->ntripStreamEdit->setEnabled(true);
     } else {
+        ui->ntripServerEdit->setText("localhost");
+        ui->ntripPortBox->setValue(65300);
+
         ui->ntripUserEdit->setEnabled(false);
         ui->ntripPasswordEdit->setEnabled(false);
         ui->ntripStreamEdit->setEnabled(false);
