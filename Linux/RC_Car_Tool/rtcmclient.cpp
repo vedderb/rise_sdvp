@@ -41,9 +41,19 @@ void rtcm_rx_obs_gps(rtcm_obs_header_t *header, rtcm_obs_gps_t *obs, int obs_num
 
     // Don't send empty observations.
     if (RtcmClient::currentMsgHandler && obs_num > 0) {
-        const uint8_t *data;
-        int len, type;
-        rtcm3_get_last_decoded_buffer(&data, &len, &type);
+        // Re-encode to 1002 since we don't care about L2 for now.
+        static uint8_t data[2048];
+        int len;
+        int type = 1002;
+
+        // Set sync to 0 since no more observations are coming. Otherwise
+        // RTKLIB has problems when discarding GLONASS. Some stations probably
+        // set this to true because GLONASS observation will come, however, we
+        // only care about GPS for now.
+        header->sync = 0;
+
+        rtcm3_encode_1002(header, obs, obs_num, data, &len);
+
         QByteArray rtcm_data((const char*)data, len);
         RtcmClient::currentMsgHandler->emitRtcmReceived(rtcm_data, type);
     }

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>687</width>
+    <width>693</width>
     <height>505</height>
    </rect>
   </property>
@@ -77,7 +77,7 @@
         <item>
          <widget class="QLineEdit" name="ntripUserEdit">
           <property name="text">
-           <string/>
+           <string>vedderb</string>
           </property>
          </widget>
         </item>
@@ -91,7 +91,7 @@
         <item>
          <widget class="QLineEdit" name="ntripPasswordEdit">
           <property name="text">
-           <string/>
+           <string>abc123</string>
           </property>
           <property name="echoMode">
            <enum>QLineEdit::Password</enum>

@@ -342,24 +342,22 @@ void MainWindow::ackReceived(quint8 id, CMD_PACKET cmd, QString msg)
 void MainWindow::rtcmReceived(QByteArray data, int type)
 {
     // Only send GPS observations and base station position
-    // to save bandwidth.
-//    switch (type) {
-//    case 1001:
-//    case 1002:
-//    case 1003:
-//    case 1004:
-//    case 1005:
-//    case 1006:
-//    case 1019:
-//        mPacketInterface->sendRtcmUsb(255, data);
-//        break;
-//    default:
-//        break;
-//    }
-
-    // For some reason rtklib refuses to work without glonass observations...
-    (void)type;
-    mPacketInterface->sendRtcmUsb(255, data);
+    // to save bandwidth. This requires that sync is 0 for
+    // RTKLIB. This is done by rtcmclient for now. Also, rtcmclient
+    // will re-encode 1004 to 1002 to save some bandwidth.
+    switch (type) {
+    case 1001:
+    case 1002:
+    case 1003:
+    case 1004:
+    case 1005:
+    case 1006:
+    case 1019:
+        mPacketInterface->sendRtcmUsb(255, data);
+        break;
+    default:
+        break;
+    }
 }
 
 void MainWindow::on_carAddButton_clicked()
