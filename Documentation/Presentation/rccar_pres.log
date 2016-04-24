@@ -1,4 +1,4 @@
-This is LuaTeX, Version beta-0.76.0-2013121407 (rev 4627)  (format=lualatex 2015.4.1)  21 APR 2016 22:07
+This is LuaTeX, Version beta-0.76.0-2013121407 (rev 4627)  (format=lualatex 2015.4.1)  25 APR 2016 00:22
  restricted \write18 enabled.
 **rccar_pres.tex
 (./rccar_pres.tex
@@ -941,11 +941,11 @@ LaTeX Font Warning: Font shape `T1/cmss/m/n' in size <4> not available
 [2{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}
 
 ]
-<Figures/car.jpg, id=63, 4143.48pt x 2330.7075pt>
-File: Figures/car.jpg Graphic file (type jpg)
- <use Figures/car.jpg>
-Package pdftex.def Info: Figures/car.jpg used on input line 43.
-(pdftex.def)             Requested size: 312.9803pt x 176.04025pt.
+<Figures/car_2.jpg, id=63, 5184.36874pt x 2400.97pt>
+File: Figures/car_2.jpg Graphic file (type jpg)
+ <use Figures/car_2.jpg>
+Package pdftex.def Info: Figures/car_2.jpg used on input line 43.
+(pdftex.def)             Requested size: 341.43306pt x 158.12013pt.
 File: Figures/theme/slide_en.pdf Graphic file (type pdf)
 
 <use Figures/theme/slide_en.pdf>
@@ -953,7 +953,7 @@ Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 43.
 (pdftex.def)             Requested size: 455.24408pt x 256.07715pt.
  [3
 
- <./Figures/car.jpg>]
+ <./Figures/car_2.jpg>]
 LaTeX Font Info:    Try loading font information for U+msa on input line 71.
 
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd
@@ -964,11 +964,11 @@ LaTeX Font Info:    Try loading font information for U+msb on input line 71.
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
-File: Figures/car.jpg Graphic file (type jpg)
+File: Figures/car_2.jpg Graphic file (type jpg)
 
-<use Figures/car.jpg>
-Package pdftex.def Info: Figures/car.jpg used on input line 71.
-(pdftex.def)             Requested size: 170.71652pt x 96.02194pt.
+<use Figures/car_2.jpg>
+Package pdftex.def Info: Figures/car_2.jpg used on input line 71.
+(pdftex.def)             Requested size: 170.71652pt x 79.06006pt.
 File: Figures/theme/slide_en.pdf Graphic file (type pdf)
  <use Figures/theme/slide_en.pdf>
 Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 71.
@@ -1209,7 +1209,7 @@ texmf-var/fonts/pk/ljfour/jknappen/ec/ecss1200.600pk> </home/benjamin/.texmf-var
 /ljfour/jknappen/ec/ecss1095.600pk> </home/benjamin/.texmf-var/fonts/pk/ljfour/j
 knappen/ec/ecss1440.600pk> </home/benjamin/.texmf-var/fonts/pk/ljfour/jknappen/e
 c/ecss0600.600pk>
-Output written on rccar_pres.pdf (18 pages, 5845405 bytes).
+Output written on rccar_pres.pdf (18 pages, 5345027 bytes).
 
 PDF statistics: 403 PDF objects out of 1000 (max. 8388607)
  36 named destinations out of 1000 (max. 131072)
