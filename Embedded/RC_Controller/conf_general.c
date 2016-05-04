@@ -125,6 +125,8 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 		conf->mag_cal_zx = 0.00674955;
 		conf->mag_cal_zy = -0.0759237;
 		conf->mag_cal_zz = 0.964149;
+
+		conf->steering_center = 0.53;
 		break;
 
 	default:
