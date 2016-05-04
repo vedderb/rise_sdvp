@@ -21,6 +21,7 @@
 #include <QDebug>
 #include <cmath>
 #include <QMessageBox>
+#include <QFileDialog>
 
 namespace {
 void stepTowards(double &value, double goal, double step) {
@@ -199,10 +200,10 @@ void MainWindow::timerSlot()
     // Update throttle and steering from keys.
     if (js_connected) {
 #ifdef HAS_JOYSTICK
-        mThrottle = (double)mJoystick->getAxis(2) / 32768.0;
+        mThrottle = -(double)mJoystick->getAxis(4) / 32768.0;
         deadband(mThrottle,0.1, 1.0);
         mSteering = -(double)mJoystick->getAxis(0) / 32768.0;
-        mSteering /= 2.0;
+        //mSteering /= 2.0;
 #endif
     } else {
         if (mKeyUp) {
@@ -515,5 +516,89 @@ void MainWindow::on_carsWidget_tabCloseRequested(int index)
         ui->carsWidget->removeTab(index);
         mCars.removeOne(car);
         delete car;
+    }
+}
+
+void MainWindow::on_genCircButton_clicked()
+{
+    double rad = ui->genCircRadBox->value();
+    double speed = 4.0 / 3.6;
+    double ang_ofs = M_PI;
+    double cx = 0;
+    double cy = rad;
+    int points = ui->genCircPointsBox->value();
+
+    CarInfo *car = ui->mapWidget->getCarInfo(ui->mapCarBox->value());
+    if (car) {
+        LocPoint p = car->getLocation();
+        double ang = p.getAlpha();
+
+        cx = p.getX();
+        cy = p.getY();
+
+        cx += rad * sin(ang);
+        cy += rad * cos(ang);
+        ang_ofs = ang + M_PI;
+    }
+
+    for (int i = 1;i <= points;i++) {
+        double ang = -((double)i * 2.0 * M_PI) / (double)points + ang_ofs;
+
+        double px = sin(ang) * rad;
+        double py = cos(ang) * rad;
+
+        // Move up
+        px += cx;
+        py += cy;
+
+        ui->mapWidget->addRoutePoint(px, py, speed);
+
+        bool res = true;
+        LocPoint pos;
+        pos.setXY(px, py);
+        pos.setSpeed(speed);
+
+        QList<LocPoint> points;
+        points.append(pos);
+
+        for (int i = 0;i < mCars.size();i++) {
+            if (mCars[i]->updateRouteFromMap()) {
+                res = mPacketInterface->setRoutePoints(mCars[i]->getId(), points);
+            }
+        }
+
+        if (!res) {
+            QMessageBox::warning(this, "Generate Cirlce",
+                                 "No ack from car when uploading point.");
+            break;
+        }
+    }
+}
+
+void MainWindow::on_simulateNmeaButton_clicked()
+{
+    QString path;
+    path = QFileDialog::getOpenFileName(this, tr("Choose NMEA file."));
+
+    QFile file(path);
+    if (file.exists()) {
+        if (file.open(QIODevice::ReadOnly)) {
+            QTextStream in(&file);
+
+            while (!in.atEnd()) {
+                QString line = in.readLine();
+                if (line.startsWith("$GPGGA")) {
+                    mPacketInterface->sendNmeaRadio(255, line.toLocal8Bit());
+
+                    // Wait
+                    QEventLoop loop;
+                    QTimer timeoutTimer;
+                    timeoutTimer.setSingleShot(true);
+                    timeoutTimer.start(200);
+                    connect(&timeoutTimer, SIGNAL(timeout()), &loop, SLOT(quit()));
+                    loop.exec();
+                }
+            }
+        }
     }
 }

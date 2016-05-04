@@ -123,6 +123,51 @@
            </widget>
           </item>
           <item>
+           <widget class="QGroupBox" name="groupBox_4">
+            <property name="title">
+             <string>Generate Circle</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_5">
+             <item>
+              <widget class="QDoubleSpinBox" name="genCircRadBox">
+               <property name="prefix">
+                <string>Rad: </string>
+               </property>
+               <property name="suffix">
+                <string> m</string>
+               </property>
+               <property name="maximum">
+                <double>10000.000000000000000</double>
+               </property>
+               <property name="value">
+                <double>5.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="genCircPointsBox">
+               <property name="prefix">
+                <string>Points: </string>
+               </property>
+               <property name="maximum">
+                <number>1000</number>
+               </property>
+               <property name="value">
+                <number>30</number>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="genCircButton">
+               <property name="text">
+                <string>Generate</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
            <spacer name="verticalSpacer_2">
             <property name="orientation">
              <enum>Qt::Vertical</enum>
@@ -291,6 +336,13 @@
          </size>
         </property>
        </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="simulateNmeaButton">
+        <property name="text">
+         <string>Simulate NMEA...</string>
+        </property>
+       </widget>
       </item>
       <item>
        <widget class="QGroupBox" name="groupBox_2">

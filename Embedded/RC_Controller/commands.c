@@ -153,6 +153,8 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			buffer_append_float32(m_send_buffer, mcval.v_in, 1e6, &send_index);
 			buffer_append_float32(m_send_buffer, mcval.temp_mos1, 1e6, &send_index);
 			m_send_buffer[send_index++] = mcval.fault_code;
+			buffer_append_float32(m_send_buffer, pos.px_gps, 1e4, &send_index);
+			buffer_append_float32(m_send_buffer, pos.py_gps, 1e4, &send_index);
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
 
@@ -196,7 +198,10 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			}
 
 			utils_truncate_number(&steering, -1.0, 1.0);
-			steering = utils_map(steering, -1.0, 1.0, main_config.steering_left, main_config.steering_right);
+			steering *= autopilot_get_steering_scale();
+			steering = utils_map(steering, -1.0, 1.0,
+					main_config.steering_center + (main_config.steering_range / 2.0),
+					main_config.steering_center - (main_config.steering_range / 2.0));
 			servo_simple_set_pos_ramp(steering);
 		} break;
 
@@ -280,6 +285,23 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			m_send_buffer[send_index++] = packet_id;
 			memcpy(m_send_buffer + send_index, data, len);
 			send_index += len;
+
+			char *curLine = (char*)data;
+			while(curLine) {
+				char *nextLine = strchr(curLine, '\n');
+				if (nextLine) {
+					*nextLine = '\0';
+				}
+
+				pos_input_nmea((const char*)curLine);
+
+				if (nextLine) {
+					*nextLine = '\n';
+				}
+
+				curLine = nextLine ? (nextLine + 1) : NULL;
+			}
+
 			comm_cc2520_send_buffer(m_send_buffer, send_index);
 		} break;
 
@@ -306,10 +328,17 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			main_config.motor_poles = buffer_get_float32(data, 1e6, &ind);
 			main_config.steering_max_angle_rad = buffer_get_float32(data, 1e6, &ind);
 			main_config.steering_center = buffer_get_float32(data, 1e6, &ind);
-			main_config.steering_left = buffer_get_float32(data, 1e6, &ind);
-			main_config.steering_right = buffer_get_float32(data, 1e6, &ind);
+			main_config.steering_range = buffer_get_float32(data, 1e6, &ind);
 			main_config.steering_ramp_time = buffer_get_float32(data, 1e6, &ind);
 			main_config.axis_distance = buffer_get_float32(data, 1e6, &ind);
+
+			main_config.gps_ant_x = buffer_get_float32(data, 1e6, &ind);
+			main_config.gps_ant_y = buffer_get_float32(data, 1e6, &ind);
+			main_config.gps_comp = data[ind++];
+			main_config.gps_corr_gain_stat = buffer_get_float32(data, 1e6, &ind);
+			main_config.gps_corr_gain_dyn = buffer_get_float32(data, 1e6, &ind);
+
+			main_config.ap_repeat_routes = data[ind++];
 
 			conf_general_store_main_config(&main_config);
 
@@ -353,10 +382,17 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			buffer_append_float32(m_send_buffer, main_cfg_tmp.motor_poles, 1e6, &send_index);
 			buffer_append_float32(m_send_buffer, main_cfg_tmp.steering_max_angle_rad, 1e6, &send_index);
 			buffer_append_float32(m_send_buffer, main_cfg_tmp.steering_center, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.steering_left, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.steering_right, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.steering_range, 1e6, &send_index);
 			buffer_append_float32(m_send_buffer, main_cfg_tmp.steering_ramp_time, 1e6, &send_index);
 			buffer_append_float32(m_send_buffer, main_cfg_tmp.axis_distance, 1e6, &send_index);
+
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.gps_ant_x, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.gps_ant_y, 1e6, &send_index);
+			m_send_buffer[send_index++] = main_cfg_tmp.gps_comp;
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.gps_corr_gain_stat, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.gps_corr_gain_dyn, 1e6, &send_index);
+
+			m_send_buffer[send_index++] = main_cfg_tmp.ap_repeat_routes;
 
 			commands_send_packet(m_send_buffer, send_index);
 		} break;

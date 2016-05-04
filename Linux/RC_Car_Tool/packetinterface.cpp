@@ -352,6 +352,8 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         state.vin = utility::buffer_get_double32(data, 1e6, &ind);
         state.temp_fet = utility::buffer_get_double32(data, 1e6, &ind);
         state.mc_fault = (mc_fault_code)data[ind++];
+        state.px_gps = utility::buffer_get_double32(data, 1e4, &ind);
+        state.py_gps = utility::buffer_get_double32(data, 1e4, &ind);
         emit stateReceived(id, state);
     } break;
 
@@ -395,10 +397,17 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         conf.motor_poles = utility::buffer_get_double32(data, 1e6, &ind);
         conf.steering_max_angle_rad = utility::buffer_get_double32(data, 1e6, &ind);
         conf.steering_center = utility::buffer_get_double32(data, 1e6, &ind);
-        conf.steering_left = utility::buffer_get_double32(data, 1e6, &ind);
-        conf.steering_right = utility::buffer_get_double32(data, 1e6, &ind);
+        conf.steering_range = utility::buffer_get_double32(data, 1e6, &ind);
         conf.steering_ramp_time = utility::buffer_get_double32(data, 1e6, &ind);
         conf.axis_distance = utility::buffer_get_double32(data, 1e6, &ind);
+
+        conf.gps_ant_x = utility::buffer_get_double32(data, 1e6, &ind);
+        conf.gps_ant_y = utility::buffer_get_double32(data, 1e6, &ind);
+        conf.gps_comp = data[ind++];
+        conf.gps_corr_gain_stat = utility::buffer_get_double32(data, 1e6, &ind);
+        conf.gps_corr_gain_dyn = utility::buffer_get_double32(data, 1e6, &ind);
+
+        conf.ap_repeat_routes = data[ind++];
 
         emit configurationReceived(id, conf);
     } break;
@@ -524,10 +533,17 @@ bool PacketInterface::setConfiguration(quint8 id, MAIN_CONFIG &conf, int retries
     utility::buffer_append_double32(mSendBuffer, conf.motor_poles, 1e6, &send_index);
     utility::buffer_append_double32(mSendBuffer, conf.steering_max_angle_rad, 1e6, &send_index);
     utility::buffer_append_double32(mSendBuffer, conf.steering_center, 1e6, &send_index);
-    utility::buffer_append_double32(mSendBuffer, conf.steering_left, 1e6, &send_index);
-    utility::buffer_append_double32(mSendBuffer, conf.steering_right, 1e6, &send_index);
+    utility::buffer_append_double32(mSendBuffer, conf.steering_range, 1e6, &send_index);
     utility::buffer_append_double32(mSendBuffer, conf.steering_ramp_time, 1e6, &send_index);
     utility::buffer_append_double32(mSendBuffer, conf.axis_distance, 1e6, &send_index);
+
+    utility::buffer_append_double32(mSendBuffer, conf.gps_ant_x, 1e6, &send_index);
+    utility::buffer_append_double32(mSendBuffer, conf.gps_ant_y, 1e6, &send_index);
+    mSendBuffer[send_index++] = conf.gps_comp;
+    utility::buffer_append_double32(mSendBuffer, conf.gps_corr_gain_stat, 1e6, &send_index);
+    utility::buffer_append_double32(mSendBuffer, conf.gps_corr_gain_dyn, 1e6, &send_index);
+
+    mSendBuffer[send_index++] = conf.ap_repeat_routes;
 
     return sendPacketAck(mSendBuffer, send_index, retries, 2000);
 }

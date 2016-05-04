@@ -84,6 +84,12 @@ void autopilot_add_point(ROUTE_POINT *p) {
 		m_route[p_last] = *p;
 		m_has_prev_point = true;
 	}
+
+	// When repeating routes, the previous point for the first
+	// point is the end point of the current route.
+	if (main_config.ap_repeat_routes) {
+		m_route[AP_ROUTE_SIZE - 1] = *p;
+	}
 }
 
 void autopilot_remove_last_point(void) {
@@ -138,6 +144,17 @@ void autopilot_set_motor_speed(float speed) {
 	bldc_interface_set_rpm((int)rpm);
 }
 
+/**
+ * Get steering scale factor based in the current speed.
+ *
+ * @return
+ * Steering scale factor. 1.0 at low speed, decreasing at high speed.
+ */
+float autopilot_get_steering_scale(void) {
+	const float div = 1.0 + fabsf(pos_get_speed()) * 0.1;
+	return 1.0 / (div * div);
+}
+
 static THD_FUNCTION(ap_thread, arg) {
 	(void)arg;
 
@@ -152,9 +169,13 @@ static THD_FUNCTION(ap_thread, arg) {
 
 		if (m_point_now == m_point_last) {
 			// The end of the route is reached.
-			servo_simple_set_pos_ramp(main_config.steering_center);
-			bldc_interface_set_current_brake(10.0);
-			continue;
+			if (main_config.ap_repeat_routes && m_point_last != 0) {
+				m_point_now = 0;
+			} else {
+				servo_simple_set_pos_ramp(main_config.steering_center);
+				bldc_interface_set_current_brake(10.0);
+				continue;
+			}
 		}
 
 		float distance, steering_angle;
@@ -177,9 +198,7 @@ static THD_FUNCTION(ap_thread, arg) {
 				rp_now.py, &steering_angle, &distance);
 
 		// Scale maximum steering by speed
-		const float div = 1.0 + fabsf(p.speed) * 0.1;
-		float steering_scale = 1.0 / (div * div);
-		float max_rad = main_config.steering_max_angle_rad * steering_scale;
+		float max_rad = main_config.steering_max_angle_rad * autopilot_get_steering_scale();
 
 		if (steering_angle >= max_rad) {
 			steering_angle = max_rad;
@@ -191,9 +210,10 @@ static THD_FUNCTION(ap_thread, arg) {
 			max_steering = 0;
 		}
 
-		servo_pos = steering_angle / ((2.0 * main_config.steering_max_angle_rad)
-				/ (main_config.steering_left - main_config.steering_right))
-											+ main_config.steering_center;
+		servo_pos = steering_angle
+				/ ((2.0 * main_config.steering_max_angle_rad)
+						/ main_config.steering_range)
+				+ main_config.steering_center;
 
 		const float dist_previous = utils_point_distance(p.px, p.py, rp_prev.px, rp_prev.py);
 		const float fract_prev = distance / (dist_previous + distance);

@@ -41,6 +41,7 @@ public:
     void setID(int id);
     int getId();
     bool pollData();
+    bool updateRouteFromMap();
     void setOrientation(double roll, double pitch, double yaw);
     void setStateData(CAR_STATE data);
     void setMap(MapWidget *map);
@@ -81,6 +82,8 @@ private slots:
     void on_confWriteButton_clicked();
     void on_nmeaLogChooseButton_clicked();
     void on_nmeaLogActiveBox_toggled(bool checked);
+    void on_magCalChooseButton_clicked();
+    void on_magCalLoadButton_clicked();
 
 private:
     Ui::CarInterface *ui;

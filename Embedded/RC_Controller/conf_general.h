@@ -27,7 +27,7 @@
 #define CC2520_DEST_ADDRESS			0xffff // 0xffff = broadcast
 
 // Software version
-#define FW_VERSION_MAJOR			1
+#define FW_VERSION_MAJOR			2
 #define FW_VERSION_MINOR			0
 
 // General settings

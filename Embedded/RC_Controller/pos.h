@@ -25,7 +25,9 @@ void pos_init(void);
 void pos_get_imu(float *accel, float *gyro, float *mag);
 void pos_get_quaternions(float *q);
 void pos_get_pos(POS_STATE *p);
+float pos_get_speed(void);
 void pos_set_xya(float x, float y, float angle);
 void pos_get_mc_val(mc_values *v);
+void pos_input_nmea(const char *data);
 
 #endif /* POS_H_ */

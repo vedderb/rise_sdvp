@@ -19,6 +19,7 @@
 #include <cstdio>
 #include <cmath>
 #include <ctime>
+#include <cstring>
 
 namespace
 {
@@ -251,4 +252,149 @@ void NmeaServer::logStop()
     } else {
         qDebug() << "Log not open";
     }
+}
+
+/**
+ * @brief NmeaServer::decodeNmeaGGA
+ * Decode NMEA GGA message.
+ *
+ * @param data
+ * NMEA data.
+ *
+ * @param gga
+ * GGA struct to fill.
+ *
+ * @return
+ * -1: Type is not GGA
+ * >= 0: Number of decoded fields.
+ */
+int NmeaServer::decodeNmeaGGA(QByteArray data, NmeaServer::nmea_gga_info_t &gga)
+{
+    static char nmea_str[1024];
+    int ms = -1;
+    double lat = 0.0;
+    double lon = 0.0;
+    double height = 0.0;
+    int fix_type = 0;
+    int sats = 0;
+    double hdop = 0.0;
+
+    int dec_fields = 0;
+
+    if (sscanf(data.constData(), "$GPGGA,%s", nmea_str) >=1) {
+        char *gga, *str;
+        int ind = 0;
+
+        str = nmea_str;
+        gga = strsep(&str, ",");
+
+        while (gga != 0) {
+            switch (ind) {
+            case 0: {
+                // Time
+                int h, m, s, ds;
+                dec_fields++;
+
+                if (sscanf(gga, "%02d%02d%02d.%d", &h, &m, &s, &ds) == 4) {
+                    ms = h * 60 * 60 * 1000;
+                    ms += m * 60 * 1000;
+                    ms += s * 1000;
+                    ms += ds * 10;
+                } else {
+                    ms = -1;
+                }
+            } break;
+
+            case 1: {
+                // Latitude
+                double l1, l2;
+                dec_fields++;
+
+                if (sscanf(gga, "%2lf%lf", &l1, &l2) == 2) {
+                    lat = l1 + l2 / 60.0;
+                } else {
+                    lat = 0;
+                }
+            } break;
+
+            case 2:
+                // Latitude direction
+                dec_fields++;
+                if (*gga == 'S' || *gga == 's') {
+                    lat = -lat;
+                }
+                break;
+
+            case 3: {
+                // Longitude
+                double l1, l2;
+                dec_fields++;
+
+                if (sscanf(gga, "%3lf%lf", &l1, &l2) == 2) {
+                    lon = l1 + l2 / 60.0;
+                } else {
+                    lon = 0;
+                }
+            } break;
+
+            case 4:
+                // Longitude direction
+                dec_fields++;
+                if (*gga == 'W' || *gga == 'w') {
+                    lon = -lon;
+                }
+                break;
+
+            case 5:
+                // Fix type
+                dec_fields++;
+                if (sscanf(gga, "%d", &fix_type) != 1) {
+                    fix_type = 0;
+                }
+                break;
+
+            case 6:
+                // Sattelites
+                dec_fields++;
+                if (sscanf(gga, "%d", &sats) != 1) {
+                    sats = 0;
+                }
+                break;
+
+            case 7:
+                // hdop
+                dec_fields++;
+                if (sscanf(gga, "%lf", &hdop) != 1) {
+                    hdop = 0.0;
+                }
+                break;
+
+            case 8:
+                // Altitude
+                dec_fields++;
+                if (sscanf(gga, "%lf", &height) != 1) {
+                    height = 0.0;
+                }
+                break;
+
+            default:
+                break;
+            }
+
+            gga = strsep(&str, ",");
+            ind++;
+        }
+    } else {
+        dec_fields = -1;
+    }
+
+    gga.lat = lat;
+    gga.lon = lon;
+    gga.height = height;
+    gga.fix_type = fix_type;
+    gga.n_sat = sats;
+    gga.t_tow = ms;
+    gga.h_dop = hdop;
+
+    return dec_fields;
 }

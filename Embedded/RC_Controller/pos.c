@@ -17,6 +17,7 @@
 
 #include <math.h>
 #include <string.h>
+#include <stdio.h>
 #include "ch.h"
 #include "hal.h"
 #include "stm32f4xx_conf.h"
@@ -26,13 +27,17 @@
 #include "bldc_interface.h"
 #include "utils.h"
 #include "servo_simple.h"
+#include "commands.h"
 
 // Defines
 #define ITERATION_TIMER_FREQ			50000
+#define FE_WGS84						(D(1.0)/D(298.257223563)) // earth flattening (WGS84)
+#define RE_WGS84						D(6378137.0)           // earth semimajor axis (WGS84) (m)
 
 // Private variables
 static ATTITUDE_INFO m_att;
 static POS_STATE m_pos;
+static GPS_STATE m_gps;
 static bool m_attitude_init_done;
 static float m_accel[3];
 static float m_gyro[3];
@@ -40,19 +45,25 @@ static float m_mag[3];
 static mc_values m_mc_val;
 static float m_imu_yaw;
 static float m_yaw_offset;
+static mutex_t m_mutex_pos;
+static mutex_t m_mutex_gps;
 
 // Private functions
 static void mpu9150_read(void);
 static void update_orientation_angles(float *accel, float *gyro, float *mag, float dt);
 static void mc_values_received(mc_values *val);
+static void init_gps_local(GPS_STATE *gps);
 
 void pos_init(void) {
 	MahonyAHRSInitAttitudeInfo(&m_att);
 	m_attitude_init_done = false;
 	memset(&m_pos, 0, sizeof(m_pos));
+	memset(&m_gps, 0, sizeof(m_gps));
 	memset(&m_mc_val, 0, sizeof(m_mc_val));
 	m_imu_yaw = 0.0;
 	m_yaw_offset = 0.0;
+	chMtxObjectInit(&m_mutex_pos);
+	chMtxObjectInit(&m_mutex_gps);
 
 	mpu9150_init();
 	chThdSleepMilliseconds(1000);
@@ -96,26 +107,207 @@ void pos_get_imu(float *accel, float *gyro, float *mag) {
 }
 
 void pos_get_quaternions(float *q) {
+	chMtxLock(&m_mutex_pos);
 	q[0] = m_pos.q0;
 	q[1] = m_pos.q1;
 	q[2] = m_pos.q2;
 	q[3] = m_pos.q3;
+	chMtxUnlock(&m_mutex_pos);
 }
 
 void pos_get_pos(POS_STATE *p) {
+	chMtxLock(&m_mutex_pos);
 	*p = m_pos;
+	chMtxUnlock(&m_mutex_pos);
+}
+
+float pos_get_speed(void) {
+	return m_pos.speed;
 }
 
 void pos_set_xya(float x, float y, float angle) {
+	chMtxLock(&m_mutex_pos);
+	chMtxLock(&m_mutex_gps);
+
 	m_pos.px = x;
 	m_pos.py = y;
 	m_pos.yaw = angle;
-
 	m_yaw_offset = m_imu_yaw - angle;
+
+	m_gps.local_init_done = false;
+
+	chMtxUnlock(&m_mutex_gps);
+	chMtxUnlock(&m_mutex_pos);
 }
 
 void pos_get_mc_val(mc_values *v) {
 	*v = m_mc_val;
+}
+
+void pos_input_nmea(const char *data) {
+	static char nmea_str[1024];
+	int ms = -1;
+	double lat = 0.0;
+	double lon = 0.0;
+	double height = 0.0;
+	int fix_type = 0;
+	int sats = 0;
+	int ind = 0;
+
+	if (sscanf(data, "$GPGGA,%s", nmea_str) >=1) {
+		char *gga, *str;
+
+		str = nmea_str;
+		gga = strsep(&str, ",");
+
+		while (gga != 0) {
+			switch (ind) {
+			case 0: {
+				// Time
+				int h, m, s, ds;
+				if (sscanf(gga, "%02d%02d%02d.%d", &h, &m, &s, &ds) == 4) {
+					ms = h * 60 * 60 * 1000;
+					ms += m * 60 * 1000;
+					ms += s * 1000;
+					ms += ds * 10;
+				} else {
+					ms = -1;
+				}
+			} break;
+
+			case 1: {
+				// Latitude
+				double l1, l2;
+
+				if (sscanf(gga, "%2lf%lf", &l1, &l2) == 2) {
+					lat = l1 + l2 / D(60.0);
+				} else {
+					lat = 0;
+				}
+			} break;
+
+			case 2:
+				// Latitude direction
+				if (*gga == 'S' || *gga == 's') {
+					lat = -lat;
+				}
+				break;
+
+			case 3: {
+				// Longitude
+				double l1, l2;
+
+				if (sscanf(gga, "%3lf%lf", &l1, &l2) == 2) {
+					lon = l1 + l2 / D(60.0);
+				} else {
+					lon = 0;
+				}
+			} break;
+
+			case 4:
+				// Longitude direction
+				if (*gga == 'W' || *gga == 'w') {
+					lon = -lon;
+				}
+				break;
+
+			case 5:
+				// Fix type
+				if (sscanf(gga, "%d", &fix_type) != 1) {
+					fix_type = -1;
+				}
+				break;
+
+			case 6:
+				// Satellites
+				if (sscanf(gga, "%d", &sats) != 1) {
+					sats = 0;
+				}
+				break;
+
+			case 8:
+				// Altitude
+				if (sscanf(gga, "%lf", &height) != 1) {
+					height = 0.0;
+				}
+				break;
+
+			default:
+				break;
+			}
+
+			gga = strsep(&str, ",");
+			ind++;
+		}
+	}
+
+	// Only use RTK float or fix
+	if (fix_type == 4 || fix_type == 5 || fix_type == 1) {
+		// Convert llh to ecef
+		double sinp = sin(lat * D_PI / D(180.0));
+		double cosp = cos(lat * D_PI / D(180.0));
+		double sinl = sin(lon * D_PI / D(180.0));
+		double cosl = cos(lon * D_PI / D(180.0));
+		double e2 = FE_WGS84 * (D(2.0) - FE_WGS84);
+		double v = RE_WGS84 / sqrt(D(1.0) - e2 * sinp * sinp);
+
+		chMtxLock(&m_mutex_gps);
+
+		m_gps.lat = lat;
+		m_gps.lon = lon;
+		m_gps.height = height;
+		m_gps.fix_type = fix_type;
+		m_gps.sats = sats;
+		m_gps.ms = ms;
+		m_gps.x = (v + height) * cosp * cosl;
+		m_gps.y = (v + height) * cosp * sinl;
+		m_gps.z = (v * (D(1.0) - e2) + height) * sinp;
+
+		// Convert to local ENU frame if initialized
+		if (m_gps.local_init_done) {
+			float dx = (float)(m_gps.x - m_gps.ix);
+			float dy = (float)(m_gps.y - m_gps.iy);
+			float dz = (float)(m_gps.z - m_gps.iz);
+
+			m_gps.lx = m_gps.r1c1 * dx + m_gps.r1c2 * dy + m_gps.r1c3 * dz;
+			m_gps.ly = m_gps.r2c1 * dx + m_gps.r2c2 * dy + m_gps.r2c3 * dz;
+			m_gps.lz = m_gps.r3c1 * dx + m_gps.r3c2 * dy + m_gps.r3c3 * dz;
+
+			// Apply offsets and rotation for local position
+			const float s_rot = sinf(m_gps.orot);
+			const float c_rot = cosf(m_gps.orot);
+			float px = m_gps.lx * c_rot + m_gps.ly * s_rot + m_gps.ox;
+			float py = m_gps.lx * s_rot + m_gps.ly * c_rot + m_gps.oy;
+
+			const float s_yaw = sinf(-m_pos.yaw * M_PI / 180.0);
+			const float c_yaw = cosf(-m_pos.yaw * M_PI / 180.0);
+			px -= c_yaw * main_config.gps_ant_x + s_yaw * main_config.gps_ant_y;
+			py -= s_yaw * main_config.gps_ant_x + c_yaw * main_config.gps_ant_y;
+
+			chMtxLock(&m_mutex_pos);
+			m_pos.px_gps = px;
+			m_pos.py_gps = py;
+
+			// Correct position
+			if (main_config.gps_comp) {
+				float gain = main_config.gps_corr_gain_stat +
+						main_config.gps_corr_gain_dyn * m_pos.gps_corr_cnt;
+
+				utils_step_towards(&m_pos.px, m_pos.px_gps, gain);
+				utils_step_towards(&m_pos.py, m_pos.py_gps, gain);
+			}
+
+			m_pos.gps_corr_cnt = 0.0;
+
+			chMtxUnlock(&m_mutex_pos);
+		} else {
+			init_gps_local(&m_gps);
+		}
+
+		m_gps.update_time = chVTGetSystemTimeX();
+
+		chMtxUnlock(&m_mutex_gps);
+	}
 }
 
 static void mpu9150_read(void) {
@@ -168,6 +360,8 @@ static void update_orientation_angles(float *accel, float *gyro, float *mag, flo
 		}
 	}
 
+	chMtxLock(&m_mutex_pos);
+
 	m_pos.roll = MahonyAHRSGetRoll((ATTITUDE_INFO*)&m_att) * 180.0 / M_PI;
 	m_pos.pitch = MahonyAHRSGetPitch((ATTITUDE_INFO*)&m_att) * 180.0 / M_PI;
 	m_imu_yaw = MahonyAHRSGetYaw((ATTITUDE_INFO*)&m_att) * 180.0 / M_PI;
@@ -186,6 +380,9 @@ static void update_orientation_angles(float *accel, float *gyro, float *mag, flo
 		} else if (ang_diff < -1.2 * main_config.yaw_imu_gain) {
 			m_pos.yaw += main_config.yaw_imu_gain;
 			utils_norm_angle(&m_pos.yaw);
+		} else {
+			m_pos.yaw -= ang_diff;
+			utils_norm_angle(&m_pos.yaw);
 		}
 	}
 
@@ -195,14 +392,12 @@ static void update_orientation_angles(float *accel, float *gyro, float *mag, flo
 	m_pos.q1 = m_att.q1;
 	m_pos.q2 = m_att.q2;
 	m_pos.q3 = m_att.q3;
+
+	chMtxUnlock(&m_mutex_pos);
 }
 
 static void mc_values_received(mc_values *val) {
 	m_mc_val = *val;
-
-	m_pos.speed = val->rpm * main_config.gear_ratio
-			* (2.0 / main_config.motor_poles) * (1.0 / 60.0)
-			* main_config.wheel_diam * M_PI;
 
 	static int32_t last_tacho = 0;
 
@@ -220,10 +415,14 @@ static void mc_values_received(mc_values *val) {
 	float steering_angle = (servo_simple_get_pos_now()
 			- main_config.steering_center)
 			* ((2.0 * main_config.steering_max_angle_rad)
-					/ (main_config.steering_left - main_config.steering_right));
+					/ main_config.steering_range);
+
+	chMtxLock(&m_mutex_pos);
 
 	if (fabsf(distance) > 1e-6) {
 		float angle_rad = -m_pos.yaw * M_PI / 180.0;
+
+		m_pos.gps_corr_cnt += fabsf(distance);
 
 		if (fabsf(steering_angle) < 0.00001) {
 			m_pos.px += cosf(angle_rad) * distance;
@@ -244,8 +443,64 @@ static void mc_values_received(mc_values *val) {
 			m_pos.py += turn_rad_rear * (cosf(angle_rad - angle_diff) - cosf(angle_rad));
 			angle_rad += angle_diff;
 			utils_norm_angle_rad(&angle_rad);
-
 			m_pos.yaw = -angle_rad * 180.0 / M_PI;
 		}
 	}
+
+	m_pos.speed = val->rpm * main_config.gear_ratio
+			* (2.0 / main_config.motor_poles) * (1.0 / 60.0)
+			* main_config.wheel_diam * M_PI;
+
+	chMtxUnlock(&m_mutex_pos);
+}
+
+static void init_gps_local(GPS_STATE *gps) {
+	gps->ix = gps->x;
+	gps->iy = gps->y;
+	gps->iz = gps->z;
+
+	float so = sinf((float)gps->lon * M_PI / 180.0);
+	float co = cosf((float)gps->lon * M_PI / 180.0);
+	float sa = sinf((float)gps->lat * M_PI / 180.0);
+	float ca = cosf((float)gps->lat * M_PI / 180.0);
+
+	// ENU
+	gps->r1c1 = -so;
+	gps->r1c2 = co;
+	gps->r1c3 = 0.0;
+
+	gps->r2c1 = -sa * co;
+	gps->r2c2 = -sa * so;
+	gps->r2c3 = ca;
+
+	gps->r3c1 = ca * -co;
+	gps->r3c2 = ca * -so;
+	gps->r3c3 = sa;
+
+	// NED
+//	gps->r1c1 = -sa * co;
+//	gps->r1c2 = -sa * sa;
+//	gps->r1c3 = ca;
+//
+//	gps->r2c1 = -so;
+//	gps->r2c2 = co;
+//	gps->r2c3 = 0;
+//
+//	gps->r3c1 = -ca * co;
+//	gps->r3c2 = -ca * so;
+//	gps->r3c3 = -sa;
+
+	gps->lx = 0.0;
+	gps->ly = 0.0;
+	gps->lz = 0.0;
+
+	gps->ox = m_pos.px;
+	gps->oy = m_pos.py;
+
+	const float s_yaw = sinf(m_pos.yaw * M_PI / 180.0);
+	const float c_yaw = cosf(m_pos.yaw * M_PI / 180.0);
+	gps->ox += c_yaw * main_config.gps_ant_x + s_yaw * main_config.gps_ant_y;
+	gps->oy += s_yaw * main_config.gps_ant_x + c_yaw * main_config.gps_ant_y;
+
+	gps->local_init_done = true;
 }

@@ -75,7 +75,7 @@ void conf_general_init(void) {
  */
 void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 	conf->mag_comp = true;
-	conf->yaw_imu_gain = 0.0; // 3e-3?
+	conf->yaw_imu_gain = 0.1;
 
 	conf->mag_cal_cx = 0.0;
 	conf->mag_cal_cy = 0.0;
@@ -94,30 +94,37 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 	conf->wheel_diam = 0.12;
 	conf->motor_poles = 4.0;
 	conf->steering_max_angle_rad = 0.42041;
-	conf->steering_center = 0.46;
-	conf->steering_left = 0.75;
-	conf->steering_right = 0.17;
+	conf->steering_center = 0.5;
+	conf->steering_range = 0.58;
 	conf->steering_ramp_time = 0.6;
 	conf->axis_distance = 0.475;
+
+	conf->gps_ant_x = 0.42;
+	conf->gps_ant_y = 0.0;
+	conf->gps_comp = false;
+	conf->gps_corr_gain_stat = 0.1;
+	conf->gps_corr_gain_dyn = 0.1;
+
+	conf->ap_repeat_routes = false;
 
 	// Custom parameters based on car ID
 	switch (main_id) {
 	case 0:
-		conf->mag_cal_cx = 6.67419;
-		conf->mag_cal_cy = -6.24658;
-		conf->mag_cal_cz = 5.05975;
+		conf->mag_cal_cx = 13.8906;
+		conf->mag_cal_cy = 41.6703;
+		conf->mag_cal_cz = -38.28;
 
-		conf->mag_cal_xx = 0.934036;
-		conf->mag_cal_xy = -0.00158248;
-		conf->mag_cal_xz = 0.00402214;
+		conf->mag_cal_xx = 0.813398;
+		conf->mag_cal_xy = 0.0421102;
+		conf->mag_cal_xz = 0.00674955;
 
-		conf->mag_cal_yx = -0.00158248;
-		conf->mag_cal_yy = 0.949697;
-		conf->mag_cal_yz = -0.00586774;
+		conf->mag_cal_yx = 0.0421102;
+		conf->mag_cal_yy = 0.835037;
+		conf->mag_cal_yz = -0.0759237;
 
-		conf->mag_cal_zx = 0.00402214;
-		conf->mag_cal_zy = -0.00586774;
-		conf->mag_cal_zz = 0.999047;
+		conf->mag_cal_zx = 0.00674955;
+		conf->mag_cal_zy = -0.0759237;
+		conf->mag_cal_zz = 0.964149;
 		break;
 
 	default:

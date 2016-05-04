@@ -49,6 +49,7 @@ MapWidget::MapWidget(QWidget *parent) :
     yRealPos = 0;
     mCarInfo.clear();
     mCarTrace.clear();
+    mCarTraceGps.clear();
     mPaintTimer = new QTimer(this);
     mPaintTimer->setSingleShot(true);
     mRoutePointSpeed = 1.0;
@@ -117,7 +118,18 @@ void MapWidget::setYOffset(double offset)
 void MapWidget::clearTrace()
 {
     mCarTrace.clear();
+    mCarTraceGps.clear();
     repaintAfterEvents();
+}
+
+void MapWidget::addRoutePoint(double px, double py, double speed)
+{
+    LocPoint pos;
+    pos.setXY(px, py);
+    pos.setSpeed(speed);
+    mRoute.append(pos);
+    update();
+    //emit routePointAdded(pos);
 }
 
 void MapWidget::clearRoute()
@@ -377,6 +389,20 @@ void MapWidget::paintEvent(QPaintEvent *event)
                 }
             }
         }
+
+        // GPS Trace
+        for (int i = 0;i < mCarInfo.size();i++) {
+            CarInfo &carInfo = mCarInfo[i];
+            if (carInfo.getId() == mTraceCar) {
+                if (mCarTraceGps.isEmpty()) {
+                    mCarTraceGps.append(carInfo.getLocationGps());
+                }
+
+                if (mCarTraceGps.last().getDistanceTo(carInfo.getLocationGps()) > 0.01) {
+                    mCarTraceGps.append(carInfo.getLocationGps());
+                }
+            }
+        }
     }
 
     // Draw trace for the selected car
@@ -387,6 +413,16 @@ void MapWidget::paintEvent(QPaintEvent *event)
     for (int i = 1;i < mCarTrace.size();i++) {
         painter.drawLine(mCarTrace[i - 1].getX() * 1000.0, mCarTrace[i - 1].getY() * 1000.0,
                 mCarTrace[i].getX() * 1000.0, mCarTrace[i].getY() * 1000.0);
+    }
+
+    // Draw GPS trace for the selected car
+    pen.setWidthF(2.5 / mScaleFactor);
+    pen.setColor(Qt::magenta);
+    painter.setPen(pen);
+    painter.setTransform(drawTrans);
+    for (int i = 1;i < mCarTraceGps.size();i++) {
+        painter.drawLine(mCarTraceGps[i - 1].getX() * 1000.0, mCarTraceGps[i - 1].getY() * 1000.0,
+                mCarTraceGps[i].getX() * 1000.0, mCarTraceGps[i].getY() * 1000.0);
     }
 
     // Draw route
@@ -423,8 +459,11 @@ void MapWidget::paintEvent(QPaintEvent *event)
     for(int i = 0;i < mCarInfo.size();i++) {
         CarInfo &carInfo = mCarInfo[i];
         LocPoint pos = carInfo.getLocation();
+        LocPoint pos_gps = carInfo.getLocationGps();
         x = pos.getX() * 1000.0;
         y = pos.getY() * 1000.0;
+        double x_gps = pos_gps.getX() * 1000.0;
+        double y_gps = pos_gps.getY() * 1000.0;
         angle = pos.getAlpha() * 180.0 / M_PI;
         painter.setTransform(drawTrans);
 
@@ -452,6 +491,10 @@ void MapWidget::paintEvent(QPaintEvent *event)
         // Center
         painter.setBrush(QBrush(Qt::blue));
         painter.drawEllipse(QPointF(x, y), car_h / 15.0, car_h / 15.0);
+
+        // GPS Location
+        painter.setBrush(QBrush(Qt::magenta));
+        painter.drawEllipse(QPointF(x_gps, y_gps), car_h / 15.0, car_h / 15.0);
 
         // Print data
         txt.sprintf("%s\n(%.3f, %.3f, %.0f)", carInfo.getName().toLocal8Bit().data(),

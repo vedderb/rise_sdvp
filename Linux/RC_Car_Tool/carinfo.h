@@ -32,6 +32,8 @@ public:
     void setName(QString name);
     LocPoint getLocation();
     void setLocation(LocPoint &point);
+    LocPoint getLocationGps();
+    void setLocationGps(LocPoint &point);
     Qt::GlobalColor getColor();
     void setColor(Qt::GlobalColor color);
 
@@ -39,6 +41,7 @@ private:
     int mId;
     QString mName;
     LocPoint mLocation;
+    LocPoint mLocationGps;
     Qt::GlobalColor mColor;
 };
 

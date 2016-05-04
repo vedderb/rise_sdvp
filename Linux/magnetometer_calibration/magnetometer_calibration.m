@@ -40,21 +40,39 @@ fprintf( 'Ellipsoid evecs      :\n                   %.6g %.6g %.6g\n           
 fprintf( 'Ellpisoid comp evecs :\n                   %.6g %.6g %.6g\n                   %.6g %.6g %.6g\n                   %.6g %.6g %.6g\n', comp);
 
 res = fopen('res.txt', 'w');
-fprintf(res, 'main_config.mag_cal_cx = %.6g;\n', e_center(1));
-fprintf(res, 'main_config.mag_cal_cy = %.6g;\n', e_center(2));
-fprintf(res, 'main_config.mag_cal_cz = %.6g;\n\n', e_center(3));
+fprintf(res, 'conf->mag_cal_cx = %.6g;\n', e_center(1));
+fprintf(res, 'conf->mag_cal_cy = %.6g;\n', e_center(2));
+fprintf(res, 'conf->mag_cal_cz = %.6g;\n\n', e_center(3));
 
-fprintf(res, 'main_config.mag_cal_xx = %.6g;\n', comp(1));
-fprintf(res, 'main_config.mag_cal_xy = %.6g;\n', comp(2));
-fprintf(res, 'main_config.mag_cal_xz = %.6g;\n\n', comp(3));
+fprintf(res, 'conf->mag_cal_xx = %.6g;\n', comp(1));
+fprintf(res, 'conf->mag_cal_xy = %.6g;\n', comp(2));
+fprintf(res, 'conf->mag_cal_xz = %.6g;\n\n', comp(3));
 
-fprintf(res, 'main_config.mag_cal_yx = %.6g;\n', comp(4));
-fprintf(res, 'main_config.mag_cal_yy = %.6g;\n', comp(5));
-fprintf(res, 'main_config.mag_cal_yz = %.6g;\n\n', comp(6));
+fprintf(res, 'conf->mag_cal_yx = %.6g;\n', comp(4));
+fprintf(res, 'conf->mag_cal_yy = %.6g;\n', comp(5));
+fprintf(res, 'conf->mag_cal_yz = %.6g;\n\n', comp(6));
 
-fprintf(res, 'main_config.mag_cal_zx = %.6g;\n', comp(7));
-fprintf(res, 'main_config.mag_cal_zy = %.6g;\n', comp(8));
-fprintf(res, 'main_config.mag_cal_zz = %.6g;\n\n', comp(9));
+fprintf(res, 'conf->mag_cal_zx = %.6g;\n', comp(7));
+fprintf(res, 'conf->mag_cal_zy = %.6g;\n', comp(8));
+fprintf(res, 'conf->mag_cal_zz = %.6g;\n\n', comp(9));
+fclose(res);
+
+res = fopen('res_raw.txt', 'w');
+fprintf(res, '%.6g\n', e_center(1));
+fprintf(res, '%.6g\n', e_center(2));
+fprintf(res, '%.6g\n', e_center(3));
+
+fprintf(res, '%.6g\n', comp(1));
+fprintf(res, '%.6g\n', comp(2));
+fprintf(res, '%.6g\n', comp(3));
+
+fprintf(res, '%.6g\n', comp(4));
+fprintf(res, '%.6g\n', comp(5));
+fprintf(res, '%.6g\n', comp(6));
+
+fprintf(res, '%.6g\n', comp(7));
+fprintf(res, '%.6g\n', comp(8));
+fprintf(res, '%.6g\n', comp(9));
 fclose(res);
 
 % draw data

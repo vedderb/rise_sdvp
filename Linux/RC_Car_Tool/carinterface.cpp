@@ -19,6 +19,7 @@
 #include "ui_carinterface.h"
 #include "carinfo.h"
 #include "utility.h"
+#include "nmeaserver.h"
 #include <QFileDialog>
 #include <QMessageBox>
 #include <cmath>
@@ -167,6 +168,11 @@ bool CarInterface::pollData()
     return ui->pollBox->isChecked();
 }
 
+bool CarInterface::updateRouteFromMap()
+{
+    return ui->updateRouteFromMapBox->isChecked();
+}
+
 void CarInterface::setOrientation(double roll, double pitch, double yaw)
 {
     ui->rollBar->setValue(roll);
@@ -273,10 +279,12 @@ void CarInterface::setStateData(CAR_STATE data)
     if (mMap) {
         CarInfo *car = mMap->getCarInfo(mId);
         LocPoint loc = car->getLocation();
+        LocPoint loc_gps = car->getLocationGps();
         loc.setAlpha(data.yaw * M_PI / 180.0);
-        loc.setX(data.px);
-        loc.setY(data.py);
+        loc.setXY(data.px, data.py);
+        loc_gps.setXY(data.px_gps, data.py_gps);
         car->setLocation(loc);
+        car->setLocationGps(loc_gps);
         mMap->repaintAfterEvents();
     }
 
@@ -417,6 +425,39 @@ void CarInterface::nmeaReceived(quint8 id, QByteArray nmea_msg)
     if (id == mId) {
         ui->nmeaBrowser->append(QString::fromLocal8Bit(nmea_msg));
         mNmeaForwardServer->broadcastData(nmea_msg);
+
+        NmeaServer::nmea_gga_info_t gga;
+        QTextStream msgs(nmea_msg);
+
+        while(!msgs.atEnd()) {
+            QString str = msgs.readLine();
+            QByteArray data = str.toLocal8Bit();
+
+            // Hack
+            if (str == "$GPGSA,A,1,,,,,,,,,,,,,,,*1E") {
+                ui->nmeaFixTypeLabel->setText("Solution: Invalid");
+                ui->nmeaSatsLabel->setText("Satellites: 0");
+            }
+
+            if (NmeaServer::decodeNmeaGGA(data, gga) >= 0) {
+                QString satStr;
+                satStr.sprintf("Satellites: %d", gga.n_sat);
+                ui->nmeaSatsLabel->setText(satStr);
+
+                QString fix_type;
+                switch (gga.fix_type) {
+                case 0: fix_type = "Solution: Invalid"; break;
+                case 1: fix_type = "Solution: SPP"; break;
+                case 2: fix_type = "Solution: DGPS"; break;
+                case 3: fix_type = "Solution: PPS"; break;
+                case 4: fix_type = "Solution: RTK Fix"; break;
+                case 5: fix_type = "Solution: RTK Float"; break;
+                default: fix_type = "Solution: Unknown"; break;
+                }
+
+                ui->nmeaFixTypeLabel->setText(fix_type);
+            }
+        }
     }
 }
 
@@ -606,10 +647,17 @@ void CarInterface::getConfGui(MAIN_CONFIG &conf)
     conf.wheel_diam = ui->confWheelDiamBox->value();
     conf.motor_poles = ui->confMotorPoleBox->value();
     conf.steering_center = ui->confServoCenterBox->value();
-    conf.steering_left = ui->confServoLeftBox->value();
-    conf.steering_right = ui->confServoRightBox->value();
+    conf.steering_range = ui->confServoRangeBox->value();
     conf.steering_ramp_time = ui->confSteeringRampBox->value();
     conf.axis_distance = ui->confAxisDistanceBox->value();
+
+    conf.gps_ant_x = ui->confGpsAntXBox->value();
+    conf.gps_ant_y = ui->confGpsAntYBox->value();
+    conf.gps_comp = ui->confGpsCorrBox->isChecked();
+    conf.gps_corr_gain_stat = ui->confGpsCorrStatBox->value();
+    conf.gps_corr_gain_dyn = ui->confGpsCorrDynBox->value();
+
+    conf.ap_repeat_routes = ui->confApRepeatBox->isChecked();
 
     conf.steering_max_angle_rad = atan(ui->confAxisDistanceBox->value() / ui->confTurnRadBox->value());
 }
@@ -625,7 +673,7 @@ void CarInterface::setConfGui(MAIN_CONFIG &conf)
     ui->confMagXxBox->setValue(conf.mag_cal_xx);
     ui->confMagXyBox->setValue(conf.mag_cal_xy);
     ui->confMagXzBox->setValue(conf.mag_cal_xz);
-    ui->confMagYzBox->setValue(conf.mag_cal_yx);
+    ui->confMagYxBox->setValue(conf.mag_cal_yx);
     ui->confMagYyBox->setValue(conf.mag_cal_yy);
     ui->confMagYzBox->setValue(conf.mag_cal_yz);
     ui->confMagZxBox->setValue(conf.mag_cal_zx);
@@ -636,10 +684,17 @@ void CarInterface::setConfGui(MAIN_CONFIG &conf)
     ui->confWheelDiamBox->setValue(conf.wheel_diam);
     ui->confMotorPoleBox->setValue(conf.motor_poles);
     ui->confServoCenterBox->setValue(conf.steering_center);
-    ui->confServoLeftBox->setValue(conf.steering_left);
-    ui->confServoRightBox->setValue(conf.steering_right);
+    ui->confServoRangeBox->setValue(conf.steering_range);
     ui->confSteeringRampBox->setValue(conf.steering_ramp_time);
     ui->confAxisDistanceBox->setValue(conf.axis_distance);
+
+    ui->confGpsAntXBox->setValue(conf.gps_ant_x);
+    ui->confGpsAntYBox->setValue(conf.gps_ant_y);
+    ui->confGpsCorrBox->setChecked(conf.gps_comp);
+    ui->confGpsCorrStatBox->setValue(conf.gps_corr_gain_stat);
+    ui->confGpsCorrDynBox->setValue(conf.gps_corr_gain_dyn);
+
+    ui->confApRepeatBox->setChecked(conf.ap_repeat_routes);
 
     ui->confTurnRadBox->setValue(conf.axis_distance / tan(conf.steering_max_angle_rad));
 }
@@ -667,5 +722,50 @@ void CarInterface::on_nmeaLogActiveBox_toggled(bool checked)
         }
     } else {
         mNmeaForwardServer->logStop();
+    }
+}
+
+void CarInterface::on_magCalChooseButton_clicked()
+{
+    QString path;
+    path = QFileDialog::getOpenFileName(this, tr("Choose magnetometer calibration file."));
+    if (path.isNull()) {
+        return;
+    }
+
+    ui->magCalFileEdit->setText(path);
+}
+
+void CarInterface::on_magCalLoadButton_clicked()
+{
+    bool ok = false;
+    QFile file(ui->magCalFileEdit->text());
+    if (file.exists()) {
+        if (file.open(QIODevice::ReadOnly)) {
+            QTextStream in(&file);
+
+            ui->confMagCxBox->setValue(in.readLine().toDouble());
+            ui->confMagCyBox->setValue(in.readLine().toDouble());
+            ui->confMagCzBox->setValue(in.readLine().toDouble());
+
+            ui->confMagXxBox->setValue(in.readLine().toDouble());
+            ui->confMagXyBox->setValue(in.readLine().toDouble());
+            ui->confMagXzBox->setValue(in.readLine().toDouble());
+
+            ui->confMagYxBox->setValue(in.readLine().toDouble());
+            ui->confMagYyBox->setValue(in.readLine().toDouble());
+            ui->confMagYzBox->setValue(in.readLine().toDouble());
+
+            ui->confMagZxBox->setValue(in.readLine().toDouble());
+            ui->confMagZyBox->setValue(in.readLine().toDouble());
+            ui->confMagZzBox->setValue(in.readLine().toDouble());
+
+            ok = true;
+        }
+    }
+
+    if (!ok) {
+        QMessageBox::warning(this, "Mag Cal",
+                             "Could not load calibration file.");
     }
 }

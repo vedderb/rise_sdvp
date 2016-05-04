@@ -55,6 +55,16 @@ void CarInfo::setLocation(LocPoint &point)
     mLocation = point;
 }
 
+LocPoint CarInfo::getLocationGps()
+{
+    return mLocationGps;
+}
+
+void CarInfo::setLocationGps(LocPoint &point)
+{
+    mLocationGps = point;
+}
+
 Qt::GlobalColor CarInfo::getColor()
 {
     return mColor;

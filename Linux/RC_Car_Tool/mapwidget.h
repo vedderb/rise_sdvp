@@ -54,6 +54,7 @@ public:
     void setXOffset(double offset);
     void setYOffset(double offset);
     void clearTrace();
+    void addRoutePoint(double px, double py, double speed);
     void clearRoute();
     void setRoutePointSpeed(double speed);
     void addPerspectivePixmap(PerspectivePixmap map);
@@ -82,6 +83,7 @@ protected:
 private:
     QList<CarInfo> mCarInfo;
     QList<LocPoint> mCarTrace;
+    QList<LocPoint> mCarTraceGps;
     QList<LocPoint> mRoute;
     QList<PerspectivePixmap> mPerspectivePixmaps;
     double mRoutePointSpeed;

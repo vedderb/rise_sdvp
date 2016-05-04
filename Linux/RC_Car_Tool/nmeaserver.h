@@ -58,6 +58,8 @@ public:
     bool logToFile(QString file);
     void logStop();
 
+    static int decodeNmeaGGA(QByteArray data, nmea_gga_info_t &gga);
+
 private:
     TcpBroadcast *mTcpBroadcast;
     QFile mLog;

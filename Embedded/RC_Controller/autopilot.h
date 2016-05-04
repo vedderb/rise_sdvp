@@ -29,5 +29,6 @@ void autopilot_set_active(bool active);
 bool autopilot_is_active(void);
 void autopilot_set_speed_override(bool is_override, float speed);
 void autopilot_set_motor_speed(float speed);
+float autopilot_get_steering_scale(void);
 
 #endif /* AUTOPILOT_H_ */

@@ -67,6 +67,8 @@ typedef struct {
     double vin;
     double temp_fet;
     mc_fault_code mc_fault;
+    double px_gps;
+    double py_gps;
 } CAR_STATE;
 
 typedef enum {
@@ -102,10 +104,19 @@ typedef struct {
     float motor_poles;
     float steering_max_angle_rad; // = arctan(axist_distance / turn_radius_at_maximum_steering_angle)
     float steering_center;
-    float steering_left;
-    float steering_right;
+    float steering_range;
     float steering_ramp_time; // Ramp time constant for the steering servo in seconds.
     float axis_distance;
+
+    // GPS parameters
+    float gps_ant_x; // Antenna offset from vehicle center in X
+    float gps_ant_y; // Antenna offset from vehicle center in Y
+    bool gps_comp; // Use GPS position correction
+    float gps_corr_gain_stat; // Static GPS correction gain
+    float gps_corr_gain_dyn; // Dynamic GPS correction gain
+
+    // Autopilot parameters
+    bool ap_repeat_routes; // Repeat the same route when the end is reached
 } MAIN_CONFIG;
 
 typedef enum {

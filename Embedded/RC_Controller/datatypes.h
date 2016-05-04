@@ -28,6 +28,10 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+// For double precision literals
+#define D(x) 		((double)x##L)
+#define D_PI		D(3.14159265358979323846)
+
 // Orientation data
 typedef struct {
 	float q0;
@@ -56,6 +60,9 @@ typedef struct {
 	float q1;
 	float q2;
 	float q3;
+	float px_gps;
+	float py_gps;
+	float gps_corr_cnt;
 } POS_STATE;
 
 // Autopilot map point
@@ -134,11 +141,51 @@ typedef struct {
 	float motor_poles;
 	float steering_max_angle_rad; // = arctan(axist_distance / turn_radius_at_maximum_steering_angle)
 	float steering_center;
-	float steering_left;
-	float steering_right;
-	float steering_ramp_time; // Ramp time constant for the steering servo in seconds.
+	float steering_range;
+	float steering_ramp_time; // Ramp time constant for the steering servo in seconds
 	float axis_distance;
+
+	// GPS parameters
+	float gps_ant_x; // Antenna offset from vehicle center in X
+	float gps_ant_y; // Antenna offset from vehicle center in Y
+	bool gps_comp; // Use GPS position correction
+	float gps_corr_gain_stat; // Static GPS correction gain
+	float gps_corr_gain_dyn; // Dynamic GPS correction gain
+
+	// Autopilot parameters
+	bool ap_repeat_routes; // Repeat the same route when the end is reached
 } MAIN_CONFIG;
+
+typedef struct {
+	// GPS position
+	double lat;
+	double lon;
+	double height;
+	double x;
+	double y;
+	double z;
+	int fix_type; // 0=Invalid, 1=SPP, 4=RTK fix, 5=RTK float
+	int sats;
+	int ms; // Milliseconds today
+	unsigned int update_time;
+	// Local position (ENU frame)
+	bool local_init_done;
+	float lx;
+	float ly;
+	float lz;
+	// Initial local position
+	double ix;
+	double iy;
+	double iz;
+	// Rotation matrix for local position
+	float r1c1, r1c2, r1c3;
+	float r2c1, r2c2, r2c3;
+	float r3c1, r3c2, r3c3;
+	// Local position offset and rotation
+	float ox;
+	float oy;
+	float orot;
+} GPS_STATE;
 
 // ============== VESC Datatypes ================== //
 
