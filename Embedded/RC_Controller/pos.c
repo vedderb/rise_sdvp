@@ -242,7 +242,7 @@ void pos_input_nmea(const char *data) {
 	}
 
 	// Only use RTK float or fix
-	if (fix_type == 4 || fix_type == 5 || fix_type == 1) {
+	if (fix_type == 4 || fix_type == 5) {
 		// Convert llh to ecef
 		double sinp = sin(lat * D_PI / D(180.0));
 		double cosp = cos(lat * D_PI / D(180.0));
