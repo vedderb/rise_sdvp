@@ -73,6 +73,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 #ifdef HAS_JOYSTICK
     mJoystick = new Joystick(this);
+    mJsType = JS_TYPE_HK;
 #endif
 
     mKeyUp = false;
@@ -200,9 +201,16 @@ void MainWindow::timerSlot()
     // Update throttle and steering from keys.
     if (js_connected) {
 #ifdef HAS_JOYSTICK
-        mThrottle = -(double)mJoystick->getAxis(4) / 32768.0;
-        deadband(mThrottle,0.1, 1.0);
-        mSteering = -(double)mJoystick->getAxis(0) / 32768.0;
+        if (mJsType == JS_TYPE_HK) {
+            mThrottle = -(double)mJoystick->getAxis(4) / 32768.0;
+            deadband(mThrottle,0.1, 1.0);
+            mSteering = -(double)mJoystick->getAxis(0) / 32768.0;
+        } else if (mJsType == JS_TYPE_PS3) {
+            mThrottle = -(double)mJoystick->getAxis(1) / 32768.0;
+            deadband(mThrottle,0.1, 1.0);
+            mSteering = (double)mJoystick->getAxis(2) / 32768.0;
+        }
+
         //mSteering /= 2.0;
 #endif
     } else {
@@ -486,7 +494,16 @@ void MainWindow::on_jsConnectButton_clicked()
         qDebug() << "Axes:" << mJoystick->numAxes();
         qDebug() << "Buttons:" << mJoystick->numButtons();
         qDebug() << "Name:" << mJoystick->getName();
-        showStatusInfo("Connected to joystick!", true);
+
+        if (mJoystick->getName().contains("sony", Qt::CaseInsensitive)) {
+            mJsType = JS_TYPE_PS3;
+            qDebug() << "Treating joystick as PS3 controller.";
+            showStatusInfo("HK joystick connected!", true);
+        } else {
+            mJsType = JS_TYPE_HK;
+            qDebug() << "Treating joystick as hobbyking simulator.";
+            showStatusInfo("PS3 joystick connected!", true);
+        }
     } else {
         qWarning() << "Opening joystick failed.";
         showStatusInfo("Opening joystick failed.", false);

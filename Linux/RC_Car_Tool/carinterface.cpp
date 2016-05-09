@@ -423,7 +423,10 @@ void CarInterface::lastRoutePointRemoved()
 void CarInterface::nmeaReceived(quint8 id, QByteArray nmea_msg)
 {
     if (id == mId) {
-        ui->nmeaBrowser->append(QString::fromLocal8Bit(nmea_msg));
+        if (ui->nmeaPrintBox->isChecked()) {
+            ui->nmeaBrowser->append(QString::fromLocal8Bit(nmea_msg));
+        }
+
         mNmeaForwardServer->broadcastData(nmea_msg);
 
         NmeaServer::nmea_gga_info_t gga;

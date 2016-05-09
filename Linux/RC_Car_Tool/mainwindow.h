@@ -89,6 +89,7 @@ private:
 
 #ifdef HAS_JOYSTICK
     Joystick *mJoystick;
+    JS_TYPE mJsType;
 #endif
 
 };
