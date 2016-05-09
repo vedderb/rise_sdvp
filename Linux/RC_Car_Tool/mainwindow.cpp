@@ -498,11 +498,11 @@ void MainWindow::on_jsConnectButton_clicked()
         if (mJoystick->getName().contains("sony", Qt::CaseInsensitive)) {
             mJsType = JS_TYPE_PS3;
             qDebug() << "Treating joystick as PS3 controller.";
-            showStatusInfo("HK joystick connected!", true);
+            showStatusInfo("PS3 joystick connected!", true);
         } else {
             mJsType = JS_TYPE_HK;
             qDebug() << "Treating joystick as hobbyking simulator.";
-            showStatusInfo("PS3 joystick connected!", true);
+            showStatusInfo("HK joystick connected!", true);
         }
     } else {
         qWarning() << "Opening joystick failed.";

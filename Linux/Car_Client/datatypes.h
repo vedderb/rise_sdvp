@@ -145,4 +145,9 @@ typedef enum {
     RC_MODE_PID
 } RC_MODE;
 
+typedef enum {
+    JS_TYPE_HK = 0,
+    JS_TYPE_PS3
+} JS_TYPE;
+
 #endif /* DATATYPES_H_ */
