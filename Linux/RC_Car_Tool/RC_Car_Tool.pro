@@ -40,7 +40,8 @@ SOURCES += main.cpp\
     rtcm3_simple.c \
     rtcmclient.cpp \
     tcpbroadcast.cpp \
-    rtcmwidget.cpp
+    rtcmwidget.cpp \
+    basestation.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
@@ -57,11 +58,13 @@ HEADERS  += mainwindow.h \
     rtcm3_simple.h \
     rtcmclient.h \
     tcpbroadcast.h \
-    rtcmwidget.h
+    rtcmwidget.h \
+    basestation.h
 
 FORMS    += mainwindow.ui \
     carinterface.ui \
-    rtcmwidget.ui
+    rtcmwidget.ui \
+    basestation.ui
 
 contains(DEFINES, HAS_JOYSTICK) {
     SOURCES += joystick.cpp

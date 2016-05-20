@@ -147,7 +147,7 @@ typedef enum {
 
 typedef enum {
     JS_TYPE_HK = 0,
-    JS_TYPE_PS3
+    JS_TYPE_PS4
 } JS_TYPE;
 
 #endif /* DATATYPES_H_ */

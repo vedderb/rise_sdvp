@@ -35,6 +35,8 @@ uint32_t buffer_get_uint32(const uint8_t *buffer, int32_t *index);
 double buffer_get_double16(const uint8_t *buffer, double scale, int32_t *index);
 double buffer_get_double32(const uint8_t *buffer, double scale, int32_t *index);
 double map(double x, double in_min, double in_max, double out_min, double out_max);
+void llhToXyz(double lat, double lon, double height, double *x, double *y, double *z);
+void xyzToLlh(double x, double y, double z, double *lat, double *lon, double *height);
 
 }
 

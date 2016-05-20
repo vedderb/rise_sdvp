@@ -20,6 +20,7 @@
 #include <cmath>
 #include <ctime>
 #include <cstring>
+#include <locale.h>
 
 namespace
 {
@@ -281,6 +282,8 @@ int NmeaServer::decodeNmeaGGA(QByteArray data, NmeaServer::nmea_gga_info_t &gga)
 
     int dec_fields = 0;
 
+    setlocale(LC_NUMERIC,"C");
+
     if (sscanf(data.constData(), "$GPGGA,%s", nmea_str) >=1) {
         char *gga, *str;
         int ind = 0;
@@ -311,6 +314,7 @@ int NmeaServer::decodeNmeaGGA(QByteArray data, NmeaServer::nmea_gga_info_t &gga)
                 dec_fields++;
 
                 if (sscanf(gga, "%2lf%lf", &l1, &l2) == 2) {
+                    qDebug() << l2;
                     lat = l1 + l2 / 60.0;
                 } else {
                     lat = 0;
@@ -376,6 +380,17 @@ int NmeaServer::decodeNmeaGGA(QByteArray data, NmeaServer::nmea_gga_info_t &gga)
                     height = 0.0;
                 }
                 break;
+
+            case 10: {
+                // Altitude 2
+                double h2 = 0.0;
+                dec_fields++;
+                if (sscanf(gga, "%lf", &h2) != 1) {
+                    h2 = 0.0;
+                }
+
+                height += h2;
+            } break;
 
             default:
                 break;

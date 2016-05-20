@@ -33,9 +33,11 @@ class RtcmWidget : public QWidget
 public:
     explicit RtcmWidget(QWidget *parent = 0);
     ~RtcmWidget();
+    void setRefPos(double lat, double lon, double height);
 
 signals:
     void rtcmReceived(QByteArray data, int type);
+    void refPosGet();
 
 private slots:
     void timerSlot();
@@ -49,6 +51,7 @@ private slots:
     void on_rtcmSerialRefreshButton_clicked();
     void on_rtcmSerialDisconnectButton_clicked();
     void on_rtcmSerialConnectButton_clicked();
+    void on_refGetButton_clicked();
 
 private:
     Ui::RtcmWidget *ui;

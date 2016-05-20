@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>693</width>
-    <height>505</height>
+    <width>827</width>
+    <height>521</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -340,6 +340,13 @@
          </size>
         </property>
        </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="refGetButton">
+        <property name="text">
+         <string>Get</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>

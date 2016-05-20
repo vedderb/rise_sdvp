@@ -214,6 +214,16 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="tab_4">
+       <attribute name="title">
+        <string>Base Station</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_6">
+        <item>
+         <widget class="BaseStation" name="baseStationWidget" native="true"/>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
     <item>
@@ -241,7 +251,7 @@
            <x>0</x>
            <y>0</y>
            <width>300</width>
-           <height>78</height>
+           <height>82</height>
           </rect>
          </property>
          <attribute name="label">
@@ -272,8 +282,8 @@
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>300</width>
-           <height>78</height>
+           <width>202</width>
+           <height>82</height>
           </rect>
          </property>
          <attribute name="label">
@@ -545,7 +555,7 @@
      <x>0</x>
      <y>0</y>
      <width>1409</width>
-     <height>25</height>
+     <height>27</height>
     </rect>
    </property>
   </widget>
@@ -563,6 +573,12 @@
    <class>RtcmWidget</class>
    <extends>QWidget</extends>
    <header>rtcmwidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>BaseStation</class>
+   <extends>QWidget</extends>
+   <header>basestation.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

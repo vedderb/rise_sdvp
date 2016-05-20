@@ -234,7 +234,7 @@ void RtcmClient::tcpInputError(QAbstractSocket::SocketError socketError)
     (void)socketError;
 
     QString errorStr = mTcpSocket->errorString();
-    qWarning() << "TcpError:" << errorStr;
+    qWarning() << "RTCM TcpError:" << errorStr;
     QMessageBox::warning(0, "TCP Error", errorStr);
 
     mTcpSocket->close();

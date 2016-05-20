@@ -99,6 +99,7 @@ MainWindow::MainWindow(QWidget *parent) :
             this, SLOT(ackReceived(quint8,CMD_PACKET,QString)));
     connect(ui->rtcmWidget, SIGNAL(rtcmReceived(QByteArray,int)),
             this, SLOT(rtcmReceived(QByteArray,int)));
+    connect(ui->rtcmWidget, SIGNAL(refPosGet()), this, SLOT(rtcmRefPosGet()));
 
     on_serialRefreshButton_clicked();
 
@@ -205,7 +206,7 @@ void MainWindow::timerSlot()
             mThrottle = -(double)mJoystick->getAxis(4) / 32768.0;
             deadband(mThrottle,0.1, 1.0);
             mSteering = -(double)mJoystick->getAxis(0) / 32768.0;
-        } else if (mJsType == JS_TYPE_PS3) {
+        } else if (mJsType == JS_TYPE_PS4) {
             mThrottle = -(double)mJoystick->getAxis(1) / 32768.0;
             deadband(mThrottle,0.1, 1.0);
             mSteering = (double)mJoystick->getAxis(2) / 32768.0;
@@ -369,6 +370,17 @@ void MainWindow::rtcmReceived(QByteArray data, int type)
     }
 }
 
+void MainWindow::rtcmRefPosGet()
+{
+    double lat, lon, height;
+    if (ui->baseStationWidget->getAvgPosLlh(lat, lon, height) > 0) {
+        ui->rtcmWidget->setRefPos(lat, lon, height);
+    } else {
+        QMessageBox::warning(this, "Reference Position",
+                             "No samples collected yet.");
+    }
+}
+
 void MainWindow::on_carAddButton_clicked()
 {
     CarInterface *car = new CarInterface(this);
@@ -496,9 +508,9 @@ void MainWindow::on_jsConnectButton_clicked()
         qDebug() << "Name:" << mJoystick->getName();
 
         if (mJoystick->getName().contains("sony", Qt::CaseInsensitive)) {
-            mJsType = JS_TYPE_PS3;
-            qDebug() << "Treating joystick as PS3 controller.";
-            showStatusInfo("PS3 joystick connected!", true);
+            mJsType = JS_TYPE_PS4;
+            qDebug() << "Treating joystick as PS4 USB controller.";
+            showStatusInfo("PS4 USB joystick connected!", true);
         } else {
             mJsType = JS_TYPE_HK;
             qDebug() << "Treating joystick as hobbyking simulator.";

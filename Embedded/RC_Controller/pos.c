@@ -232,6 +232,15 @@ void pos_input_nmea(const char *data) {
 				}
 				break;
 
+			case 10: {
+				// Altitude 2
+				double h2 = 0.0;
+				if (sscanf(gga, "%lf", &h2) != 1) {
+					h2 = 0.0;
+				}
+				height += h2;
+			} break;
+
 			default:
 				break;
 			}
