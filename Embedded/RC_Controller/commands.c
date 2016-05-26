@@ -205,13 +205,22 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			servo_simple_set_pos_ramp(steering);
 		} break;
 
-		case CMD_SET_POS: {
+		case CMD_SET_POS:
+		case CMD_SET_POS_ACK: {
 			float x, y, angle;
 			int32_t ind = 0;
 			x = buffer_get_float32(data, 1e4, &ind);
 			y = buffer_get_float32(data, 1e4, &ind);
 			angle = buffer_get_float32(data, 1e6, &ind);
 			pos_set_xya(x, y, angle);
+
+			if (packet_id == CMD_SET_POS_ACK) {
+				// Send ack
+				int32_t send_index = 0;
+				m_send_buffer[send_index++] = main_id;
+				m_send_buffer[send_index++] = packet_id;
+				commands_send_packet(m_send_buffer, send_index);
+			}
 		} break;
 
 		case CMD_AP_ADD_POINTS: {
@@ -337,6 +346,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			main_config.gps_comp = data[ind++];
 			main_config.gps_corr_gain_stat = buffer_get_float32(data, 1e6, &ind);
 			main_config.gps_corr_gain_dyn = buffer_get_float32(data, 1e6, &ind);
+			main_config.gps_corr_gain_yaw = buffer_get_float32(data, 1e6, &ind);
 
 			main_config.ap_repeat_routes = data[ind++];
 
@@ -391,10 +401,27 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			m_send_buffer[send_index++] = main_cfg_tmp.gps_comp;
 			buffer_append_float32(m_send_buffer, main_cfg_tmp.gps_corr_gain_stat, 1e6, &send_index);
 			buffer_append_float32(m_send_buffer, main_cfg_tmp.gps_corr_gain_dyn, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.gps_corr_gain_yaw, 1e6, &send_index);
 
 			m_send_buffer[send_index++] = main_cfg_tmp.ap_repeat_routes;
 
 			commands_send_packet(m_send_buffer, send_index);
+		} break;
+
+		case CMD_SET_YAW_OFFSET:
+		case CMD_SET_YAW_OFFSET_ACK: {
+			float angle;
+			int32_t ind = 0;
+			angle = buffer_get_float32(data, 1e6, &ind);
+			pos_set_yaw_offset(angle);
+
+			if (packet_id == CMD_SET_YAW_OFFSET_ACK) {
+				// Send ack
+				int32_t send_index = 0;
+				m_send_buffer[send_index++] = main_id;
+				m_send_buffer[send_index++] = packet_id;
+				commands_send_packet(m_send_buffer, send_index);
+			}
 		} break;
 
 		default:

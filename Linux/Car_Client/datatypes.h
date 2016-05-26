@@ -126,6 +126,7 @@ typedef enum {
     CMD_VESC_FWD,
     CMD_RC_CONTROL,
     CMD_SET_POS,
+    CMD_SET_POS_ACK,
     CMD_AP_ADD_POINTS,
     CMD_AP_REMOVE_LAST_POINT,
     CMD_AP_CLEAR_POINTS,
@@ -147,7 +148,7 @@ typedef enum {
 
 typedef enum {
     JS_TYPE_HK = 0,
-    JS_TYPE_PS3
+    JS_TYPE_PS4
 } JS_TYPE;
 
 #endif /* DATATYPES_H_ */

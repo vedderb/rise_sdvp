@@ -545,7 +545,18 @@ bool PacketInterface::setConfiguration(quint8 id, MAIN_CONFIG &conf, int retries
 
     mSendBuffer[send_index++] = conf.ap_repeat_routes;
 
-    return sendPacketAck(mSendBuffer, send_index, retries, 2000);
+    return sendPacketAck(mSendBuffer, send_index, retries, 500);
+}
+
+bool PacketInterface::setPosAck(quint8 id, double x, double y, double angle, int retries)
+{
+    qint32 send_index = 0;
+    mSendBuffer[send_index++] = id;
+    mSendBuffer[send_index++] = CMD_SET_POS_ACK;
+    utility::buffer_append_double32(mSendBuffer, x, 1e4, &send_index);
+    utility::buffer_append_double32(mSendBuffer, y, 1e4, &send_index);
+    utility::buffer_append_double32(mSendBuffer, angle, 1e6, &send_index);
+    return sendPacketAck(mSendBuffer, send_index, retries);
 }
 
 void PacketInterface::sendTerminalCmd(quint8 id, QString cmd)

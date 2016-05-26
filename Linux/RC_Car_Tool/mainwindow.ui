@@ -44,163 +44,198 @@
        <attribute name="title">
         <string>Map</string>
        </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <layout class="QVBoxLayout" name="verticalLayout_7">
         <item>
-         <layout class="QVBoxLayout" name="verticalLayout_2">
+         <layout class="QHBoxLayout" name="horizontalLayout_3">
           <item>
-           <widget class="QPushButton" name="mapZeroButton">
-            <property name="text">
-             <string>Go to Zero</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QSpinBox" name="mapCarBox">
-            <property name="prefix">
-             <string>Car: </string>
-            </property>
-            <property name="maximum">
-             <number>255</number>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <layout class="QVBoxLayout" name="verticalLayout_2">
             <item>
-             <widget class="QCheckBox" name="mapTraceBox">
+             <widget class="QPushButton" name="mapZeroButton">
               <property name="text">
-               <string>Trace</string>
+               <string>Go to Zero</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QCheckBox" name="mapFollowBox">
+             <widget class="QSpinBox" name="mapCarBox">
+              <property name="prefix">
+               <string>Car: </string>
+              </property>
+              <property name="maximum">
+               <number>255</number>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_2">
+              <item>
+               <widget class="QCheckBox" name="mapTraceBox">
+                <property name="text">
+                 <string>Trace</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="mapFollowBox">
+                <property name="text">
+                 <string>Follow</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <widget class="QDoubleSpinBox" name="mapRouteSpeedBox">
+              <property name="prefix">
+               <string>RP: </string>
+              </property>
+              <property name="suffix">
+               <string> km/h</string>
+              </property>
+              <property name="decimals">
+               <number>1</number>
+              </property>
+              <property name="maximum">
+               <double>120.000000000000000</double>
+              </property>
+              <property name="value">
+               <double>3.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="mapRemoveRouteButton">
               <property name="text">
-               <string>Follow</string>
+               <string>Remove Route</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="mapRemoveTraceButton">
+              <property name="text">
+               <string>Remove Trace</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="MapRemovePixmapsButton">
+              <property name="text">
+               <string>Remove Pixmaps</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QGroupBox" name="groupBox_4">
+              <property name="title">
+               <string>Generate Circle</string>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_5">
+               <item>
+                <widget class="QDoubleSpinBox" name="genCircRadBox">
+                 <property name="prefix">
+                  <string>Rad: </string>
+                 </property>
+                 <property name="suffix">
+                  <string> m</string>
+                 </property>
+                 <property name="maximum">
+                  <double>10000.000000000000000</double>
+                 </property>
+                 <property name="value">
+                  <double>5.000000000000000</double>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QSpinBox" name="genCircPointsBox">
+                 <property name="prefix">
+                  <string>Points: </string>
+                 </property>
+                 <property name="maximum">
+                  <number>1000</number>
+                 </property>
+                 <property name="value">
+                  <number>30</number>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="genCircButton">
+                 <property name="text">
+                  <string>Generate</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <spacer name="verticalSpacer_2">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="mapAntialiasBox">
+              <property name="text">
+               <string>Antialias</string>
+              </property>
+              <property name="checked">
+               <bool>false</bool>
               </property>
              </widget>
             </item>
            </layout>
           </item>
           <item>
-           <widget class="QDoubleSpinBox" name="mapRouteSpeedBox">
-            <property name="prefix">
-             <string>RP: </string>
-            </property>
-            <property name="suffix">
-             <string> km/h</string>
-            </property>
-            <property name="decimals">
-             <number>1</number>
-            </property>
-            <property name="maximum">
-             <double>120.000000000000000</double>
-            </property>
-            <property name="value">
-             <double>3.000000000000000</double>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="mapRemoveRouteButton">
-            <property name="text">
-             <string>Remove Route</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="mapRemoveTraceButton">
-            <property name="text">
-             <string>Remove Trace</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="MapRemovePixmapsButton">
-            <property name="text">
-             <string>Remove Pixmaps</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QGroupBox" name="groupBox_4">
-            <property name="title">
-             <string>Generate Circle</string>
-            </property>
-            <layout class="QVBoxLayout" name="verticalLayout_5">
-             <item>
-              <widget class="QDoubleSpinBox" name="genCircRadBox">
-               <property name="prefix">
-                <string>Rad: </string>
-               </property>
-               <property name="suffix">
-                <string> m</string>
-               </property>
-               <property name="maximum">
-                <double>10000.000000000000000</double>
-               </property>
-               <property name="value">
-                <double>5.000000000000000</double>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QSpinBox" name="genCircPointsBox">
-               <property name="prefix">
-                <string>Points: </string>
-               </property>
-               <property name="maximum">
-                <number>1000</number>
-               </property>
-               <property name="value">
-                <number>30</number>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="genCircButton">
-               <property name="text">
-                <string>Generate</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item>
-           <spacer name="verticalSpacer_2">
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>20</width>
-              <height>40</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="mapAntialiasBox">
-            <property name="text">
-             <string>Antialias</string>
-            </property>
-            <property name="checked">
-             <bool>false</bool>
+           <widget class="MapWidget" name="mapWidget" native="true">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
             </property>
            </widget>
           </item>
          </layout>
         </item>
         <item>
-         <widget class="MapWidget" name="mapWidget" native="true">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-         </widget>
+         <layout class="QHBoxLayout" name="horizontalLayout_4">
+          <item>
+           <widget class="QLabel" name="label_2">
+            <property name="text">
+             <string>Set ABS Yaw</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSlider" name="mapAbsYawSlider">
+            <property name="maximum">
+             <number>360</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="tickPosition">
+             <enum>QSlider::NoTicks</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="mapSetAbsYawButton">
+            <property name="text">
+             <string>Set</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
        </layout>
       </widget>
@@ -251,7 +286,7 @@
            <x>0</x>
            <y>0</y>
            <width>300</width>
-           <height>82</height>
+           <height>78</height>
           </rect>
          </property>
          <attribute name="label">
@@ -282,8 +317,8 @@
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>202</width>
-           <height>82</height>
+           <width>300</width>
+           <height>78</height>
           </rect>
          </property>
          <attribute name="label">
@@ -545,6 +580,26 @@
         </layout>
        </widget>
       </item>
+      <item>
+       <widget class="QPushButton" name="stopButton">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>50</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>15</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Stop</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </item>
    </layout>
@@ -555,7 +610,7 @@
      <x>0</x>
      <y>0</y>
      <width>1409</width>
-     <height>27</height>
+     <height>25</height>
     </rect>
    </property>
   </widget>

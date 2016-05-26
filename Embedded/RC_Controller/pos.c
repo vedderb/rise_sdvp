@@ -140,6 +140,15 @@ void pos_set_xya(float x, float y, float angle) {
 	chMtxUnlock(&m_mutex_pos);
 }
 
+void pos_set_yaw_offset(float angle) {
+	chMtxLock(&m_mutex_pos);
+
+	m_yaw_offset = angle;
+	m_pos.yaw = m_imu_yaw - m_yaw_offset;
+
+	chMtxUnlock(&m_mutex_pos);
+}
+
 void pos_get_mc_val(mc_values *v) {
 	*v = m_mc_val;
 }
@@ -302,8 +311,22 @@ void pos_input_nmea(const char *data) {
 				float gain = main_config.gps_corr_gain_stat +
 						main_config.gps_corr_gain_dyn * m_pos.gps_corr_cnt;
 
+				float yaw_gps = atan2f(m_pos.py_gps - m_pos.gps_ang_corr_y_last_gps,
+						m_pos.px_gps - m_pos.gps_ang_corr_x_last_gps);
+				float yaw_car = atan2f(m_pos.py - m_pos.gps_ang_corr_y_last_car,
+						m_pos.px - m_pos.gps_ang_corr_x_last_car);
+				float yaw_diff = utils_angle_difference_rad(yaw_gps, yaw_car) * 180.0 / M_PI;
+
+				utils_step_towards(&m_yaw_offset, m_yaw_offset + yaw_diff,
+						main_config.gps_corr_gain_yaw * m_pos.gps_corr_cnt);
+
 				utils_step_towards(&m_pos.px, m_pos.px_gps, gain);
 				utils_step_towards(&m_pos.py, m_pos.py_gps, gain);
+
+				m_pos.gps_ang_corr_x_last_gps = m_pos.px_gps;
+				m_pos.gps_ang_corr_y_last_gps = m_pos.py_gps;
+				m_pos.gps_ang_corr_x_last_car = m_pos.px;
+				m_pos.gps_ang_corr_y_last_car = m_pos.px;
 			}
 
 			m_pos.gps_corr_cnt = 0.0;
@@ -506,8 +529,8 @@ static void init_gps_local(GPS_STATE *gps) {
 	gps->ox = m_pos.px;
 	gps->oy = m_pos.py;
 
-	const float s_yaw = sinf(m_pos.yaw * M_PI / 180.0);
-	const float c_yaw = cosf(m_pos.yaw * M_PI / 180.0);
+	const float s_yaw = sinf(-m_pos.yaw * M_PI / 180.0);
+	const float c_yaw = cosf(-m_pos.yaw * M_PI / 180.0);
 	gps->ox += c_yaw * main_config.gps_ant_x + s_yaw * main_config.gps_ant_y;
 	gps->oy += s_yaw * main_config.gps_ant_x + c_yaw * main_config.gps_ant_y;
 

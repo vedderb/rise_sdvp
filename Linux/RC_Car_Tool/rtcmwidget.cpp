@@ -42,11 +42,6 @@ RtcmWidget::RtcmWidget(QWidget *parent) :
     ui->refSendLatBox->setValue(57.71495867);
     ui->refSendLonBox->setValue(12.89134921);
     ui->refSendHBox->setValue(219.0);
-
-    // Freefly
-//    ui->refSendLatBox->setValue(47.741901801805106);
-//    ui->refSendLonBox->setValue(-122.15486320203019);
-//    ui->refSendHBox->setValue(6.0);
 }
 
 RtcmWidget::~RtcmWidget()

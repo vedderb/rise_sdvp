@@ -63,6 +63,10 @@ typedef struct {
 	float px_gps;
 	float py_gps;
 	float gps_corr_cnt;
+	float gps_ang_corr_x_last_gps;
+	float gps_ang_corr_y_last_gps;
+	float gps_ang_corr_x_last_car;
+	float gps_ang_corr_y_last_car;
 } POS_STATE;
 
 // Autopilot map point
@@ -96,6 +100,7 @@ typedef enum {
 	CMD_VESC_FWD,
 	CMD_RC_CONTROL,
 	CMD_SET_POS,
+	CMD_SET_POS_ACK,
 	CMD_AP_ADD_POINTS,
 	CMD_AP_REMOVE_LAST_POINT,
 	CMD_AP_CLEAR_POINTS,
@@ -105,7 +110,9 @@ typedef enum {
 	CMD_SEND_NMEA_RADIO,
 	CMD_SET_MAIN_CONFIG,
 	CMD_GET_MAIN_CONFIG,
-	CMD_GET_MAIN_CONFIG_DEFAULT
+	CMD_GET_MAIN_CONFIG_DEFAULT,
+	CMD_SET_YAW_OFFSET,
+	CMD_SET_YAW_OFFSET_ACK
 } CMD_PACKET;
 
 // RC control modes
@@ -151,6 +158,7 @@ typedef struct {
 	bool gps_comp; // Use GPS position correction
 	float gps_corr_gain_stat; // Static GPS correction gain
 	float gps_corr_gain_dyn; // Dynamic GPS correction gain
+	float gps_corr_gain_yaw; // Gain for yaw correction
 
 	// Autopilot parameters
 	bool ap_repeat_routes; // Repeat the same route when the end is reached

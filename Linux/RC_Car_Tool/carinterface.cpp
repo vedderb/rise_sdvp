@@ -349,6 +349,12 @@ void CarInterface::setControlValues(double throttle, double steering, double max
     }
 }
 
+void CarInterface::emergencyStop()
+{
+    ui->autopilotBox->setChecked(false);
+    ui->keyboardControlBox->setChecked(false);
+}
+
 void CarInterface::timerSlot()
 {
     // Update mag sample label
@@ -659,6 +665,7 @@ void CarInterface::getConfGui(MAIN_CONFIG &conf)
     conf.gps_comp = ui->confGpsCorrBox->isChecked();
     conf.gps_corr_gain_stat = ui->confGpsCorrStatBox->value();
     conf.gps_corr_gain_dyn = ui->confGpsCorrDynBox->value();
+    conf.gps_corr_gain_yaw = ui->confGpsCorrYawBox->value();
 
     conf.ap_repeat_routes = ui->confApRepeatBox->isChecked();
 
@@ -696,6 +703,7 @@ void CarInterface::setConfGui(MAIN_CONFIG &conf)
     ui->confGpsCorrBox->setChecked(conf.gps_comp);
     ui->confGpsCorrStatBox->setValue(conf.gps_corr_gain_stat);
     ui->confGpsCorrDynBox->setValue(conf.gps_corr_gain_dyn);
+    ui->confGpsCorrYawBox->setValue(conf.gps_corr_gain_yaw);
 
     ui->confApRepeatBox->setChecked(conf.ap_repeat_routes);
 

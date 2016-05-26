@@ -266,7 +266,7 @@ static void steering_angle_to_point(
 	 * Add correction if the arc is much longer than the total distance.
 	 * TODO: Find a good model.
 	 */
-	float angle_correction = 1.0 + D * 0.5;
+	float angle_correction = 1.0 + D * 0.2;
 	if (angle_correction > 5.0) {
 		angle_correction = 5.0;
 	}

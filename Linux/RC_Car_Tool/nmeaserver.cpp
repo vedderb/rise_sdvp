@@ -314,7 +314,6 @@ int NmeaServer::decodeNmeaGGA(QByteArray data, NmeaServer::nmea_gga_info_t &gga)
                 dec_fields++;
 
                 if (sscanf(gga, "%2lf%lf", &l1, &l2) == 2) {
-                    qDebug() << l2;
                     lat = l1 + l2 / 60.0;
                 } else {
                     lat = 0;

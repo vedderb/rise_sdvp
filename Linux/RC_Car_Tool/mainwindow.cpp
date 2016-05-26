@@ -124,6 +124,15 @@ bool MainWindow::eventFilter(QObject *object, QEvent *e)
 {
     Q_UNUSED(object);
 
+    // Emergency stop on escape
+    if (e->type() == QEvent::KeyPress) {
+        QKeyEvent *keyEvent = static_cast<QKeyEvent *>(e);
+        if (keyEvent->key() == Qt::Key_Escape) {
+            on_stopButton_clicked();
+            return true;
+        }
+    }
+
 #ifdef HAS_JOYSTICK
     if (mJoystick->isConnected()) {
         return false;
@@ -551,7 +560,7 @@ void MainWindow::on_carsWidget_tabCloseRequested(int index)
 void MainWindow::on_genCircButton_clicked()
 {
     double rad = ui->genCircRadBox->value();
-    double speed = 4.0 / 3.6;
+    double speed = ui->mapRouteSpeedBox->value() / 3.6;
     double ang_ofs = M_PI;
     double cx = 0;
     double cy = rad;
@@ -630,4 +639,48 @@ void MainWindow::on_simulateNmeaButton_clicked()
             }
         }
     }
+}
+
+void MainWindow::on_mapSetAbsYawButton_clicked()
+{
+    CarInfo *car = ui->mapWidget->getCarInfo(ui->mapCarBox->value());
+    if (car) {
+        if (mSerialPort->isOpen()) {
+            ui->mapSetAbsYawButton->setEnabled(false);
+            ui->mapAbsYawSlider->setEnabled(false);
+            bool ok = mPacketInterface->setYawOffsetAck(car->getId(), (double)ui->mapAbsYawSlider->value());
+            ui->mapSetAbsYawButton->setEnabled(true);
+            ui->mapAbsYawSlider->setEnabled(true);
+
+            if (!ok) {
+                qDebug() << "No pos ack received";
+            }
+        }
+    }
+}
+
+void MainWindow::on_mapAbsYawSlider_valueChanged(int value)
+{
+    (void)value;
+    CarInfo *car = ui->mapWidget->getCarInfo(ui->mapCarBox->value());
+    if (car) {
+        mPacketInterface->setYawOffset(car->getId(), (double)ui->mapAbsYawSlider->value());
+    }
+}
+
+void MainWindow::on_mapAbsYawSlider_sliderReleased()
+{
+    on_mapSetAbsYawButton_clicked();
+}
+
+void MainWindow::on_stopButton_clicked()
+{
+    for (int i = 0;i < mCars.size();i++) {
+        mCars[i]->emergencyStop();
+    }
+
+    mPacketInterface->setRcControlCurrent(255, 0.0, 0.0);
+    mPacketInterface->setRcControlCurrent(255, 0.0, 0.0);
+    mPacketInterface->setRcControlCurrent(255, 0.0, 0.0);
+    mPacketInterface->setRcControlCurrent(255, 0.0, 0.0);
 }

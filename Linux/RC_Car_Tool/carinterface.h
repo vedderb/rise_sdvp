@@ -47,6 +47,7 @@ public:
     void setMap(MapWidget *map);
     void setPacketInterface(PacketInterface *packetInterface);
     void setControlValues(double throttle, double steering, double max, bool currentMode);
+    void emergencyStop();
 
 signals:
     void terminalCmd(quint8 id, QString cmd);

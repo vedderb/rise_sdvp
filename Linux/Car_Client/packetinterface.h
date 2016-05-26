@@ -46,6 +46,7 @@ public:
     bool clearRoute(quint8 id, int retries = 10);
     bool setApActive(quint8 id, bool active, int retries = 10);
     bool setConfiguration(quint8 id, MAIN_CONFIG &conf, int retries = 10);
+    bool setPosAck(quint8 id, double x, double y, double angle, int retries = 10);
 
 signals:
     void dataToSend(QByteArray &data);

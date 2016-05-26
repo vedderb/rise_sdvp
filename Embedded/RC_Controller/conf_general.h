@@ -28,7 +28,7 @@
 
 // Software version
 #define FW_VERSION_MAJOR			2
-#define FW_VERSION_MINOR			0
+#define FW_VERSION_MINOR			2
 
 // General settings
 #define ID_ALL						255

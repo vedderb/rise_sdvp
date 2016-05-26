@@ -46,6 +46,8 @@ public:
     bool clearRoute(quint8 id, int retries = 10);
     bool setApActive(quint8 id, bool active, int retries = 10);
     bool setConfiguration(quint8 id, MAIN_CONFIG &conf, int retries = 10);
+    bool setPosAck(quint8 id, double x, double y, double angle, int retries = 10);
+    bool setYawOffsetAck(quint8 id, double angle, int retries = 10);
 
 signals:
     void dataToSend(QByteArray &data);
@@ -70,6 +72,7 @@ public slots:
     void sendNmeaRadio(quint8 id, QByteArray nmea_msg);
     void getConfiguration(quint8 id);
     void getDefaultConfiguration(quint8 id);
+    void setYawOffset(quint8 id, double angle);
 
 private:
     unsigned short crc16(const unsigned char *buf, unsigned int len);

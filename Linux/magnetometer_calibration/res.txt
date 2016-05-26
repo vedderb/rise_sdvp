@@ -1,16 +1,16 @@
-conf->mag_cal_cx = 13.8906;
-conf->mag_cal_cy = 41.6703;
-conf->mag_cal_cz = -38.28;
+conf->mag_cal_cx = 23.568;
+conf->mag_cal_cy = 48.4407;
+conf->mag_cal_cz = -28.7804;
 
-conf->mag_cal_xx = 0.813398;
-conf->mag_cal_xy = 0.0421102;
-conf->mag_cal_xz = 0.00674955;
+conf->mag_cal_xx = 0.795437;
+conf->mag_cal_xy = -0.00805418;
+conf->mag_cal_xz = 0.0383987;
 
-conf->mag_cal_yx = 0.0421102;
-conf->mag_cal_yy = 0.835037;
-conf->mag_cal_yz = -0.0759237;
+conf->mag_cal_yx = -0.00805418;
+conf->mag_cal_yy = 0.841154;
+conf->mag_cal_yz = -0.0177637;
 
-conf->mag_cal_zx = 0.00674955;
-conf->mag_cal_zy = -0.0759237;
-conf->mag_cal_zz = 0.964149;
+conf->mag_cal_zx = 0.0383987;
+conf->mag_cal_zy = -0.0177637;
+conf->mag_cal_zz = 0.990448;
 
