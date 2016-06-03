@@ -29,42 +29,42 @@ LocPoint::LocPoint(const LocPoint &point)
     *this = point;
 }
 
-double LocPoint::getX()
+double LocPoint::getX() const
 {
     return mX;
 }
 
-double LocPoint::getY()
+double LocPoint::getY() const
 {
     return mY;
 }
 
-double LocPoint::getAlpha()
+double LocPoint::getAlpha() const
 {
     return mAlpha;
 }
 
-double LocPoint::getSpeed()
+double LocPoint::getSpeed() const
 {
     return mSpeed;
 }
 
-QPointF LocPoint::getPoint()
+QPointF LocPoint::getPoint() const
 {
     return QPointF(mX, mY);
 }
 
-QPointF LocPoint::getPointMm()
+QPointF LocPoint::getPointMm() const
 {
     return QPointF(mX * 1000.0, mY * 1000.0);
 }
 
-double LocPoint::getRadius()
+double LocPoint::getRadius() const
 {
     return mRadius;
 }
 
-double LocPoint::getSigma()
+double LocPoint::getSigma() const
 {
     return mSigma;
 }

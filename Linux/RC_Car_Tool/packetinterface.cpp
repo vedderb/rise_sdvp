@@ -354,6 +354,9 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         state.mc_fault = (mc_fault_code)data[ind++];
         state.px_gps = utility::buffer_get_double32(data, 1e4, &ind);
         state.py_gps = utility::buffer_get_double32(data, 1e4, &ind);
+        state.ap_goal_px = utility::buffer_get_double32(data, 1e4, &ind);
+        state.ap_goal_py = utility::buffer_get_double32(data, 1e4, &ind);
+        state.ap_rad = utility::buffer_get_double32(data, 1e6, &ind);
         emit stateReceived(id, state);
     } break;
 

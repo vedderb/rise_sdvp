@@ -69,6 +69,9 @@ typedef struct {
     mc_fault_code mc_fault;
     double px_gps;
     double py_gps;
+    double ap_goal_px;
+    double ap_goal_py;
+    double ap_rad;
 } CAR_STATE;
 
 typedef enum {

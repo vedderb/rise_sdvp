@@ -55,7 +55,12 @@ MapWidget::MapWidget(QWidget *parent) :
     mRoutePointSpeed = 1.0;
     mAntialias = false;
 
+    mHasRouteClosest = false;
+    mRouteCurrentPoint = 0;
+
     connect(mPaintTimer, SIGNAL(timeout()), this, SLOT(paintTimerSlot()));
+
+    setMouseTracking(true);
 }
 
 CarInfo *MapWidget::getCarInfo(int car)
@@ -454,6 +459,19 @@ void MapWidget::paintEvent(QPaintEvent *event)
         painter.drawText(rect_txt, txt);
     }
 
+    // For debugging...
+    if (mHasRouteClosest) {
+        QPointF p = mRouteClosest.getPointMm();
+        painter.setTransform(drawTrans);
+        pen.setColor(Qt::darkGreen);
+        painter.setPen(pen);
+        painter.drawEllipse(p, 10 / mScaleFactor, 10 / mScaleFactor);
+
+        QPointF pm = getMousePosRelative();
+        painter.setBrush(Qt::transparent);
+        painter.drawEllipse(pm, 1000.0, 1000.0);
+    }
+
     // Draw cars
     painter.setPen(QPen(textColor));
     for(int i = 0;i < mCarInfo.size();i++) {
@@ -496,6 +514,19 @@ void MapWidget::paintEvent(QPaintEvent *event)
         painter.setBrush(QBrush(Qt::magenta));
         painter.drawEllipse(QPointF(x_gps, y_gps), car_h / 15.0, car_h / 15.0);
 
+        // Autopilot state
+        LocPoint ap_goal = carInfo.getApGoal();
+        if (ap_goal.getRadius() > 0.0) {
+            QPointF p = ap_goal.getPointMm();
+            pen.setColor(carInfo.getColor());
+            painter.setPen(pen);
+            painter.drawEllipse(p, 10 / mScaleFactor, 10 / mScaleFactor);
+
+            QPointF pm = pos.getPointMm();
+            painter.setBrush(Qt::transparent);
+            painter.drawEllipse(pm, ap_goal.getRadius() * 1000.0, ap_goal.getRadius() * 1000.0);
+        }
+
         // Print data
         txt.sprintf("%s\n(%.3f, %.3f, %.0f)", carInfo.getName().toLocal8Bit().data(),
                     pos.getX(), pos.getY(), angle);
@@ -516,6 +547,129 @@ void MapWidget::paintEvent(QPaintEvent *event)
     painter.drawText(width() - 50, 35, txt);
 
     painter.end();
+}
+
+namespace {
+typedef struct {
+    float px;
+    float py;
+    float speed;
+} ROUTE_POINT;
+
+int circleLineIntersection(float cx, float cy, float rad,
+                                const ROUTE_POINT *point1, const ROUTE_POINT *point2,
+                                ROUTE_POINT *intersection1, ROUTE_POINT *intersection2)
+{
+    float dx, dy, a, b, c, det, t, x, y;
+
+    const float p1x = point1->px;
+    const float p1y = point1->py;
+    const float p2x = point2->px;
+    const float p2y = point2->py;
+
+    float maxx = p1x;
+    float minx = p2x;
+    float maxy = p1y;
+    float miny = p2y;
+
+    if (maxx < minx) {
+        maxx = p2x;
+        minx = p1x;
+    }
+
+    if (maxy < miny) {
+        maxy = p2y;
+        miny = p1y;
+    }
+
+    dx = p2x - p1x;
+    dy = p2y - p1y;
+
+    a = dx * dx + dy * dy;
+    b = 2 * (dx * (p1x - cx) + dy * (p1y - cy));
+    c = (p1x - cx) * (p1x - cx) + (p1y - cy) * (p1y - cy) - rad * rad;
+
+    det = b * b - 4 * a * c;
+
+    int ints = 0;
+    if ((a <= 1e-6) || (det < 0.0)) {
+        // No real solutions.
+    } else if (det == 0) {
+        // One solution.
+        t = -b / (2 * a);
+        x = p1x + t * dx;
+        y = p1y + t * dy;
+
+        if (x >= minx && x <= maxx &&
+                y >= miny && y <= maxy) {
+            intersection1->px = x;
+            intersection1->py = y;
+            ints++;
+        }
+    } else {
+        // Two solutions.
+        t = (-b + sqrt(det)) / (2 * a);
+        x = p1x + t * dx;
+        y = p1y + t * dy;
+
+        if (x >= minx && x <= maxx &&
+                y >= miny && y <= maxy) {
+            intersection1->px = x;
+            intersection1->py = y;
+            ints++;
+        }
+
+        t = (-b - sqrt(det)) / (2 * a);
+        x = p1x + t * dx;
+        y = p1y + t * dy;
+
+        if (x >= minx && x <= maxx &&
+                y >= miny && y <= maxy) {
+            if (ints) {
+                intersection2->px = x;
+                intersection2->py = y;
+            } else {
+                intersection1->px = x;
+                intersection1->py = y;
+            }
+
+            ints++;
+        }
+    }
+
+    return ints;
+}
+
+void closestPointLineSegment(const ROUTE_POINT *point1, const ROUTE_POINT *point2, float px, float py, ROUTE_POINT *closest) {
+    const float p1x = point1->px;
+    const float p1y = point1->py;
+    const float p2x = point2->px;
+    const float p2y = point2->py;
+
+    const float d1x = px - p1x;
+    const float d1y = py - p1y;
+    const float dx = p2x - p1x;
+    const float dy = p2y - p1y;
+
+    const float ab2 = dx * dx + dy * dy;
+    const float ap_ab = d1x * dx + d1y * dy;
+    float t = ap_ab / ab2;
+
+    if (t < 0.0) {
+        t = 0.0;
+    } else if (t > 1.0) {
+        t = 1.0;
+    }
+
+    closest->px = p1x + dx * t;
+    closest->py = p1y + dy * t;
+}
+
+float pointDistance(const ROUTE_POINT *p1, const ROUTE_POINT *p2) {
+    float dx = p2->px - p1->px;
+    float dy = p2->py - p1->py;
+    return sqrtf(dx * dx + dy * dy);
+}
 }
 
 void MapWidget::mouseMoveEvent(QMouseEvent *e)
@@ -544,10 +698,138 @@ void MapWidget::mouseMoveEvent(QMouseEvent *e)
         mMouseLastX = x;
         mMouseLastY = y;
     }
+
+    if (false) {
+        bool update_now = false;
+        if (mRoute.size() >= 2) {
+            QPoint p = getMousePosRelative();
+
+            int add = 5;
+            if (add > mRoute.size()) {
+                add = mRoute.size();
+            }
+
+            int start = mRouteCurrentPoint;
+            int end = mRouteCurrentPoint + add;
+
+            float cx = p.x() / 1000.0;
+            float cy = p.y() / 1000.0;
+
+            ROUTE_POINT last;
+            bool has = false;
+            int current = 0;
+            for (int i = start;i < end;i++) {
+                int ind = i;
+                int indn = i + 1;
+
+                if (ind >= mRoute.size()) {
+                    ind -= mRoute.size();
+                }
+
+                if (indn >= mRoute.size()) {
+                    indn -= mRoute.size();
+                }
+
+                ROUTE_POINT int1, int2;
+                ROUTE_POINT p1, p2;
+                p1.px = mRoute.at(ind).getX();
+                p1.py = mRoute.at(ind).getY();
+                p2.px = mRoute.at(indn).getX();
+                p2.py = mRoute.at(indn).getY();
+
+                int res = circleLineIntersection(cx, cy, 1.0, &p1, &p2, &int1, &int2);
+
+                if (!has && res > 0) {
+                    has = true;
+                    last = int1;
+                    current = i;
+                }
+
+                if (res == 1) {
+                    if (pointDistance(&p2, &int1) <
+                            pointDistance(&last, &p2)) {
+                        last = int1;
+                        current = i;
+                    }
+                }
+
+                if (res == 2) {
+                    if (pointDistance(&p2, &int2) <
+                            pointDistance(&last, &p2)) {
+                        last = int2;
+                        current = i;
+                    }
+                }
+            }
+
+            if (!has) {
+                ROUTE_POINT mouse;
+                mouse.px = cx;
+                mouse.py = cy;
+                bool lastSet = false;
+                for (int i = start;i < end;i++) {
+                    int ind = i;
+                    int indn = i + 1;
+
+                    if (ind >= mRoute.size()) {
+                        ind -= mRoute.size();
+                    }
+
+                    if (indn >= mRoute.size()) {
+                        indn -= mRoute.size();
+                    }
+
+                    ROUTE_POINT tmp;
+                    ROUTE_POINT p1, p2;
+                    p1.px = mRoute.at(ind).getX();
+                    p1.py = mRoute.at(ind).getY();
+                    p2.px = mRoute.at(indn).getX();
+                    p2.py = mRoute.at(indn).getY();
+                    closestPointLineSegment(&p1, &p2, cx, cy, &tmp);
+
+                    if (!lastSet || pointDistance(&tmp, &mouse) < pointDistance(&last, &mouse)) {
+                        last = tmp;
+                        lastSet = true;
+                        current = i;
+                    }
+                }
+            }
+
+            if (current > (mRouteCurrentPoint + 1) && current > 0) {
+                mRouteCurrentPoint = current -  1;
+
+                if (mRouteCurrentPoint >= mRoute.size()) {
+                    mRouteCurrentPoint -= mRoute.size();
+                }
+
+                qDebug() << mRouteCurrentPoint;
+            }
+
+            mRouteClosest.setXY(last.px, last.py);
+            mHasRouteClosest = true;
+            update_now = true;
+        } else {
+            if (mHasRouteClosest) {
+                update_now = true;
+            }
+
+            mHasRouteClosest = false;
+        }
+
+        if (mHasRouteClosest) {
+            update_now = true;
+        }
+
+        if (update_now) {
+            update();
+        }
+    }
 }
 
 void MapWidget::mousePressEvent(QMouseEvent *e)
 {
+    mRouteCurrentPoint = 0;
+
     if (mSelectedCar >= 0 && (e->buttons() & Qt::LeftButton) && (e->modifiers() & Qt::ControlModifier)) {
         for (int i = 0;i < mCarInfo.size();i++) {
             CarInfo &carInfo = mCarInfo[i];

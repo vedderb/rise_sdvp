@@ -474,6 +474,180 @@ float utils_point_distance(float x1, float y1, float x2, float y2) {
 }
 
 /**
+ * Calculate the distance between two route points.
+ *
+ * @param p1
+ * The first route point
+ *
+ * @param p2
+ * The second route point
+ *
+ * @return
+ * The distance between the route points
+ */
+float utils_rp_distance(const ROUTE_POINT *p1, const ROUTE_POINT *p2) {
+    float dx = p2->px - p1->px;
+    float dy = p2->py - p1->py;
+    return sqrtf(dx * dx + dy * dy);
+}
+
+/**
+ * Calculate the intersection point(s) between a circle and a line segment.
+ *
+ * @param cx
+ * Circle center x
+ *
+ * @param cy
+ * Circle center y
+ *
+ * @param rad
+ * Circle radius
+ *
+ * @param point1
+ * Line segment start
+ *
+ * @param point2
+ * Line segment end
+ *
+ * @param int1
+ * First intersection
+ *
+ * @param int2
+ * Second intersection
+ *
+ * @return
+ * The number of intersections found, can be 0, 1 or 2
+ *
+ */
+int utils_circle_line_int(float cx, float cy, float rad,
+		const ROUTE_POINT *point1, const ROUTE_POINT *point2,
+		ROUTE_POINT *int1, ROUTE_POINT *int2) {
+	float dx, dy, a, b, c, det, t, x, y;
+
+	const float p1x = point1->px;
+	const float p1y = point1->py;
+	const float p2x = point2->px;
+	const float p2y = point2->py;
+
+    float maxx = p1x;
+    float minx = p2x;
+    float maxy = p1y;
+    float miny = p2y;
+
+    if (maxx < minx) {
+        maxx = p2x;
+        minx = p1x;
+    }
+
+    if (maxy < miny) {
+        maxy = p2y;
+        miny = p1y;
+    }
+
+    dx = p2x - p1x;
+    dy = p2y - p1y;
+
+    a = dx * dx + dy * dy;
+    b = 2 * (dx * (p1x - cx) + dy * (p1y - cy));
+    c = (p1x - cx) * (p1x - cx) + (p1y - cy) * (p1y - cy) - rad * rad;
+
+    det = b * b - 4 * a * c;
+
+    int ints = 0;
+    if ((a <= 1e-6) || (det < 0.0)) {
+        // No real solutions.
+    } else if (det == 0) {
+        // One solution.
+        t = -b / (2 * a);
+        x = p1x + t * dx;
+        y = p1y + t * dy;
+
+        if (x >= minx && x <= maxx &&
+                y >= miny && y <= maxy) {
+            int1->px = x;
+            int1->py = y;
+            ints++;
+        }
+    } else {
+        // Two solutions.
+        t = (-b + sqrtf(det)) / (2 * a);
+        x = p1x + t * dx;
+        y = p1y + t * dy;
+
+        if (x >= minx && x <= maxx &&
+                y >= miny && y <= maxy) {
+            int1->px = x;
+            int1->py = y;
+            ints++;
+        }
+
+        t = (-b - sqrtf(det)) / (2 * a);
+        x = p1x + t * dx;
+        y = p1y + t * dy;
+
+        if (x >= minx && x <= maxx &&
+                y >= miny && y <= maxy) {
+            if (ints) {
+                int2->px = x;
+                int2->py = y;
+            } else {
+                int1->px = x;
+                int1->py = y;
+            }
+
+            ints++;
+        }
+    }
+
+    return ints;
+}
+
+/**
+ * Calculate the closest point on a line segment to another point
+ *
+ * @param point1
+ * Line segment start
+ *
+ * @param point2
+ * Line segment end
+ *
+ * @param px
+ * Point x
+ *
+ * @param py
+ * Point y
+ *
+ * @param res
+ * Closest point
+ *
+ */
+void utils_closest_point_line(const ROUTE_POINT *point1, const ROUTE_POINT *point2,
+		float px, float py, ROUTE_POINT *res) {
+	const float p1x = point1->px;
+	const float p1y = point1->py;
+    const float p2x = point2->px;
+    const float p2y = point2->py;
+
+    const float d1x = px - p1x;
+    const float d1y = py - p1y;
+    const float dx = p2x - p1x;
+    const float dy = p2y - p1y;
+
+    const float ab2 = dx * dx + dy * dy;
+    const float ap_ab = d1x * dx + d1y * dy;
+    float t = ap_ab / ab2;
+
+    if (t < 0.0) {
+        t = 0.0;
+    } else if (t > 1.0) {
+        t = 1.0;
+    }
+
+    res->px = p1x + dx * t;
+    res->py = p1y + dy * t;
+}
+
+/**
  * A system locking function with a counter. For every lock, a corresponding unlock must
  * exist to unlock the system. That means, if lock is called five times, unlock has to
  * be called five times as well. Note that chSysLock and chSysLockFromIsr are the same

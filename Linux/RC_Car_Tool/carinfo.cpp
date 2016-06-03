@@ -40,7 +40,7 @@ void CarInfo::setId(int id, bool changeName = false)
     }
 }
 
-QString CarInfo::getName()
+QString CarInfo::getName() const
 {
     return mName;
 }
@@ -55,7 +55,7 @@ void CarInfo::setLocation(LocPoint &point)
     mLocation = point;
 }
 
-LocPoint CarInfo::getLocationGps()
+LocPoint CarInfo::getLocationGps() const
 {
     return mLocationGps;
 }
@@ -65,7 +65,7 @@ void CarInfo::setLocationGps(LocPoint &point)
     mLocationGps = point;
 }
 
-Qt::GlobalColor CarInfo::getColor()
+Qt::GlobalColor CarInfo::getColor() const
 {
     return mColor;
 }
@@ -75,7 +75,17 @@ void CarInfo::setColor(Qt::GlobalColor color)
     mColor = color;
 }
 
-LocPoint CarInfo::getLocation()
+LocPoint CarInfo::getApGoal() const
+{
+    return mApGoal;
+}
+
+void CarInfo::setApGoal(const LocPoint &apGoal)
+{
+    mApGoal = apGoal;
+}
+
+LocPoint CarInfo::getLocation() const
 {
     return mLocation;
 }

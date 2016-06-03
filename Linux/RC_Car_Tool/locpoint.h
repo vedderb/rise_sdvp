@@ -27,14 +27,14 @@ public:
              double speed = 0.5, double radius = 0, double sigma = 0);
     LocPoint(const LocPoint &point);
 
-    double getX();
-    double getY();
-    double getAlpha();
-    double getSpeed();
-    QPointF getPoint();
-    QPointF getPointMm();
-    double getRadius();
-    double getSigma();
+    double getX() const;
+    double getY() const;
+    double getAlpha() const;
+    double getSpeed() const;
+    QPointF getPoint() const;
+    QPointF getPointMm() const;
+    double getRadius() const;
+    double getSigma() const;
 
     void setX(double x);
     void setY(double y);

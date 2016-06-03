@@ -19,6 +19,7 @@
 #define UTILS_H_
 
 #include <stdbool.h>
+#include "conf_general.h"
 
 void utils_step_towards(float *value, float goal, float step);
 float utils_calc_ratio(float low, float high, float val);
@@ -39,6 +40,12 @@ bool utils_saturate_vector_2d(float *x, float *y, float max);
 void utils_fast_sincos(float angle, float *sin, float *cos);
 void utils_fast_sincos_better(float angle, float *sin, float *cos);
 float utils_point_distance(float x1, float y1, float x2, float y2);
+float utils_rp_distance(const ROUTE_POINT *p1, const ROUTE_POINT *p2);
+int utils_circle_line_int(float cx, float cy, float rad,
+		const ROUTE_POINT *point1, const ROUTE_POINT *point2,
+		ROUTE_POINT *int1, ROUTE_POINT *int2);
+void utils_closest_point_line(const ROUTE_POINT *point1, const ROUTE_POINT *point2,
+		float px, float py, ROUTE_POINT *res);
 void utils_sys_lock_cnt(void);
 void utils_sys_unlock_cnt(void);
 

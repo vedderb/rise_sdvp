@@ -100,6 +100,10 @@ private:
     double yRealPos;
     QTimer *mPaintTimer;
     bool mAntialias;
+
+    LocPoint mRouteClosest;
+    bool mHasRouteClosest;
+    int mRouteCurrentPoint;
 };
 
 #endif // MAPWIDGET_H

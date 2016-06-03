@@ -280,11 +280,15 @@ void CarInterface::setStateData(CAR_STATE data)
         CarInfo *car = mMap->getCarInfo(mId);
         LocPoint loc = car->getLocation();
         LocPoint loc_gps = car->getLocationGps();
+        LocPoint ap_goal = car->getApGoal();
         loc.setAlpha(data.yaw * M_PI / 180.0);
         loc.setXY(data.px, data.py);
         loc_gps.setXY(data.px_gps, data.py_gps);
+        ap_goal.setXY(data.ap_goal_px, data.ap_goal_py);
+        ap_goal.setRadius(data.ap_rad);
         car->setLocation(loc);
         car->setLocationGps(loc_gps);
+        car->setApGoal(ap_goal);
         mMap->repaintAfterEvents();
     }
 

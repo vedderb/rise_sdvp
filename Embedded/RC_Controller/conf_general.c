@@ -104,9 +104,9 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 	conf->gps_comp = false;
 	conf->gps_corr_gain_stat = 0.05;
 	conf->gps_corr_gain_dyn = 0.05;
-	conf->gps_corr_gain_yaw = 0.005;
+	conf->gps_corr_gain_yaw = 1.0;
 
-	conf->ap_repeat_routes = false;
+	conf->ap_repeat_routes = true;
 
 	// Custom parameters based on car ID
 	switch (main_id) {

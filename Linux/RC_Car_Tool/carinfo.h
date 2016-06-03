@@ -28,20 +28,23 @@ public:
     CarInfo(int id = 0, Qt::GlobalColor color = Qt::red);
     int getId();
     void setId(int id, bool changeName);
-    QString getName();
+    QString getName() const;
     void setName(QString name);
-    LocPoint getLocation();
+    LocPoint getLocation() const;
     void setLocation(LocPoint &point);
-    LocPoint getLocationGps();
+    LocPoint getLocationGps() const;
     void setLocationGps(LocPoint &point);
-    Qt::GlobalColor getColor();
+    Qt::GlobalColor getColor() const;
     void setColor(Qt::GlobalColor color);
+    LocPoint getApGoal() const;
+    void setApGoal(const LocPoint &apGoal);
 
 private:
     int mId;
     QString mName;
     LocPoint mLocation;
     LocPoint mLocationGps;
+    LocPoint mApGoal;
     Qt::GlobalColor mColor;
 };
 

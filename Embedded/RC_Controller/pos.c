@@ -320,13 +320,17 @@ void pos_input_nmea(const char *data) {
 				utils_step_towards(&m_yaw_offset, m_yaw_offset + yaw_diff,
 						main_config.gps_corr_gain_yaw * m_pos.gps_corr_cnt);
 
+//				m_yaw_offset += main_config.gps_corr_gain_yaw * m_pos.gps_corr_cnt * yaw_diff;
+
+				utils_norm_angle(&m_yaw_offset);
+
 				utils_step_towards(&m_pos.px, m_pos.px_gps, gain);
 				utils_step_towards(&m_pos.py, m_pos.py_gps, gain);
 
 				m_pos.gps_ang_corr_x_last_gps = m_pos.px_gps;
 				m_pos.gps_ang_corr_y_last_gps = m_pos.py_gps;
 				m_pos.gps_ang_corr_x_last_car = m_pos.px;
-				m_pos.gps_ang_corr_y_last_car = m_pos.px;
+				m_pos.gps_ang_corr_y_last_car = m_pos.py;
 			}
 
 			m_pos.gps_corr_cnt = 0.0;

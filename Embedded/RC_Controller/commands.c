@@ -120,41 +120,47 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			float accel[3];
 			float gyro[3];
 			float mag[3];
+			ROUTE_POINT rp_goal;
 			
 			m_send_func = func;
 
 			pos_get_imu(accel, gyro, mag);
 			pos_get_pos(&pos);
 			pos_get_mc_val(&mcval);
+			autopilot_get_goal_now(&rp_goal);
+
 			int32_t send_index = 0;
-			m_send_buffer[send_index++] = main_id;
-			m_send_buffer[send_index++] = CMD_GET_STATE;
-			m_send_buffer[send_index++] = FW_VERSION_MAJOR;
-			m_send_buffer[send_index++] = FW_VERSION_MINOR;
-			buffer_append_float32(m_send_buffer, pos.roll, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, pos.pitch, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, pos.yaw, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, accel[0], 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, accel[1], 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, accel[2], 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, gyro[0], 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, gyro[1], 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, gyro[2], 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, mag[0], 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, mag[1], 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, mag[2], 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, pos.q0, 1e8, &send_index);
-			buffer_append_float32(m_send_buffer, pos.q1, 1e8, &send_index);
-			buffer_append_float32(m_send_buffer, pos.q2, 1e8, &send_index);
-			buffer_append_float32(m_send_buffer, pos.q3, 1e8, &send_index);
-			buffer_append_float32(m_send_buffer, pos.px, 1e4, &send_index);
-			buffer_append_float32(m_send_buffer, pos.py, 1e4, &send_index);
-			buffer_append_float32(m_send_buffer, pos.speed, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, mcval.v_in, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, mcval.temp_mos1, 1e6, &send_index);
-			m_send_buffer[send_index++] = mcval.fault_code;
-			buffer_append_float32(m_send_buffer, pos.px_gps, 1e4, &send_index);
-			buffer_append_float32(m_send_buffer, pos.py_gps, 1e4, &send_index);
+			m_send_buffer[send_index++] = main_id; // 1
+			m_send_buffer[send_index++] = CMD_GET_STATE; // 2
+			m_send_buffer[send_index++] = FW_VERSION_MAJOR; // 3
+			m_send_buffer[send_index++] = FW_VERSION_MINOR; // 4
+			buffer_append_float32(m_send_buffer, pos.roll, 1e6, &send_index); // 8
+			buffer_append_float32(m_send_buffer, pos.pitch, 1e6, &send_index); // 12
+			buffer_append_float32(m_send_buffer, pos.yaw, 1e6, &send_index); // 16
+			buffer_append_float32(m_send_buffer, accel[0], 1e6, &send_index); // 20
+			buffer_append_float32(m_send_buffer, accel[1], 1e6, &send_index); // 24
+			buffer_append_float32(m_send_buffer, accel[2], 1e6, &send_index); // 28
+			buffer_append_float32(m_send_buffer, gyro[0], 1e6, &send_index); // 32
+			buffer_append_float32(m_send_buffer, gyro[1], 1e6, &send_index); // 36
+			buffer_append_float32(m_send_buffer, gyro[2], 1e6, &send_index); // 40
+			buffer_append_float32(m_send_buffer, mag[0], 1e6, &send_index); // 44
+			buffer_append_float32(m_send_buffer, mag[1], 1e6, &send_index); // 48
+			buffer_append_float32(m_send_buffer, mag[2], 1e6, &send_index); // 52
+			buffer_append_float32(m_send_buffer, pos.q0, 1e8, &send_index); // 56
+			buffer_append_float32(m_send_buffer, pos.q1, 1e8, &send_index); // 60
+			buffer_append_float32(m_send_buffer, pos.q2, 1e8, &send_index); // 64
+			buffer_append_float32(m_send_buffer, pos.q3, 1e8, &send_index); // 68
+			buffer_append_float32(m_send_buffer, pos.px, 1e4, &send_index); // 72
+			buffer_append_float32(m_send_buffer, pos.py, 1e4, &send_index); // 76
+			buffer_append_float32(m_send_buffer, pos.speed, 1e6, &send_index); // 80
+			buffer_append_float32(m_send_buffer, mcval.v_in, 1e6, &send_index); // 84
+			buffer_append_float32(m_send_buffer, mcval.temp_mos1, 1e6, &send_index); // 88
+			m_send_buffer[send_index++] = mcval.fault_code; // 89
+			buffer_append_float32(m_send_buffer, pos.px_gps, 1e4, &send_index); // 93
+			buffer_append_float32(m_send_buffer, pos.py_gps, 1e4, &send_index); // 97
+			buffer_append_float32(m_send_buffer, rp_goal.px, 1e4, &send_index); // 101
+			buffer_append_float32(m_send_buffer, rp_goal.py, 1e4, &send_index); // 105
+			buffer_append_float32(m_send_buffer, autopilot_get_rad_now(), 1e6, &send_index); // 109
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
 
