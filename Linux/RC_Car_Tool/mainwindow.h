@@ -80,6 +80,7 @@ private slots:
     void on_mapApButton_clicked();
     void on_mapKbButton_clicked();
     void on_mapOffButton_clicked();
+    void on_mapUpdateSpeedButton_clicked();
 
 private:
     Ui::MainWindow *ui;

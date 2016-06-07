@@ -141,6 +141,12 @@ QList<LocPoint> MapWidget::getRoute()
     return mRoute;
 }
 
+void MapWidget::setRoute(QList<LocPoint> route)
+{
+    mRoute = route;
+    update();
+}
+
 void MapWidget::clearRoute()
 {
     mRoute.clear();

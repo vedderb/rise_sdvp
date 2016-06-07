@@ -56,6 +56,7 @@ public:
     void clearTrace();
     void addRoutePoint(double px, double py, double speed);
     QList<LocPoint> getRoute();
+    void setRoute(QList<LocPoint> route);
     void clearRoute();
     void setRoutePointSpeed(double speed);
     void addPerspectivePixmap(PerspectivePixmap map);

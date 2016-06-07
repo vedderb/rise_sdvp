@@ -781,3 +781,14 @@ void MainWindow::on_mapOffButton_clicked()
         }
     }
 }
+
+void MainWindow::on_mapUpdateSpeedButton_clicked()
+{
+    QList<LocPoint> route = ui->mapWidget->getRoute();
+
+    for (int i = 0;i < route.size();i++) {
+        route[i].setSpeed(ui->mapRouteSpeedBox->value() / 3.6);
+    }
+
+    ui->mapWidget->setRoute(route);
+}
