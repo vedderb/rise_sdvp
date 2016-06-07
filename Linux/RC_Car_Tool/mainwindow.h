@@ -76,6 +76,10 @@ private slots:
     void on_mapAbsYawSlider_valueChanged(int value);
     void on_mapAbsYawSlider_sliderReleased();
     void on_stopButton_clicked();
+    void on_mapUploadRouteButton_clicked();
+    void on_mapApButton_clicked();
+    void on_mapKbButton_clicked();
+    void on_mapOffButton_clicked();
 
 private:
     Ui::MainWindow *ui;

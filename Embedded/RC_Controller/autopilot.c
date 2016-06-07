@@ -215,7 +215,7 @@ static THD_FUNCTION(ap_thread, arg) {
 			float cy = p.py;
 
 			// Speed-dependent radius
-			m_rad_now = 1.0 / autopilot_get_steering_scale();
+			m_rad_now = main_config.ap_base_rad / autopilot_get_steering_scale();
 
 			ROUTE_POINT last;
 			ROUTE_POINT *closest1 = &m_route[0];
@@ -228,20 +228,20 @@ static THD_FUNCTION(ap_thread, arg) {
 				int indn = i + 1;
 
 				if (ind >= m_point_last) {
-					if (m_point_now < m_point_last) {
+					if (m_point_now <= m_point_last) {
 						ind -= m_point_last;
 					} else {
-						if (ind > AP_ROUTE_SIZE) {
+						if (ind >= AP_ROUTE_SIZE) {
 							ind -= AP_ROUTE_SIZE;
 						}
 					}
 				}
 
 				if (indn >= m_point_last) {
-					if (m_point_now < m_point_last) {
+					if (m_point_now <= m_point_last) {
 						indn -= m_point_last;
 					} else {
-						if (indn > AP_ROUTE_SIZE) {
+						if (indn >= AP_ROUTE_SIZE) {
 							indn -= AP_ROUTE_SIZE;
 						}
 					}
@@ -254,18 +254,15 @@ static THD_FUNCTION(ap_thread, arg) {
 
 				if (!closest_set) {
 					closest1 = p1;
-					closest2 = p2;
 					closest_set = true;
 				}
 
+				// Closest point
 				if (utils_point_distance(cx, cy, p1->px, p1->py) <
 						utils_point_distance(cx, cy, closest1->px, closest1->py)) {
 					closest1 = p1;
-				}
-
-				if (utils_point_distance(cx, cy, p1->px, p1->py) <
-						utils_point_distance(cx, cy, closest2->px, closest2->py) &&
-						p1 != closest1) {
+				} else {
+					// Make sure that closest2 is at least further away
 					closest2 = p1;
 				}
 
@@ -294,6 +291,28 @@ static THD_FUNCTION(ap_thread, arg) {
 				}
 			}
 
+			// Next closest point
+			for (int i = start;i < end;i++) {
+				int ind = i;
+				if (ind >= m_point_last) {
+					if (m_point_now <= m_point_last) {
+						ind -= m_point_last;
+					} else {
+						if (ind >= AP_ROUTE_SIZE) {
+							ind -= AP_ROUTE_SIZE;
+						}
+					}
+				}
+
+				ROUTE_POINT *p1 = &m_route[ind];
+
+				if (utils_point_distance(cx, cy, p1->px, p1->py) <
+						utils_point_distance(cx, cy, closest2->px, closest2->py) &&
+						p1 != closest1) {
+					closest2 = p1;
+				}
+			}
+
 			if (!has) {
 				ROUTE_POINT carp;
 				carp.px = cx;
@@ -305,20 +324,20 @@ static THD_FUNCTION(ap_thread, arg) {
 					int indn = i + 1;
 
 					if (ind >= m_point_last) {
-						if (m_point_now < m_point_last) {
+						if (m_point_now <= m_point_last) {
 							ind -= m_point_last;
 						} else {
-							if (ind > AP_ROUTE_SIZE) {
+							if (ind >= AP_ROUTE_SIZE) {
 								ind -= AP_ROUTE_SIZE;
 							}
 						}
 					}
 
 					if (indn >= m_point_last) {
-						if (m_point_now < m_point_last) {
+						if (m_point_now <= m_point_last) {
 							indn -= m_point_last;
 						} else {
-							if (indn > AP_ROUTE_SIZE) {
+							if (indn >= AP_ROUTE_SIZE) {
 								indn -= AP_ROUTE_SIZE;
 							}
 						}
@@ -373,15 +392,15 @@ static THD_FUNCTION(ap_thread, arg) {
 							/ main_config.steering_range)
 							+ main_config.steering_center;
 
-			const float dist_next = utils_point_distance(p.px, p.py, closest2->px, closest2->py);
-			const float dist_previous = utils_point_distance(p.px, p.py, closest1->px, closest1->py);
+			const float dist_next = utils_point_distance(cx, cy, closest1->px, closest1->py);
+			const float dist_previous = utils_point_distance(cx, cy, closest2->px, closest2->py);
 			const float fract_prev = dist_next / (dist_previous + dist_next);
 
 			float speed;
 			if (m_is_speed_override) {
 				speed = m_override_speed;
 			} else {
-				speed = (closest1->speed * fract_prev) + (closest2->speed * (1.0 - fract_prev));
+				speed = (closest2->speed * fract_prev) + (closest1->speed * (1.0 - fract_prev));
 			}
 
 			servo_simple_set_pos_ramp(servo_pos);

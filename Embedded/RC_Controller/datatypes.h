@@ -162,6 +162,7 @@ typedef struct {
 
 	// Autopilot parameters
 	bool ap_repeat_routes; // Repeat the same route when the end is reached
+	float ap_base_rad; // Radius around car at 0 speed
 } MAIN_CONFIG;
 
 typedef struct {

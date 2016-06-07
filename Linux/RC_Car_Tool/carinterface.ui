@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>966</width>
-    <height>581</height>
+    <width>917</width>
+    <height>548</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1023,6 +1023,25 @@
               <widget class="QCheckBox" name="confApRepeatBox">
                <property name="text">
                 <string>Repeat Routes</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QDoubleSpinBox" name="confApBaseRadBox">
+               <property name="prefix">
+                <string>Base radius: </string>
+               </property>
+               <property name="suffix">
+                <string> m</string>
+               </property>
+               <property name="decimals">
+                <number>3</number>
+               </property>
+               <property name="maximum">
+                <double>100.000000000000000</double>
+               </property>
+               <property name="singleStep">
+                <double>0.100000000000000</double>
                </property>
               </widget>
              </item>

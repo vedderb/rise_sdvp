@@ -134,7 +134,11 @@ void MapWidget::addRoutePoint(double px, double py, double speed)
     pos.setSpeed(speed);
     mRoute.append(pos);
     update();
-    //emit routePointAdded(pos);
+}
+
+QList<LocPoint> MapWidget::getRoute()
+{
+    return mRoute;
 }
 
 void MapWidget::clearRoute()
@@ -526,6 +530,8 @@ void MapWidget::paintEvent(QPaintEvent *event)
             painter.setBrush(Qt::transparent);
             painter.drawEllipse(pm, ap_goal.getRadius() * 1000.0, ap_goal.getRadius() * 1000.0);
         }
+
+        painter.setPen(QPen(textColor));
 
         // Print data
         txt.sprintf("%s\n(%.3f, %.3f, %.0f)", carInfo.getName().toLocal8Bit().data(),

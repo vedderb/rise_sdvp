@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1409</width>
-    <height>707</height>
+    <width>1200</width>
+    <height>669</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -44,84 +44,112 @@
        <attribute name="title">
         <string>Map</string>
        </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout_7">
+       <layout class="QVBoxLayout" name="verticalLayout_9">
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_3">
           <item>
-           <layout class="QVBoxLayout" name="verticalLayout_2">
+           <layout class="QVBoxLayout" name="verticalLayout_8">
             <item>
-             <widget class="QPushButton" name="mapZeroButton">
-              <property name="text">
-               <string>Go to Zero</string>
+             <widget class="QGroupBox" name="groupBox_5">
+              <property name="title">
+               <string>Selection and Control</string>
               </property>
+              <layout class="QGridLayout" name="gridLayout_6">
+               <item row="3" column="1">
+                <widget class="QPushButton" name="mapKbButton">
+                 <property name="text">
+                  <string>KB</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0" colspan="2">
+                <widget class="QCheckBox" name="mapTraceBox">
+                 <property name="text">
+                  <string>Draw trace</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="0">
+                <widget class="QSpinBox" name="mapCarBox">
+                 <property name="prefix">
+                  <string>Car: </string>
+                 </property>
+                 <property name="maximum">
+                  <number>255</number>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1" colspan="2">
+                <widget class="QPushButton" name="mapZeroButton">
+                 <property name="text">
+                  <string>Go to Zero</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="2">
+                <widget class="QPushButton" name="mapOffButton">
+                 <property name="text">
+                  <string>Off</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="0" colspan="3">
+                <widget class="QDoubleSpinBox" name="mapRouteSpeedBox">
+                 <property name="prefix">
+                  <string>Route speed: </string>
+                 </property>
+                 <property name="suffix">
+                  <string> km/h</string>
+                 </property>
+                 <property name="decimals">
+                  <number>1</number>
+                 </property>
+                 <property name="maximum">
+                  <double>120.000000000000000</double>
+                 </property>
+                 <property name="value">
+                  <double>3.000000000000000</double>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="0">
+                <widget class="QPushButton" name="mapApButton">
+                 <property name="text">
+                  <string>AP</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="2">
+                <widget class="QCheckBox" name="mapFollowBox">
+                 <property name="text">
+                  <string>Follow</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
              </widget>
             </item>
             <item>
-             <widget class="QSpinBox" name="mapCarBox">
-              <property name="prefix">
-               <string>Car: </string>
+             <widget class="QGroupBox" name="groupBox_6">
+              <property name="title">
+               <string>Upload Route</string>
               </property>
-              <property name="maximum">
-               <number>255</number>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_2">
-              <item>
-               <widget class="QCheckBox" name="mapTraceBox">
-                <property name="text">
-                 <string>Trace</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QCheckBox" name="mapFollowBox">
-                <property name="text">
-                 <string>Follow</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <widget class="QDoubleSpinBox" name="mapRouteSpeedBox">
-              <property name="prefix">
-               <string>RP: </string>
-              </property>
-              <property name="suffix">
-               <string> km/h</string>
-              </property>
-              <property name="decimals">
-               <number>1</number>
-              </property>
-              <property name="maximum">
-               <double>120.000000000000000</double>
-              </property>
-              <property name="value">
-               <double>3.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="mapRemoveRouteButton">
-              <property name="text">
-               <string>Remove Route</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="mapRemoveTraceButton">
-              <property name="text">
-               <string>Remove Trace</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="MapRemovePixmapsButton">
-              <property name="text">
-               <string>Remove Pixmaps</string>
-              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_7">
+               <item>
+                <widget class="QProgressBar" name="mapUploadRouteProgressBar">
+                 <property name="value">
+                  <number>0</number>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="mapUploadRouteButton">
+                 <property name="text">
+                  <string>Upload current</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
              </widget>
             </item>
             <item>
@@ -131,38 +159,72 @@
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_5">
                <item>
-                <widget class="QDoubleSpinBox" name="genCircRadBox">
-                 <property name="prefix">
-                  <string>Rad: </string>
-                 </property>
-                 <property name="suffix">
-                  <string> m</string>
-                 </property>
-                 <property name="maximum">
-                  <double>10000.000000000000000</double>
-                 </property>
-                 <property name="value">
-                  <double>5.000000000000000</double>
-                 </property>
-                </widget>
+                <layout class="QGridLayout" name="gridLayout_5">
+                 <item row="0" column="0">
+                  <widget class="QDoubleSpinBox" name="genCircRadBox">
+                   <property name="prefix">
+                    <string>Rad: </string>
+                   </property>
+                   <property name="suffix">
+                    <string> m</string>
+                   </property>
+                   <property name="maximum">
+                    <double>1000.000000000000000</double>
+                   </property>
+                   <property name="value">
+                    <double>5.000000000000000</double>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="1">
+                  <widget class="QSpinBox" name="genCircPointsBox">
+                   <property name="prefix">
+                    <string>Pts: </string>
+                   </property>
+                   <property name="maximum">
+                    <number>500</number>
+                   </property>
+                   <property name="value">
+                    <number>30</number>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="0" colspan="2">
+                  <widget class="QPushButton" name="genCircButton">
+                   <property name="text">
+                    <string>Generate</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
                </item>
-               <item>
-                <widget class="QSpinBox" name="genCircPointsBox">
-                 <property name="prefix">
-                  <string>Points: </string>
-                 </property>
-                 <property name="maximum">
-                  <number>1000</number>
-                 </property>
-                 <property name="value">
-                  <number>30</number>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="genCircButton">
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QGroupBox" name="groupBox_7">
+              <property name="title">
+               <string>Remove</string>
+              </property>
+              <layout class="QGridLayout" name="gridLayout_7">
+               <item row="1" column="0">
+                <widget class="QPushButton" name="mapRemoveTraceButton">
                  <property name="text">
-                  <string>Generate</string>
+                  <string>Trace</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="0">
+                <widget class="QPushButton" name="mapRemoveRouteButton">
+                 <property name="text">
+                  <string>Route</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QPushButton" name="MapRemovePixmapsButton">
+                 <property name="text">
+                  <string>Pixmaps</string>
                  </property>
                 </widget>
                </item>
@@ -198,7 +260,7 @@
            <widget class="MapWidget" name="mapWidget" native="true">
             <property name="sizePolicy">
              <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
-              <horstretch>0</horstretch>
+              <horstretch>1</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
@@ -609,7 +671,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1409</width>
+     <width>1200</width>
      <height>25</height>
     </rect>
    </property>

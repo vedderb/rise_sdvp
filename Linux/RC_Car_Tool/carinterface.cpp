@@ -359,6 +359,33 @@ void CarInterface::emergencyStop()
     ui->keyboardControlBox->setChecked(false);
 }
 
+void CarInterface::setCtrlAp()
+{
+    ui->autopilotBox->setChecked(true);
+    ui->keyboardControlBox->setChecked(false);
+}
+
+void CarInterface::setCtrlKb()
+{
+    ui->autopilotBox->setChecked(false);
+    ui->keyboardControlBox->setChecked(true);
+}
+
+bool CarInterface::setAp(bool on)
+{
+    bool ok = false;
+
+    if (mPacketInterface) {
+        ok = mPacketInterface->setApActive(mId, on);
+
+        if (ok) {
+            ui->autopilotBox->setChecked(on);
+        }
+    }
+
+    return ok;
+}
+
 void CarInterface::timerSlot()
 {
     // Update mag sample label
@@ -672,6 +699,7 @@ void CarInterface::getConfGui(MAIN_CONFIG &conf)
     conf.gps_corr_gain_yaw = ui->confGpsCorrYawBox->value();
 
     conf.ap_repeat_routes = ui->confApRepeatBox->isChecked();
+    conf.ap_base_rad = ui->confApBaseRadBox->value();
 
     conf.steering_max_angle_rad = atan(ui->confAxisDistanceBox->value() / ui->confTurnRadBox->value());
 }
@@ -710,6 +738,7 @@ void CarInterface::setConfGui(MAIN_CONFIG &conf)
     ui->confGpsCorrYawBox->setValue(conf.gps_corr_gain_yaw);
 
     ui->confApRepeatBox->setChecked(conf.ap_repeat_routes);
+    ui->confApBaseRadBox->setValue(conf.ap_base_rad);
 
     ui->confTurnRadBox->setValue(conf.axis_distance / tan(conf.steering_max_angle_rad));
 }

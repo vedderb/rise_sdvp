@@ -355,6 +355,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			main_config.gps_corr_gain_yaw = buffer_get_float32(data, 1e6, &ind);
 
 			main_config.ap_repeat_routes = data[ind++];
+			main_config.ap_base_rad = buffer_get_float32(data, 1e6, &ind);
 
 			conf_general_store_main_config(&main_config);
 
@@ -410,6 +411,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			buffer_append_float32(m_send_buffer, main_cfg_tmp.gps_corr_gain_yaw, 1e6, &send_index);
 
 			m_send_buffer[send_index++] = main_cfg_tmp.ap_repeat_routes;
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.ap_base_rad, 1e6, &send_index);
 
 			commands_send_packet(m_send_buffer, send_index);
 		} break;

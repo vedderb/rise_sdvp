@@ -440,6 +440,7 @@ void MainWindow::on_serialConnectButton_clicked()
 void MainWindow::on_serialRefreshButton_clicked()
 {
     ui->serialPortBox->clear();
+    bool found = false;
 
     QList<QSerialPortInfo> ports = QSerialPortInfo::availablePorts();
     foreach(const QSerialPortInfo &port, ports) {
@@ -449,11 +450,16 @@ void MainWindow::on_serialRefreshButton_clicked()
         if(port.manufacturer() == "STMicroelectronics") {
             name.insert(0, "IF - ");
             index = 0;
+            found = true;
         }
         ui->serialPortBox->insertItem(index, name, port.systemLocation());
     }
 
     ui->serialPortBox->setCurrentIndex(0);
+
+    if (found && !mSerialPort->isOpen()) {
+        on_serialConnectButton_clicked();
+    }
 }
 
 void MainWindow::on_disconnectButton_clicked()
@@ -683,4 +689,95 @@ void MainWindow::on_stopButton_clicked()
     mPacketInterface->setRcControlCurrent(255, 0.0, 0.0);
     mPacketInterface->setRcControlCurrent(255, 0.0, 0.0);
     mPacketInterface->setRcControlCurrent(255, 0.0, 0.0);
+}
+
+void MainWindow::on_mapUploadRouteButton_clicked()
+{
+    if (!mSerialPort->isOpen()) {
+        QMessageBox::warning(this, "Upload route",
+                             "Serial port not connected.");
+        return;
+    }
+
+    QList<LocPoint> route = ui->mapWidget->getRoute();
+    int len = route.size();
+    int car = ui->mapCarBox->value();
+    bool ok = true;
+
+    if (len <= 0) {
+        QMessageBox::warning(this, "Upload route",
+                             "No route on map.");
+        return;
+    }
+
+    ui->mapUploadRouteButton->setEnabled(false);
+
+    // Stop car
+    for (int i = 0;i < mCars.size();i++) {
+        if (mCars[i]->getId() == car) {
+            ok = mCars[i]->setAp(false);
+            break;
+        }
+    }
+
+    // Clear previous route
+    if (ok) {
+        ok = mPacketInterface->clearRoute(car);
+    }
+
+    if (ok) {
+        int ind = 0;
+        for (ind = 0;ind < len;ind += 5) {
+            QList<LocPoint> tmpList;
+            for (int j = ind;j < (ind + 5);j++) {
+                if (j < len) {
+                    tmpList.append(route.at(j));
+                }
+            }
+
+            ok = mPacketInterface->setRoutePoints(car, tmpList);
+
+            if (!ok) {
+                break;
+            }
+
+            ui->mapUploadRouteProgressBar->setValue((100 * (ind + 5)) / len);
+        }
+    }
+
+    if (!ok) {
+        QMessageBox::warning(this, "Upload route",
+                             "No response when uploading route.");
+    } else {
+        ui->mapUploadRouteProgressBar->setValue(100);
+    }
+
+    ui->mapUploadRouteButton->setEnabled(true);
+}
+
+void MainWindow::on_mapApButton_clicked()
+{
+    for (int i = 0;i < mCars.size();i++) {
+        if (mCars[i]->getId() == ui->mapCarBox->value()) {
+            mCars[i]->setCtrlAp();
+        }
+    }
+}
+
+void MainWindow::on_mapKbButton_clicked()
+{
+    for (int i = 0;i < mCars.size();i++) {
+        if (mCars[i]->getId() == ui->mapCarBox->value()) {
+            mCars[i]->setCtrlKb();
+        }
+    }
+}
+
+void MainWindow::on_mapOffButton_clicked()
+{
+    for (int i = 0;i < mCars.size();i++) {
+        if (mCars[i]->getId() == ui->mapCarBox->value()) {
+            mCars[i]->emergencyStop();
+        }
+    }
 }

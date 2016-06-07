@@ -48,6 +48,9 @@ public:
     void setPacketInterface(PacketInterface *packetInterface);
     void setControlValues(double throttle, double steering, double max, bool currentMode);
     void emergencyStop();
+    void setCtrlAp();
+    void setCtrlKb();
+    bool setAp(bool on);
 
 signals:
     void terminalCmd(quint8 id, QString cmd);
