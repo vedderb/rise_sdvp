@@ -192,8 +192,6 @@ static THD_FUNCTION(ap_thread, arg) {
 			continue;
 		}
 
-		////////////////////// NEW //////////////////////////
-
 		int len = m_point_last;
 		if (m_point_now > m_point_last) {
 			len = AP_ROUTE_SIZE + m_point_last - m_point_now;
@@ -411,79 +409,6 @@ static THD_FUNCTION(ap_thread, arg) {
 			m_rad_now = -1.0;
 			continue;
 		}
-
-		////////////////////// OLD //////////////////////////
-
-//		if (m_point_now == m_point_last) {
-//			// The end of the route is reached.
-//			if (main_config.ap_repeat_routes && m_point_last != 0) {
-//				m_point_now = 0;
-//			} else {
-//				servo_simple_set_pos_ramp(main_config.steering_center);
-//				bldc_interface_set_current_brake(10.0);
-//				continue;
-//			}
-//		}
-//
-//		float distance, steering_angle;
-//		float servo_pos;
-//		static int max_steering = 0;
-//
-//		POS_STATE p;
-//		ROUTE_POINT rp_now, rp_prev;
-//
-//		int p_last = m_point_now - 1;
-//		if (p_last < 0) {
-//			p_last = AP_ROUTE_SIZE - 1;
-//		}
-//
-//		rp_now = m_route[m_point_now];
-//		rp_prev = m_route[p_last];
-//		pos_get_pos(&p);
-//
-//		steering_angle_to_point(p.px, p.py, -p.yaw * M_PI / 180.0, rp_now.px,
-//				rp_now.py, &steering_angle, &distance);
-//
-//		// Scale maximum steering by speed
-//		float max_rad = main_config.steering_max_angle_rad * autopilot_get_steering_scale();
-//
-//		if (steering_angle >= max_rad) {
-//			steering_angle = max_rad;
-//			max_steering++;
-//		} else if (steering_angle <= -max_rad) {
-//			steering_angle = -max_rad;
-//			max_steering++;
-//		} else {
-//			max_steering = 0;
-//		}
-//
-//		servo_pos = steering_angle
-//				/ ((2.0 * main_config.steering_max_angle_rad)
-//						/ main_config.steering_range)
-//						+ main_config.steering_center;
-//
-//		const float dist_previous = utils_point_distance(p.px, p.py, rp_prev.px, rp_prev.py);
-//		const float fract_prev = distance / (dist_previous + distance);
-//
-//		float speed;
-//		if (m_is_speed_override) {
-//			speed = m_override_speed;
-//		} else {
-//			speed = (rp_prev.speed * fract_prev) + (rp_now.speed * (1.0 - fract_prev));
-//		}
-//
-//		servo_simple_set_pos_ramp(servo_pos);
-//		autopilot_set_motor_speed(speed);
-//
-//		// Check it it is time to go to the next point
-//		if (distance < 0.3 || (max_steering > 25 && distance < 3.0)) {
-//			max_steering = 0;
-//
-//			m_point_now++;
-//			if (m_point_now >= AP_ROUTE_SIZE) {
-//				m_point_now = 0;
-//			}
-//		}
 	}
 }
 
