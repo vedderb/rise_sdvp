@@ -199,6 +199,10 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 					autopilot_set_motor_speed(throttle);
 					break;
 
+				case RC_MODE_CURRENT_BRAKE:
+					bldc_interface_set_current_brake(throttle);
+					break;
+
 				default:
 					break;
 			}

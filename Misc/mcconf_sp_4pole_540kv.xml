@@ -70,11 +70,11 @@
     <foc_hall_table_5>255</foc_hall_table_5>
     <foc_hall_table_6>255</foc_hall_table_6>
     <foc_hall_table_7>255</foc_hall_table_7>
-    <foc_hall_sl_erpm>2000</foc_hall_sl_erpm>
+    <foc_sl_erpm>2500</foc_sl_erpm>
     <s_pid_kp>0.0001</s_pid_kp>
     <s_pid_ki>0.01</s_pid_ki>
     <s_pid_kd>0</s_pid_kd>
-    <s_pid_min_rpm>800</s_pid_min_rpm>
+    <s_pid_min_rpm>400</s_pid_min_rpm>
     <p_pid_kp>0.03</p_pid_kp>
     <p_pid_ki>0</p_pid_ki>
     <p_pid_kd>0.0004</p_pid_kd>
@@ -88,6 +88,7 @@
     <m_duty_ramp_step_rpm_lim>0.0005</m_duty_ramp_step_rpm_lim>
     <m_current_backoff_gain>0.5</m_current_backoff_gain>
     <m_encoder_counts>8192</m_encoder_counts>
+    <m_sensor_port_mode>0</m_sensor_port_mode>
     <meta_description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }

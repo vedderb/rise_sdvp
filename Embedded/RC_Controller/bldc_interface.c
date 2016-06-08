@@ -19,7 +19,8 @@
  * bldc_interface.c
  *
  * Compatible Firmware Versions
- * 2.16
+ * 2.17
+ * 2.18
  *
  */
 
@@ -250,7 +251,7 @@ void bldc_interface_process_packet(unsigned char *data, unsigned int len) {
 		mcconf.foc_sl_d_current_factor = buffer_get_float32(data, 1e3, &ind);
 		memcpy(mcconf.foc_hall_table, data + ind, 8);
 		ind += 8;
-		mcconf.foc_hall_sl_erpm = buffer_get_float32(data, 1000.0, &ind);
+		mcconf.foc_sl_erpm = buffer_get_float32(data, 1000.0, &ind);
 
 		mcconf.s_pid_kp = buffer_get_float32(data, 1000000.0, &ind);
 		mcconf.s_pid_ki = buffer_get_float32(data, 1000000.0, &ind);
@@ -272,6 +273,7 @@ void bldc_interface_process_packet(unsigned char *data, unsigned int len) {
 		mcconf.m_duty_ramp_step_rpm_lim = buffer_get_float32(data, 1000000.0, &ind);
 		mcconf.m_current_backoff_gain = buffer_get_float32(data, 1000000.0, &ind);
 		mcconf.m_encoder_counts = buffer_get_uint32(data, &ind);
+		mcconf.m_sensor_port_mode = data[ind++];
 
 		if (rx_mcconf_func) {
 			rx_mcconf_func(&mcconf);
@@ -600,7 +602,7 @@ void bldc_interface_set_mcconf(const mc_configuration *mcconf) {
 	buffer_append_float32(send_buffer, mcconf->foc_sl_d_current_factor, 1e3, &send_index);
 	memcpy(send_buffer + send_index, mcconf->foc_hall_table, 8);
 	send_index += 8;
-	buffer_append_float32(send_buffer,mcconf->foc_hall_sl_erpm, 1000, &send_index);
+	buffer_append_float32(send_buffer,mcconf->foc_sl_erpm, 1000, &send_index);
 
 	buffer_append_float32(send_buffer,mcconf->s_pid_kp, 1000000, &send_index);
 	buffer_append_float32(send_buffer,mcconf->s_pid_ki, 1000000, &send_index);
@@ -622,6 +624,7 @@ void bldc_interface_set_mcconf(const mc_configuration *mcconf) {
 	buffer_append_float32(send_buffer,mcconf->m_duty_ramp_step_rpm_lim, 1000000, &send_index);
 	buffer_append_float32(send_buffer,mcconf->m_current_backoff_gain, 1000000, &send_index);
 	buffer_append_uint32(send_buffer, mcconf->m_encoder_counts, &send_index);
+	send_buffer[send_index++] = mcconf->m_sensor_port_mode;
 
 	send_packet_no_fwd(send_buffer, send_index);
 }

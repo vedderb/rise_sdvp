@@ -65,12 +65,13 @@
 #define MCCONF_S_PID_KP						0.0001	// Proportional gain
 #define MCCONF_S_PID_KI						0.01	// Integral gain
 #define MCCONF_S_PID_KD						0.0		// Derivative gain
-#define MCCONF_S_PID_MIN_RPM				800.0	// Minimum allowed RPM
+#define MCCONF_S_PID_MIN_RPM				400.0	// Minimum allowed RPM
 
 // Speed PID parameters (FOC)
 //#define MCCONF_S_PID_KP						0.004	// Proportional gain
 //#define MCCONF_S_PID_KI						0.004	// Integral gain
 //#define MCCONF_S_PID_KD						0.01	// Derivative gain
-//#define MCCONF_S_PID_MIN_RPM				800.0	// Minimum allowed RPM
+//#define MCCONF_S_PID_MIN_RPM				400.0	// Minimum allowed RPM
 
 #endif /* MCCONF_SP_H_ */
+

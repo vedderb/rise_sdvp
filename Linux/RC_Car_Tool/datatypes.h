@@ -150,7 +150,8 @@ typedef enum {
 typedef enum {
     RC_MODE_CURRENT = 0,
     RC_MODE_DUTY,
-    RC_MODE_PID
+    RC_MODE_PID,
+    RC_MODE_CURRENT_BRAKE
 } RC_MODE;
 
 typedef enum {

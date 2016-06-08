@@ -601,13 +601,24 @@ void PacketInterface::forwardVesc(quint8 id, QByteArray data)
     sendPacket(packet);
 }
 
-void PacketInterface::setRcControlCurrent(quint8 id, double duty, double steering)
+void PacketInterface::setRcControlCurrent(quint8 id, double current, double steering)
 {
     qint32 send_index = 0;
     mSendBuffer[send_index++] = id;
     mSendBuffer[send_index++] = CMD_RC_CONTROL;
     mSendBuffer[send_index++] = RC_MODE_CURRENT;
-    utility::buffer_append_double32(mSendBuffer, duty, 1e4, &send_index);
+    utility::buffer_append_double32(mSendBuffer, current, 1e4, &send_index);
+    utility::buffer_append_double32(mSendBuffer, steering, 1e6, &send_index);
+    sendPacket(mSendBuffer, send_index);
+}
+
+void PacketInterface::setRcControlCurrentBrake(quint8 id, double current, double steering)
+{
+    qint32 send_index = 0;
+    mSendBuffer[send_index++] = id;
+    mSendBuffer[send_index++] = CMD_RC_CONTROL;
+    mSendBuffer[send_index++] = RC_MODE_CURRENT_BRAKE;
+    utility::buffer_append_double32(mSendBuffer, current, 1e4, &send_index);
     utility::buffer_append_double32(mSendBuffer, steering, 1e6, &send_index);
     sendPacket(mSendBuffer, send_index);
 }
