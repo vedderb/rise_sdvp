@@ -586,7 +586,13 @@ void MainWindow::on_genCircButton_clicked()
     }
 
     for (int i = 1;i <= points;i++) {
-        double ang = -((double)i * 2.0 * M_PI) / (double)points + ang_ofs;
+        int ind = i;
+
+        if (rad < 0.0) {
+            ind = points - i;
+        }
+
+        double ang = -((double)ind * 2.0 * M_PI) / (double)points + ang_ofs;
 
         double px = sin(ang) * rad;
         double py = cos(ang) * rad;
