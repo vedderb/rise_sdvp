@@ -251,10 +251,6 @@ void CarInterface::setStateData(CAR_STATE data)
 
     // Orientation
     setOrientation(data.roll, data.pitch, data.yaw);
-    //ui->orientationWidget->setQuanternions(data.q[0], data.q[1], data.q[2], data.q[3]);
-    //ui->rollBar->setValue(data.roll);
-    //ui->pitchBar->setValue(data.pitch);
-    //ui->yawBar->setValue(data.yaw);
 
     // Fault label
     QString fault_str;

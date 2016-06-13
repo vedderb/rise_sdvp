@@ -342,10 +342,6 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         state.mag[0] = utility::buffer_get_double32(data, 1e6, &ind);
         state.mag[1] = utility::buffer_get_double32(data, 1e6, &ind);
         state.mag[2] = utility::buffer_get_double32(data, 1e6, &ind);
-        state.q[0] = utility::buffer_get_double32(data, 1e8, &ind);
-        state.q[1] = utility::buffer_get_double32(data, 1e8, &ind);
-        state.q[2] = utility::buffer_get_double32(data, 1e8, &ind);
-        state.q[3] = utility::buffer_get_double32(data, 1e8, &ind);
         state.px = utility::buffer_get_double32(data, 1e4, &ind);
         state.py = utility::buffer_get_double32(data, 1e4, &ind);
         state.speed = utility::buffer_get_double32(data, 1e6, &ind);

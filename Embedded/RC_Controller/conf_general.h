@@ -20,6 +20,14 @@
 
 #include "datatypes.h"
 
+// Default car settings
+//#define CAR_TERO // Benjamins tero car
+
+// Defaults for different cars
+#ifdef CAR_TERO
+#define IMU_ROT_180					1
+#endif
+
 // CC2520 Settings
 #define CC2520_RF_CHANNEL			12
 #define CC2520_PAN_ID				0xfa11
@@ -28,11 +36,16 @@
 
 // Software version
 #define FW_VERSION_MAJOR			3
-#define FW_VERSION_MINOR			1
+#define FW_VERSION_MINOR			2
 
 // General settings
 #define ID_ALL						255
 #define VESC_ID						ID_ALL // id, or ID_ALL for any VESC
+
+// Car parameters
+#ifndef IMU_ROT_180
+#define IMU_ROT_180					0
+#endif
 
 // Servo settings
 #define SERVO_OUT_RATE_HZ			50

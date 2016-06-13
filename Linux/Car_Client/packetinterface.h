@@ -47,6 +47,7 @@ public:
     bool setApActive(quint8 id, bool active, int retries = 10);
     bool setConfiguration(quint8 id, MAIN_CONFIG &conf, int retries = 10);
     bool setPosAck(quint8 id, double x, double y, double angle, int retries = 10);
+    bool setYawOffsetAck(quint8 id, double angle, int retries = 10);
 
 signals:
     void dataToSend(QByteArray &data);
@@ -63,7 +64,8 @@ public slots:
     void readPendingDatagrams();
     void sendTerminalCmd(quint8 id, QString cmd);
     void forwardVesc(quint8 id, QByteArray data);
-    void setRcControlCurrent(quint8 id, double duty, double steering);
+    void setRcControlCurrent(quint8 id, double current, double steering);
+    void setRcControlCurrentBrake(quint8 id, double current, double steering);
     void setRcControlDuty(quint8 id, double duty, double steering);
     void setPos(quint8 id, double x, double y, double angle);
     void setServoDirect(quint8 id, double value);
@@ -71,6 +73,7 @@ public slots:
     void sendNmeaRadio(quint8 id, QByteArray nmea_msg);
     void getConfiguration(quint8 id);
     void getDefaultConfiguration(quint8 id);
+    void setYawOffset(quint8 id, double angle);
 
 private:
     unsigned short crc16(const unsigned char *buf, unsigned int len);

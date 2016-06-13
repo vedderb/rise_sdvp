@@ -398,12 +398,20 @@ static void update_orientation_angles(float *accel, float *gyro, float *mag, flo
 
 	chMtxLock(&m_mutex_pos);
 
+#if IMU_ROT_180
+	m_pos.roll = -MahonyAHRSGetRoll((ATTITUDE_INFO*)&m_att) * 180.0 / M_PI;
+	m_pos.pitch = -MahonyAHRSGetPitch((ATTITUDE_INFO*)&m_att) * 180.0 / M_PI;
+	m_pos.roll_rate = gyro[0] * 180.0 / M_PI;
+	m_pos.pitch_rate = -gyro[1] * 180.0 / M_PI;
+#else
 	m_pos.roll = MahonyAHRSGetRoll((ATTITUDE_INFO*)&m_att) * 180.0 / M_PI;
 	m_pos.pitch = MahonyAHRSGetPitch((ATTITUDE_INFO*)&m_att) * 180.0 / M_PI;
-	m_imu_yaw = MahonyAHRSGetYaw((ATTITUDE_INFO*)&m_att) * 180.0 / M_PI;
-	utils_norm_angle(&m_imu_yaw);
 	m_pos.roll_rate = -gyro[0] * 180.0 / M_PI;
 	m_pos.pitch_rate = gyro[1] * 180.0 / M_PI;
+#endif
+
+	m_imu_yaw = MahonyAHRSGetYaw((ATTITUDE_INFO*)&m_att) * 180.0 / M_PI;
+	utils_norm_angle(&m_imu_yaw);
 	m_pos.yaw_rate = -gyro[2] * 180.0 / M_PI;
 
 	// Correct yaw

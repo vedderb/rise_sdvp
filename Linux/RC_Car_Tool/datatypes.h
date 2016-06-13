@@ -60,7 +60,6 @@ typedef struct {
     double accel[3];
     double gyro[3];
     double mag[3];
-    double q[4];
     double px;
     double py;
     double speed;

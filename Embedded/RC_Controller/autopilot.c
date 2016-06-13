@@ -39,6 +39,8 @@ static float m_override_speed;
 static bool m_is_speed_override;
 static ROUTE_POINT m_rp_now;
 static float m_rad_now;
+static ROUTE_POINT m_point_rx_prev;
+static bool m_point_rx_prev_set;
 
 // Private functions
 static THD_FUNCTION(ap_thread, arg);
@@ -61,6 +63,8 @@ void autopilot_init(void) {
 	m_is_speed_override = false;
 	memset(&m_rp_now, 0, sizeof(ROUTE_POINT));
 	m_rad_now = -1.0;
+	memset(&m_point_rx_prev, 0, sizeof(ROUTE_POINT));
+	m_point_rx_prev_set = false;
 
 	chThdCreateStatic(ap_thread_wa, sizeof(ap_thread_wa),
 			NORMALPRIO, ap_thread, NULL);
@@ -68,10 +72,12 @@ void autopilot_init(void) {
 
 void autopilot_add_point(ROUTE_POINT *p) {
 	// Check if the same point is sent again.
-	ROUTE_POINT *lp = &m_route[m_point_last];
-	if (utils_point_distance(lp->px, lp->py, p->px, p->py) < 1e-4) {
+	if (m_point_rx_prev_set && utils_point_distance(m_point_rx_prev.px, m_point_rx_prev.py, p->px, p->py) < 1e-4) {
 		return;
 	}
+
+	m_point_rx_prev = *p;
+	m_point_rx_prev_set = true;
 
 	m_route[m_point_last++] = *p;
 
@@ -110,6 +116,7 @@ void autopilot_clear_route(void) {
 	m_has_prev_point = false;
 	m_point_now = 0;
 	m_point_last = 0;
+	m_point_rx_prev_set = false;
 }
 
 void autopilot_set_active(bool active) {

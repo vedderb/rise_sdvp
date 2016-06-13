@@ -134,6 +134,21 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 	default:
 		break;
 	}
+
+#ifdef CAR_TERO
+	conf->gear_ratio = 0.15;
+	conf->wheel_diam = 0.155;
+	conf->motor_poles = 4.0;
+	conf->steering_max_angle_rad = 0.39952;
+	conf->steering_center = 0.45;
+	conf->steering_range = -0.8;
+	conf->steering_ramp_time = 0.6;
+	conf->axis_distance = 0.57;
+
+	conf->gps_ant_x = 0.0;
+	conf->gps_ant_y = 0.0;
+#endif
+
 }
 
 /**

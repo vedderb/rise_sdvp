@@ -60,7 +60,6 @@ typedef struct {
     double accel[3];
     double gyro[3];
     double mag[3];
-    double q[4];
     double px;
     double py;
     double speed;
@@ -69,6 +68,9 @@ typedef struct {
     mc_fault_code mc_fault;
     double px_gps;
     double py_gps;
+    double ap_goal_px;
+    double ap_goal_py;
+    double ap_rad;
 } CAR_STATE;
 
 typedef enum {
@@ -114,9 +116,11 @@ typedef struct {
     bool gps_comp; // Use GPS position correction
     float gps_corr_gain_stat; // Static GPS correction gain
     float gps_corr_gain_dyn; // Dynamic GPS correction gain
+    float gps_corr_gain_yaw; // Gain for yaw correction
 
     // Autopilot parameters
     bool ap_repeat_routes; // Repeat the same route when the end is reached
+    float ap_base_rad; // Radius around car at 0 speed
 } MAIN_CONFIG;
 
 typedef enum {
@@ -136,14 +140,17 @@ typedef enum {
     CMD_SEND_NMEA_RADIO,
     CMD_SET_MAIN_CONFIG,
     CMD_GET_MAIN_CONFIG,
-    CMD_GET_MAIN_CONFIG_DEFAULT
+    CMD_GET_MAIN_CONFIG_DEFAULT,
+    CMD_SET_YAW_OFFSET,
+    CMD_SET_YAW_OFFSET_ACK
 } CMD_PACKET;
 
 // RC control modes
 typedef enum {
     RC_MODE_CURRENT = 0,
     RC_MODE_DUTY,
-    RC_MODE_PID
+    RC_MODE_PID,
+    RC_MODE_CURRENT_BRAKE
 } RC_MODE;
 
 typedef enum {

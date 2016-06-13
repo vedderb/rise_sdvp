@@ -146,21 +146,17 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			buffer_append_float32(m_send_buffer, mag[0], 1e6, &send_index); // 44
 			buffer_append_float32(m_send_buffer, mag[1], 1e6, &send_index); // 48
 			buffer_append_float32(m_send_buffer, mag[2], 1e6, &send_index); // 52
-			buffer_append_float32(m_send_buffer, pos.q0, 1e8, &send_index); // 56
-			buffer_append_float32(m_send_buffer, pos.q1, 1e8, &send_index); // 60
-			buffer_append_float32(m_send_buffer, pos.q2, 1e8, &send_index); // 64
-			buffer_append_float32(m_send_buffer, pos.q3, 1e8, &send_index); // 68
-			buffer_append_float32(m_send_buffer, pos.px, 1e4, &send_index); // 72
-			buffer_append_float32(m_send_buffer, pos.py, 1e4, &send_index); // 76
-			buffer_append_float32(m_send_buffer, pos.speed, 1e6, &send_index); // 80
-			buffer_append_float32(m_send_buffer, mcval.v_in, 1e6, &send_index); // 84
-			buffer_append_float32(m_send_buffer, mcval.temp_mos1, 1e6, &send_index); // 88
-			m_send_buffer[send_index++] = mcval.fault_code; // 89
-			buffer_append_float32(m_send_buffer, pos.px_gps, 1e4, &send_index); // 93
-			buffer_append_float32(m_send_buffer, pos.py_gps, 1e4, &send_index); // 97
-			buffer_append_float32(m_send_buffer, rp_goal.px, 1e4, &send_index); // 101
-			buffer_append_float32(m_send_buffer, rp_goal.py, 1e4, &send_index); // 105
-			buffer_append_float32(m_send_buffer, autopilot_get_rad_now(), 1e6, &send_index); // 109
+			buffer_append_float32(m_send_buffer, pos.px, 1e4, &send_index); // 56
+			buffer_append_float32(m_send_buffer, pos.py, 1e4, &send_index); // 60
+			buffer_append_float32(m_send_buffer, pos.speed, 1e6, &send_index); // 64
+			buffer_append_float32(m_send_buffer, mcval.v_in, 1e6, &send_index); // 68
+			buffer_append_float32(m_send_buffer, mcval.temp_mos1, 1e6, &send_index); // 72
+			m_send_buffer[send_index++] = mcval.fault_code; // 73
+			buffer_append_float32(m_send_buffer, pos.px_gps, 1e4, &send_index); // 77
+			buffer_append_float32(m_send_buffer, pos.py_gps, 1e4, &send_index); // 81
+			buffer_append_float32(m_send_buffer, rp_goal.px, 1e4, &send_index); // 85
+			buffer_append_float32(m_send_buffer, rp_goal.py, 1e4, &send_index); // 89
+			buffer_append_float32(m_send_buffer, autopilot_get_rad_now(), 1e6, &send_index); // 93
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
 
