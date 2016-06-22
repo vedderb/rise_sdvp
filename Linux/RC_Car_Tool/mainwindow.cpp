@@ -625,34 +625,6 @@ void MainWindow::on_genCircButton_clicked()
     }
 }
 
-void MainWindow::on_simulateNmeaButton_clicked()
-{
-    QString path;
-    path = QFileDialog::getOpenFileName(this, tr("Choose NMEA file."));
-
-    QFile file(path);
-    if (file.exists()) {
-        if (file.open(QIODevice::ReadOnly)) {
-            QTextStream in(&file);
-
-            while (!in.atEnd()) {
-                QString line = in.readLine();
-                if (line.startsWith("$GPGGA")) {
-                    mPacketInterface->sendNmeaRadio(255, line.toLocal8Bit());
-
-                    // Wait
-                    QEventLoop loop;
-                    QTimer timeoutTimer;
-                    timeoutTimer.setSingleShot(true);
-                    timeoutTimer.start(200);
-                    connect(&timeoutTimer, SIGNAL(timeout()), &loop, SLOT(quit()));
-                    loop.exec();
-                }
-            }
-        }
-    }
-}
-
 void MainWindow::on_mapSetAbsYawButton_clicked()
 {
     CarInfo *car = ui->mapWidget->getCarInfo(ui->mapCarBox->value());

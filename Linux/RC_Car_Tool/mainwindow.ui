@@ -389,7 +389,7 @@
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>193</width>
+           <width>300</width>
            <height>78</height>
           </rect>
          </property>
@@ -453,13 +453,6 @@
          </size>
         </property>
        </spacer>
-      </item>
-      <item>
-       <widget class="QPushButton" name="simulateNmeaButton">
-        <property name="text">
-         <string>Simulate NMEA...</string>
-        </property>
-       </widget>
       </item>
       <item>
        <widget class="QGroupBox" name="groupBox_2">

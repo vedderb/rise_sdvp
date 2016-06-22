@@ -71,7 +71,6 @@ private slots:
     void on_mapAntialiasBox_toggled(bool checked);
     void on_carsWidget_tabCloseRequested(int index);
     void on_genCircButton_clicked();
-    void on_simulateNmeaButton_clicked();
     void on_mapSetAbsYawButton_clicked();
     void on_mapAbsYawSlider_valueChanged(int value);
     void on_mapAbsYawSlider_sliderReleased();
