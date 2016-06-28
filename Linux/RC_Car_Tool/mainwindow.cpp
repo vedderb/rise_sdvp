@@ -76,6 +76,8 @@ MainWindow::MainWindow(QWidget *parent) :
     mJsType = JS_TYPE_HK;
 #endif
 
+    mPing = new Ping(this);
+
     mKeyUp = false;
     mKeyDown = false;
     mKeyLeft = false;
@@ -100,6 +102,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->rtcmWidget, SIGNAL(rtcmReceived(QByteArray,int)),
             this, SLOT(rtcmReceived(QByteArray,int)));
     connect(ui->rtcmWidget, SIGNAL(refPosGet()), this, SLOT(rtcmRefPosGet()));
+    connect(mPing, SIGNAL(pingRx(int,QString)), this, SLOT(pingRx(int,QString)));
+    connect(mPing, SIGNAL(pingError(QString,QString)), this, SLOT(pingError(QString,QString)));
 
     on_serialRefreshButton_clicked();
 
@@ -388,6 +392,18 @@ void MainWindow::rtcmRefPosGet()
         QMessageBox::warning(this, "Reference Position",
                              "No samples collected yet.");
     }
+}
+
+void MainWindow::pingRx(int time, QString msg)
+{
+    QString str;
+    str.sprintf("ping response time: %.3f ms", (double)time / 1000.0);
+    QMessageBox::information(this, "Ping " + msg, str);
+}
+
+void MainWindow::pingError(QString msg, QString error)
+{
+    QMessageBox::warning(this, "Error ping " + msg, error);
 }
 
 void MainWindow::on_carAddButton_clicked()
@@ -769,4 +785,9 @@ void MainWindow::on_mapUpdateSpeedButton_clicked()
     }
 
     ui->mapWidget->setRoute(route);
+}
+
+void MainWindow::on_udpPingButton_clicked()
+{
+    mPing->pingHost(ui->udpIpEdit->text(), "UDP Host");
 }

@@ -41,7 +41,8 @@ SOURCES += main.cpp\
     rtcmclient.cpp \
     tcpbroadcast.cpp \
     rtcmwidget.cpp \
-    basestation.cpp
+    basestation.cpp \
+    ping.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
@@ -59,7 +60,8 @@ HEADERS  += mainwindow.h \
     rtcmclient.h \
     tcpbroadcast.h \
     rtcmwidget.h \
-    basestation.h
+    basestation.h \
+    ping.h
 
 FORMS    += mainwindow.ui \
     carinterface.ui \

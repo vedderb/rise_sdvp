@@ -25,6 +25,7 @@
 #include <QLabel>
 #include "carinterface.h"
 #include "packetinterface.h"
+#include "ping.h"
 
 #ifdef HAS_JOYSTICK
 #include "joystick.h"
@@ -54,6 +55,8 @@ private slots:
     void ackReceived(quint8 id, CMD_PACKET cmd, QString msg);
     void rtcmReceived(QByteArray data, int type);
     void rtcmRefPosGet();
+    void pingRx(int time, QString msg);
+    void pingError(QString msg, QString error);
 
     void on_carAddButton_clicked();
     void on_carRemoveButton_clicked();
@@ -80,6 +83,7 @@ private slots:
     void on_mapKbButton_clicked();
     void on_mapOffButton_clicked();
     void on_mapUpdateSpeedButton_clicked();
+    void on_udpPingButton_clicked();
 
 private:
     Ui::MainWindow *ui;
@@ -95,6 +99,7 @@ private:
     bool mKeyLeft;
     double mThrottle;
     double mSteering;
+    Ping *mPing;
 
 #ifdef HAS_JOYSTICK
     Joystick *mJoystick;
