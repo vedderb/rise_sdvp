@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>938</width>
-    <height>763</height>
+    <width>1048</width>
+    <height>658</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -328,6 +328,16 @@
        <layout class="QVBoxLayout" name="verticalLayout_6">
         <item>
          <widget class="BaseStation" name="baseStationWidget" native="true"/>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tab_5">
+       <attribute name="title">
+        <string>NetworkLogger</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <item>
+         <widget class="NetworkLogger" name="networkLoggerWidget" native="true"/>
         </item>
        </layout>
       </widget>
@@ -681,7 +691,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>938</width>
+     <width>1048</width>
      <height>25</height>
     </rect>
    </property>
@@ -706,6 +716,12 @@
    <class>BaseStation</class>
    <extends>QWidget</extends>
    <header>basestation.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>NetworkLogger</class>
+   <extends>QWidget</extends>
+   <header>networklogger.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

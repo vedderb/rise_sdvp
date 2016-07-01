@@ -21,6 +21,7 @@
 #include <QWidget>
 #include <QTimer>
 #include "rtcmclient.h"
+#include <tcpbroadcast.h>
 
 namespace Ui {
 class RtcmWidget;
@@ -52,11 +53,13 @@ private slots:
     void on_rtcmSerialDisconnectButton_clicked();
     void on_rtcmSerialConnectButton_clicked();
     void on_refGetButton_clicked();
+    void on_tcpServerBox_toggled(bool checked);
 
 private:
     Ui::RtcmWidget *ui;
     RtcmClient *mRtcm;
     QTimer *mTimer;
+    TcpBroadcast *mTcpServer;
 };
 
 #endif // RTCMWIDGET_H

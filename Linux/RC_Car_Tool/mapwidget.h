@@ -59,6 +59,8 @@ public:
     void setRoute(QList<LocPoint> route);
     void clearRoute();
     void setRoutePointSpeed(double speed);
+    void addInfoPoint(LocPoint &info);
+    void clearInfoTrace();
     void addPerspectivePixmap(PerspectivePixmap map);
     void clearPerspectivePixmaps();
     QPoint getMousePosRelative();
@@ -87,6 +89,7 @@ private:
     QList<LocPoint> mCarTrace;
     QList<LocPoint> mCarTraceGps;
     QList<LocPoint> mRoute;
+    QList<LocPoint> mInfoTrace;
     QList<PerspectivePixmap> mPerspectivePixmaps;
     double mRoutePointSpeed;
     double mScaleFactor;

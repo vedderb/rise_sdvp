@@ -19,6 +19,7 @@
 #define LOCPOINT_H
 
 #include <QPointF>
+#include <QString>
 
 class LocPoint
 {
@@ -35,6 +36,7 @@ public:
     QPointF getPointMm() const;
     double getRadius() const;
     double getSigma() const;
+    QString getInfo() const;
 
     void setX(double x);
     void setY(double y);
@@ -45,6 +47,7 @@ public:
     void setRadius(double radius);
     void setSigma(double sigma);
     double getDistanceTo(const LocPoint &point);
+    void setInfo(const QString &info);
 
     // Operators
     LocPoint& operator=(const LocPoint& point);
@@ -58,6 +61,8 @@ private:
     double mSpeed;
     double mRadius;
     double mSigma;
+    QString mInfo;
+
 };
 
 #endif // LOCPOINT_H

@@ -10,7 +10,8 @@ class Ping : public QThread
     Q_OBJECT
 public:
     Ping(QObject *parent);
-    bool pingHost(QString host, QString msg = "");
+    ~Ping();
+    bool pingHost(QString host, int len = 64, QString msg = "");
 
 signals:
     void pingRx(int us, QString msg);
@@ -27,6 +28,11 @@ private:
 
     QString mMsg;
     QString mHost;
+    int mLen;
+
+    int mSocket;
+    u_char *mPacket;
+    u_char *mOutpack;
 
 };
 

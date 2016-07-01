@@ -85,6 +85,11 @@ void LocPoint::setXY(double x, double y)
     mY = y;
 }
 
+QString LocPoint::getInfo() const
+{
+    return mInfo;
+}
+
 LocPoint &LocPoint::operator =(const LocPoint &point)
 {
     mX = point.mX;
@@ -93,6 +98,7 @@ LocPoint &LocPoint::operator =(const LocPoint &point)
     mSpeed = point.mSpeed;
     mRadius = point.mRadius;
     mSigma = point.mSigma;
+    mInfo = point.mInfo;
     return *this;
 }
 
@@ -103,7 +109,8 @@ bool LocPoint::operator ==(const LocPoint &point)
             mAlpha == point.mAlpha &&
             mSpeed == point.mSpeed &&
             mRadius == point.mRadius &&
-            mSigma == point.mSigma) {
+            mSigma == point.mSigma &&
+            mInfo == point.mInfo) {
         return true;
     } else {
         return false;
@@ -113,6 +120,11 @@ bool LocPoint::operator ==(const LocPoint &point)
 bool LocPoint::operator !=(const LocPoint &point)
 {
     return !(operator==(point));
+}
+
+void LocPoint::setInfo(const QString &info)
+{
+    mInfo = info;
 }
 
 void LocPoint::setAlpha(double alpha)

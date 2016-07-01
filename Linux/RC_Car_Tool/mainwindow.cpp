@@ -789,5 +789,5 @@ void MainWindow::on_mapUpdateSpeedButton_clicked()
 
 void MainWindow::on_udpPingButton_clicked()
 {
-    mPing->pingHost(ui->udpIpEdit->text(), "UDP Host");
+    mPing->pingHost(ui->udpIpEdit->text(), 64, "UDP Host");
 }

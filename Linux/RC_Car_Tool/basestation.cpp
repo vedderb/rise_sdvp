@@ -84,8 +84,8 @@ void BaseStation::tcpInputDataAvailable()
         if (NmeaServer::decodeNmeaGGA(data, gga) >= 0) {
             mSatNowStr.sprintf("Satellites: %d", gga.n_sat);
 
-            qDebug() << data;
-            qDebug() << QString().sprintf("%.9f", gga.lat);
+            //qDebug() << data;
+            //qDebug() << QString().sprintf("%.9f", gga.lat);
 
             switch (gga.fix_type) {
             case 0: mFixNowStr = "Solution: Invalid"; break;
@@ -96,14 +96,14 @@ void BaseStation::tcpInputDataAvailable()
             case 5: mFixNowStr = "Solution: RTK Float"; break;
             default: mFixNowStr = "Solution: Unknown"; break;
             }
-        }
 
-        if (gga.fix_type == 1 || gga.fix_type == 2 || gga.fix_type == 4 || gga.fix_type == 5) {
-            utility::llhToXyz(gga.lat, gga.lon, gga.height, &mXNow, &mYNow, &mZNow);
-            mXAvg += mXNow;
-            mYAvg += mYNow;
-            mZAvg += mZNow;
-            mAvgSamples += 1.0;
+            if (gga.fix_type == 1 || gga.fix_type == 2 || gga.fix_type == 4 || gga.fix_type == 5) {
+                utility::llhToXyz(gga.lat, gga.lon, gga.height, &mXNow, &mYNow, &mZNow);
+                mXAvg += mXNow;
+                mYAvg += mYNow;
+                mZAvg += mZNow;
+                mAvgSamples += 1.0;
+            }
         }
 
         updateNmeaText();

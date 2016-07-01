@@ -18,6 +18,7 @@
 #include "rtcmwidget.h"
 #include "ui_rtcmwidget.h"
 #include <QSerialPortInfo>
+#include <QMessageBox>
 
 RtcmWidget::RtcmWidget(QWidget *parent) :
     QWidget(parent),
@@ -27,6 +28,7 @@ RtcmWidget::RtcmWidget(QWidget *parent) :
     mRtcm = new RtcmClient(this);
     mTimer = new QTimer(this);
     mTimer->start(20);
+    mTcpServer = new TcpBroadcast(this);
 
     connect(mRtcm, SIGNAL(rtcmReceived(QByteArray,int)),
             this, SLOT(rtcmRx(QByteArray,int)));
@@ -88,12 +90,14 @@ void RtcmWidget::timerSlot()
         cnt++;
         if (cnt >= (5000 / mTimer->interval())) {
             cnt = 0;
-            emit rtcmReceived(RtcmClient::encodeBasePos(
-                                  ui->refSendLatBox->value(),
-                                  ui->refSendLonBox->value(),
-                                  ui->refSendHBox->value(),
-                                  ui->refSendAntHBox->value()),
-                              1006);
+            QByteArray data = RtcmClient::encodeBasePos(
+                        ui->refSendLatBox->value(),
+                        ui->refSendLonBox->value(),
+                        ui->refSendHBox->value(),
+                        ui->refSendAntHBox->value());
+
+            emit rtcmReceived(data, 1006);
+            mTcpServer->broadcastData(data);
         }
     }
 }
@@ -122,6 +126,7 @@ void RtcmWidget::rtcmRx(QByteArray data, int type)
 
     if (!ui->sendRefPosBox->isChecked() || (type != 1006 && type != 1007)) {
         emit rtcmReceived(data, type);
+        mTcpServer->broadcastData(data);
     }
 }
 
@@ -218,4 +223,18 @@ void RtcmWidget::on_rtcmSerialConnectButton_clicked()
 void RtcmWidget::on_refGetButton_clicked()
 {
     emit refPosGet();
+}
+
+void RtcmWidget::on_tcpServerBox_toggled(bool checked)
+{
+    if (checked) {
+        if (!mTcpServer->startTcpServer(ui->tcpServerPortBox->value())) {
+            QMessageBox::warning(this, "TCP Server Error",
+                                 "Creating TCP server for RTCM data failed. Make sure that the port is not "
+                                 "already in use.");
+            ui->tcpServerBox->setChecked(false);
+        }
+    } else {
+        mTcpServer->stopServer();
+    }
 }

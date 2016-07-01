@@ -147,12 +147,24 @@ void MapWidget::setRoute(QList<LocPoint> route)
 void MapWidget::clearRoute()
 {
     mRoute.clear();
-    repaintAfterEvents();
+    update();
 }
 
 void MapWidget::setRoutePointSpeed(double speed)
 {
     mRoutePointSpeed = speed;
+}
+
+void MapWidget::addInfoPoint(LocPoint &info)
+{
+    mInfoTrace.append(info);
+    update();
+}
+
+void MapWidget::clearInfoTrace()
+{
+    mInfoTrace.clear();
+    update();
 }
 
 void MapWidget::addPerspectivePixmap(PerspectivePixmap map)
@@ -414,6 +426,37 @@ void MapWidget::paintEvent(QPaintEvent *event)
                     mCarTraceGps.append(carInfo.getLocationGps());
                 }
             }
+        }
+    }
+
+    // Draw info trace
+    pen.setWidthF(3.0 / mScaleFactor);
+    pen.setColor(Qt::darkGreen);
+    painter.setPen(pen);
+    painter.setBrush(Qt::green);
+    painter.setTransform(drawTrans);
+    for (int i = 1;i < mInfoTrace.size();i++) {
+        painter.drawLine(mInfoTrace[i - 1].getX() * 1000.0, mInfoTrace[i - 1].getY() * 1000.0,
+                mInfoTrace[i].getX() * 1000.0, mInfoTrace[i].getY() * 1000.0);
+    }
+    for (int i = 0;i < mInfoTrace.size();i++) {
+        QPointF p = mInfoTrace[i].getPointMm();
+        painter.setTransform(drawTrans);
+        pen.setColor(Qt::darkGreen);
+        painter.setPen(pen);
+        painter.drawEllipse(p, 5 / mScaleFactor, 5 / mScaleFactor);
+
+        if (mScaleFactor > 0.5) {
+            pt_txt.setX(p.x() + 5 / mScaleFactor);
+            pt_txt.setY(p.y());
+            painter.setTransform(txtTrans);
+            pt_txt = drawTrans.map(pt_txt);
+            pen.setColor(Qt::black);
+            painter.setPen(pen);
+            painter.setFont(QFont("monospace"));
+            rect_txt.setCoords(pt_txt.x(), pt_txt.y() - 20,
+                               pt_txt.x() + 500, pt_txt.y() + 500);
+            painter.drawText(rect_txt, Qt::AlignTop | Qt::AlignLeft, mInfoTrace[i].getInfo());
         }
     }
 

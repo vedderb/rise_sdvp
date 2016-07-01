@@ -89,8 +89,6 @@ void TcpBroadcast::logStop()
     if (mLog.isOpen()) {
         qDebug() << "Closing log:" << mLog.fileName();
         mLog.close();
-    } else {
-        qDebug() << "TCP log not open";
     }
 }
 

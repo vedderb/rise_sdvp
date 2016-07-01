@@ -24,34 +24,53 @@
 
 Ping::Ping(QObject *parent) : QThread(parent)
 {
-
+    mSocket = -1;
+    mPacket = new u_char[120000];
+    mOutpack = new u_char[120000];
 }
 
-bool Ping::pingHost(QString host, QString msg)
+Ping::~Ping()
+{
+    this->wait();
+
+    if (mSocket >= 0) {
+        close(mSocket);
+    }
+
+    delete mPacket;
+    delete mOutpack;
+}
+
+bool Ping::pingHost(QString host, int len, QString msg)
 {
     if (this->isRunning()) {
         emit pingError(msg, "Ping already in progress");
         return false;
     } else {
+        if (len < ICMP_MINLEN || len > 65536 - 60) {
+            emit pingError(msg, "Invalid length");
+            return false;
+        }
+
         mHost = host;
         mMsg = msg;
+        mLen = len;
         this->start();
         return true;
     }
 }
 
 // From http://www.linuxforums.org/forum/linux-networking/60389-implementing-ping-c.html#post382967
-#define	DEFDATALEN	(64-ICMP_MINLEN)	/* default data length */
 #define	MAXIPLEN	60
 #define	MAXICMPLEN	76
 #define	MAXPACKET	(65536 - 60 - ICMP_MINLEN)/* max packet size */
 
 void Ping::run()
 {
-    int s, i, cc, packlen, datalen = DEFDATALEN;
+    int i, cc, packlen;
+    int datalen = mLen - ICMP_MINLEN;
     struct hostent *hp;
     struct sockaddr_in to, from;
-    u_char *packet, outpack[MAXPACKET];
     char hnamebuf[MAXHOSTNAMELEN];
     QString hostname;
     struct icmp *icp;
@@ -86,19 +105,17 @@ void Ping::run()
     }
 
     packlen = datalen + MAXIPLEN + MAXICMPLEN;
-    if ((packet = (u_char *)malloc((u_int)packlen)) == NULL) {
-        emit pingError(mMsg, "malloc error");
-        return;
+
+    if (mSocket < 0) {
+        if ( (mSocket = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)) < 0) {
+            char const *res = strerror_r(errno, errbuf, errbufl);
+            QString error = "socket: " + QString::fromLocal8Bit(res);
+            emit pingError(mMsg, error);
+            return;
+        }
     }
 
-    if ( (s = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)) < 0) {
-        char const *res = strerror_r(errno, errbuf, errbufl);
-        QString error = "socket: " + QString::fromLocal8Bit(res);
-        emit pingError(mMsg, error);
-        return;
-    }
-
-    icp = (struct icmp *)outpack;
+    icp = (struct icmp *)mOutpack;
     icp->icmp_type = ICMP_ECHO;
     icp->icmp_code = 0;
     icp->icmp_cksum = 0;
@@ -110,7 +127,7 @@ void Ping::run()
 
     gettimeofday(&start, NULL);
 
-    i = sendto(s, (char *)outpack, cc, 0, (struct sockaddr*)&to, (socklen_t)sizeof(struct sockaddr_in));
+    i = sendto(mSocket, (char *)mOutpack, cc, 0, (struct sockaddr*)&to, (socklen_t)sizeof(struct sockaddr_in));
     if (i < 0 || i != cc) {
         if (i < 0) {
             char const *res = strerror_r(errno, errbuf, errbufl);
@@ -122,13 +139,13 @@ void Ping::run()
 
     // Watch stdin (fd 0) to see when it has input.
     FD_ZERO(&rfds);
-    FD_SET(s, &rfds);
+    FD_SET(mSocket, &rfds);
     // Wait up to one seconds.
     tv.tv_sec = 1;
     tv.tv_usec = 0;
 
     while(cont) {
-        retval = select(s+1, &rfds, NULL, NULL, &tv);
+        retval = select(mSocket+1, &rfds, NULL, NULL, &tv);
         if (retval == -1) {
             char const *res = strerror_r(errno, errbuf, errbufl);
             QString error = "select(): " + QString::fromLocal8Bit(res);
@@ -136,7 +153,7 @@ void Ping::run()
             return;
         } else if (retval) {
             fromlen = sizeof(sockaddr_in);
-            if ( (ret = recvfrom(s, (char *)packet, packlen, 0,(struct sockaddr *)&from, (socklen_t*)&fromlen)) < 0) {
+            if ( (ret = recvfrom(mSocket, (char *)mPacket, packlen, 0,(struct sockaddr *)&from, (socklen_t*)&fromlen)) < 0) {
                 char const *res = strerror_r(errno, errbuf, errbufl);
                 QString error = "recvfrom error: " + QString::fromLocal8Bit(res);
                 emit pingError(mMsg, error);
@@ -152,7 +169,7 @@ void Ping::run()
             }
 
             // Now the ICMP part
-            icp = (struct icmp *)(packet + hlen);
+            icp = (struct icmp *)(mPacket + hlen);
             if (icp->icmp_type == ICMP_ECHOREPLY) {
                 if (icp->icmp_seq != 12345) {
                     continue;

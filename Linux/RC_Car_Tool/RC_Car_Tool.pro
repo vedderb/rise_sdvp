@@ -42,7 +42,8 @@ SOURCES += main.cpp\
     tcpbroadcast.cpp \
     rtcmwidget.cpp \
     basestation.cpp \
-    ping.cpp
+    ping.cpp \
+    networklogger.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
@@ -61,12 +62,14 @@ HEADERS  += mainwindow.h \
     tcpbroadcast.h \
     rtcmwidget.h \
     basestation.h \
-    ping.h
+    ping.h \
+    networklogger.h
 
 FORMS    += mainwindow.ui \
     carinterface.ui \
     rtcmwidget.ui \
-    basestation.ui
+    basestation.ui \
+    networklogger.ui
 
 contains(DEFINES, HAS_JOYSTICK) {
     SOURCES += joystick.cpp
