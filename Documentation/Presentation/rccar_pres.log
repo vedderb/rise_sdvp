@@ -1,4 +1,4 @@
-This is LuaTeX, Version beta-0.76.0-2013121407 (rev 4627)  (format=lualatex 2015.4.1)  25 APR 2016 00:22
+This is LuaTeX, Version beta-0.76.0-2013121407 (rev 4627)  (format=lualatex 2015.3.23)  5 JUL 2016 15:35
  restricted \write18 enabled.
 **rccar_pres.tex
 (./rccar_pres.tex
@@ -741,20 +741,20 @@ Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
 (hyperref)                removing `\\' on input line 19.
 
 (./rccar_pres.aux)
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 22.
-LaTeX Font Info:    ... okay on input line 22.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 22.
-LaTeX Font Info:    ... okay on input line 22.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 22.
-LaTeX Font Info:    ... okay on input line 22.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 22.
-LaTeX Font Info:    ... okay on input line 22.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 22.
-LaTeX Font Info:    ... okay on input line 22.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 22.
-LaTeX Font Info:    ... okay on input line 22.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 22.
-LaTeX Font Info:    ... okay on input line 22.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
@@ -820,7 +820,7 @@ File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Live
 ))
 ABD: EveryShipout initializing macros
 \AtBeginShipoutBox=\box57
-Package hyperref Info: Link coloring OFF on input line 22.
+Package hyperref Info: Link coloring OFF on input line 23.
 
 (/usr/share/texlive/texmf-dist/tex/latex/hyperref/nameref.sty
 Package: nameref 2012/10/27 v2.43 Cross-referencing by name of section
@@ -830,9 +830,9 @@ Package: gettitlestring 2010/12/03 v1.4 Cleanup title references (HO)
 )
 \c@section@level=\count168
 )
-LaTeX Info: Redefining \ref on input line 22.
-LaTeX Info: Redefining \pageref on input line 22.
-LaTeX Info: Redefining \nameref on input line 22.
+LaTeX Info: Redefining \ref on input line 23.
+LaTeX Info: Redefining \pageref on input line 23.
+LaTeX Info: Redefining \nameref on input line 23.
 
 (./rccar_pres.out) (./rccar_pres.out
 LuaTeX warning (Object streams): \pdfobjcompresslevel > 0 requires \pdfminorvers
@@ -840,47 +840,47 @@ ion > 4. Object streams disabled now.
 )
 \@outlinefile=\write5
 LaTeX Font Info:    Overwriting symbol font `operators' in version `normal'
-(Font)                  OT1/cmr/m/n --> OT1/cmss/m/n on input line 22.
+(Font)                  OT1/cmr/m/n --> OT1/cmss/m/n on input line 23.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `bold'
-(Font)                  OT1/cmr/bx/n --> OT1/cmss/bx/n on input line 22.
+(Font)                  OT1/cmr/bx/n --> OT1/cmss/bx/n on input line 23.
 \symnumbers=\mathgroup6
 \sympureletters=\mathgroup7
 LaTeX Font Info:    Overwriting math alphabet `\mathrm' in version `normal'
-(Font)                  OT1/cmss/m/n --> T1/cmr/m/n on input line 22.
-LaTeX Font Info:    Redeclaring math alphabet \mathbf on input line 22.
+(Font)                  OT1/cmss/m/n --> T1/cmr/m/n on input line 23.
+LaTeX Font Info:    Redeclaring math alphabet \mathbf on input line 23.
 LaTeX Font Info:    Overwriting math alphabet `\mathbf' in version `normal'
-(Font)                  OT1/cmr/bx/n --> T1/cmss/bx/n on input line 22.
+(Font)                  OT1/cmr/bx/n --> T1/cmss/bx/n on input line 23.
 LaTeX Font Info:    Overwriting math alphabet `\mathbf' in version `bold'
-(Font)                  OT1/cmr/bx/n --> T1/cmss/bx/n on input line 22.
-LaTeX Font Info:    Redeclaring math alphabet \mathsf on input line 22.
+(Font)                  OT1/cmr/bx/n --> T1/cmss/bx/n on input line 23.
+LaTeX Font Info:    Redeclaring math alphabet \mathsf on input line 23.
 LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `normal'
-(Font)                  OT1/cmss/m/n --> T1/cmss/m/n on input line 22.
+(Font)                  OT1/cmss/m/n --> T1/cmss/m/n on input line 23.
 LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `bold'
-(Font)                  OT1/cmss/bx/n --> T1/cmss/m/n on input line 22.
-LaTeX Font Info:    Redeclaring math alphabet \mathit on input line 22.
+(Font)                  OT1/cmss/bx/n --> T1/cmss/m/n on input line 23.
+LaTeX Font Info:    Redeclaring math alphabet \mathit on input line 23.
 LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `normal'
-(Font)                  OT1/cmr/m/it --> T1/cmss/m/it on input line 22.
+(Font)                  OT1/cmr/m/it --> T1/cmss/m/it on input line 23.
 LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `bold'
-(Font)                  OT1/cmr/bx/it --> T1/cmss/m/it on input line 22.
-LaTeX Font Info:    Redeclaring math alphabet \mathtt on input line 22.
+(Font)                  OT1/cmr/bx/it --> T1/cmss/m/it on input line 23.
+LaTeX Font Info:    Redeclaring math alphabet \mathtt on input line 23.
 LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `normal'
-(Font)                  OT1/cmtt/m/n --> T1/cmtt/m/n on input line 22.
+(Font)                  OT1/cmtt/m/n --> T1/cmtt/m/n on input line 23.
 LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `bold'
-(Font)                  OT1/cmtt/m/n --> T1/cmtt/m/n on input line 22.
+(Font)                  OT1/cmtt/m/n --> T1/cmtt/m/n on input line 23.
 LaTeX Font Info:    Overwriting symbol font `numbers' in version `bold'
-(Font)                  T1/cmss/m/n --> T1/cmss/bx/n on input line 22.
+(Font)                  T1/cmss/m/n --> T1/cmss/bx/n on input line 23.
 LaTeX Font Info:    Overwriting symbol font `pureletters' in version `bold'
-(Font)                  T1/cmss/m/it --> T1/cmss/bx/it on input line 22.
+(Font)                  T1/cmss/m/it --> T1/cmss/bx/it on input line 23.
 LaTeX Font Info:    Overwriting math alphabet `\mathrm' in version `bold'
-(Font)                  OT1/cmss/bx/n --> T1/cmr/bx/n on input line 22.
+(Font)                  OT1/cmss/bx/n --> T1/cmr/bx/n on input line 23.
 LaTeX Font Info:    Overwriting math alphabet `\mathbf' in version `bold'
-(Font)                  T1/cmss/bx/n --> T1/cmss/bx/n on input line 22.
+(Font)                  T1/cmss/bx/n --> T1/cmss/bx/n on input line 23.
 LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `bold'
-(Font)                  T1/cmss/m/n --> T1/cmss/bx/n on input line 22.
+(Font)                  T1/cmss/m/n --> T1/cmss/bx/n on input line 23.
 LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `bold'
-(Font)                  T1/cmss/m/it --> T1/cmss/bx/it on input line 22.
+(Font)                  T1/cmss/m/it --> T1/cmss/bx/it on input line 23.
 LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `bold'
-(Font)                  T1/cmtt/m/n --> T1/cmtt/bx/n on input line 22.
+(Font)                  T1/cmtt/m/n --> T1/cmtt/bx/n on input line 23.
 
 (/usr/share/texmf/tex/latex/beamer/base/translator/dicts/translator-basic-dicti
 onary/translator-basic-dictionary-English.dict
@@ -906,37 +906,37 @@ Dictionary: translator-numbers-dictionary, Language: English
 tionary/translator-theorem-dictionary-English.dict
 Dictionary: translator-theorem-dictionary, Language: English 
 )
-LaTeX Info: Redefining \includegraphics on input line 22.
+LaTeX Info: Redefining \includegraphics on input line 23.
  (./rccar_pres.nav)
 <Figures/theme/front_en_el.pdf, id=16, 722.7pt x 406.51875pt>
 File: Figures/theme/front_en_el.pdf Graphic file (type pdf)
 
 <use Figures/theme/front_en_el.pdf>
-Package pdftex.def Info: Figures/theme/front_en_el.pdf used on input line 24.
+Package pdftex.def Info: Figures/theme/front_en_el.pdf used on input line 25.
 (pdftex.def)             Requested size: 455.24408pt x 256.07715pt.
 
 <Figures/theme/slide_en.pdf, id=17, 722.7pt x 406.51875pt>
 File: Figures/theme/slide_en.pdf Graphic file (type pdf)
 
 <use Figures/theme/slide_en.pdf>
-Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 24.
+Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 25.
 (pdftex.def)             Requested size: 455.24408pt x 256.07715pt.
  [1
 
  <./Figures/theme/slide_en.pdf> <./Figures/theme/front_en_el.pdf>]
-LaTeX Font Info:    Try loading font information for T1+cmtt on input line 25.
+LaTeX Font Info:    Try loading font information for T1+cmtt on input line 26.
  (/usr/share/texlive/texmf-dist/tex/latex/base/t1cmtt.fd
 File: t1cmtt.fd 1999/05/25 v2.5h Standard LaTeX font definitions
 )
 File: Figures/theme/slide_en.pdf Graphic file (type pdf)
 
 <use Figures/theme/slide_en.pdf>
-Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 25.
+Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 26.
 (pdftex.def)             Requested size: 455.24408pt x 256.07715pt.
 
 
 LaTeX Font Warning: Font shape `T1/cmss/m/n' in size <4> not available
-(Font)              size <5> substituted on input line 25.
+(Font)              size <5> substituted on input line 26.
 
 [2{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}
 
@@ -944,22 +944,22 @@ LaTeX Font Warning: Font shape `T1/cmss/m/n' in size <4> not available
 <Figures/car_2.jpg, id=63, 5184.36874pt x 2400.97pt>
 File: Figures/car_2.jpg Graphic file (type jpg)
  <use Figures/car_2.jpg>
-Package pdftex.def Info: Figures/car_2.jpg used on input line 43.
+Package pdftex.def Info: Figures/car_2.jpg used on input line 44.
 (pdftex.def)             Requested size: 341.43306pt x 158.12013pt.
 File: Figures/theme/slide_en.pdf Graphic file (type pdf)
 
 <use Figures/theme/slide_en.pdf>
-Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 43.
+Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 44.
 (pdftex.def)             Requested size: 455.24408pt x 256.07715pt.
  [3
 
  <./Figures/car_2.jpg>]
-LaTeX Font Info:    Try loading font information for U+msa on input line 71.
+LaTeX Font Info:    Try loading font information for U+msa on input line 72.
 
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Try loading font information for U+msb on input line 71.
+LaTeX Font Info:    Try loading font information for U+msb on input line 72.
 
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
@@ -967,11 +967,11 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 File: Figures/car_2.jpg Graphic file (type jpg)
 
 <use Figures/car_2.jpg>
-Package pdftex.def Info: Figures/car_2.jpg used on input line 71.
+Package pdftex.def Info: Figures/car_2.jpg used on input line 72.
 (pdftex.def)             Requested size: 170.71652pt x 79.06006pt.
 File: Figures/theme/slide_en.pdf Graphic file (type pdf)
  <use Figures/theme/slide_en.pdf>
-Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 71.
+Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 72.
 (pdftex.def)             Requested size: 455.24408pt x 256.07715pt.
  [4
 
@@ -980,18 +980,18 @@ Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 71.
 File: Figures/viking_dyn_spp.png Graphic file (type png)
 
 <use Figures/viking_dyn_spp.png>
-Package pdftex.def Info: Figures/viking_dyn_spp.png used on input line 90.
+Package pdftex.def Info: Figures/viking_dyn_spp.png used on input line 91.
 (pdftex.def)             Requested size: 184.9429pt x 137.45796pt.
 
 <Figures/viking_dyn_rtk.png, id=77, 1192.455pt x 886.31125pt>
 File: Figures/viking_dyn_rtk.png Graphic file (type png)
 
 <use Figures/viking_dyn_rtk.png>
-Package pdftex.def Info: Figures/viking_dyn_rtk.png used on input line 90.
+Package pdftex.def Info: Figures/viking_dyn_rtk.png used on input line 91.
 (pdftex.def)             Requested size: 184.9429pt x 137.45796pt.
 File: Figures/theme/slide_en.pdf Graphic file (type pdf)
  <use Figures/theme/slide_en.pdf>
-Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 90.
+Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 91.
 (pdftex.def)             Requested size: 455.24408pt x 256.07715pt.
  [5
 
@@ -1000,187 +1000,220 @@ Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 90.
 File: Figures/block_diagram.pdf Graphic file (type pdf)
 
 <use Figures/block_diagram.pdf>
-Package pdftex.def Info: Figures/block_diagram.pdf used on input line 98.
+Package pdftex.def Info: Figures/block_diagram.pdf used on input line 99.
 (pdftex.def)             Requested size: 341.43306pt x 160.69052pt.
 File: Figures/theme/slide_en.pdf Graphic file (type pdf)
  <use Figures/theme/slide_en.pdf>
-Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 98.
+Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 99.
 (pdftex.def)             Requested size: 455.24408pt x 256.07715pt.
  [6
 
- <./Figures/block_diagram.pdf>] <Figures/VESC_3D.png, id=106, 1354.05875pt x 82
-2.07124pt>
-File: Figures/VESC_3D.png Graphic file (type png)
+ <./Figures/block_diagram.pdf>]
+<Figures/car_overview.png, id=106, 1006.76125pt x 480.79625pt>
+File: Figures/car_overview.png Graphic file (type png)
 
-<use Figures/VESC_3D.png>
-Package pdftex.def Info: Figures/VESC_3D.png used on input line 121.
-(pdftex.def)             Requested size: 156.49014pt x 95.00659pt.
-
-<Figures/VESC_Layout.png, id=107, 1579.9025pt x 902.37125pt>
-File: Figures/VESC_Layout.png Graphic file (type png)
-
-<use Figures/VESC_Layout.png>
-Package pdftex.def Info: Figures/VESC_Layout.png used on input line 121.
-(pdftex.def)             Requested size: 156.49014pt x 89.37495pt.
+<use Figures/car_overview.png>
+Package pdftex.def Info: Figures/car_overview.png used on input line 107.
+(pdftex.def)             Requested size: 341.43306pt x 163.05771pt.
 File: Figures/theme/slide_en.pdf Graphic file (type pdf)
  <use Figures/theme/slide_en.pdf>
-Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 121.
+Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 107.
 (pdftex.def)             Requested size: 455.24408pt x 256.07715pt.
  [7
 
- <./Figures/VESC_3D.png> <./Figures/VESC_Layout.png>]
-<Figures/controller_front.png, id=113, 1859.94875pt x 1095.09125pt>
-File: Figures/controller_front.png Graphic file (type png)
+ <./Figures/car_overview.png>] <Figures/VESC_6.png, id=112, 998.73125pt x 965.6
+075pt>
+File: Figures/VESC_6.png Graphic file (type png)
 
-<use Figures/controller_front.png>
-Package pdftex.def Info: Figures/controller_front.png used on input line 129.
-(pdftex.def)             Requested size: 284.52756pt x 167.51498pt.
+<use Figures/VESC_6.png>
+Package pdftex.def Info: Figures/VESC_6.png used on input line 134.
+(pdftex.def)             Requested size: 117.70906pt x 113.81102pt.
+
+<Figures/VESC_6_F.png, id=113, 1098.1025pt x 1066.98625pt>
+File: Figures/VESC_6_F.png Graphic file (type png)
+
+<use Figures/VESC_6_F.png>
+Package pdftex.def Info: Figures/VESC_6_F.png used on input line 134.
+(pdftex.def)             Requested size: 117.12215pt x 113.81102pt.
+
+<Figures/VESC_6_B.png, id=114, 1098.1025pt x 1066.98625pt>
+File: Figures/VESC_6_B.png Graphic file (type png)
+
+<use Figures/VESC_6_B.png>
+Package pdftex.def Info: Figures/VESC_6_B.png used on input line 134.
+(pdftex.def)             Requested size: 117.12215pt x 113.81102pt.
 File: Figures/theme/slide_en.pdf Graphic file (type pdf)
  <use Figures/theme/slide_en.pdf>
-Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 129.
+Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 134.
 (pdftex.def)             Requested size: 455.24408pt x 256.07715pt.
  [8
 
- <./Figures/controller_front.png>]
-<Figures/controller_back.png, id=120, 1859.94875pt x 1095.09125pt>
-File: Figures/controller_back.png Graphic file (type png)
+ <./Figures/VESC_6.png> <./Figures/VESC_6_F.png> <./Figures/VESC_6_B.png>]
+<Figures/BLDC_Tool_FOC.png, id=122, 1300.86pt x 820.06375pt>
+File: Figures/BLDC_Tool_FOC.png Graphic file (type png)
 
-<use Figures/controller_back.png>
-Package pdftex.def Info: Figures/controller_back.png used on input line 137.
-(pdftex.def)             Requested size: 284.52756pt x 167.51498pt.
+<use Figures/BLDC_Tool_FOC.png>
+Package pdftex.def Info: Figures/BLDC_Tool_FOC.png used on input line 142.
+(pdftex.def)             Requested size: 293.37561pt x 184.9429pt.
 File: Figures/theme/slide_en.pdf Graphic file (type pdf)
  <use Figures/theme/slide_en.pdf>
-Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 137.
+Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 142.
 (pdftex.def)             Requested size: 455.24408pt x 256.07715pt.
  [9
 
- <./Figures/controller_back.png>]
-<Figures/GUI/car_orientation.png, id=127, 1579.9025pt x 910.40125pt>
-File: Figures/GUI/car_orientation.png Graphic file (type png)
+ <./Figures/BLDC_Tool_FOC.png>]
+<Figures/controller_front.png, id=129, 1859.94875pt x 1095.09125pt>
+File: Figures/controller_front.png Graphic file (type png)
 
-<use Figures/GUI/car_orientation.png>
-Package pdftex.def Info: Figures/GUI/car_orientation.png used on input line 145.
-
-(pdftex.def)             Requested size: 312.9803pt x 180.34058pt.
+<use Figures/controller_front.png>
+Package pdftex.def Info: Figures/controller_front.png used on input line 150.
+(pdftex.def)             Requested size: 284.52756pt x 167.51498pt.
 File: Figures/theme/slide_en.pdf Graphic file (type pdf)
  <use Figures/theme/slide_en.pdf>
-Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 145.
+Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 150.
 (pdftex.def)             Requested size: 455.24408pt x 256.07715pt.
  [10
 
- <./Figures/GUI/car_orientation.png>]
-<Figures/linux_diagram.pdf, id=134, 531.63622pt x 318.86627pt>
-File: Figures/linux_diagram.pdf Graphic file (type pdf)
+ <./Figures/controller_front.png>]
+<Figures/controller_back.png, id=136, 1859.94875pt x 1095.09125pt>
+File: Figures/controller_back.png Graphic file (type png)
 
-<use Figures/linux_diagram.pdf>
-Package pdftex.def Info: Figures/linux_diagram.pdf used on input line 153.
-(pdftex.def)             Requested size: 284.52756pt x 170.65744pt.
+<use Figures/controller_back.png>
+Package pdftex.def Info: Figures/controller_back.png used on input line 158.
+(pdftex.def)             Requested size: 284.52756pt x 167.51498pt.
 File: Figures/theme/slide_en.pdf Graphic file (type pdf)
  <use Figures/theme/slide_en.pdf>
-Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 153.
+Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 158.
 (pdftex.def)             Requested size: 455.24408pt x 256.07715pt.
  [11
 
- <./Figures/linux_diagram.pdf>]
-<Figures/GUI/car_imu.png, id=156, 1579.9025pt x 910.40125pt>
-File: Figures/GUI/car_imu.png Graphic file (type png)
+ <./Figures/controller_back.png>]
+<Figures/GUI/car_orientation.png, id=144, 1579.9025pt x 910.40125pt>
+File: Figures/GUI/car_orientation.png Graphic file (type png)
 
-<use Figures/GUI/car_imu.png>
-Package pdftex.def Info: Figures/GUI/car_imu.png used on input line 161.
+<use Figures/GUI/car_orientation.png>
+Package pdftex.def Info: Figures/GUI/car_orientation.png used on input line 166.
+
 (pdftex.def)             Requested size: 312.9803pt x 180.34058pt.
 File: Figures/theme/slide_en.pdf Graphic file (type pdf)
  <use Figures/theme/slide_en.pdf>
-Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 161.
+Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 166.
 (pdftex.def)             Requested size: 455.24408pt x 256.07715pt.
  [12
 
- <./Figures/GUI/car_imu.png>]
-<Figures/GUI/car_terminal.png, id=163, 1579.9025pt x 910.40125pt>
-File: Figures/GUI/car_terminal.png Graphic file (type png)
+ <./Figures/GUI/car_orientation.png>]
+<Figures/linux_diagram.pdf, id=151, 531.63622pt x 318.86627pt>
+File: Figures/linux_diagram.pdf Graphic file (type pdf)
 
-<use Figures/GUI/car_terminal.png>
-Package pdftex.def Info: Figures/GUI/car_terminal.png used on input line 169.
-(pdftex.def)             Requested size: 312.9803pt x 180.34058pt.
+<use Figures/linux_diagram.pdf>
+Package pdftex.def Info: Figures/linux_diagram.pdf used on input line 174.
+(pdftex.def)             Requested size: 284.52756pt x 170.65744pt.
 File: Figures/theme/slide_en.pdf Graphic file (type pdf)
  <use Figures/theme/slide_en.pdf>
-Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 169.
+Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 174.
 (pdftex.def)             Requested size: 455.24408pt x 256.07715pt.
  [13
 
- <./Figures/GUI/car_terminal.png>]
-<Figures/GUI/car_gps.png, id=170, 1579.9025pt x 910.40125pt>
-File: Figures/GUI/car_gps.png Graphic file (type png)
+ <./Figures/linux_diagram.pdf>]
+<Figures/GUI/car_imu.png, id=172, 1579.9025pt x 910.40125pt>
+File: Figures/GUI/car_imu.png Graphic file (type png)
 
-<use Figures/GUI/car_gps.png>
-Package pdftex.def Info: Figures/GUI/car_gps.png used on input line 177.
+<use Figures/GUI/car_imu.png>
+Package pdftex.def Info: Figures/GUI/car_imu.png used on input line 182.
 (pdftex.def)             Requested size: 312.9803pt x 180.34058pt.
 File: Figures/theme/slide_en.pdf Graphic file (type pdf)
  <use Figures/theme/slide_en.pdf>
-Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 177.
+Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 182.
 (pdftex.def)             Requested size: 455.24408pt x 256.07715pt.
  [14
 
- <./Figures/GUI/car_gps.png>]
-<Figures/GUI/car_config.png, id=177, 1579.9025pt x 910.40125pt>
-File: Figures/GUI/car_config.png Graphic file (type png)
+ <./Figures/GUI/car_imu.png>]
+<Figures/GUI/car_terminal.png, id=179, 1579.9025pt x 910.40125pt>
+File: Figures/GUI/car_terminal.png Graphic file (type png)
 
-<use Figures/GUI/car_config.png>
-Package pdftex.def Info: Figures/GUI/car_config.png used on input line 185.
+<use Figures/GUI/car_terminal.png>
+Package pdftex.def Info: Figures/GUI/car_terminal.png used on input line 190.
 (pdftex.def)             Requested size: 312.9803pt x 180.34058pt.
 File: Figures/theme/slide_en.pdf Graphic file (type pdf)
  <use Figures/theme/slide_en.pdf>
-Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 185.
+Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 190.
 (pdftex.def)             Requested size: 455.24408pt x 256.07715pt.
  [15
 
- <./Figures/GUI/car_config.png>]
-<Figures/GUI/car_rtcm.png, id=184, 1579.9025pt x 910.40125pt>
-File: Figures/GUI/car_rtcm.png Graphic file (type png)
+ <./Figures/GUI/car_terminal.png>]
+<Figures/GUI/car_gps.png, id=186, 1579.9025pt x 910.40125pt>
+File: Figures/GUI/car_gps.png Graphic file (type png)
 
-<use Figures/GUI/car_rtcm.png>
-Package pdftex.def Info: Figures/GUI/car_rtcm.png used on input line 193.
+<use Figures/GUI/car_gps.png>
+Package pdftex.def Info: Figures/GUI/car_gps.png used on input line 198.
 (pdftex.def)             Requested size: 312.9803pt x 180.34058pt.
 File: Figures/theme/slide_en.pdf Graphic file (type pdf)
  <use Figures/theme/slide_en.pdf>
-Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 193.
+Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 198.
 (pdftex.def)             Requested size: 455.24408pt x 256.07715pt.
  [16
 
- <./Figures/GUI/car_rtcm.png>] <Figures/GUI/car_map.png, id=191, 1579.9025pt x 
-910.40125pt>
-File: Figures/GUI/car_map.png Graphic file (type png)
+ <./Figures/GUI/car_gps.png>]
+<Figures/GUI/car_config.png, id=193, 1395.2125pt x 675.52374pt>
+File: Figures/GUI/car_config.png Graphic file (type png)
 
-<use Figures/GUI/car_map.png>
-Package pdftex.def Info: Figures/GUI/car_map.png used on input line 201.
-(pdftex.def)             Requested size: 312.9803pt x 180.34058pt.
+<use Figures/GUI/car_config.png>
+Package pdftex.def Info: Figures/GUI/car_config.png used on input line 206.
+(pdftex.def)             Requested size: 312.9803pt x 151.53275pt.
 File: Figures/theme/slide_en.pdf Graphic file (type pdf)
  <use Figures/theme/slide_en.pdf>
-Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 201.
+Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 206.
 (pdftex.def)             Requested size: 455.24408pt x 256.07715pt.
  [17
 
- <./Figures/GUI/car_map.png>] <Figures/theme/back_en_el.pdf, id=198, 722.7pt x 
+ <./Figures/GUI/car_config.png>]
+<Figures/GUI/car_rtcm.png, id=200, 1579.9025pt x 910.40125pt>
+File: Figures/GUI/car_rtcm.png Graphic file (type png)
+
+<use Figures/GUI/car_rtcm.png>
+Package pdftex.def Info: Figures/GUI/car_rtcm.png used on input line 214.
+(pdftex.def)             Requested size: 312.9803pt x 180.34058pt.
+File: Figures/theme/slide_en.pdf Graphic file (type pdf)
+ <use Figures/theme/slide_en.pdf>
+Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 214.
+(pdftex.def)             Requested size: 455.24408pt x 256.07715pt.
+ [18
+
+ <./Figures/GUI/car_rtcm.png>] <Figures/GUI/car_map.png, id=207, 1395.2125pt x 
+675.52374pt>
+File: Figures/GUI/car_map.png Graphic file (type png)
+
+<use Figures/GUI/car_map.png>
+Package pdftex.def Info: Figures/GUI/car_map.png used on input line 222.
+(pdftex.def)             Requested size: 312.9803pt x 151.53275pt.
+File: Figures/theme/slide_en.pdf Graphic file (type pdf)
+ <use Figures/theme/slide_en.pdf>
+Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 222.
+(pdftex.def)             Requested size: 455.24408pt x 256.07715pt.
+ [19
+
+ <./Figures/GUI/car_map.png>] <Figures/theme/back_en_el.pdf, id=214, 722.7pt x 
 406.51875pt>
 File: Figures/theme/back_en_el.pdf Graphic file (type pdf)
 
 <use Figures/theme/back_en_el.pdf>
-Package pdftex.def Info: Figures/theme/back_en_el.pdf used on input line 203.
+Package pdftex.def Info: Figures/theme/back_en_el.pdf used on input line 224.
 (pdftex.def)             Requested size: 455.24408pt x 256.07715pt.
 File: Figures/theme/slide_en.pdf Graphic file (type pdf)
  <use Figures/theme/slide_en.pdf>
-Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 203.
+Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 224.
 (pdftex.def)             Requested size: 455.24408pt x 256.07715pt.
- [18
+ [20
 
  <./Figures/theme/back_en_el.pdf>]
 \tf@nav=\write6
 \tf@toc=\write7
 \tf@snm=\write8
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 205.
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 205.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 226.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 226.
  (./rccar_pres.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 205.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 205.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 226.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 226.
 Package rerunfilecheck Info: File `rccar_pres.out' has not changed.
 (rerunfilecheck)             Checksum: DB4907BAECED9E6EC4AFD693504A7296;43.
 
@@ -1188,30 +1221,29 @@ Package rerunfilecheck Info: File `rccar_pres.out' has not changed.
 LaTeX Font Warning: Size substitutions with differences
 (Font)              up to 1.0pt have occurred.
 
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 205.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 226.
  )
 
 Here is how much of LuaTeX's memory you used:
- 19015 strings out of 494490
+ 19050 strings out of 494490
  100000,552014 words of node,token memory allocated
- 938 words of node memory still in use:
+ 942 words of node memory still in use:
    25 hlist, 6 vlist, 4 rule, 40 glue, 1 kern, 10 penalty, 60 glue_spec, 4 write
 , 1 local_par, 17 pdf_literal, 1 pdf_refximage, 1 pdf_save_pos, 4 pdf_colorstack
 , 1 pdf_setmatrix, 1 pdf_save, 1 pdf_restore nodes
-   avail lists: 2:26,3:264,4:737,5:59,6:648,7:22,8:3,9:225,10:76
- 21552 multiletter control sequences out of 65536+600000
+   avail lists: 2:26,3:268,4:733,5:59,6:648,7:22,8:3,9:225,10:76
+ 21568 multiletter control sequences out of 65536+600000
  46 fonts using 1819867 bytes
  49i,13n,53p,398b,853s stack positions out of 5000i,500n,10000p,200000b,100000s
- </home/benjamin/.texmf-var/fonts/pk/ljfour/jknappen/ec/ecsx1095.600pk> </home/b
-enjamin/.texmf-var/fonts/pk/ljfour/jknappen/ec/ecss1000.600pk> </home/benjamin/.
-texmf-var/fonts/pk/ljfour/jknappen/ec/ecss1200.600pk> </home/benjamin/.texmf-var
-/fonts/pk/ljfour/jknappen/ec/ectt1095.600pk> </home/benjamin/.texmf-var/fonts/pk
-/ljfour/jknappen/ec/ecss1095.600pk> </home/benjamin/.texmf-var/fonts/pk/ljfour/j
-knappen/ec/ecss1440.600pk> </home/benjamin/.texmf-var/fonts/pk/ljfour/jknappen/e
-c/ecss0600.600pk>
-Output written on rccar_pres.pdf (18 pages, 5345027 bytes).
+{/usr/share/texmf/fonts/enc/dvips/cm-super/cm-super-t1.enc}</usr/share/texmf/fon
+ts/type1/public/cm-super/sfss0600.pfb></usr/share/texmf/fonts/type1/public/cm-su
+per/sfss1000.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfss1095.pfb></us
+r/share/texmf/fonts/type1/public/cm-super/sfss1200.pfb></usr/share/texmf/fonts/t
+ype1/public/cm-super/sfss1440.pfb></usr/share/texmf/fonts/type1/public/cm-super/
+sfsx1095.pfb></usr/share/texmf/fonts/type1/public/cm-super/sftt1095.pfb>
+Output written on rccar_pres.pdf (20 pages, 6550207 bytes).
 
-PDF statistics: 403 PDF objects out of 1000 (max. 8388607)
- 36 named destinations out of 1000 (max. 131072)
+PDF statistics: 272 PDF objects out of 1000 (max. 8388607)
+ 40 named destinations out of 1000 (max. 131072)
  24 words of extra memory for PDF output out of 10000 (max. 10000000)
 

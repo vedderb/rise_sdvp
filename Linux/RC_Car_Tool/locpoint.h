@@ -20,12 +20,13 @@
 
 #include <QPointF>
 #include <QString>
+#include <QColor>
 
 class LocPoint
 {
 public:
     LocPoint(double x = 0, double y = 0, double alpha = 0,
-             double speed = 0.5, double radius = 0, double sigma = 0);
+             double speed = 0.5, double radius = 0, double sigma = 0, QColor color = Qt::darkGreen);
     LocPoint(const LocPoint &point);
 
     double getX() const;
@@ -37,6 +38,7 @@ public:
     double getRadius() const;
     double getSigma() const;
     QString getInfo() const;
+    QColor getColor() const;
 
     void setX(double x);
     void setY(double y);
@@ -48,6 +50,7 @@ public:
     void setSigma(double sigma);
     double getDistanceTo(const LocPoint &point);
     void setInfo(const QString &info);
+    void setColor(const QColor &color);
 
     // Operators
     LocPoint& operator=(const LocPoint& point);
@@ -62,6 +65,7 @@ private:
     double mRadius;
     double mSigma;
     QString mInfo;
+    QColor mColor;
 
 };
 

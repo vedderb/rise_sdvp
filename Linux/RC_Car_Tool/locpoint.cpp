@@ -18,8 +18,8 @@
 #include "locpoint.h"
 #include <cmath>
 
-LocPoint::LocPoint(double x, double y, double alpha, double speed, double radius, double sigma) :
-    mX(x), mY(y), mAlpha(alpha), mSpeed(speed), mRadius(radius), mSigma(sigma)
+LocPoint::LocPoint(double x, double y, double alpha, double speed, double radius, double sigma, QColor color) :
+    mX(x), mY(y), mAlpha(alpha), mSpeed(speed), mRadius(radius), mSigma(sigma), mColor(color)
 {
 
 }
@@ -90,6 +90,11 @@ QString LocPoint::getInfo() const
     return mInfo;
 }
 
+QColor LocPoint::getColor() const
+{
+    return mColor;
+}
+
 LocPoint &LocPoint::operator =(const LocPoint &point)
 {
     mX = point.mX;
@@ -99,6 +104,7 @@ LocPoint &LocPoint::operator =(const LocPoint &point)
     mRadius = point.mRadius;
     mSigma = point.mSigma;
     mInfo = point.mInfo;
+    mColor = point.mColor;
     return *this;
 }
 
@@ -110,7 +116,8 @@ bool LocPoint::operator ==(const LocPoint &point)
             mSpeed == point.mSpeed &&
             mRadius == point.mRadius &&
             mSigma == point.mSigma &&
-            mInfo == point.mInfo) {
+            mInfo == point.mInfo &&
+            mColor == point.mColor) {
         return true;
     } else {
         return false;
@@ -145,6 +152,11 @@ void LocPoint::setRadius(double radius)
 void LocPoint::setSigma(double sigma)
 {
     mSigma = sigma;
+}
+
+void LocPoint::setColor(const QColor &color)
+{
+    mColor = color;
 }
 
 double LocPoint::getDistanceTo(const LocPoint &point)

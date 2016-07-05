@@ -229,7 +229,11 @@ void MapWidget::paintEvent(QPaintEvent *event)
     QPainter painter(this);
 
     if (mAntialias) {
-        painter.setRenderHint(QPainter::Antialiasing);
+        painter.setRenderHint(QPainter::Antialiasing, true);
+        painter.setRenderHint(QPainter::TextAntialiasing, true);
+    } else {
+        painter.setRenderHint(QPainter::Antialiasing, false);
+        painter.setRenderHint(QPainter::TextAntialiasing, false);
     }
 
     const double scaleMax = 20;
@@ -441,22 +445,26 @@ void MapWidget::paintEvent(QPaintEvent *event)
     }
     for (int i = 0;i < mInfoTrace.size();i++) {
         QPointF p = mInfoTrace[i].getPointMm();
-        painter.setTransform(drawTrans);
-        pen.setColor(Qt::darkGreen);
-        painter.setPen(pen);
-        painter.drawEllipse(p, 5 / mScaleFactor, 5 / mScaleFactor);
 
-        if (mScaleFactor > 0.5) {
-            pt_txt.setX(p.x() + 5 / mScaleFactor);
-            pt_txt.setY(p.y());
-            painter.setTransform(txtTrans);
-            pt_txt = drawTrans.map(pt_txt);
-            pen.setColor(Qt::black);
+        if (p.x() > xStart && p.x() < xEnd && p.y() > yStart && p.y() < yEnd) {
+            painter.setTransform(drawTrans);
+            pen.setColor(mInfoTrace[i].getColor());
+            painter.setBrush(mInfoTrace[i].getColor());
             painter.setPen(pen);
-            painter.setFont(QFont("monospace"));
-            rect_txt.setCoords(pt_txt.x(), pt_txt.y() - 20,
-                               pt_txt.x() + 500, pt_txt.y() + 500);
-            painter.drawText(rect_txt, Qt::AlignTop | Qt::AlignLeft, mInfoTrace[i].getInfo());
+            painter.drawEllipse(p, 5 / mScaleFactor, 5 / mScaleFactor);
+
+            if (mScaleFactor > 0.5) {
+                pt_txt.setX(p.x() + 5 / mScaleFactor);
+                pt_txt.setY(p.y());
+                painter.setTransform(txtTrans);
+                pt_txt = drawTrans.map(pt_txt);
+                pen.setColor(Qt::black);
+                painter.setPen(pen);
+                painter.setFont(QFont("monospace"));
+                rect_txt.setCoords(pt_txt.x(), pt_txt.y() - 20,
+                                   pt_txt.x() + 500, pt_txt.y() + 500);
+                painter.drawText(rect_txt, Qt::AlignTop | Qt::AlignLeft, mInfoTrace[i].getInfo());
+            }
         }
     }
 

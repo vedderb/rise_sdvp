@@ -34,6 +34,8 @@ private slots:
     void on_logFileChooseButton_clicked();
     void on_logFileActiveBox_toggled(bool checked);
     void on_mapClearButton_clicked();
+    void on_statLogOpenButton_clicked();
+    void on_statLogChooseButton_clicked();
 
 private:
     Ui::NetworkLogger *ui;
@@ -47,6 +49,7 @@ private:
     LocPoint mLastPoint;
 
     void initGpsLocal(GPS_STATE *gps);
+    void calcEnuCoords(GPS_STATE *gps);
 
 };
 

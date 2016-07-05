@@ -7,6 +7,7 @@
 #include <cmath>
 #include <QFileDialog>
 #include <QDateTime>
+#include <QStringList>
 
 NetworkLogger::NetworkLogger(QWidget *parent) :
     QWidget(parent),
@@ -102,19 +103,13 @@ void NetworkLogger::tcpInputDataAvailable()
             return;
         }
 
-        double x, y, z;
-
-        utility::llhToXyz(gga.lat, gga.lon, gga.height, &x, &y, &z);
-
         mGpsState.lat = gga.lat;
         mGpsState.lon = gga.lon;
         mGpsState.height = gga.height;
         mGpsState.fix_type = gga.fix_type;
         mGpsState.sats = gga.n_sat;
         mGpsState.ms = gga.t_tow;
-        mGpsState.x = x;
-        mGpsState.y = y;
-        mGpsState.z = z;
+        calcEnuCoords(&mGpsState);
 
         QString logStr;
         logStr.sprintf("%s    %.8f    %.8f    %.3f    %d    %d",
@@ -122,38 +117,19 @@ void NetworkLogger::tcpInputDataAvailable()
                        gga.lat, gga.lon, gga.height, gga.fix_type, ui->pingLenBox->value());
         bool pingOk = mPing->pingHost(ui->pingHostEdit->text(), ui->pingLenBox->value(), logStr);
 
-        // Convert to local ENU frame if initialized
-        if (mGpsState.local_init_done) {
-            float dx = (float)(mGpsState.x - mGpsState.ix);
-            float dy = (float)(mGpsState.y - mGpsState.iy);
-            float dz = (float)(mGpsState.z - mGpsState.iz);
+        // Plot local position on map
+        if (pingOk) {
+            mLastPoint.setXY(mGpsState.lx, mGpsState.ly);
 
-            mGpsState.lx = mGpsState.r1c1 * dx + mGpsState.r1c2 * dy + mGpsState.r1c3 * dz;
-            mGpsState.ly = mGpsState.r2c1 * dx + mGpsState.r2c2 * dy + mGpsState.r2c3 * dz;
-            mGpsState.lz = mGpsState.r3c1 * dx + mGpsState.r3c2 * dy + mGpsState.r3c3 * dz;
+            QString info;
+            info.sprintf("Lat  : %.8f\n"
+                         "Lon  : %.8f\n"
+                         "H    : %.3f\n"
+                         "Fix  : %d\n"
+                         "Pktzs: %d\n",
+                         gga.lat, gga.lon, gga.height, gga.fix_type, ui->pingLenBox->value());
 
-            // Apply offsets and rotation for local position
-            const float s_rot = sinf(mGpsState.orot);
-            const float c_rot = cosf(mGpsState.orot);
-            float px = mGpsState.lx * c_rot + mGpsState.ly * s_rot + mGpsState.ox;
-            float py = mGpsState.lx * s_rot + mGpsState.ly * c_rot + mGpsState.oy;
-
-            // Plot local position on map
-            if (pingOk) {
-                mLastPoint.setXY(px, py);
-
-                QString info;
-                info.sprintf("Lat  : %.8f\n"
-                             "Lon  : %.8f\n"
-                             "H    : %.3f\n"
-                             "Fix  : %d\n"
-                             "Pktzs: %d\n",
-                             gga.lat, gga.lon, gga.height, gga.fix_type, ui->pingLenBox->value());
-
-                mLastPoint.setInfo(info);
-            }
-        } else {
-            initGpsLocal(&mGpsState);
+            mLastPoint.setInfo(info);
         }
     }
 }
@@ -282,6 +258,31 @@ void NetworkLogger::initGpsLocal(GPS_STATE *gps)
     gps->local_init_done = true;
 }
 
+void NetworkLogger::calcEnuCoords(GPS_STATE *gps)
+{
+    double x, y, z;
+    utility::llhToXyz(gps->lat, gps->lon, gps->height, &x, &y, &z);
+    gps->x = x;
+    gps->y = y;
+    gps->z = z;
+
+    // Convert to local ENU frame if initialized
+    if (gps->local_init_done) {
+        float dx = (float)(gps->x - gps->ix);
+        float dy = (float)(gps->y - gps->iy);
+        float dz = (float)(gps->z - gps->iz);
+
+        gps->lx = gps->r1c1 * dx + gps->r1c2 * dy + gps->r1c3 * dz;
+        gps->ly = gps->r2c1 * dx + gps->r2c2 * dy + gps->r2c3 * dz;
+        gps->lz = gps->r3c1 * dx + gps->r3c2 * dy + gps->r3c3 * dz;
+    } else {
+        initGpsLocal(gps);
+        gps->lx = 0.0;
+        gps->ly = 0.0;
+        gps->lz = 0.0;
+    }
+}
+
 void NetworkLogger::on_pingTestButton_clicked()
 {
     mPing->pingHost(ui->pingHostEdit->text(), ui->pingLenBox->value());
@@ -311,7 +312,7 @@ void NetworkLogger::on_logFileActiveBox_toggled(bool checked)
         }
 
         mLog.setFileName(ui->logFileEdit->text());
-        bool ok = mLog.open(QIODevice::ReadWrite | QIODevice::Append);
+        bool ok = mLog.open(QIODevice::ReadWrite | QIODevice::Append | QIODevice::Text);
 
         if (!ok) {
             QMessageBox::warning(this, "Log",
@@ -326,4 +327,79 @@ void NetworkLogger::on_logFileActiveBox_toggled(bool checked)
 void NetworkLogger::on_mapClearButton_clicked()
 {
     ui->mapWidget->clearInfoTrace();
+}
+
+void NetworkLogger::on_statLogOpenButton_clicked()
+{
+    QFile log;
+    log.setFileName(ui->statLogLoadEdit->text());
+
+    if (log.exists()) {
+        bool ok = log.open(QIODevice::ReadOnly | QIODevice::Text);
+
+        if (ok) {
+            QTextStream in(&log);
+            GPS_STATE gps;
+            memset(&gps, 0, sizeof(gps));
+
+            while(!in.atEnd()) {
+                QStringList list = in.readLine().split(QRegExp("[ ]"), QString::SkipEmptyParts);
+                QDateTime date = QDateTime::fromString(list.at(0), Qt::ISODate);
+
+                gps.lat = list.at(1).toDouble();
+                gps.lon = list.at(2).toDouble();
+                gps.height = list.at(3).toDouble();
+                gps.fix_type = list.at(4).toInt();
+                calcEnuCoords(&gps);
+
+                int bytes = list.at(5).toInt();
+                QString pingRes = list.at(6);
+
+                LocPoint p;
+                p.setXY(gps.lx, gps.ly);
+
+                QString info;
+                info.sprintf("Date : %s\n"
+                             "Lat  : %.8f\n"
+                             "Lon  : %.8f\n"
+                             "H    : %.3f\n"
+                             "Fix  : %d\n"
+                             "Pktzs: %d\n"
+                             "Ping : %s",
+                             date.toString(Qt::ISODate).toLocal8Bit().data(), gps.lat, gps.lon, gps.height,
+                             gps.fix_type, bytes, pingRes.toLocal8Bit().data());
+
+                p.setInfo(info);
+
+                bool ok;
+                double pingt = pingRes.toDouble(&ok);
+
+                if (ok) {
+                    if (pingt > 50.0) {
+                        p.setColor(Qt::yellow);
+                    }
+                } else {
+                    p.setColor(Qt::red);
+                }
+
+                ui->mapWidget->addInfoPoint(p);
+            }
+        } else {
+            QMessageBox::warning(this, "Open Error", "Could not open " + log.fileName());
+        }
+
+    } else {
+        QMessageBox::warning(this, "Open Error", "Please select a valid log file");
+    }
+}
+
+void NetworkLogger::on_statLogChooseButton_clicked()
+{
+    QString path;
+    path = QFileDialog::getOpenFileName(this, tr("Choose log file to open"));
+    if (path.isNull()) {
+        return;
+    }
+
+    ui->statLogLoadEdit->setText(path);
 }

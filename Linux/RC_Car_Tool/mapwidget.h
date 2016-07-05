@@ -35,7 +35,7 @@
 #include "perspectivepixmap.h"
 
 // QWidget or QGLWidget
-#define MapWidgetType   QWidget
+#define MapWidgetType   QGLWidget
 
 class MapWidget : public MapWidgetType
 {
