@@ -6,6 +6,11 @@ OsmTile::OsmTile(QPixmap pxm, int zoom, int x, int y) : mPixmap(pxm), mZoom(zoom
 
 }
 
+OsmTile::OsmTile(int zoom, int x, int y) : mZoom(zoom), mX(x), mY(y)
+{
+
+}
+
 void OsmTile::setZXY(int zoom, int x, int y)
 {
     mZoom = zoom;
@@ -85,8 +90,7 @@ int OsmTile::long2tilex(double lon, int z)
 
 int OsmTile::lat2tiley(double lat, int z)
 {
-    return (int)(floor((1.0 - log(tan(lat * M_PI/180.0) +
-                                  1.0 / cos(lat * M_PI/180.0)) / M_PI) / 2.0 * pow(2.0, z)));
+    return (int)(floor((1.0 - log(tan(lat * M_PI/180.0) + 1.0 / cos(lat * M_PI/180.0)) / M_PI) / 2.0 * pow(2.0, z)));
 }
 
 double OsmTile::tilex2long(int x, int z)

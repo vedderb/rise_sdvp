@@ -517,13 +517,13 @@ static void init_gps_local(GPS_STATE *gps) {
 	gps->r2c2 = -sa * so;
 	gps->r2c3 = ca;
 
-	gps->r3c1 = ca * -co;
-	gps->r3c2 = ca * -so;
+	gps->r3c1 = ca * co;
+	gps->r3c2 = ca * so;
 	gps->r3c3 = sa;
 
 	// NED
 //	gps->r1c1 = -sa * co;
-//	gps->r1c2 = -sa * sa;
+//	gps->r1c2 = -sa * so;
 //	gps->r1c3 = ca;
 //
 //	gps->r2c1 = -so;

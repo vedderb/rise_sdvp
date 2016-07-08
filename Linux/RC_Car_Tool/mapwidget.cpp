@@ -56,6 +56,22 @@ MapWidget::MapWidget(QWidget *parent) :
     mAntialias = false;
 
     mOsm = new OsmClient(this);
+    mDrawOpenStreetmap = true;
+    mOsmZoomLevel = 16;
+
+    // Set this to the SP base station position for now
+    mRefLat = 57.71495867;
+    mRefLon = 12.89134921;
+    mRefHeight = 219.0;
+
+    // Hardcoded for now
+    mOsm->setCacheDir("/home/benjamin/Skrivbord/osm_tiles");
+    mOsm->setTileServerUrl("http://tile.openstreetmap.org");
+
+    connect(mOsm, SIGNAL(tileReady(OsmTile)),
+            this, SLOT(tileReady(OsmTile)));
+    connect(mOsm, SIGNAL(errorGetTile(QString)),
+            this, SLOT(errorGetTile(QString)));
 
     connect(mPaintTimer, SIGNAL(timeout()), this, SLOT(paintTimerSlot()));
 
@@ -198,7 +214,7 @@ void MapWidget::repaintAfterEvents()
 void MapWidget::setAntialiasing(bool antialias)
 {
     mAntialias = antialias;
-    repaintAfterEvents();
+    update();
 }
 
 void MapWidget::paintTimerSlot()
@@ -208,7 +224,8 @@ void MapWidget::paintTimerSlot()
 
 void MapWidget::tileReady(OsmTile tile)
 {
-
+    (void)tile;
+    update();
 }
 
 void MapWidget::errorGetTile(QString reason)
@@ -337,6 +354,35 @@ void MapWidget::paintEvent(QPaintEvent *event)
     painter.setTransform(drawTrans);
     for(int i = 0;i < mPerspectivePixmaps.size();i++) {
         mPerspectivePixmaps[i].drawUsingPainter(painter);
+    }
+
+    // Draw openstreetmap tiles
+    if (mDrawOpenStreetmap) {
+        int xt = OsmTile::long2tilex(mRefLon, mOsmZoomLevel);
+        int yt = OsmTile::lat2tiley(mRefLat, mOsmZoomLevel);
+        for (int j = 0;j < 20;j++) {
+            for (int i = 0;i < 20;i++) {
+                bool ok;
+                OsmTile t = mOsm->getTileMemory(mOsmZoomLevel, xt + i, yt + j, ok);
+
+                if (ok) {
+                    double w = t.getWidthTop();
+
+                    QTransform transOld = painter.transform();
+                    QTransform trans = painter.transform();
+                    trans.scale(1, -1);
+                    painter.setTransform(trans);
+                    painter.drawPixmap(w * i, w * j, w, w, t.pixmap());
+                    painter.setTransform(transOld);
+                } else {
+                    int res = mOsm->getTile(mOsmZoomLevel, xt + i, yt + j);
+                    if (res != 1) {
+                        i = j = 10000000;
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     painter.setTransform(txtTrans);
@@ -719,4 +765,14 @@ void MapWidget::wheelEvent(QWheelEvent *e)
         emit offsetChanged(mXOffset, mYOffset);
         repaintAfterEvents();
     }
+}
+
+bool MapWidget::getDrawOpenStreetmap() const
+{
+    return mDrawOpenStreetmap;
+}
+
+void MapWidget::setDrawOpenStreetmap(bool drawOpenStreetmap)
+{
+    mDrawOpenStreetmap = drawOpenStreetmap;
 }

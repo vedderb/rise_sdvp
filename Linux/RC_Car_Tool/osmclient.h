@@ -12,6 +12,7 @@
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
 #include <QNetworkReply>
+#include <QList>
 
 #include "osmtile.h"
 
@@ -34,7 +35,11 @@ public:
     explicit OsmClient(QObject *parent = 0);
     bool setCacheDir(QString path);
     bool setTileServerUrl(QString path);
-    void getTile(int zoom, int x, int y);
+    int getTile(int zoom, int x, int y);
+    OsmTile getTileMemory(int zoom, int x, int y, bool &ok);
+
+    int getMaxMemoryTiles() const;
+    void setMaxMemoryTiles(int maxMemoryTiles);
 
 signals:
     void tileReady(OsmTile tile);
@@ -49,8 +54,11 @@ private:
     QString mCacheDir;
     QString mTileServer;
     QNetworkAccessManager mWebCtrl;
+    QList<OsmTile> mMemoryTiles;
+    int mMaxMemoryTiles;
 
     void downloadTile(int zoom, int x, int y);
+    void emitTile(OsmTile tile);
 
 };
 

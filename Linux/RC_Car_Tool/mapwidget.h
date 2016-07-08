@@ -67,6 +67,8 @@ public:
     QPoint getMousePosRelative();
     void repaintAfterEvents();
     void setAntialiasing(bool antialias);
+    bool getDrawOpenStreetmap() const;
+    void setDrawOpenStreetmap(bool drawOpenStreetmap);
 
 signals:
     void scaleChanged(double newScale);
@@ -112,6 +114,11 @@ private:
     bool mAntialias;
 
     OsmClient *mOsm;
+    int mOsmZoomLevel;
+    bool mDrawOpenStreetmap;
+    double mRefLat;
+    double mRefLon;
+    double mRefHeight;
 
 };
 

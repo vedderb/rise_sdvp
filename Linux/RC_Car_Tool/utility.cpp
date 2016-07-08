@@ -140,4 +140,73 @@ void xyzToLlh(double x, double y, double z, double *lat, double *lon, double *he
     *height = sqrt(r2 + za * za) - v;
 }
 
+void createEnuMatrix(double lat, double lon, double *enuMat)
+{
+    double so = sin(lon * M_PI / 180.0);
+    double co = cos(lon * M_PI / 180.0);
+    double sa = sin(lat * M_PI / 180.0);
+    double ca = cos(lat * M_PI / 180.0);
+
+    // ENU
+    enuMat[0] = -so;
+    enuMat[1] = co;
+    enuMat[2] = 0.0;
+
+    enuMat[3] = -sa * co;
+    enuMat[4] = -sa * so;
+    enuMat[5] = ca;
+
+    enuMat[6] = ca * co;
+    enuMat[7] = ca * so;
+    enuMat[8] = sa;
+
+    // NED
+//    enuMat[0] = -sa * co;
+//    enuMat[1] = -sa * so;
+//    enuMat[2] = ca;
+
+//    enuMat[3] = -so;
+//    enuMat[4] = co;
+//    enuMat[5] = 0.0;
+
+//    enuMat[6] = -ca * co;
+//    enuMat[7] = -ca * so;
+//    enuMat[8] = -sa;
+}
+
+void llhToEnu(double *iLlh, double *llh, double *xyz)
+{
+    double ix, iy, iz;
+    llhToXyz(iLlh[0], iLlh[1], iLlh[2], &ix, &iy, &iz);
+
+    double x, y, z;
+    llhToXyz(llh[0], llh[1], llh[2], &x, &y, &z);
+
+    double enuMat[9];
+    createEnuMatrix(iLlh[0], iLlh[1], enuMat);
+
+    double dx = x - ix;
+    double dy = y - iy;
+    double dz = z - iz;
+
+    xyz[0] = enuMat[0] * dx + enuMat[1] * dy + enuMat[2] * dz;
+    xyz[1] = enuMat[3] * dx + enuMat[4] * dy + enuMat[5] * dz;
+    xyz[2] = enuMat[6] * dx + enuMat[7] * dy + enuMat[8] * dz;
+}
+
+void enuToLlh(double *iLlh, double *xyz, double *llh)
+{
+    double ix, iy, iz;
+    llhToXyz(iLlh[0], iLlh[1], iLlh[2], &ix, &iy, &iz);
+
+    double enuMat[9];
+    createEnuMatrix(iLlh[0], iLlh[1], enuMat);
+
+    double x = enuMat[0] * xyz[0] + enuMat[3] * xyz[1] + enuMat[6] * xyz[2] + ix;
+    double y = enuMat[1] * xyz[0] + enuMat[4] * xyz[1] + enuMat[7] * xyz[2] + iy;
+    double z = enuMat[2] * xyz[0] + enuMat[5] * xyz[1] + enuMat[8] * xyz[2] + iz;
+
+    xyzToLlh(x, y, z, &llh[0], &llh[1], &llh[2]);
+}
+
 }

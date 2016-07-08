@@ -243,8 +243,8 @@ void NetworkLogger::initGpsLocal(GPS_STATE *gps)
     gps->r2c2 = -sa * so;
     gps->r2c3 = ca;
 
-    gps->r3c1 = ca * -co;
-    gps->r3c2 = ca * -so;
+    gps->r3c1 = ca * co;
+    gps->r3c2 = ca * so;
     gps->r3c3 = sa;
 
     gps->lx = 0.0;
