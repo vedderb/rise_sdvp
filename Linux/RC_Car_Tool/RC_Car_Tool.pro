@@ -43,7 +43,9 @@ SOURCES += main.cpp\
     rtcmwidget.cpp \
     basestation.cpp \
     ping.cpp \
-    networklogger.cpp
+    networklogger.cpp \
+    osmclient.cpp \
+    osmtile.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
@@ -63,7 +65,9 @@ HEADERS  += mainwindow.h \
     rtcmwidget.h \
     basestation.h \
     ping.h \
-    networklogger.h
+    networklogger.h \
+    osmclient.h \
+    osmtile.h
 
 FORMS    += mainwindow.ui \
     carinterface.ui \

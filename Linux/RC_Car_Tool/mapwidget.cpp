@@ -55,6 +55,8 @@ MapWidget::MapWidget(QWidget *parent) :
     mRoutePointSpeed = 1.0;
     mAntialias = false;
 
+    mOsm = new OsmClient(this);
+
     connect(mPaintTimer, SIGNAL(timeout()), this, SLOT(paintTimerSlot()));
 
     setMouseTracking(true);
@@ -202,6 +204,16 @@ void MapWidget::setAntialiasing(bool antialias)
 void MapWidget::paintTimerSlot()
 {
     update();
+}
+
+void MapWidget::tileReady(OsmTile tile)
+{
+
+}
+
+void MapWidget::errorGetTile(QString reason)
+{
+    qWarning() << "OSM tile error:" << reason;
 }
 
 void MapWidget::setFollowCar(int car)

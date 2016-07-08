@@ -33,6 +33,7 @@
 #include "locpoint.h"
 #include "carinfo.h"
 #include "perspectivepixmap.h"
+#include "osmclient.h"
 
 // QWidget or QGLWidget
 #define MapWidgetType   QGLWidget
@@ -77,6 +78,10 @@ signals:
 public slots:
     void paintTimerSlot();
 
+private slots:
+    void tileReady(OsmTile tile);
+    void errorGetTile(QString reason);
+
 protected:
     void paintEvent(QPaintEvent *event);
     void mouseMoveEvent (QMouseEvent * e);
@@ -105,6 +110,8 @@ private:
     double yRealPos;
     QTimer *mPaintTimer;
     bool mAntialias;
+
+    OsmClient *mOsm;
 
 };
 
