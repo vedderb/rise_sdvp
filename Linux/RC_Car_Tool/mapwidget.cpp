@@ -20,6 +20,7 @@
 #include <qmath.h>
 
 #include "mapwidget.h"
+#include "utility.h"
 
 namespace
 {
@@ -36,7 +37,7 @@ static void normalizeAngleRad(double &angle)
 MapWidget::MapWidget(QWidget *parent) :
     MapWidgetType(parent)
 {
-    mScaleFactor = 0.3;
+    mScaleFactor = 0.1;
     mRotation = 0;
     mXOffset = 0;
     mYOffset = 0;
@@ -57,7 +58,7 @@ MapWidget::MapWidget(QWidget *parent) :
 
     mOsm = new OsmClient(this);
     mDrawOpenStreetmap = true;
-    mOsmZoomLevel = 16;
+    mOsmZoomLevel = 15;
 
     // Set this to the SP base station position for now
     mRefLat = 57.71495867;
@@ -65,7 +66,7 @@ MapWidget::MapWidget(QWidget *parent) :
     mRefHeight = 219.0;
 
     // Hardcoded for now
-    mOsm->setCacheDir("/home/benjamin/Skrivbord/osm_tiles");
+    mOsm->setCacheDir("osm_tiles");
     mOsm->setTileServerUrl("http://tile.openstreetmap.org");
 
     connect(mOsm, SIGNAL(tileReady(OsmTile)),
@@ -266,7 +267,7 @@ void MapWidget::paintEvent(QPaintEvent *event)
     }
 
     const double scaleMax = 20;
-    const double scaleMin = 0.00001;
+    const double scaleMin = 0.000001;
 
     // Make sure scale and offsetappend is reasonable
     if (mScaleFactor < scaleMin) {
@@ -358,27 +359,56 @@ void MapWidget::paintEvent(QPaintEvent *event)
 
     // Draw openstreetmap tiles
     if (mDrawOpenStreetmap) {
-        int xt = OsmTile::long2tilex(mRefLon, mOsmZoomLevel);
-        int yt = OsmTile::lat2tiley(mRefLat, mOsmZoomLevel);
-        for (int j = 0;j < 20;j++) {
-            for (int i = 0;i < 20;i++) {
+        double i_llh[3];
+        i_llh[0] = mRefLat;
+        i_llh[1] = mRefLon;
+        i_llh[2] = mRefHeight;
+
+        double llh[3];
+        double xyz[3];
+        xyz[0] = -mXOffset / mScaleFactor / 1000.0 - width() / mScaleFactor / 2000.0;
+        xyz[1] = -mYOffset / mScaleFactor / 1000.0 + height() / mScaleFactor / 2000.0;
+        xyz[2] = 0;
+
+        utility::enuToLlh(i_llh, xyz, llh);
+
+        mOsmZoomLevel = (int)round(log2(mScaleFactor * 50000000.0));
+        if (mOsmZoomLevel > 19) {
+            mOsmZoomLevel = 19;
+        } else if (mOsmZoomLevel < 0) {
+            mOsmZoomLevel = 0;
+        }
+
+        int xt = OsmTile::long2tilex(llh[1], mOsmZoomLevel);
+        int yt = OsmTile::lat2tiley(llh[0], mOsmZoomLevel);
+
+        double llh_t[3];
+        llh_t[0] = OsmTile::tiley2lat(yt, mOsmZoomLevel);
+        llh_t[1] = OsmTile::tilex2long(xt, mOsmZoomLevel);
+        llh_t[2] = 0.0;
+
+        utility::llhToEnu(i_llh, llh_t, xyz);
+
+        double w = -1.0;
+        for (int j = 0;j < 10;j++) {
+            for (int i = 0;i < 10;i++) {
                 bool ok;
                 OsmTile t = mOsm->getTileMemory(mOsmZoomLevel, xt + i, yt + j, ok);
 
                 if (ok) {
-                    double w = t.getWidthTop();
+                    if (w < 0.0) {
+                        w = t.getWidthTop() * 1000.0;
+                    }
 
                     QTransform transOld = painter.transform();
                     QTransform trans = painter.transform();
                     trans.scale(1, -1);
                     painter.setTransform(trans);
-                    painter.drawPixmap(w * i, w * j, w, w, t.pixmap());
+                    painter.drawPixmap(xyz[0] * 1000.0 + w * i, -xyz[1] * 1000.0 + w * j, w, w, t.pixmap());
                     painter.setTransform(transOld);
                 } else {
-                    int res = mOsm->getTile(mOsmZoomLevel, xt + i, yt + j);
-                    if (res != 1) {
-                        i = j = 10000000;
-                        break;
+                    if (!mOsm->downloadQueueFull()) {
+                        mOsm->getTile(mOsmZoomLevel, xt + i, yt + j);
                     }
                 }
             }
@@ -510,8 +540,10 @@ void MapWidget::paintEvent(QPaintEvent *event)
             painter.setBrush(mInfoTrace[i].getColor());
             painter.setPen(pen);
             painter.drawEllipse(p, 5 / mScaleFactor, 5 / mScaleFactor);
+//            double w = 10.0 / mScaleFactor;
+//            painter.fillRect(p.x() - w / 2.0, p.y() - w / 2.0, w, w, mInfoTrace[i].getColor());
 
-            if (mScaleFactor > 0.5) {
+            if (mScaleFactor > 0.3) {
                 pt_txt.setX(p.x() + 5 / mScaleFactor);
                 pt_txt.setY(p.y());
                 painter.setTransform(txtTrans);
@@ -775,4 +807,19 @@ bool MapWidget::getDrawOpenStreetmap() const
 void MapWidget::setDrawOpenStreetmap(bool drawOpenStreetmap)
 {
     mDrawOpenStreetmap = drawOpenStreetmap;
+}
+
+void MapWidget::setEnuRef(double lat, double lon, double height)
+{
+    mRefLat = lat;
+    mRefLon = lon;
+    mRefHeight = height;
+    update();
+}
+
+void MapWidget::getEnuRef(double *llh)
+{
+    llh[0] = mRefLat;
+    llh[1] = mRefLon;
+    llh[2] = mRefHeight;
 }

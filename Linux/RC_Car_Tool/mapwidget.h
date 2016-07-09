@@ -69,6 +69,8 @@ public:
     void setAntialiasing(bool antialias);
     bool getDrawOpenStreetmap() const;
     void setDrawOpenStreetmap(bool drawOpenStreetmap);
+    void setEnuRef(double lat, double lon, double height);
+    void getEnuRef(double *llh);
 
 signals:
     void scaleChanged(double newScale);

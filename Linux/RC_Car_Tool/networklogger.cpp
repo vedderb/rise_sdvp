@@ -277,6 +277,7 @@ void NetworkLogger::calcEnuCoords(GPS_STATE *gps)
         gps->lz = gps->r3c1 * dx + gps->r3c2 * dy + gps->r3c3 * dz;
     } else {
         initGpsLocal(gps);
+        ui->mapWidget->setEnuRef(gps->lat, gps->lon, gps->height);
         gps->lx = 0.0;
         gps->ly = 0.0;
         gps->lz = 0.0;
@@ -339,24 +340,22 @@ void NetworkLogger::on_statLogOpenButton_clicked()
 
         if (ok) {
             QTextStream in(&log);
-            GPS_STATE gps;
-            memset(&gps, 0, sizeof(gps));
 
             while(!in.atEnd()) {
                 QStringList list = in.readLine().split(QRegExp("[ ]"), QString::SkipEmptyParts);
                 QDateTime date = QDateTime::fromString(list.at(0), Qt::ISODate);
 
-                gps.lat = list.at(1).toDouble();
-                gps.lon = list.at(2).toDouble();
-                gps.height = list.at(3).toDouble();
-                gps.fix_type = list.at(4).toInt();
-                calcEnuCoords(&gps);
+                mGpsState.lat = list.at(1).toDouble();
+                mGpsState.lon = list.at(2).toDouble();
+                mGpsState.height = list.at(3).toDouble();
+                mGpsState.fix_type = list.at(4).toInt();
+                calcEnuCoords(&mGpsState);
 
                 int bytes = list.at(5).toInt();
                 QString pingRes = list.at(6);
 
                 LocPoint p;
-                p.setXY(gps.lx, gps.ly);
+                p.setXY(mGpsState.lx, mGpsState.ly);
 
                 QString info;
                 info.sprintf("Date : %s\n"
@@ -366,8 +365,8 @@ void NetworkLogger::on_statLogOpenButton_clicked()
                              "Fix  : %d\n"
                              "Pktzs: %d\n"
                              "Ping : %s",
-                             date.toString(Qt::ISODate).toLocal8Bit().data(), gps.lat, gps.lon, gps.height,
-                             gps.fix_type, bytes, pingRes.toLocal8Bit().data());
+                             date.toString(Qt::ISODate).toLocal8Bit().data(), mGpsState.lat, mGpsState.lon, mGpsState.height,
+                             mGpsState.fix_type, bytes, pingRes.toLocal8Bit().data());
 
                 p.setInfo(info);
 

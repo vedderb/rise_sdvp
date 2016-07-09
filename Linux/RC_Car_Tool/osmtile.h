@@ -10,7 +10,7 @@ public:
     OsmTile(int zoom = 0, int x = 0, int y = 0);
     void setZXY(int zoom, int x, int y);
 
-    double zoom() const;
+    int zoom() const;
     void setZoom(double zoom);
 
     int x() const;

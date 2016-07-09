@@ -18,7 +18,7 @@ void OsmTile::setZXY(int zoom, int x, int y)
     mY = y;
 }
 
-double OsmTile::zoom() const
+int OsmTile::zoom() const
 {
     return mZoom;
 }

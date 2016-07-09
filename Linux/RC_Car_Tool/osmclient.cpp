@@ -2,7 +2,8 @@
 
 OsmClient::OsmClient(QObject *parent) : QObject(parent)
 {
-    mMaxMemoryTiles = 100000;
+    mMaxMemoryTiles = 500;
+    mMaxDownloadingTiles = 4;
 
     connect(&mWebCtrl, SIGNAL(finished(QNetworkReply*)),
             this, SLOT(fileDownloaded(QNetworkReply*)));
@@ -10,6 +11,7 @@ OsmClient::OsmClient(QObject *parent) : QObject(parent)
 
 bool OsmClient::setCacheDir(QString path)
 {
+    QDir().mkpath(path);
     QFileInfo file;
     file.setFile(path);
 
@@ -70,31 +72,34 @@ int OsmClient::getTile(int zoom, int x, int y)
 
 OsmTile OsmClient::getTileMemory(int zoom, int x, int y, bool &ok)
 {
-    int ind = mMemoryTiles.indexOf(OsmTile(zoom, x, y));
+    quint64 key = calcKey(zoom, x, y);
+    OsmTile t = mMemoryTiles.value(key);
 
-    if (ind >= 0) {
-        ok = true;
-        return mMemoryTiles[ind];
-    } else {
-        ok = false;
-        return OsmTile();
-    }
+    ok = !t.pixmap().isNull();
+    return t;
+}
+
+bool OsmClient::downloadQueueFull()
+{
+    return mDownloadingTiles.size() >= mMaxDownloadingTiles;
 }
 
 void OsmClient::fileDownloaded(QNetworkReply *pReply)
 {
-    if (pReply->error() == QNetworkReply::NoError) {
-        QString path = pReply->url().toString();
-        path = path.left(path.length() - 4);
-        int ind = path.lastIndexOf("/");
-        int y = path.mid(ind + 1).toInt();
-        path = path.left(ind);
-        ind = path.lastIndexOf("/");
-        int x = path.mid(ind + 1).toInt();
-        path = path.left(ind);
-        ind = path.lastIndexOf("/");
-        int zoom = path.mid(ind + 1).toInt();
+    QString path = pReply->url().toString();
+    path = path.left(path.length() - 4);
+    int ind = path.lastIndexOf("/");
+    int y = path.mid(ind + 1).toInt();
+    path = path.left(ind);
+    ind = path.lastIndexOf("/");
+    int x = path.mid(ind + 1).toInt();
+    path = path.left(ind);
+    ind = path.lastIndexOf("/");
+    int zoom = path.mid(ind + 1).toInt();
 
+    mDownloadingTiles.remove(calcKey(zoom, x, y));
+
+    if (pReply->error() == QNetworkReply::NoError) {
         QPixmap pm;
         QByteArray data = pReply->readAll();
         pm.loadFromData(data, "PNG");
@@ -122,6 +127,16 @@ void OsmClient::fileDownloaded(QNetworkReply *pReply)
     }
 }
 
+int OsmClient::getMaxDownloadingTiles() const
+{
+    return mMaxDownloadingTiles;
+}
+
+void OsmClient::setMaxDownloadingTiles(int maxDownloadingTiles)
+{
+    mMaxDownloadingTiles = maxDownloadingTiles;
+}
+
 int OsmClient::getMaxMemoryTiles() const
 {
     return mMaxMemoryTiles;
@@ -134,20 +149,45 @@ void OsmClient::setMaxMemoryTiles(int maxMemoryTiles)
 
 void OsmClient::downloadTile(int zoom, int x, int y)
 {
-    QString path = mTileServer + "/" + QString::number(zoom) + "/" + QString::number(x) +
-            "/" + QString::number(y) + ".png";
-    QNetworkRequest request(path);
-    request.setRawHeader("User-Agent", "MyBrowser");
-    mWebCtrl.get(request);
+    if (mDownloadingTiles.size() < mMaxDownloadingTiles) {
+        quint64 key = calcKey(zoom, x, y);
+        if (!mDownloadingTiles.contains(key)) {
+            // Only add if this tile is not already downloading
+            QString path = mTileServer + "/" + QString::number(zoom) + "/" + QString::number(x) +
+                    "/" + QString::number(y) + ".png";
+            QNetworkRequest request(path);
+            request.setRawHeader("User-Agent", "MyBrowser");
+            mWebCtrl.get(request);
+            mDownloadingTiles.insert(key, true);
+        }
+    } else {
+        emit errorGetTile("Too many tiles downloading");
+    }
 }
 
 void OsmClient::emitTile(OsmTile tile)
 {
-    mMemoryTiles.append(tile);
-    while (mMemoryTiles.size() > mMaxMemoryTiles) {
-        mMemoryTiles.removeFirst();
+    quint64 key = calcKey(tile.zoom(), tile.x(), tile.y());
+    if (!mMemoryTiles.contains(key)) {
+        mMemoryTiles.insert(key, tile);
+        mMemoryTilesOrder.append(tile);
+
+        // The list is used to keep track of when to delete the oldest tiles
+        while (mMemoryTilesOrder.size() > mMaxMemoryTiles) {
+            OsmTile t = mMemoryTilesOrder.takeFirst();
+            quint64 k = calcKey(t.zoom(), t.x(), t.y());
+            int res = mMemoryTiles.remove(k);
+
+            if (res != 1) {
+                qDebug() << res << mMemoryTiles.size() << k;
+            }
+        }
     }
 
     emit tileReady(tile);
 }
 
+quint64 OsmClient::calcKey(int zoom, int x, int y)
+{
+    return ((qint64)zoom << 40) | ((qint64)x << 20) | (qint64)y;
+}
