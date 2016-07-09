@@ -80,7 +80,7 @@ double OsmTile::getEast()
 
 double OsmTile::getWidthTop()
 {
-    return 156543.03 * cos(getNorth() * M_PI / 180.0) / ((double)(1 << mZoom)) * 256.0;
+    return lat2width(getNorth(), mZoom);
 }
 
 int OsmTile::long2tilex(double lon, int z)
@@ -102,6 +102,11 @@ double OsmTile::tiley2lat(int y, int z)
 {
     double n = M_PI - 2.0 * M_PI * y / pow(2.0, z);
     return 180.0 / M_PI * atan(0.5 * (exp(n) - exp(-n)));
+}
+
+double OsmTile::lat2width(double lat, int zoom)
+{
+    return 156543.03 * cos(lat * M_PI / 180.0) / ((double)(1 << zoom)) * 256.0;
 }
 
 bool OsmTile::operator==(const OsmTile &tile)

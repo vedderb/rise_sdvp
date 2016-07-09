@@ -34,6 +34,7 @@ public:
     static int lat2tiley(double lat, int z);
     static double tilex2long(int x, int z);
     static double tiley2lat(int y, int z);
+    static double lat2width(double lat, int zoom);
 
     // Operators
     bool operator==(const OsmTile& tile);

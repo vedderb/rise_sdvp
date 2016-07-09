@@ -389,7 +389,15 @@ void MapWidget::paintEvent(QPaintEvent *event)
 
         utility::llhToEnu(i_llh, llh_t, xyz);
 
-        double w = -1.0;
+        // Calculate scale at map center
+        double llh_sc[3];
+        double xyz_sc[3];
+        xyz_sc[0] = -mXOffset;
+        xyz_sc[1] = -mYOffset;
+        xyz_sc[2] = 0.0;
+        utility::enuToLlh(i_llh, xyz_sc, llh_sc);
+        double w = OsmTile::lat2width(llh_sc[0], mOsmZoomLevel) * 1000.0;
+
         for (int j = 0;j < 10;j++) {
             for (int i = 0;i < 10;i++) {
                 bool ok;
