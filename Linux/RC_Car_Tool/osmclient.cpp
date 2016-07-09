@@ -1,4 +1,5 @@
 #include "osmclient.h"
+#include <QDebug>
 
 OsmClient::OsmClient(QObject *parent) : QObject(parent)
 {
