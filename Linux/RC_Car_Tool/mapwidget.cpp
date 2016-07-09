@@ -64,6 +64,9 @@ MapWidget::MapWidget(QWidget *parent) :
     mRefLat = 57.71495867;
     mRefLon = 12.89134921;
     mRefHeight = 219.0;
+//    mRefLat = 0.0;
+//    mRefLon = 10.0;
+//    mRefHeight = 0.0;
 
     // Hardcoded for now
     mOsm->setCacheDir("osm_tiles");
@@ -258,13 +261,8 @@ void MapWidget::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
 
-    if (mAntialias) {
-        painter.setRenderHint(QPainter::Antialiasing, true);
-        painter.setRenderHint(QPainter::TextAntialiasing, true);
-    } else {
-        painter.setRenderHint(QPainter::Antialiasing, false);
-        painter.setRenderHint(QPainter::TextAntialiasing, false);
-    }
+    painter.setRenderHint(QPainter::Antialiasing, mAntialias);
+    painter.setRenderHint(QPainter::TextAntialiasing, mAntialias);
 
     const double scaleMax = 20;
     const double scaleMin = 0.000001;
@@ -351,6 +349,11 @@ void MapWidget::paintEvent(QPaintEvent *event)
     const double yStart = -ceil(height() / step / mScaleFactor) * step - ceil(mYOffset / step / mScaleFactor) * step;
     const double yEnd = ceil(height() / step / mScaleFactor) * step - floor(mYOffset / step / mScaleFactor) * step;
 
+    const double cx = -mXOffset / mScaleFactor / 1000.0;
+    const double cy = -mYOffset / mScaleFactor / 1000.0;
+    const double view_w = width() / mScaleFactor / 1000.0;
+    const double view_h = height() / mScaleFactor / 1000.0;
+
     // Draw perspective pixmaps first
     painter.setTransform(drawTrans);
     for(int i = 0;i < mPerspectivePixmaps.size();i++) {
@@ -364,63 +367,71 @@ void MapWidget::paintEvent(QPaintEvent *event)
         i_llh[1] = mRefLon;
         i_llh[2] = mRefHeight;
 
-        double llh[3];
-        double xyz[3];
-        xyz[0] = -mXOffset / mScaleFactor / 1000.0 - width() / mScaleFactor / 2000.0;
-        xyz[1] = -mYOffset / mScaleFactor / 1000.0 + height() / mScaleFactor / 2000.0;
-        xyz[2] = 0;
-
-        utility::enuToLlh(i_llh, xyz, llh);
-
-        mOsmZoomLevel = (int)round(log2(mScaleFactor * 50000000.0));
+        mOsmZoomLevel = (int)round(log2(mScaleFactor * 100000000.0 * cos(i_llh[0] * M_PI / 180.0)));
         if (mOsmZoomLevel > 19) {
             mOsmZoomLevel = 19;
         } else if (mOsmZoomLevel < 0) {
             mOsmZoomLevel = 0;
         }
 
-        int xt = OsmTile::long2tilex(llh[1], mOsmZoomLevel);
-        int yt = OsmTile::lat2tiley(llh[0], mOsmZoomLevel);
+        int xt = OsmTile::long2tilex(i_llh[1], mOsmZoomLevel);
+        int yt = OsmTile::lat2tiley(i_llh[0], mOsmZoomLevel);
 
         double llh_t[3];
         llh_t[0] = OsmTile::tiley2lat(yt, mOsmZoomLevel);
         llh_t[1] = OsmTile::tilex2long(xt, mOsmZoomLevel);
         llh_t[2] = 0.0;
 
+        double xyz[3];
         utility::llhToEnu(i_llh, llh_t, xyz);
 
-        // Calculate scale at map center
-        double llh_sc[3];
-        double xyz_sc[3];
-        xyz_sc[0] = -mXOffset;
-        xyz_sc[1] = -mYOffset;
-        xyz_sc[2] = 0.0;
-        utility::enuToLlh(i_llh, xyz_sc, llh_sc);
-        double w = OsmTile::lat2width(llh_sc[0], mOsmZoomLevel) * 1000.0;
+        // Calculate scale at ENU origin
+        double w = OsmTile::lat2width(i_llh[0], mOsmZoomLevel);
 
-        for (int j = 0;j < 10;j++) {
-            for (int i = 0;i < 10;i++) {
-                bool ok;
-                OsmTile t = mOsm->getTileMemory(mOsmZoomLevel, xt + i, yt + j, ok);
+        int t_ofs_x = (int)ceil(-(cx - view_w / 2.0) / w);
+        int t_ofs_y = (int)ceil((cy + view_h / 2.0) / w);
 
-                if (ok) {
+        // Always antialias openstreetmap tiles
+        painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
+
+        for (int j = 0;j < 20;j++) {
+            for (int i = 0;i < 20;i++) {
+                int xt_i = xt + i - t_ofs_x;
+                int yt_i = yt + j - t_ofs_y;
+                double ts_x = xyz[0] + w * i - (double)t_ofs_x * w;
+                double ts_y = -xyz[1] + w * j - (double)t_ofs_y * w;
+
+                if (ts_x > (cx + view_w / 2.0)) {
+                    break;
+                } else if ((ts_y - w) > (-cy + view_h / 2.0)) {
+                    break;
+                }
+
+                int res;
+                OsmTile t = mOsm->getTile(mOsmZoomLevel, xt_i, yt_i, res);
+
+                if (res > 0) {
                     if (w < 0.0) {
-                        w = t.getWidthTop() * 1000.0;
+                        w = t.getWidthTop();
                     }
 
                     QTransform transOld = painter.transform();
                     QTransform trans = painter.transform();
                     trans.scale(1, -1);
                     painter.setTransform(trans);
-                    painter.drawPixmap(xyz[0] * 1000.0 + w * i, -xyz[1] * 1000.0 + w * j, w, w, t.pixmap());
+                    painter.drawPixmap(ts_x * 1000.0, ts_y * 1000.0,
+                                       w * 1000.0, w * 1000.0, t.pixmap());
                     painter.setTransform(transOld);
                 } else {
                     if (!mOsm->downloadQueueFull()) {
-                        mOsm->getTile(mOsmZoomLevel, xt + i, yt + j);
+                        mOsm->downloadTile(mOsmZoomLevel, xt_i, yt_i);
                     }
                 }
             }
         }
+
+        // Restore antialiasing
+        painter.setRenderHint(QPainter::SmoothPixmapTransform, mAntialias);
     }
 
     painter.setTransform(txtTrans);

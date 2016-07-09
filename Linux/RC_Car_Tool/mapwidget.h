@@ -36,7 +36,7 @@
 #include "osmclient.h"
 
 // QWidget or QGLWidget
-#define MapWidgetType   QGLWidget
+#define MapWidgetType QGLWidget
 
 class MapWidget : public MapWidgetType
 {

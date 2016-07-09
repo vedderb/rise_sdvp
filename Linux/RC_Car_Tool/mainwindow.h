@@ -84,6 +84,7 @@ private slots:
     void on_mapOffButton_clicked();
     void on_mapUpdateSpeedButton_clicked();
     void on_udpPingButton_clicked();
+    void on_mapOpenStreetMapBox_toggled(bool checked);
 
 private:
     Ui::MainWindow *ui;

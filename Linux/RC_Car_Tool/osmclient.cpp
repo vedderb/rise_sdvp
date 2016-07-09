@@ -3,8 +3,8 @@
 
 OsmClient::OsmClient(QObject *parent) : QObject(parent)
 {
-    mMaxMemoryTiles = 500;
-    mMaxDownloadingTiles = 4;
+    mMaxMemoryTiles = 300;
+    mMaxDownloadingTiles = 3;
 
     connect(&mWebCtrl, SIGNAL(finished(QNetworkReply*)),
             this, SLOT(fileDownloaded(QNetworkReply*)));
@@ -38,46 +38,103 @@ bool OsmClient::setTileServerUrl(QString path)
     }
 }
 
-int OsmClient::getTile(int zoom, int x, int y)
+/**
+ * @brief OsmClient::getTile
+ * Get a openstreetmap tile
+ *
+ * @param zoom
+ * zoom level
+ *
+ * @param x
+ * x index
+ *
+ * @param y
+ * y index
+ *
+ * @param res
+ * Reference to store the result in.
+ *
+ * Result greater than 0 means that a valid tile is returned. Negative results
+ * are errors.
+ *
+ * -1: Unknown error.
+ * 0: Tile not cached in memory or on disk.
+ * 1: Tile read from memory.
+ * 2: Tile read from disk.
+ *
+ * @return
+ * The tile if res > 0, otherwise a tile with a null pixmap.
+ */
+OsmTile OsmClient::getTile(int zoom, int x, int y, int &res)
 {
-    int retval = -1;
+    res = -1;
 
-    if (!mCacheDir.isEmpty()) {
+    quint64 key = calcKey(zoom, x, y);
+    OsmTile t = mMemoryTiles.value(key);
+
+    if (!t.pixmap().isNull()) {
+        res = 1;
+    } else if (!mCacheDir.isEmpty()) {
         QString path = mCacheDir + "/" + QString::number(zoom) + "/" +
                 QString::number(x) + "/" + QString::number(y) + ".png";
         QFile file;
         file.setFileName(path);
         if (file.exists()) {
-            emitTile(OsmTile(QPixmap(path), zoom, x, y));
-            retval = 1;
-        } else {
-            if (!mTileServer.isEmpty()) {
-                downloadTile(zoom, x, y);
-                retval = 2;
-            } else {
-                emit errorGetTile("Tile not cached and tile server not set.");
-                retval = -2;
-            }
-        }
-    } else {
-        if (!mTileServer.isEmpty()) {
-            downloadTile(zoom, x, y);
-        } else {
-            emit errorGetTile("Cache dir and tile server not set.");
-            retval = -3;
+            res = 2;
+            t = OsmTile(QPixmap(path), zoom, x, y);
         }
     }
 
-    return retval;
+    return t;
 }
 
-OsmTile OsmClient::getTileMemory(int zoom, int x, int y, bool &ok)
+/**
+ * @brief OsmClient::downloadTile
+ * Start a tile dowmload.
+ *
+ * @param zoom
+ * zoom level
+ *
+ * @param x
+ * x index
+ *
+ * @param y
+ * y index
+ *
+ * @return
+ * -3: Tile server not set.
+ * -2: Too many tiles downloading.
+ * -1: Unknown error.
+ * 1: Tile download started.
+ *
+ */
+int OsmClient::downloadTile(int zoom, int x, int y)
 {
-    quint64 key = calcKey(zoom, x, y);
-    OsmTile t = mMemoryTiles.value(key);
+    int retval = -1;
 
-    ok = !t.pixmap().isNull();
-    return t;
+    if (!mTileServer.isEmpty()) {
+        if (mDownloadingTiles.size() < mMaxDownloadingTiles) {
+            quint64 key = calcKey(zoom, x, y);
+            if (!mDownloadingTiles.contains(key)) {
+                // Only add if this tile is not already downloading
+                QString path = mTileServer + "/" + QString::number(zoom) +
+                        "/" + QString::number(x) + "/" + QString::number(y) + ".png";
+                QNetworkRequest request(path);
+                request.setRawHeader("User-Agent", "MyBrowser");
+                mWebCtrl.get(request);
+                mDownloadingTiles.insert(key, true);
+            }
+            retval = 1;
+        } else {
+            emit errorGetTile("Too many tiles downloading.");
+            retval = -2;
+        }
+    } else {
+        emit errorGetTile("Tile server not set.");
+        retval = -3;
+    }
+
+    return retval;
 }
 
 bool OsmClient::downloadQueueFull()
@@ -148,35 +205,16 @@ void OsmClient::setMaxMemoryTiles(int maxMemoryTiles)
     mMaxMemoryTiles = maxMemoryTiles;
 }
 
-void OsmClient::downloadTile(int zoom, int x, int y)
-{
-    if (mDownloadingTiles.size() < mMaxDownloadingTiles) {
-        quint64 key = calcKey(zoom, x, y);
-        if (!mDownloadingTiles.contains(key)) {
-            // Only add if this tile is not already downloading
-            QString path = mTileServer + "/" + QString::number(zoom) + "/" + QString::number(x) +
-                    "/" + QString::number(y) + ".png";
-            QNetworkRequest request(path);
-            request.setRawHeader("User-Agent", "MyBrowser");
-            mWebCtrl.get(request);
-            mDownloadingTiles.insert(key, true);
-        }
-    } else {
-        emit errorGetTile("Too many tiles downloading");
-    }
-}
-
 void OsmClient::emitTile(OsmTile tile)
 {
     quint64 key = calcKey(tile.zoom(), tile.x(), tile.y());
     if (!mMemoryTiles.contains(key)) {
         mMemoryTiles.insert(key, tile);
-        mMemoryTilesOrder.append(tile);
+        mMemoryTilesOrder.append(key);
 
         // The list is used to keep track of when to delete the oldest tiles
         while (mMemoryTilesOrder.size() > mMaxMemoryTiles) {
-            OsmTile t = mMemoryTilesOrder.takeFirst();
-            quint64 k = calcKey(t.zoom(), t.x(), t.y());
+            quint64 k = mMemoryTilesOrder.takeFirst();
             int res = mMemoryTiles.remove(k);
 
             if (res != 1) {

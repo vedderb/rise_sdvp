@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1048</width>
-    <height>658</height>
+    <height>686</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -264,6 +264,16 @@
               </property>
              </widget>
             </item>
+            <item>
+             <widget class="QCheckBox" name="mapOpenStreetMapBox">
+              <property name="text">
+               <string>Use OpenStreetMap</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
            </layout>
           </item>
           <item>
@@ -368,7 +378,7 @@
            <x>0</x>
            <y>0</y>
            <width>300</width>
-           <height>78</height>
+           <height>82</height>
           </rect>
          </property>
          <attribute name="label">
@@ -400,7 +410,7 @@
            <x>0</x>
            <y>0</y>
            <width>300</width>
-           <height>78</height>
+           <height>82</height>
           </rect>
          </property>
          <attribute name="label">
@@ -692,7 +702,7 @@
      <x>0</x>
      <y>0</y>
      <width>1048</width>
-     <height>25</height>
+     <height>27</height>
     </rect>
    </property>
   </widget>

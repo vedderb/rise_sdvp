@@ -791,3 +791,9 @@ void MainWindow::on_udpPingButton_clicked()
 {
     mPing->pingHost(ui->udpIpEdit->text(), 64, "UDP Host");
 }
+
+void MainWindow::on_mapOpenStreetMapBox_toggled(bool checked)
+{
+    ui->mapWidget->setDrawOpenStreetmap(checked);
+    ui->mapWidget->update();
+}

@@ -36,8 +36,8 @@ public:
     explicit OsmClient(QObject *parent = 0);
     bool setCacheDir(QString path);
     bool setTileServerUrl(QString path);
-    int getTile(int zoom, int x, int y);
-    OsmTile getTileMemory(int zoom, int x, int y, bool &ok);
+    OsmTile getTile(int zoom, int x, int y, int &res);
+    int downloadTile(int zoom, int x, int y);
     bool downloadQueueFull();
 
     int getMaxMemoryTiles() const;
@@ -60,13 +60,12 @@ private:
     QString mTileServer;
     QNetworkAccessManager mWebCtrl;
     QHash<quint64, OsmTile> mMemoryTiles;
-    QList<OsmTile> mMemoryTilesOrder;
+    QList<quint64> mMemoryTilesOrder;
     QHash<quint64, bool> mDownloadingTiles;
 
     int mMaxMemoryTiles;
     int mMaxDownloadingTiles;
 
-    void downloadTile(int zoom, int x, int y);
     void emitTile(OsmTile tile);
     quint64 calcKey(int zoom, int x, int y);
 
