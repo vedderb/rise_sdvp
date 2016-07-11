@@ -158,36 +158,4 @@ typedef enum {
     JS_TYPE_PS4
 } JS_TYPE;
 
-// GPS State
-typedef struct {
-    // GPS position
-    double lat;
-    double lon;
-    double height;
-    double x;
-    double y;
-    double z;
-    int fix_type; // 0=Invalid, 1=SPP, 4=RTK fix, 5=RTK float
-    int sats;
-    int ms; // Milliseconds today
-    unsigned int update_time;
-    // Local position (ENU frame)
-    bool local_init_done;
-    float lx;
-    float ly;
-    float lz;
-    // Initial local position
-    double ix;
-    double iy;
-    double iz;
-    // Rotation matrix for local position
-    float r1c1, r1c2, r1c3;
-    float r2c1, r2c2, r2c3;
-    float r3c1, r3c2, r3c3;
-    // Local position offset and rotation
-    float ox;
-    float oy;
-    float orot;
-} GPS_STATE;
-
 #endif /* DATATYPES_H_ */

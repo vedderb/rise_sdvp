@@ -7,6 +7,7 @@
 #include "datatypes.h"
 #include "ping.h"
 #include "locpoint.h"
+#include "mapwidget.h"
 
 namespace Ui {
 class NetworkLogger;
@@ -19,6 +20,7 @@ class NetworkLogger : public QWidget
 public:
     explicit NetworkLogger(QWidget *parent = 0);
     ~NetworkLogger();
+    void setMap(MapWidget *map);
 
 private slots:
     void tcpInputConnected();
@@ -33,7 +35,6 @@ private slots:
     void on_logClearButton_clicked();
     void on_logFileChooseButton_clicked();
     void on_logFileActiveBox_toggled(bool checked);
-    void on_mapClearButton_clicked();
     void on_statLogOpenButton_clicked();
     void on_statLogChooseButton_clicked();
 
@@ -43,13 +44,10 @@ private:
     bool mTcpConnected;
     QString mFixNowStr;
     QString mSatNowStr;
-    GPS_STATE mGpsState;
     Ping *mPing;
     QFile mLog;
     LocPoint mLastPoint;
-
-    void initGpsLocal(GPS_STATE *gps);
-    void calcEnuCoords(GPS_STATE *gps);
+    MapWidget *mMap;
 
 };
 

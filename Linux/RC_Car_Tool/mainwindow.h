@@ -85,6 +85,13 @@ private slots:
     void on_mapUpdateSpeedButton_clicked();
     void on_udpPingButton_clicked();
     void on_mapOpenStreetMapBox_toggled(bool checked);
+    void on_mapAntialiasOsmBox_toggled(bool checked);
+    void on_mapOsmResSlider_valueChanged(int value);
+    void on_mapChooseNmeaButton_clicked();
+    void on_mapImportNmeaButton_clicked();
+    void on_mapRemoveInfoButton_clicked();
+    void on_traceInfoMinZoomBox_valueChanged(double arg1);
+    void on_removeRouteExtraButton_clicked();
 
 private:
     Ui::MainWindow *ui;

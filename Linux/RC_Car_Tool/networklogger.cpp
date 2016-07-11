@@ -19,8 +19,8 @@ NetworkLogger::NetworkLogger(QWidget *parent) :
     mTcpConnected = false;
     mFixNowStr = "Solution...";
     mSatNowStr = "Sats...";
-    memset(&mGpsState, 0, sizeof(mGpsState));
     mPing = new Ping(this);
+    mMap = 0;
 
     connect(mTcpSocket, SIGNAL(readyRead()), this, SLOT(tcpInputDataAvailable()));
     connect(mTcpSocket, SIGNAL(connected()), this, SLOT(tcpInputConnected()));
@@ -40,6 +40,11 @@ NetworkLogger::~NetworkLogger()
     }
 
     delete ui;
+}
+
+void NetworkLogger::setMap(MapWidget *map)
+{
+    mMap = map;
 }
 
 void NetworkLogger::tcpInputConnected()
@@ -103,14 +108,6 @@ void NetworkLogger::tcpInputDataAvailable()
             return;
         }
 
-        mGpsState.lat = gga.lat;
-        mGpsState.lon = gga.lon;
-        mGpsState.height = gga.height;
-        mGpsState.fix_type = gga.fix_type;
-        mGpsState.sats = gga.n_sat;
-        mGpsState.ms = gga.t_tow;
-        calcEnuCoords(&mGpsState);
-
         QString logStr;
         logStr.sprintf("%s    %.8f    %.8f    %.3f    %d    %d",
                        QDateTime::currentDateTime().toString(Qt::ISODate).toLocal8Bit().data(),
@@ -118,8 +115,18 @@ void NetworkLogger::tcpInputDataAvailable()
         bool pingOk = mPing->pingHost(ui->pingHostEdit->text(), ui->pingLenBox->value(), logStr);
 
         // Plot local position on map
-        if (pingOk) {
-            mLastPoint.setXY(mGpsState.lx, mGpsState.ly);
+        if (pingOk && mMap) {
+            double i_llh[3];
+            double llh[3];
+            double xyz[3];
+
+            mMap->getEnuRef(i_llh);
+            llh[0] = gga.lat;
+            llh[1] = gga.lon;
+            llh[2] = gga.height;
+            utility::llhToEnu(i_llh, llh, xyz);
+
+            mLastPoint.setXY(xyz[0], xyz[1]);
 
             QString info;
             info.sprintf("Lat  : %.8f\n"
@@ -169,12 +176,12 @@ void NetworkLogger::pingRx(int time, QString msg)
             mLog.write(QString(logLine + "\r\n").toLocal8Bit());
         }
 
-        if (ui->plotMapBox->isChecked()) {
+        if (ui->plotMapBox->isChecked() && mMap) {
             QString info = mLastPoint.getInfo();
             msStr.sprintf("Time : %.3f ms", (double)time / 1000.0);
             info.append(msStr);
             mLastPoint.setInfo(info);
-            ui->mapWidget->addInfoPoint(mLastPoint);
+            mMap->addInfoPoint(mLastPoint);
         }
     }
 }
@@ -197,11 +204,11 @@ void NetworkLogger::pingError(QString msg, QString error)
             mLog.write(QString(logLine + "\r\n").toLocal8Bit());
         }
 
-        if (ui->plotMapBox->isChecked()) {
+        if (ui->plotMapBox->isChecked() && mMap) {
             QString info = mLastPoint.getInfo();
             info.append("Time : error");
             mLastPoint.setInfo(info);
-            ui->mapWidget->addInfoPoint(mLastPoint);
+            mMap->addInfoPoint(mLastPoint);
         }
     }
 }
@@ -220,67 +227,6 @@ void NetworkLogger::on_nmeaServerConnectButton_clicked()
 
         ui->nmeaServerConnectButton->setEnabled(false);
         ui->nmeaServerConnectButton->setText("Connecting...");
-    }
-}
-
-void NetworkLogger::initGpsLocal(GPS_STATE *gps)
-{
-    gps->ix = gps->x;
-    gps->iy = gps->y;
-    gps->iz = gps->z;
-
-    float so = sinf((float)gps->lon * M_PI / 180.0);
-    float co = cosf((float)gps->lon * M_PI / 180.0);
-    float sa = sinf((float)gps->lat * M_PI / 180.0);
-    float ca = cosf((float)gps->lat * M_PI / 180.0);
-
-    // ENU
-    gps->r1c1 = -so;
-    gps->r1c2 = co;
-    gps->r1c3 = 0.0;
-
-    gps->r2c1 = -sa * co;
-    gps->r2c2 = -sa * so;
-    gps->r2c3 = ca;
-
-    gps->r3c1 = ca * co;
-    gps->r3c2 = ca * so;
-    gps->r3c3 = sa;
-
-    gps->lx = 0.0;
-    gps->ly = 0.0;
-    gps->lz = 0.0;
-
-    // Set offset to 0 for now
-    gps->ox = 0.0;
-    gps->oy = 0.0;
-
-    gps->local_init_done = true;
-}
-
-void NetworkLogger::calcEnuCoords(GPS_STATE *gps)
-{
-    double x, y, z;
-    utility::llhToXyz(gps->lat, gps->lon, gps->height, &x, &y, &z);
-    gps->x = x;
-    gps->y = y;
-    gps->z = z;
-
-    // Convert to local ENU frame if initialized
-    if (gps->local_init_done) {
-        float dx = (float)(gps->x - gps->ix);
-        float dy = (float)(gps->y - gps->iy);
-        float dz = (float)(gps->z - gps->iz);
-
-        gps->lx = gps->r1c1 * dx + gps->r1c2 * dy + gps->r1c3 * dz;
-        gps->ly = gps->r2c1 * dx + gps->r2c2 * dy + gps->r2c3 * dz;
-        gps->lz = gps->r3c1 * dx + gps->r3c2 * dy + gps->r3c3 * dz;
-    } else {
-        initGpsLocal(gps);
-        ui->mapWidget->setEnuRef(gps->lat, gps->lon, gps->height);
-        gps->lx = 0.0;
-        gps->ly = 0.0;
-        gps->lz = 0.0;
     }
 }
 
@@ -325,11 +271,6 @@ void NetworkLogger::on_logFileActiveBox_toggled(bool checked)
     }
 }
 
-void NetworkLogger::on_mapClearButton_clicked()
-{
-    ui->mapWidget->clearInfoTrace();
-}
-
 void NetworkLogger::on_statLogOpenButton_clicked()
 {
     QFile log;
@@ -341,21 +282,39 @@ void NetworkLogger::on_statLogOpenButton_clicked()
         if (ok) {
             QTextStream in(&log);
 
+            double i_llh[3];
+            bool i_llh_set = false;
+
             while(!in.atEnd()) {
-                QStringList list = in.readLine().split(QRegExp("[ ]"), QString::SkipEmptyParts);
+                QString line = in.readLine();
+                QStringList list = line.split(QRegExp("[ ]"), QString::SkipEmptyParts);
                 QDateTime date = QDateTime::fromString(list.at(0), Qt::ISODate);
 
-                mGpsState.lat = list.at(1).toDouble();
-                mGpsState.lon = list.at(2).toDouble();
-                mGpsState.height = list.at(3).toDouble();
-                mGpsState.fix_type = list.at(4).toInt();
-                calcEnuCoords(&mGpsState);
+                double llh[3];
+                llh[0] = list.at(1).toDouble();
+                llh[1] = list.at(2).toDouble();
+                llh[2] = list.at(3).toDouble();
+                int fix_type = list.at(4).toInt();
+
+                if (!i_llh_set) {
+                    i_llh[0] = llh[0];
+                    i_llh[1] = llh[1];
+                    i_llh[2] = llh[2];
+                    i_llh_set = true;
+
+                    if (mMap) {
+                        mMap->setEnuRef(i_llh[0], i_llh[1], i_llh[2]);
+                    }
+                }
+
+                double xyz[3];
+                utility::llhToEnu(i_llh, llh, xyz);
 
                 int bytes = list.at(5).toInt();
                 QString pingRes = list.at(6);
 
                 LocPoint p;
-                p.setXY(mGpsState.lx, mGpsState.ly);
+                p.setXY(xyz[0], xyz[1]);
 
                 QString info;
                 info.sprintf("Date : %s\n"
@@ -365,8 +324,8 @@ void NetworkLogger::on_statLogOpenButton_clicked()
                              "Fix  : %d\n"
                              "Pktzs: %d\n"
                              "Ping : %s",
-                             date.toString(Qt::ISODate).toLocal8Bit().data(), mGpsState.lat, mGpsState.lon, mGpsState.height,
-                             mGpsState.fix_type, bytes, pingRes.toLocal8Bit().data());
+                             date.toString(Qt::ISODate).toLocal8Bit().data(), llh[0], llh[1], llh[2],
+                             fix_type, bytes, pingRes.toLocal8Bit().data());
 
                 p.setInfo(info);
 
@@ -374,15 +333,21 @@ void NetworkLogger::on_statLogOpenButton_clicked()
                 double pingt = pingRes.toDouble(&ok);
 
                 if (ok) {
-                    if (pingt > 50.0) {
+                    if (pingt > 100.0) {
+                        p.setColor(Qt::red);
+                    } else if (pingt > 60.0) {
                         p.setColor(Qt::yellow);
                     }
                 } else {
                     p.setColor(Qt::red);
                 }
 
-                ui->mapWidget->addInfoPoint(p);
+                if (mMap) {
+                    mMap->addInfoPoint(p);
+                }
             }
+
+            log.close();
         } else {
             QMessageBox::warning(this, "Open Error", "Could not open " + log.fileName());
         }

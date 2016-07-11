@@ -23,6 +23,9 @@
 #include <QMessageBox>
 #include <QFileDialog>
 
+#include "nmeaserver.h"
+#include "utility.h"
+
 namespace {
 void stepTowards(double &value, double goal, double step) {
     if (value < goal) {
@@ -84,6 +87,7 @@ MainWindow::MainWindow(QWidget *parent) :
     mKeyRight = false;
 
     ui->mapWidget->setRoutePointSpeed(ui->mapRouteSpeedBox->value() / 3.6);
+    ui->networkLoggerWidget->setMap(ui->mapWidget);
 
     connect(mTimer, SIGNAL(timeout()), this, SLOT(timerSlot()));
     connect(mSerialPort, SIGNAL(readyRead()),
@@ -566,7 +570,7 @@ void MainWindow::on_jsDisconnectButton_clicked()
 
 void MainWindow::on_mapAntialiasBox_toggled(bool checked)
 {
-    ui->mapWidget->setAntialiasing(checked);
+    ui->mapWidget->setAntialiasDrawings(checked);
 }
 
 void MainWindow::on_carsWidget_tabCloseRequested(int index)
@@ -796,4 +800,103 @@ void MainWindow::on_mapOpenStreetMapBox_toggled(bool checked)
 {
     ui->mapWidget->setDrawOpenStreetmap(checked);
     ui->mapWidget->update();
+}
+
+void MainWindow::on_mapAntialiasOsmBox_toggled(bool checked)
+{
+    ui->mapWidget->setAntialiasOsm(checked);
+}
+
+void MainWindow::on_mapOsmResSlider_valueChanged(int value)
+{
+    ui->mapWidget->setOsmRes((double)value / 100.0);
+}
+
+void MainWindow::on_mapChooseNmeaButton_clicked()
+{
+    QString path;
+    path = QFileDialog::getOpenFileName(this, tr("Choose log file to open"));
+    if (path.isNull()) {
+        return;
+    }
+
+    ui->mapImportNmeaEdit->setText(path);
+}
+
+void MainWindow::on_mapImportNmeaButton_clicked()
+{
+    QFile file;
+    file.setFileName(ui->mapImportNmeaEdit->text());
+
+    if (file.exists()) {
+        bool ok = file.open(QIODevice::ReadOnly | QIODevice::Text);
+
+        if (ok) {
+            QTextStream in(&file);
+
+            double i_llh[3];
+            bool i_llh_set = false;
+
+            while(!in.atEnd()) {
+                QString line = in.readLine();
+
+                NmeaServer::nmea_gga_info_t gga;
+                int res = NmeaServer::decodeNmeaGGA(line.toLocal8Bit(), gga);
+
+                if (res > 5) {
+                    if (!i_llh_set) {
+                        if (ui->mapImportNmeaZeroEnuBox->isChecked()) {
+                            i_llh[0] = gga.lat;
+                            i_llh[1] = gga.lon;
+                            i_llh[2] = gga.height;
+                            ui->mapWidget->setEnuRef(i_llh[0], i_llh[1], i_llh[2]);
+                        } else {
+                            ui->mapWidget->getEnuRef(i_llh);
+                        }
+
+                        i_llh_set = true;
+                    }
+
+                    double llh[3];
+                    double xyz[3];
+
+                    llh[0] = gga.lat;
+                    llh[1] = gga.lon;
+                    llh[2] = gga.height;
+                    utility::llhToEnu(i_llh, llh, xyz);
+
+                    LocPoint p;
+                    p.setXY(xyz[0], xyz[1]);
+                    QString info;
+
+                    info.sprintf("Fix type: %d\n"
+                                 "Height  : %.2f",
+                                 gga.fix_type, gga.height);
+
+                    p.setInfo(info);
+                    ui->mapWidget->addInfoPoint(p);
+                }
+            }
+        } else {
+            QMessageBox::warning(this, "Open Error", "Could not open " + file.fileName());
+        }
+
+    } else {
+        QMessageBox::warning(this, "Open Error", "Please select a valid log file");
+    }
+}
+
+void MainWindow::on_mapRemoveInfoButton_clicked()
+{
+    ui->mapWidget->clearInfoTrace();
+}
+
+void MainWindow::on_traceInfoMinZoomBox_valueChanged(double arg1)
+{
+    ui->mapWidget->setInfoTraceTextZoom(arg1);
+}
+
+void MainWindow::on_removeRouteExtraButton_clicked()
+{
+    on_mapRemoveRouteButton_clicked();
 }

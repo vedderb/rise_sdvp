@@ -68,6 +68,7 @@ private:
 
     void emitTile(OsmTile tile);
     quint64 calcKey(int zoom, int x, int y);
+    void storeTileMemory(quint64 key, const OsmTile &tile);
 
 };
 

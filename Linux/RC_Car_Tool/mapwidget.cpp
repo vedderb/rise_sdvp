@@ -54,11 +54,14 @@ MapWidget::MapWidget(QWidget *parent) :
     mPaintTimer = new QTimer(this);
     mPaintTimer->setSingleShot(true);
     mRoutePointSpeed = 1.0;
-    mAntialias = false;
+    mAntialiasDrawings = false;
+    mAntialiasOsm = true;
+    mInfoTraceTextZoom = 0.5;
 
     mOsm = new OsmClient(this);
     mDrawOpenStreetmap = true;
     mOsmZoomLevel = 15;
+    mOsmRes = 1.0;
 
     // Set this to the SP base station position for now
     mRefLat = 57.71495867;
@@ -215,9 +218,15 @@ void MapWidget::repaintAfterEvents()
     }
 }
 
-void MapWidget::setAntialiasing(bool antialias)
+void MapWidget::setAntialiasDrawings(bool antialias)
 {
-    mAntialias = antialias;
+    mAntialiasDrawings = antialias;
+    update();
+}
+
+void MapWidget::setAntialiasOsm(bool antialias)
+{
+    mAntialiasOsm = antialias;
     update();
 }
 
@@ -261,8 +270,8 @@ void MapWidget::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
 
-    painter.setRenderHint(QPainter::Antialiasing, mAntialias);
-    painter.setRenderHint(QPainter::TextAntialiasing, mAntialias);
+    painter.setRenderHint(QPainter::Antialiasing, mAntialiasDrawings);
+    painter.setRenderHint(QPainter::TextAntialiasing, mAntialiasDrawings);
 
     const double scaleMax = 20;
     const double scaleMin = 0.000001;
@@ -336,7 +345,7 @@ void MapWidget::paintEvent(QPaintEvent *event)
     font.setPointSize(10);
     painter.setFont(font);
 
-    // Axis parameters
+    // Grid parameters
     const double scaleMult = 0.1 * ceil((1.0 / ((mScaleFactor * 10.0) / 50.0)));
     const double step = 100 * scaleMult;
     const double zeroAxisWidth = 3;
@@ -367,7 +376,8 @@ void MapWidget::paintEvent(QPaintEvent *event)
         i_llh[1] = mRefLon;
         i_llh[2] = mRefHeight;
 
-        mOsmZoomLevel = (int)round(log2(mScaleFactor * 100000000.0 * cos(i_llh[0] * M_PI / 180.0)));
+        mOsmZoomLevel = (int)round(log2(mScaleFactor * mOsmRes * 130000000.0 *
+                                        cos(i_llh[0] * M_PI / 180.0)));
         if (mOsmZoomLevel > 19) {
             mOsmZoomLevel = 19;
         } else if (mOsmZoomLevel < 0) {
@@ -391,20 +401,27 @@ void MapWidget::paintEvent(QPaintEvent *event)
         int t_ofs_x = (int)ceil(-(cx - view_w / 2.0) / w);
         int t_ofs_y = (int)ceil((cy + view_h / 2.0) / w);
 
-        // Always antialias openstreetmap tiles
-        painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
+        painter.setRenderHint(QPainter::SmoothPixmapTransform, mAntialiasOsm);
 
-        for (int j = 0;j < 20;j++) {
-            for (int i = 0;i < 20;i++) {
+        for (int j = 0;j < 40;j++) {
+            for (int i = 0;i < 40;i++) {
                 int xt_i = xt + i - t_ofs_x;
                 int yt_i = yt + j - t_ofs_y;
                 double ts_x = xyz[0] + w * i - (double)t_ofs_x * w;
                 double ts_y = -xyz[1] + w * j - (double)t_ofs_y * w;
 
+                // We are outside the view
                 if (ts_x > (cx + view_w / 2.0)) {
                     break;
                 } else if ((ts_y - w) > (-cy + view_h / 2.0)) {
                     break;
+                }
+
+                // This tile is not part of the map
+                if (xt_i < 0 || yt_i < 0 ||
+                        xt_i >= (1 << mOsmZoomLevel) ||
+                        yt_i >= (1 << mOsmZoomLevel)) {
+                    continue;
                 }
 
                 int res;
@@ -431,7 +448,7 @@ void MapWidget::paintEvent(QPaintEvent *event)
         }
 
         // Restore antialiasing
-        painter.setRenderHint(QPainter::SmoothPixmapTransform, mAntialias);
+        painter.setRenderHint(QPainter::SmoothPixmapTransform, mAntialiasDrawings);
     }
 
     painter.setTransform(txtTrans);
@@ -550,19 +567,21 @@ void MapWidget::paintEvent(QPaintEvent *event)
         painter.drawLine(mInfoTrace[i - 1].getX() * 1000.0, mInfoTrace[i - 1].getY() * 1000.0,
                 mInfoTrace[i].getX() * 1000.0, mInfoTrace[i].getY() * 1000.0);
     }
-    for (int i = 0;i < mInfoTrace.size();i++) {
-        QPointF p = mInfoTrace[i].getPointMm();
 
-        if (p.x() > xStart && p.x() < xEnd && p.y() > yStart && p.y() < yEnd) {
+    // Draw green points first
+    for (int i = 0;i < mInfoTrace.size();i++) {
+        const LocPoint &ip = mInfoTrace[i];
+        QPointF p = ip.getPointMm();
+
+        if ((ip.getColor() == Qt::green || ip.getColor() == Qt::darkGreen) &&
+                p.x() > xStart && p.x() < xEnd && p.y() > yStart && p.y() < yEnd) {
             painter.setTransform(drawTrans);
-            pen.setColor(mInfoTrace[i].getColor());
-            painter.setBrush(mInfoTrace[i].getColor());
+            pen.setColor(ip.getColor());
+            painter.setBrush(ip.getColor());
             painter.setPen(pen);
             painter.drawEllipse(p, 5 / mScaleFactor, 5 / mScaleFactor);
-//            double w = 10.0 / mScaleFactor;
-//            painter.fillRect(p.x() - w / 2.0, p.y() - w / 2.0, w, w, mInfoTrace[i].getColor());
 
-            if (mScaleFactor > 0.3) {
+            if (mScaleFactor > mInfoTraceTextZoom) {
                 pt_txt.setX(p.x() + 5 / mScaleFactor);
                 pt_txt.setY(p.y());
                 painter.setTransform(txtTrans);
@@ -572,7 +591,35 @@ void MapWidget::paintEvent(QPaintEvent *event)
                 painter.setFont(QFont("monospace"));
                 rect_txt.setCoords(pt_txt.x(), pt_txt.y() - 20,
                                    pt_txt.x() + 500, pt_txt.y() + 500);
-                painter.drawText(rect_txt, Qt::AlignTop | Qt::AlignLeft, mInfoTrace[i].getInfo());
+                painter.drawText(rect_txt, Qt::AlignTop | Qt::AlignLeft, ip.getInfo());
+            }
+        }
+    }
+
+    // Draw other points after the green ones so that they come on top
+    for (int i = 0;i < mInfoTrace.size();i++) {
+        const LocPoint &ip = mInfoTrace[i];
+        QPointF p = ip.getPointMm();
+
+        if (ip.getColor() != Qt::green && ip.getColor() != Qt::darkGreen &&
+                p.x() > xStart && p.x() < xEnd && p.y() > yStart && p.y() < yEnd) {
+            painter.setTransform(drawTrans);
+            pen.setColor(ip.getColor());
+            painter.setBrush(ip.getColor());
+            painter.setPen(pen);
+            painter.drawEllipse(p, 5 / mScaleFactor, 5 / mScaleFactor);
+
+            if (mScaleFactor > mInfoTraceTextZoom) {
+                pt_txt.setX(p.x() + 5 / mScaleFactor);
+                pt_txt.setY(p.y());
+                painter.setTransform(txtTrans);
+                pt_txt = drawTrans.map(pt_txt);
+                pen.setColor(Qt::black);
+                painter.setPen(pen);
+                painter.setFont(QFont("monospace"));
+                rect_txt.setCoords(pt_txt.x(), pt_txt.y() - 20,
+                                   pt_txt.x() + 500, pt_txt.y() + 500);
+                painter.drawText(rect_txt, Qt::AlignTop | Qt::AlignLeft, ip.getInfo());
             }
         }
     }
@@ -697,10 +744,17 @@ void MapWidget::paintEvent(QPaintEvent *event)
 
     // Draw units (m)
     painter.setTransform(txtTrans);
-    font.setPointSize(16);
+    font.setPointSize(12);
     painter.setFont(font);
-    txt = "(m)";
-    painter.drawText(width() - 50, 35, txt);
+    txt = "Grid unit: m";
+    painter.drawText(width() - 140, 30, txt);
+
+    // Draw zoom level
+    painter.setTransform(txtTrans);
+    font.setPointSize(12);
+    painter.setFont(font);
+    txt.sprintf("Zoom: %.7f", mScaleFactor);
+    painter.drawText(width() - 140, 55, txt);
 
     painter.end();
 }
@@ -816,6 +870,28 @@ void MapWidget::wheelEvent(QWheelEvent *e)
         emit offsetChanged(mXOffset, mYOffset);
         repaintAfterEvents();
     }
+}
+
+double MapWidget::getInfoTraceTextZoom() const
+{
+    return mInfoTraceTextZoom;
+}
+
+void MapWidget::setInfoTraceTextZoom(double infoTraceTextZoom)
+{
+    mInfoTraceTextZoom = infoTraceTextZoom;
+    update();
+}
+
+double MapWidget::getOsmRes() const
+{
+    return mOsmRes;
+}
+
+void MapWidget::setOsmRes(double osmRes)
+{
+    mOsmRes = osmRes;
+    update();
 }
 
 bool MapWidget::getDrawOpenStreetmap() const

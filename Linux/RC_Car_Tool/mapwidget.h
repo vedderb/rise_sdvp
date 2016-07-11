@@ -66,11 +66,16 @@ public:
     void clearPerspectivePixmaps();
     QPoint getMousePosRelative();
     void repaintAfterEvents();
-    void setAntialiasing(bool antialias);
+    void setAntialiasDrawings(bool antialias);
+    void setAntialiasOsm(bool antialias);
     bool getDrawOpenStreetmap() const;
     void setDrawOpenStreetmap(bool drawOpenStreetmap);
     void setEnuRef(double lat, double lon, double height);
     void getEnuRef(double *llh);
+    double getOsmRes() const;
+    void setOsmRes(double osmRes);
+    double getInfoTraceTextZoom() const;
+    void setInfoTraceTextZoom(double infoTraceTextZoom);
 
 signals:
     void scaleChanged(double newScale);
@@ -113,7 +118,10 @@ private:
     double xRealPos;
     double yRealPos;
     QTimer *mPaintTimer;
-    bool mAntialias;
+    bool mAntialiasDrawings;
+    bool mAntialiasOsm;
+    double mOsmRes;
+    double mInfoTraceTextZoom;
 
     OsmClient *mOsm;
     int mOsmZoomLevel;

@@ -82,6 +82,7 @@ OsmTile OsmClient::getTile(int zoom, int x, int y, int &res)
         if (file.exists()) {
             res = 2;
             t = OsmTile(QPixmap(path), zoom, x, y);
+            storeTileMemory(key, t);
         }
     }
 
@@ -209,18 +210,7 @@ void OsmClient::emitTile(OsmTile tile)
 {
     quint64 key = calcKey(tile.zoom(), tile.x(), tile.y());
     if (!mMemoryTiles.contains(key)) {
-        mMemoryTiles.insert(key, tile);
-        mMemoryTilesOrder.append(key);
-
-        // The list is used to keep track of when to delete the oldest tiles
-        while (mMemoryTilesOrder.size() > mMaxMemoryTiles) {
-            quint64 k = mMemoryTilesOrder.takeFirst();
-            int res = mMemoryTiles.remove(k);
-
-            if (res != 1) {
-                qDebug() << res << mMemoryTiles.size() << k;
-            }
-        }
+        storeTileMemory(key, tile);
     }
 
     emit tileReady(tile);
@@ -229,4 +219,20 @@ void OsmClient::emitTile(OsmTile tile)
 quint64 OsmClient::calcKey(int zoom, int x, int y)
 {
     return ((qint64)zoom << 40) | ((qint64)x << 20) | (qint64)y;
+}
+
+void OsmClient::storeTileMemory(quint64 key, const OsmTile &tile)
+{
+    mMemoryTiles.insert(key, tile);
+    mMemoryTilesOrder.append(key);
+
+    // Remove old tiles from memory if too much memory is used.
+    while (mMemoryTilesOrder.size() > mMaxMemoryTiles) {
+        quint64 k = mMemoryTilesOrder.takeFirst();
+        int res = mMemoryTiles.remove(k);
+
+        if (res != 1) {
+            qDebug() << res << mMemoryTiles.size() << k;
+        }
+    }
 }

@@ -44,11 +44,11 @@ Ping::~Ping()
 bool Ping::pingHost(QString host, int len, QString msg)
 {
     if (this->isRunning()) {
-        emit pingError(msg, "Ping already in progress");
+        //emit pingError(msg, "Ping already in progress");
         return false;
     } else {
         if (len < ICMP_MINLEN || len > 65536 - 60) {
-            emit pingError(msg, "Invalid length");
+            //emit pingError(msg, "Invalid length");
             return false;
         }
 
