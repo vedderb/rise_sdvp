@@ -67,13 +67,12 @@ MapWidget::MapWidget(QWidget *parent) :
     mRefLat = 57.71495867;
     mRefLon = 12.89134921;
     mRefHeight = 219.0;
-//    mRefLat = 0.0;
-//    mRefLon = 10.0;
-//    mRefHeight = 0.0;
 
     // Hardcoded for now
     mOsm->setCacheDir("osm_tiles");
-    mOsm->setTileServerUrl("http://tile.openstreetmap.org");
+//    mOsm->setTileServerUrl("http://tile.openstreetmap.org");
+//    mOsm->setTileServerUrl("http://home.vedder.se/osm_tiles");
+    mOsm->setTileServerUrl("https://c.osm.rrze.fau.de/osmhd");
 
     connect(mOsm, SIGNAL(tileReady(OsmTile)),
             this, SLOT(tileReady(OsmTile)));
@@ -756,6 +755,15 @@ void MapWidget::paintEvent(QPaintEvent *event)
     txt.sprintf("Zoom: %.7f", mScaleFactor);
     painter.drawText(width() - 140, 55, txt);
 
+    // Draw OSM zoom level
+    if (mDrawOpenStreetmap) {
+        painter.setTransform(txtTrans);
+        font.setPointSize(12);
+        painter.setFont(font);
+        txt.sprintf("OSM zoom: %d", mOsmZoomLevel);
+        painter.drawText(width() - 140, 80, txt);
+    }
+
     painter.end();
 }
 
@@ -881,6 +889,11 @@ void MapWidget::setInfoTraceTextZoom(double infoTraceTextZoom)
 {
     mInfoTraceTextZoom = infoTraceTextZoom;
     update();
+}
+
+OsmClient *MapWidget::osmClient()
+{
+    return mOsm;
 }
 
 double MapWidget::getOsmRes() const

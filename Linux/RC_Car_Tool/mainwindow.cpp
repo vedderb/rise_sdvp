@@ -900,3 +900,23 @@ void MainWindow::on_removeRouteExtraButton_clicked()
 {
     on_mapRemoveRouteButton_clicked();
 }
+
+void MainWindow::on_mapOsmClearCacheButton_clicked()
+{
+    ui->mapWidget->osmClient()->clearCache();
+    ui->mapWidget->update();
+}
+
+void MainWindow::on_mapOsmServerOsmButton_toggled(bool checked)
+{
+    if (checked) {
+        ui->mapWidget->osmClient()->setTileServerUrl("http://tile.openstreetmap.org");
+    }
+}
+
+void MainWindow::on_mapOsmServerHiResButton_toggled(bool checked)
+{
+    if (checked) {
+        ui->mapWidget->osmClient()->setTileServerUrl("https://c.osm.rrze.fau.de/osmhd");
+    }
+}

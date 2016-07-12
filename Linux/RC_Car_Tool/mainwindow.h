@@ -92,6 +92,9 @@ private slots:
     void on_mapRemoveInfoButton_clicked();
     void on_traceInfoMinZoomBox_valueChanged(double arg1);
     void on_removeRouteExtraButton_clicked();
+    void on_mapOsmClearCacheButton_clicked();
+    void on_mapOsmServerOsmButton_toggled(bool checked);
+    void on_mapOsmServerHiResButton_toggled(bool checked);
 
 private:
     Ui::MainWindow *ui;

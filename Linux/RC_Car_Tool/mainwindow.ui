@@ -358,7 +358,7 @@
                    </property>
                   </widget>
                  </item>
-                 <item row="3" column="0" colspan="2">
+                 <item row="1" column="1">
                   <widget class="QSlider" name="mapOsmResSlider">
                    <property name="minimum">
                     <number>30</number>
@@ -374,13 +374,34 @@
                    </property>
                   </widget>
                  </item>
-                 <item row="2" column="0" colspan="2">
+                 <item row="1" column="0">
                   <widget class="QLabel" name="label_3">
                    <property name="text">
                     <string>Resolution</string>
                    </property>
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
+                  </widget>
+                 </item>
+                 <item row="3" column="0" colspan="2">
+                  <widget class="QPushButton" name="mapOsmClearCacheButton">
+                   <property name="text">
+                    <string>Clear Cache</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="4" column="0">
+                  <widget class="QRadioButton" name="mapOsmServerOsmButton">
+                   <property name="text">
+                    <string>OSM</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="4" column="1">
+                  <widget class="QRadioButton" name="mapOsmServerHiResButton">
+                   <property name="text">
+                    <string>HiRes</string>
+                   </property>
+                   <property name="checked">
+                    <bool>true</bool>
                    </property>
                   </widget>
                  </item>
@@ -424,7 +445,7 @@
                 <property name="sizeHint" stdset="0">
                  <size>
                   <width>20</width>
-                  <height>78</height>
+                  <height>40</height>
                  </size>
                 </property>
                </spacer>

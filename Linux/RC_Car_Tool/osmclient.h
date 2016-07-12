@@ -26,6 +26,11 @@
  * http://wiki.openstreetmap.org/wiki/Zoom_levels
  * https://en.wikipedia.org/wiki/Web_Mercator
  * https://switch2osm.org/serving-tiles/manually-building-a-tile-server-14-04/
+ * http://stackoverflow.com/questions/16834983/i-am-trying-to-config-my-own-map-server-with-mapnik-mod-tile-and-apache-no-tiles
+ * https://github.com/gravitystorm/openstreetmap-carto
+ * http://wiki.openstreetmap.org/wiki/User:SomeoneElse/Tileserver_zoom_levels
+ * https://github.com/SomeoneElseOSM/openstreetmap-carto-AJT
+ * http://wiki.openstreetmap.org/wiki/Minutely_Mapnik
  *
  */
 
@@ -39,6 +44,7 @@ public:
     OsmTile getTile(int zoom, int x, int y, int &res);
     int downloadTile(int zoom, int x, int y);
     bool downloadQueueFull();
+    void clearCache();
 
     int getMaxMemoryTiles() const;
     void setMaxMemoryTiles(int maxMemoryTiles);

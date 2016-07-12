@@ -143,6 +143,14 @@ bool OsmClient::downloadQueueFull()
     return mDownloadingTiles.size() >= mMaxDownloadingTiles;
 }
 
+void OsmClient::clearCache()
+{
+    QDir dir(mCacheDir);
+    dir.removeRecursively();
+    mMemoryTiles.clear();
+    mMemoryTilesOrder.clear();
+}
+
 void OsmClient::fileDownloaded(QNetworkReply *pReply)
 {
     QString path = pReply->url().toString();

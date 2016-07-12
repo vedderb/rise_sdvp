@@ -76,6 +76,7 @@ public:
     void setOsmRes(double osmRes);
     double getInfoTraceTextZoom() const;
     void setInfoTraceTextZoom(double infoTraceTextZoom);
+    OsmClient *osmClient();
 
 signals:
     void scaleChanged(double newScale);
