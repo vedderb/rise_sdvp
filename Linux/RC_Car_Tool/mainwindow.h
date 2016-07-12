@@ -95,6 +95,7 @@ private slots:
     void on_mapOsmClearCacheButton_clicked();
     void on_mapOsmServerOsmButton_toggled(bool checked);
     void on_mapOsmServerHiResButton_toggled(bool checked);
+    void on_mapOsmServerVedderButton_toggled(bool checked);
 
 private:
     Ui::MainWindow *ui;

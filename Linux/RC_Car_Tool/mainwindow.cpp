@@ -920,3 +920,10 @@ void MainWindow::on_mapOsmServerHiResButton_toggled(bool checked)
         ui->mapWidget->osmClient()->setTileServerUrl("https://c.osm.rrze.fau.de/osmhd");
     }
 }
+
+void MainWindow::on_mapOsmServerVedderButton_toggled(bool checked)
+{
+    if (checked) {
+        ui->mapWidget->osmClient()->setTileServerUrl("http://home.vedder.se/osm_tiles");
+    }
+}

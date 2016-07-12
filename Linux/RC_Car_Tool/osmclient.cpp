@@ -1,10 +1,56 @@
 #include "osmclient.h"
 #include <QDebug>
+#include <QPainter>
 
 OsmClient::OsmClient(QObject *parent) : QObject(parent)
 {
     mMaxMemoryTiles = 300;
-    mMaxDownloadingTiles = 3;
+    mMaxDownloadingTiles = 6;
+
+    // Generate status pixmaps
+    for (int i = 0;i < 2;i++) {
+        QPixmap pix(512, 512);
+        QPainter *p = new QPainter(&pix);
+
+        switch (i) {
+        case 0: {
+            // Downloading
+            p->fillRect(pix.rect(), Qt::white);
+            p->setBrush(QBrush(QColor(200, 200, 255)));
+            p->setPen(QPen(QBrush(Qt::blue), 10));
+            p->drawRoundedRect(pix.rect(), 30, 30);
+            QString txt = "Downloading\ntile...";
+            p->setPen(QColor(Qt::black));
+            QFont font;
+            font.setPointSize(32);
+            p->setFont(font);
+            QRect rect;
+            rect.setRect(0, 0, 512, 512);
+            p->drawText(rect, Qt::AlignCenter, txt);
+        } break;
+
+        case 1: {
+            // Waiting for other downloads.
+            p->fillRect(pix.rect(), Qt::white);
+            p->setBrush(QBrush(QColor(255, 200, 200)));
+            p->setPen(QPen(QBrush(Qt::red), 10));
+            p->drawRoundedRect(pix.rect(), 30, 30);
+            QString txt = "Waiting...";
+            p->setPen(QColor(Qt::black));
+            QFont font;
+            font.setPointSize(32);
+            p->setFont(font);
+            QRect rect;
+            rect.setRect(0, 0, 512, 512);
+            p->drawText(rect, Qt::AlignCenter, txt);
+        } break;
+
+
+        }
+
+        delete p;
+        mStatusPixmaps.append(pix);
+    }
 
     connect(&mWebCtrl, SIGNAL(finished(QNetworkReply*)),
             this, SLOT(fileDownloaded(QNetworkReply*)));
@@ -57,33 +103,39 @@ bool OsmClient::setTileServerUrl(QString path)
  * Result greater than 0 means that a valid tile is returned. Negative results
  * are errors.
  *
- * -1: Unknown error.
  * 0: Tile not cached in memory or on disk.
  * 1: Tile read from memory.
  * 2: Tile read from disk.
  *
  * @return
- * The tile if res > 0, otherwise a tile with a null pixmap.
+ * The tile if res > 0, otherwise a tile with a status pixmap.
  */
 OsmTile OsmClient::getTile(int zoom, int x, int y, int &res)
 {
-    res = -1;
+    res = 0;
 
     quint64 key = calcKey(zoom, x, y);
     OsmTile t = mMemoryTiles.value(key);
 
     if (!t.pixmap().isNull()) {
         res = 1;
+        //qDebug() << "RAM";
     } else if (!mCacheDir.isEmpty()) {
         QString path = mCacheDir + "/" + QString::number(zoom) + "/" +
                 QString::number(x) + "/" + QString::number(y) + ".png";
         QFile file;
         file.setFileName(path);
+
         if (file.exists()) {
             res = 2;
             t = OsmTile(QPixmap(path), zoom, x, y);
             storeTileMemory(key, t);
+            //qDebug() << "----->HDD";
+        } else {
+            t = OsmTile(getStatusPixmap(key), zoom, x, y);
         }
+    } else {
+        t = OsmTile(getStatusPixmap(key), zoom, x, y);
     }
 
     return t;
@@ -242,5 +294,14 @@ void OsmClient::storeTileMemory(quint64 key, const OsmTile &tile)
         if (res != 1) {
             qDebug() << res << mMemoryTiles.size() << k;
         }
+    }
+}
+
+const QPixmap &OsmClient::getStatusPixmap(quint64 key)
+{
+    if (mDownloadingTiles.contains(key)) {
+        return mStatusPixmaps.at(0);
+    } else {
+        return mStatusPixmaps.at(1);
     }
 }

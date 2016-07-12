@@ -401,6 +401,10 @@ void MapWidget::paintEvent(QPaintEvent *event)
         int t_ofs_y = (int)ceil((cy + view_h / 2.0) / w);
 
         painter.setRenderHint(QPainter::SmoothPixmapTransform, mAntialiasOsm);
+        QTransform transOld = painter.transform();
+        QTransform trans = painter.transform();
+        trans.scale(1, -1);
+        painter.setTransform(trans);
 
         for (int j = 0;j < 40;j++) {
             for (int i = 0;i < 40;i++) {
@@ -426,27 +430,21 @@ void MapWidget::paintEvent(QPaintEvent *event)
                 int res;
                 OsmTile t = mOsm->getTile(mOsmZoomLevel, xt_i, yt_i, res);
 
-                if (res > 0) {
-                    if (w < 0.0) {
-                        w = t.getWidthTop();
-                    }
+                if (w < 0.0) {
+                    w = t.getWidthTop();
+                }
 
-                    QTransform transOld = painter.transform();
-                    QTransform trans = painter.transform();
-                    trans.scale(1, -1);
-                    painter.setTransform(trans);
-                    painter.drawPixmap(ts_x * 1000.0, ts_y * 1000.0,
-                                       w * 1000.0, w * 1000.0, t.pixmap());
-                    painter.setTransform(transOld);
-                } else {
-                    if (!mOsm->downloadQueueFull()) {
-                        mOsm->downloadTile(mOsmZoomLevel, xt_i, yt_i);
-                    }
+                painter.drawPixmap(ts_x * 1000.0, ts_y * 1000.0,
+                                   w * 1000.0, w * 1000.0, t.pixmap());
+
+                if (res == 0 && !mOsm->downloadQueueFull()) {
+                    mOsm->downloadTile(mOsmZoomLevel, xt_i, yt_i);
                 }
             }
         }
 
-        // Restore antialiasing
+        // Restore painter
+        painter.setTransform(transOld);
         painter.setRenderHint(QPainter::SmoothPixmapTransform, mAntialiasDrawings);
     }
 

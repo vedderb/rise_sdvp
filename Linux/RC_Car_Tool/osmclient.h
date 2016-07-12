@@ -68,6 +68,7 @@ private:
     QHash<quint64, OsmTile> mMemoryTiles;
     QList<quint64> mMemoryTilesOrder;
     QHash<quint64, bool> mDownloadingTiles;
+    QList<QPixmap> mStatusPixmaps;
 
     int mMaxMemoryTiles;
     int mMaxDownloadingTiles;
@@ -75,6 +76,7 @@ private:
     void emitTile(OsmTile tile);
     quint64 calcKey(int zoom, int x, int y);
     void storeTileMemory(quint64 key, const OsmTile &tile);
+    const QPixmap& getStatusPixmap(quint64 key);
 
 };
 
