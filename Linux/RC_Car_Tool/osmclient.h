@@ -37,7 +37,6 @@
  * Ubuntu tile server
  * https://switch2osm.org/serving-tiles/manually-building-a-tile-server-14-04/
  * https://switch2osm.org/loading-osm-data/
- *
  * http://stackoverflow.com/questions/16834983/i-am-trying-to-config-my-own-map-server-with-mapnik-mod-tile-and-apache-no-tiles
  *
  * Carto style

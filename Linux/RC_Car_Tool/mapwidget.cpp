@@ -89,8 +89,42 @@ bool intersect(Point a, Point b, Point p, Point q){
     }
 }
 
-bool isWithin(const QPointF &p, double xStart, double xEnd, double yStart, double yEnd) {
+bool isPointWithinRect(const QPointF &p, double xStart, double xEnd, double yStart, double yEnd) {
     return p.x() > xStart && p.x() < xEnd && p.y() > yStart && p.y() < yEnd;
+}
+
+bool isLineSegmentWithinRect(const QPointF &pa, const QPointF &pb, double xStart, double xEnd, double yStart, double yEnd) {
+    Point p1(pa.x(), pa.y());
+    Point q1(pb.x(), pb.y());
+    Point p2(xStart, yStart);
+    Point q2(xEnd, yEnd);
+    bool res = intersect(p1, q1, p2, q2);
+
+    if (!res) {
+        p2.x = xStart;
+        p2.y = yStart;
+        q2.x = xStart;
+        q2.y = yEnd;
+        res = intersect(p1, q1, p2, q2);
+    }
+
+    if (!res) {
+        p2.x = xStart;
+        p2.y = yEnd;
+        q2.x = xEnd;
+        q2.y = yEnd;
+        res = intersect(p1, q1, p2, q2);
+    }
+
+    if (!res) {
+        p2.x = xEnd;
+        p2.y = yStart;
+        q2.x = xEnd;
+        q2.y = yEnd;
+        res = intersect(p1, q1, p2, q2);
+    }
+
+    return res;
 }
 }
 
@@ -627,59 +661,27 @@ void MapWidget::paintEvent(QPaintEvent *event)
     int info_points = 0;
 
     double xStart2 = (cx - view_w / 2.0) * 1000.0;
-    double yStart2 = (cy - view_w / 2.0) * 1000.0;
+    double yStart2 = (cy - view_h / 2.0) * 1000.0;
     double xEnd2 = (cx + view_w / 2.0) * 1000.0;
-    double yEnd2 = (cy + view_w / 2.0) * 1000.0;
+    double yEnd2 = (cy + view_h / 2.0) * 1000.0;
 
     int last_visible = 0;
     for (int i = 1;i < mInfoTrace.size();i++) {
-        bool draw = isWithin(mInfoTrace[last_visible].getPointMm(), xStart2, xEnd2, yStart2, yEnd2);
-
-        if (!draw) {
-            draw = isWithin(mInfoTrace[i].getPointMm(), xStart2, xEnd2, yStart2, yEnd2);
-        }
-
         double dist_view = mInfoTrace.at(i).getDistanceTo(mInfoTrace.at(last_visible)) * mScaleFactor;
-        if (draw && dist_view < 0.02) {
+        if (dist_view < 0.02) {
             continue;
         }
 
+        bool draw = isPointWithinRect(mInfoTrace[last_visible].getPointMm(), xStart2, xEnd2, yStart2, yEnd2);
+
         if (!draw) {
-            Point p1, q1, p2, q2;
-            p1.x = mInfoTrace[last_visible].getX() * 1000.0;
-            p1.y = mInfoTrace[last_visible].getY() * 1000.0;
-            q1.x = mInfoTrace[i].getX() * 1000.0;
-            q1.y = mInfoTrace[i].getY() * 1000.0;
+            draw = isPointWithinRect(mInfoTrace[i].getPointMm(), xStart2, xEnd2, yStart2, yEnd2);
+        }
 
-            p2.x = xStart2;
-            p2.y = yStart2;
-            q2.x = xEnd2 - xStart2;
-            q2.y = yStart2;
-            draw = intersect(p1, q1, p2, q2);
-
-            if (!draw) {
-                p2.x = xStart2;
-                p2.y = yStart2;
-                q2.x = xStart2;
-                q2.y = yEnd2 - yStart2;
-                draw = intersect(p1, q1, p2, q2);
-            }
-
-            if (!draw) {
-                p2.x = xStart2;
-                p2.y = yEnd2 - yStart2;
-                q2.x = xEnd2 - xStart2;
-                q2.y = yEnd2 - yStart2;
-                draw = intersect(p1, q1, p2, q2);
-            }
-
-            if (!draw) {
-                p2.x = xEnd2 - xStart2;
-                p2.y = yStart2;
-                q2.x = xEnd2 - xStart2;
-                q2.y = yEnd2 - yStart2;
-                draw = intersect(p1, q1, p2, q2);
-            }
+        if (!draw) {
+            draw = isLineSegmentWithinRect(mInfoTrace[last_visible].getPointMm(),
+                                           mInfoTrace[i].getPointMm(),
+                                           xStart2, xEnd2, yStart2, yEnd2);
         }
 
         if (draw) {
@@ -699,7 +701,7 @@ void MapWidget::paintEvent(QPaintEvent *event)
         QPointF p = ip.getPointMm();
 
         if ((ip.getColor() == Qt::green || ip.getColor() == Qt::darkGreen) &&
-                isWithin(p, xStart2, xEnd2, yStart2, yEnd2)) {
+                isPointWithinRect(p, xStart2, xEnd2, yStart2, yEnd2)) {
 
             if (drawn > 0) {
                 double dist_view = mInfoTrace.at(i).getDistanceTo(mInfoTrace.at(last_visible)) * mScaleFactor;
@@ -742,7 +744,7 @@ void MapWidget::paintEvent(QPaintEvent *event)
         QPointF p = ip.getPointMm();
 
         if (ip.getColor() != Qt::green && ip.getColor() != Qt::darkGreen &&
-                isWithin(p, xStart2, xEnd2, yStart2, yEnd2)) {
+                isPointWithinRect(p, xStart2, xEnd2, yStart2, yEnd2)) {
 
             if (drawn > 0) {
                 double dist_view = mInfoTrace.at(i).getDistanceTo(mInfoTrace.at(last_visible)) * mScaleFactor;
