@@ -347,6 +347,9 @@ void NetworkLogger::on_statLogOpenButton_clicked()
                     p.setColor(Qt::red);
                 }
 
+                double w = utility::map(pingt, 40.0, 100.0, 5.0, 10.0);
+                p.setRadius(w);
+
                 if (mMap) {
                     mMap->addInfoPoint(p);
                 }

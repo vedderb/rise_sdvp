@@ -8,7 +8,7 @@ OsmClient::OsmClient(QObject *parent) : QObject(parent)
     mMaxDownloadingTiles = 6;
 
     // Generate status pixmaps
-    for (int i = 0;i < 3;i++) {
+    for (int i = 0;i < 4;i++) {
         QPixmap pix(512, 512);
         QPainter *p = new QPainter(&pix);
 
@@ -55,6 +55,23 @@ OsmClient::OsmClient(QObject *parent) : QObject(parent)
             QRect r(3, 3, 506, 506);
             p->drawRect(r);
             QString txt = "Download\nerror";
+            p->setPen(QColor(Qt::black));
+            QFont font;
+            font.setPointSize(32);
+            p->setFont(font);
+            QRect rect;
+            rect.setRect(0, 0, 512, 512);
+            p->drawText(rect, Qt::AlignCenter, txt);
+        } break;
+
+        case 3: {
+            // Not in map.
+            p->fillRect(pix.rect(), Qt::white);
+            p->setBrush(QBrush(QColor(255, 200, 200)));
+            p->setPen(QPen(QBrush(Qt::red), 3, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin));
+            QRect r(3, 3, 506, 506);
+            p->drawRect(r);
+            QString txt = "Tile outside\nof map";
             p->setPen(QColor(Qt::black));
             QFont font;
             font.setPointSize(32);
@@ -121,6 +138,7 @@ bool OsmClient::setTileServerUrl(QString path)
  * Result greater than 0 means that a valid tile is returned. Negative results
  * are errors.
  *
+ * -1: Tile not part of map.
  * 0: Tile not cached in memory or on disk.
  * 1: Tile read from memory.
  * 2: Tile read from disk.
@@ -135,7 +153,12 @@ OsmTile OsmClient::getTile(int zoom, int x, int y, int &res)
     quint64 key = calcKey(zoom, x, y);
     OsmTile t = mMemoryTiles.value(key);
 
-    if (!t.pixmap().isNull()) {
+    if (x < 0 || y < 0 ||
+            x >= (1 << zoom) ||
+            y >= (1 << zoom)) {
+        res = -1;
+        t = OsmTile(mStatusPixmaps.at(3), zoom, x, y);
+    } else if (!t.pixmap().isNull()) {
         res = 1;
         //qDebug() << "RAM";
     } else if (!mCacheDir.isEmpty()) {

@@ -36,7 +36,7 @@ static void normalizeAngleRad(double &angle)
 // see http://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/
 
 double eps = 1e-8;
-struct Point{
+struct Point {
     double x;
     double y;
     Point(){}
@@ -51,7 +51,7 @@ bool is_in(Point p, Point a, Point b) {
     return fabs(len_sq(a,p) + len_sq(p,b) - len_sq(a,b)) < eps;
 }
 
-bool intersect(Point a, Point b, Point p, Point q){
+bool lineSegmentIntersection(Point a, Point b, Point p, Point q){
     //slopes of the line segments, they can be represented as points
     Point u(b.x-a.x,b.y-a.y);
     Point v(q.x-p.x,q.y-p.y);
@@ -98,14 +98,14 @@ bool isLineSegmentWithinRect(const QPointF &pa, const QPointF &pb, double xStart
     Point q1(pb.x(), pb.y());
     Point p2(xStart, yStart);
     Point q2(xEnd, yEnd);
-    bool res = intersect(p1, q1, p2, q2);
+    bool res = lineSegmentIntersection(p1, q1, p2, q2);
 
     if (!res) {
         p2.x = xStart;
         p2.y = yStart;
         q2.x = xStart;
         q2.y = yEnd;
-        res = intersect(p1, q1, p2, q2);
+        res = lineSegmentIntersection(p1, q1, p2, q2);
     }
 
     if (!res) {
@@ -113,7 +113,7 @@ bool isLineSegmentWithinRect(const QPointF &pa, const QPointF &pb, double xStart
         p2.y = yEnd;
         q2.x = xEnd;
         q2.y = yEnd;
-        res = intersect(p1, q1, p2, q2);
+        res = lineSegmentIntersection(p1, q1, p2, q2);
     }
 
     if (!res) {
@@ -121,7 +121,7 @@ bool isLineSegmentWithinRect(const QPointF &pa, const QPointF &pb, double xStart
         p2.y = yStart;
         q2.x = xEnd;
         q2.y = yEnd;
-        res = intersect(p1, q1, p2, q2);
+        res = lineSegmentIntersection(p1, q1, p2, q2);
     }
 
     return res;
@@ -145,8 +145,6 @@ MapWidget::MapWidget(QWidget *parent) :
     mCarInfo.clear();
     mCarTrace.clear();
     mCarTraceGps.clear();
-    mPaintTimer = new QTimer(this);
-    mPaintTimer->setSingleShot(true);
     mRoutePointSpeed = 1.0;
     mAntialiasDrawings = false;
     mAntialiasOsm = true;
@@ -175,8 +173,6 @@ MapWidget::MapWidget(QWidget *parent) :
     connect(mOsm, SIGNAL(errorGetTile(QString)),
             this, SLOT(errorGetTile(QString)));
 
-    connect(mPaintTimer, SIGNAL(timeout()), this, SLOT(paintTimerSlot()));
-
     setMouseTracking(true);
 }
 
@@ -194,7 +190,7 @@ CarInfo *MapWidget::getCarInfo(int car)
 void MapWidget::addCar(CarInfo car)
 {
     mCarInfo.append(car);
-    repaintAfterEvents();
+    update();
 }
 
 bool MapWidget::removeCar(int carId)
@@ -216,32 +212,32 @@ void MapWidget::setScaleFactor(double scale)
     mScaleFactor = scale;
     mXOffset *= scaleDiff;
     mYOffset *= scaleDiff;
-    repaintAfterEvents();
+    update();
 }
 
 void MapWidget::setRotation(double rotation)
 {
     mRotation = rotation;
-    repaintAfterEvents();
+    update();
 }
 
 void MapWidget::setXOffset(double offset)
 {
     mXOffset = offset;
-    repaintAfterEvents();
+    update();
 }
 
 void MapWidget::setYOffset(double offset)
 {
     mYOffset = offset;
-    repaintAfterEvents();
+    update();
 }
 
 void MapWidget::clearTrace()
 {
     mCarTrace.clear();
     mCarTraceGps.clear();
-    repaintAfterEvents();
+    update();
 }
 
 void MapWidget::addRoutePoint(double px, double py, double speed)
@@ -295,7 +291,7 @@ void MapWidget::addPerspectivePixmap(PerspectivePixmap map)
 void MapWidget::clearPerspectivePixmaps()
 {
     mPerspectivePixmaps.clear();
-    repaintAfterEvents();
+    update();
 }
 
 QPoint MapWidget::getMousePosRelative()
@@ -304,13 +300,6 @@ QPoint MapWidget::getMousePosRelative()
     p.setX((p.x() - mXOffset - width() / 2) / mScaleFactor);
     p.setY((-p.y() - mYOffset + height() / 2) / mScaleFactor);
     return p;
-}
-
-void MapWidget::repaintAfterEvents()
-{
-    if (!mPaintTimer->isActive()) {
-        mPaintTimer->start();
-    }
 }
 
 void MapWidget::setAntialiasDrawings(bool antialias)
@@ -322,11 +311,6 @@ void MapWidget::setAntialiasDrawings(bool antialias)
 void MapWidget::setAntialiasOsm(bool antialias)
 {
     mAntialiasOsm = antialias;
-    update();
-}
-
-void MapWidget::paintTimerSlot()
-{
     update();
 }
 
@@ -347,7 +331,7 @@ void MapWidget::setFollowCar(int car)
     mFollowCar = car;
 
     if (oldCar != mFollowCar) {
-        repaintAfterEvents();
+        update();
     }
 }
 
@@ -448,15 +432,24 @@ void MapWidget::paintEvent(QPaintEvent *event)
     const QColor firstAxisColor = Qt::gray;
     const QColor secondAxisColor = Qt::blue;
     const QColor textColor = QPalette::Foreground;
+
+    // Grid boundries in mm
     const double xStart = -ceil(width() / step / mScaleFactor) * step - ceil(mXOffset / step / mScaleFactor) * step;
     const double xEnd = ceil(width() / step / mScaleFactor) * step - floor(mXOffset / step / mScaleFactor) * step;
     const double yStart = -ceil(height() / step / mScaleFactor) * step - ceil(mYOffset / step / mScaleFactor) * step;
     const double yEnd = ceil(height() / step / mScaleFactor) * step - floor(mYOffset / step / mScaleFactor) * step;
 
+    // View center, width and height in m
     const double cx = -mXOffset / mScaleFactor / 1000.0;
     const double cy = -mYOffset / mScaleFactor / 1000.0;
     const double view_w = width() / mScaleFactor / 1000.0;
     const double view_h = height() / mScaleFactor / 1000.0;
+
+    // View boundries in mm
+    const double xStart2 = (cx - view_w / 2.0) * 1000.0;
+    const double yStart2 = (cy - view_h / 2.0) * 1000.0;
+    const double xEnd2 = (cx + view_w / 2.0) * 1000.0;
+    const double yEnd2 = (cy + view_h / 2.0) * 1000.0;
 
     // Draw perspective pixmaps first
     painter.setTransform(drawTrans);
@@ -514,13 +507,6 @@ void MapWidget::paintEvent(QPaintEvent *event)
                     break;
                 } else if ((ts_y - w) > (-cy + view_h / 2.0)) {
                     break;
-                }
-
-                // This tile is not part of the map
-                if (xt_i < 0 || yt_i < 0 ||
-                        xt_i >= (1 << mOsmZoomLevel) ||
-                        yt_i >= (1 << mOsmZoomLevel)) {
-                    continue;
                 }
 
                 int res;
@@ -659,16 +645,12 @@ void MapWidget::paintEvent(QPaintEvent *event)
 
     int info_segments = 0;
     int info_points = 0;
-
-    double xStart2 = (cx - view_w / 2.0) * 1000.0;
-    double yStart2 = (cy - view_h / 2.0) * 1000.0;
-    double xEnd2 = (cx + view_w / 2.0) * 1000.0;
-    double yEnd2 = (cy + view_h / 2.0) * 1000.0;
+    const double info_min_dist = 0.02;
 
     int last_visible = 0;
     for (int i = 1;i < mInfoTrace.size();i++) {
         double dist_view = mInfoTrace.at(i).getDistanceTo(mInfoTrace.at(last_visible)) * mScaleFactor;
-        if (dist_view < 0.02) {
+        if (dist_view < info_min_dist) {
             continue;
         }
 
@@ -705,7 +687,7 @@ void MapWidget::paintEvent(QPaintEvent *event)
 
             if (drawn > 0) {
                 double dist_view = mInfoTrace.at(i).getDistanceTo(mInfoTrace.at(last_visible)) * mScaleFactor;
-                if (dist_view < 0.02) {
+                if (dist_view < info_min_dist) {
                     continue;
                 }
 
@@ -718,7 +700,7 @@ void MapWidget::paintEvent(QPaintEvent *event)
             pen.setColor(ip.getColor());
             painter.setBrush(ip.getColor());
             painter.setPen(pen);
-            painter.drawEllipse(p, 5 / mScaleFactor, 5 / mScaleFactor);
+            painter.drawEllipse(p, ip.getRadius() / mScaleFactor, ip.getRadius() / mScaleFactor);
             info_points++;
 
             if (mScaleFactor > mInfoTraceTextZoom) {
@@ -748,7 +730,7 @@ void MapWidget::paintEvent(QPaintEvent *event)
 
             if (drawn > 0) {
                 double dist_view = mInfoTrace.at(i).getDistanceTo(mInfoTrace.at(last_visible)) * mScaleFactor;
-                if (dist_view < 0.02) {
+                if (dist_view < info_min_dist) {
                     continue;
                 }
 
@@ -761,7 +743,7 @@ void MapWidget::paintEvent(QPaintEvent *event)
             pen.setColor(ip.getColor());
             painter.setBrush(ip.getColor());
             painter.setPen(pen);
-            painter.drawEllipse(p, 5 / mScaleFactor, 5 / mScaleFactor);
+            painter.drawEllipse(p, ip.getRadius() / mScaleFactor, ip.getRadius() / mScaleFactor);
             info_points++;
 
             if (mScaleFactor > mInfoTraceTextZoom) {
@@ -777,6 +759,29 @@ void MapWidget::paintEvent(QPaintEvent *event)
                 painter.drawText(rect_txt, Qt::AlignTop | Qt::AlignLeft, ip.getInfo());
             }
         }
+    }
+
+    // Draw point closest to mouse pointer
+    if (mClosestInfo.getInfo().size() > 0) {
+        QPointF p = mClosestInfo.getPointMm();
+
+        painter.setTransform(drawTrans);
+        pen.setColor(Qt::green);
+        painter.setBrush(Qt::green);
+        painter.setPen(pen);
+        painter.drawEllipse(p, mClosestInfo.getRadius() / mScaleFactor,
+                            mClosestInfo.getRadius() / mScaleFactor);
+
+        pt_txt.setX(p.x() + 5 / mScaleFactor);
+        pt_txt.setY(p.y());
+        painter.setTransform(txtTrans);
+        pt_txt = drawTrans.map(pt_txt);
+        pen.setColor(Qt::black);
+        painter.setPen(pen);
+        painter.setFont(QFont("monospace"));
+        rect_txt.setCoords(pt_txt.x(), pt_txt.y() - 20,
+                           pt_txt.x() + 500, pt_txt.y() + 500);
+        painter.drawText(rect_txt, Qt::AlignTop | Qt::AlignLeft, mClosestInfo.getInfo());
     }
 
     // Draw trace for the selected car
@@ -958,7 +963,7 @@ void MapWidget::mouseMoveEvent(QMouseEvent *e)
         {
             int diffx = x - mMouseLastX;
             mXOffset += diffx;
-            repaintAfterEvents();
+            update();
         }
 
         if (mMouseLastY < 100000)
@@ -967,12 +972,14 @@ void MapWidget::mouseMoveEvent(QMouseEvent *e)
             mYOffset -= diffy;
 
             emit offsetChanged(mXOffset, mYOffset);
-            repaintAfterEvents();
+            update();
         }
 
         mMouseLastX = x;
         mMouseLastY = y;
     }
+
+    updateClosestInfoPoint();
 }
 
 void MapWidget::mousePressEvent(QMouseEvent *e)
@@ -986,7 +993,7 @@ void MapWidget::mousePressEvent(QMouseEvent *e)
                 pos.setXY(p.x() / 1000.0, p.y() / 1000.0);
                 carInfo.setLocation(pos);
                 emit posSet(mSelectedCar, pos);
-                repaintAfterEvents();
+                update();
             }
         }
     } else if (e->modifiers() & Qt::ShiftModifier) {
@@ -1005,7 +1012,7 @@ void MapWidget::mousePressEvent(QMouseEvent *e)
             }
             emit lastRoutePointRemoved(pos);
         }
-        repaintAfterEvents();
+        update();
     }
 }
 
@@ -1030,7 +1037,7 @@ void MapWidget::wheelEvent(QWheelEvent *e)
                 pos.setAlpha(angle);
                 carInfo.setLocation(pos);
                 emit posSet(mSelectedCar, pos);
-                repaintAfterEvents();
+                update();
             }
         }
     } else {
@@ -1056,7 +1063,42 @@ void MapWidget::wheelEvent(QWheelEvent *e)
 
         emit scaleChanged(mScaleFactor);
         emit offsetChanged(mXOffset, mYOffset);
-        repaintAfterEvents();
+        update();
+    }
+
+    updateClosestInfoPoint();
+}
+
+void MapWidget::updateClosestInfoPoint()
+{
+    QPointF mpq = getMousePosRelative();
+    LocPoint mp(mpq.x() / 1000.0, mpq.y() / 1000.0);
+    double dist_min = 1e30;
+    LocPoint closest;
+
+    for (int i = 0;i < mInfoTrace.size();i++) {
+        const LocPoint &ip = mInfoTrace[i];
+        if (mp.getDistanceTo(ip) < dist_min) {
+            dist_min = mp.getDistanceTo(ip);
+            closest = ip;
+        }
+    }
+
+    bool drawBefore = mClosestInfo.getInfo().size() > 0;
+    bool drawNow = false;
+    if ((dist_min * mScaleFactor) < 0.02) {
+        if (closest != mClosestInfo) {
+            mClosestInfo = closest;
+            update();
+        }
+
+        drawNow = true;
+    } else {
+        mClosestInfo.setInfo("");
+    }
+
+    if (drawBefore && !drawNow) {
+        update();
     }
 }
 

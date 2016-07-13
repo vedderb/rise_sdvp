@@ -65,7 +65,6 @@ public:
     void addPerspectivePixmap(PerspectivePixmap map);
     void clearPerspectivePixmaps();
     QPoint getMousePosRelative();
-    void repaintAfterEvents();
     void setAntialiasDrawings(bool antialias);
     void setAntialiasOsm(bool antialias);
     bool getDrawOpenStreetmap() const;
@@ -87,9 +86,6 @@ signals:
     void posSet(quint8 id, LocPoint pos);
     void routePointAdded(LocPoint pos);
     void lastRoutePointRemoved(LocPoint pos);
-
-public slots:
-    void paintTimerSlot();
 
 private slots:
     void tileReady(OsmTile tile);
@@ -121,7 +117,6 @@ private:
     int mSelectedCar;
     double xRealPos;
     double yRealPos;
-    QTimer *mPaintTimer;
     bool mAntialiasDrawings;
     bool mAntialiasOsm;
     double mOsmRes;
@@ -133,6 +128,9 @@ private:
     double mRefLat;
     double mRefLon;
     double mRefHeight;
+    LocPoint mClosestInfo;
+
+    void updateClosestInfoPoint();
 
 };
 

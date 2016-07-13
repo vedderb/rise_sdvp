@@ -53,6 +53,7 @@ static void mpu9150_read(void);
 static void update_orientation_angles(float *accel, float *gyro, float *mag, float dt);
 static void mc_values_received(mc_values *val);
 static void init_gps_local(GPS_STATE *gps);
+static double nmea_parse_val(char *str);
 
 void pos_init(void) {
 	MahonyAHRSInitAttitudeInfo(&m_att);
@@ -186,13 +187,7 @@ void pos_input_nmea(const char *data) {
 
 			case 1: {
 				// Latitude
-				double l1, l2;
-
-				if (sscanf(gga, "%2lf%lf", &l1, &l2) == 2) {
-					lat = l1 + l2 / D(60.0);
-				} else {
-					lat = 0;
-				}
+				lat = nmea_parse_val(gga);
 			} break;
 
 			case 2:
@@ -204,13 +199,7 @@ void pos_input_nmea(const char *data) {
 
 			case 3: {
 				// Longitude
-				double l1, l2;
-
-				if (sscanf(gga, "%3lf%lf", &l1, &l2) == 2) {
-					lon = l1 + l2 / D(60.0);
-				} else {
-					lon = 0;
-				}
+				lon = nmea_parse_val(gga);
 			} break;
 
 			case 4:
@@ -320,7 +309,7 @@ void pos_input_nmea(const char *data) {
 				utils_step_towards(&m_yaw_offset, m_yaw_offset + yaw_diff,
 						main_config.gps_corr_gain_yaw * m_pos.gps_corr_cnt);
 
-//				m_yaw_offset += main_config.gps_corr_gain_yaw * m_pos.gps_corr_cnt * yaw_diff;
+				//				m_yaw_offset += main_config.gps_corr_gain_yaw * m_pos.gps_corr_cnt * yaw_diff;
 
 				utils_norm_angle(&m_yaw_offset);
 
@@ -430,7 +419,7 @@ static void update_orientation_angles(float *accel, float *gyro, float *mag, flo
 		}
 	}
 
-//	m_pos.yaw = yaw;
+	//	m_pos.yaw = yaw;
 
 	m_pos.q0 = m_att.q0;
 	m_pos.q1 = m_att.q1;
@@ -458,8 +447,8 @@ static void mc_values_received(mc_values *val) {
 
 	float steering_angle = (servo_simple_get_pos_now()
 			- main_config.steering_center)
-			* ((2.0 * main_config.steering_max_angle_rad)
-					/ main_config.steering_range);
+					* ((2.0 * main_config.steering_max_angle_rad)
+							/ main_config.steering_range);
 
 	chMtxLock(&m_mutex_pos);
 
@@ -522,17 +511,17 @@ static void init_gps_local(GPS_STATE *gps) {
 	gps->r3c3 = sa;
 
 	// NED
-//	gps->r1c1 = -sa * co;
-//	gps->r1c2 = -sa * so;
-//	gps->r1c3 = ca;
-//
-//	gps->r2c1 = -so;
-//	gps->r2c2 = co;
-//	gps->r2c3 = 0;
-//
-//	gps->r3c1 = -ca * co;
-//	gps->r3c2 = -ca * so;
-//	gps->r3c3 = -sa;
+	//	gps->r1c1 = -sa * co;
+	//	gps->r1c2 = -sa * so;
+	//	gps->r1c3 = ca;
+	//
+	//	gps->r2c1 = -so;
+	//	gps->r2c2 = co;
+	//	gps->r2c3 = 0;
+	//
+	//	gps->r3c1 = -ca * co;
+	//	gps->r3c2 = -ca * so;
+	//	gps->r3c3 = -sa;
 
 	gps->lx = 0.0;
 	gps->ly = 0.0;
@@ -547,4 +536,31 @@ static void init_gps_local(GPS_STATE *gps) {
 	gps->oy += s_yaw * main_config.gps_ant_x + c_yaw * main_config.gps_ant_y;
 
 	gps->local_init_done = true;
+}
+
+static double nmea_parse_val(char *str) {
+	int ind = -1;
+	int len = strlen(str);
+	double retval = 0.0;
+
+	for (int i = 2;i < len;i++) {
+		if (str[i] == '.') {
+			ind = i - 2;
+			break;
+		}
+	}
+
+	if (ind >= 0) {
+		char a[len + 1];
+		memcpy(a, str, ind);
+		a[ind] = ' ';
+		memcpy(a + ind + 1, str + ind, len - ind);
+
+		double l1, l2;
+		if (sscanf(a, "%lf %lf", &l1, &l2) == 2) {
+			retval = l1 + l2 / D(60.0);
+		}
+	}
+
+	return retval;
 }

@@ -56,6 +56,33 @@ static void nmea_append_checksum(char *s, size_t size) {
 
     sprintf(p, "*%02X\r\n", sum);
 }
+
+static double nmea_parse_val(char *str) {
+    int ind = -1;
+    int len = strlen(str);
+    double retval = 0.0;
+
+    for (int i = 2;i < len;i++) {
+        if (str[i] == '.') {
+            ind = i - 2;
+            break;
+        }
+    }
+
+    if (ind >= 0) {
+        char a[len + 1];
+        memcpy(a, str, ind);
+        a[ind] = ' ';
+        memcpy(a + ind + 1, str + ind, len - ind);
+
+        double l1, l2;
+        if (sscanf(a, "%lf %lf", &l1, &l2) == 2) {
+            retval = l1 + l2 / 60.0;
+        }
+    }
+
+    return retval;
+}
 }
 
 NmeaServer::NmeaServer(QObject *parent) : QObject(parent)
@@ -310,14 +337,8 @@ int NmeaServer::decodeNmeaGGA(QByteArray data, NmeaServer::nmea_gga_info_t &gga)
 
             case 1: {
                 // Latitude
-                double l1, l2;
                 dec_fields++;
-
-                if (sscanf(gga, "%2lf%lf", &l1, &l2) == 2) {
-                    lat = l1 + l2 / 60.0;
-                } else {
-                    lat = 0;
-                }
+                lat = nmea_parse_val(gga);
             } break;
 
             case 2:
@@ -330,14 +351,8 @@ int NmeaServer::decodeNmeaGGA(QByteArray data, NmeaServer::nmea_gga_info_t &gga)
 
             case 3: {
                 // Longitude
-                double l1, l2;
                 dec_fields++;
-
-                if (sscanf(gga, "%3lf%lf", &l1, &l2) == 2) {
-                    lon = l1 + l2 / 60.0;
-                } else {
-                    lon = 0;
-                }
+                lon = nmea_parse_val(gga);
             } break;
 
             case 4:

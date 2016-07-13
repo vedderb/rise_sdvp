@@ -285,7 +285,7 @@ void CarInterface::setStateData(CAR_STATE data)
         car->setLocation(loc);
         car->setLocationGps(loc_gps);
         car->setApGoal(ap_goal);
-        mMap->repaintAfterEvents();
+        mMap->update();
     }
 
     QVector<double> magXYZ;
