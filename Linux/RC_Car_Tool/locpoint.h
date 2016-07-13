@@ -48,7 +48,7 @@ public:
     void setSpeed(double speed);
     void setRadius(double radius);
     void setSigma(double sigma);
-    double getDistanceTo(const LocPoint &point);
+    double getDistanceTo(const LocPoint &point) const;
     void setInfo(const QString &info);
     void setColor(const QColor &color);
 

@@ -307,6 +307,9 @@
                    <property name="text">
                     <string>Zero ENU Coordinates</string>
                    </property>
+                   <property name="checked">
+                    <bool>true</bool>
+                   </property>
                   </widget>
                  </item>
                 </layout>
@@ -338,6 +341,37 @@
                  <string>OpenStreetMap</string>
                 </property>
                 <layout class="QGridLayout" name="gridLayout_10">
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="label_3">
+                   <property name="text">
+                    <string>Resolution</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="5" column="0" colspan="2">
+                  <widget class="QPushButton" name="mapOsmClearCacheButton">
+                   <property name="text">
+                    <string>Clear Cache</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="4" column="0">
+                  <widget class="QRadioButton" name="mapOsmServerVedderButton">
+                   <property name="text">
+                    <string>Vedder</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="3" column="1">
+                  <widget class="QRadioButton" name="mapOsmServerHiResButton">
+                   <property name="text">
+                    <string>HiRes</string>
+                   </property>
+                   <property name="checked">
+                    <bool>false</bool>
+                   </property>
+                  </widget>
+                 </item>
                  <item row="0" column="0">
                   <widget class="QCheckBox" name="mapOpenStreetMapBox">
                    <property name="text">
@@ -358,6 +392,23 @@
                    </property>
                   </widget>
                  </item>
+                 <item row="4" column="1">
+                  <widget class="QRadioButton" name="mapOsmServerVedderHdButton">
+                   <property name="text">
+                    <string>Vedder HD</string>
+                   </property>
+                   <property name="checked">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="3" column="0">
+                  <widget class="QRadioButton" name="mapOsmServerOsmButton">
+                   <property name="text">
+                    <string>OSM</string>
+                   </property>
+                  </widget>
+                 </item>
                  <item row="1" column="1">
                   <widget class="QSlider" name="mapOsmResSlider">
                    <property name="minimum">
@@ -374,41 +425,16 @@
                    </property>
                   </widget>
                  </item>
-                 <item row="1" column="0">
-                  <widget class="QLabel" name="label_3">
-                   <property name="text">
-                    <string>Resolution</string>
+                 <item row="2" column="0" colspan="2">
+                  <widget class="QSpinBox" name="mapOsmMaxZoomBox">
+                   <property name="prefix">
+                    <string>Max Zoom: </string>
                    </property>
-                  </widget>
-                 </item>
-                 <item row="3" column="0">
-                  <widget class="QRadioButton" name="mapOsmServerOsmButton">
-                   <property name="text">
-                    <string>OSM</string>
+                   <property name="maximum">
+                    <number>22</number>
                    </property>
-                  </widget>
-                 </item>
-                 <item row="4" column="0">
-                  <widget class="QRadioButton" name="mapOsmServerVedderButton">
-                   <property name="text">
-                    <string>Vedder</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="5" column="0" colspan="2">
-                  <widget class="QPushButton" name="mapOsmClearCacheButton">
-                   <property name="text">
-                    <string>Clear Cache</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="3" column="1">
-                  <widget class="QRadioButton" name="mapOsmServerHiResButton">
-                   <property name="text">
-                    <string>HiRes</string>
-                   </property>
-                   <property name="checked">
-                    <bool>true</bool>
+                   <property name="value">
+                    <number>19</number>
                    </property>
                   </widget>
                  </item>
@@ -494,13 +520,6 @@
                 </layout>
                </widget>
               </item>
-              <item>
-               <widget class="QPushButton" name="mapZeroButton">
-                <property name="text">
-                 <string>Go to Zero</string>
-                </property>
-               </widget>
-              </item>
              </layout>
             </widget>
            </widget>
@@ -511,13 +530,6 @@
              <string>Selection</string>
             </property>
             <layout class="QGridLayout" name="gridLayout_6">
-             <item row="0" column="1">
-              <widget class="QCheckBox" name="mapFollowBox">
-               <property name="text">
-                <string>Follow</string>
-               </property>
-              </widget>
-             </item>
              <item row="0" column="0">
               <widget class="QSpinBox" name="mapCarBox">
                <property name="prefix">
@@ -528,10 +540,24 @@
                </property>
               </widget>
              </item>
+             <item row="0" column="1">
+              <widget class="QCheckBox" name="mapFollowBox">
+               <property name="text">
+                <string>Follow</string>
+               </property>
+              </widget>
+             </item>
              <item row="1" column="1">
               <widget class="QCheckBox" name="mapTraceBox">
                <property name="text">
                 <string>Draw trace</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QPushButton" name="mapZeroButton">
+               <property name="text">
+                <string>Go to Zero</string>
                </property>
               </widget>
              </item>

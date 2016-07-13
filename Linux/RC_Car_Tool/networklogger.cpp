@@ -297,9 +297,14 @@ void NetworkLogger::on_statLogOpenButton_clicked()
                 int fix_type = list.at(4).toInt();
 
                 if (!i_llh_set) {
-                    i_llh[0] = llh[0];
-                    i_llh[1] = llh[1];
-                    i_llh[2] = llh[2];
+                    if (ui->statLogZeroEnuBox->isChecked() || !mMap) {
+                        i_llh[0] = llh[0];
+                        i_llh[1] = llh[1];
+                        i_llh[2] = llh[2];
+                    } else {
+                        mMap->getEnuRef(i_llh);
+                    }
+
                     i_llh_set = true;
 
                     if (mMap) {

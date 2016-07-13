@@ -32,6 +32,61 @@ static void normalizeAngleRad(double &angle)
         angle += 2.0 * M_PI;
     }
 }
+
+// see http://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/
+
+double eps = 0.00000001;
+struct Point{
+    double x;
+    double y;
+    Point(){}
+    Point(double x1, double x2){x=x1;y=x2;}
+};
+
+double len_sq(Point a,Point b) {
+    return (a.x - b.x)*(a.x - b.x) + (a.y - b.y)*(a.y - b.y);
+}
+
+bool is_in(Point p, Point a, Point b) {
+    return fabs(len_sq(a,p) + len_sq(p,b) - len_sq(a,b)) < eps;
+}
+
+bool intersect(Point a, Point b, Point p, Point q){
+    //slopes of the line segments, they can be represented as points
+    Point u(b.x-a.x,b.y-a.y);
+    Point v(q.x-p.x,q.y-p.y);
+    //when vectors are parallel (or at least one of them is 0), their cross product is 0
+    if (fabs(u.x*v.y - u.y*v.x) < eps){
+        if (is_in(a,p,q) || is_in(b,p,q) || is_in(p,a,b) || is_in(q,a,b))
+            return true;
+        else return false;
+    }
+    //Since we want a intersection between line segments, we have to calculate
+    //parameters s and t from parametric representation of a line.
+    // x = a.x +s*u.x x = p.x+t*v.x
+    // y = a.y +s*u.y y = p.y+t*v.y
+    //this below is just a solution for equation of 4 unknown variables x,y would
+    //be coordinates of the point of an intersection, but we don't need them.
+    double s,t;
+    if (fabs(u.y) < eps){
+        s = (a.y - p.y ) / v.y;
+        t = ( p.x + s * v.x - a.x ) / u.x;
+    } else if (fabs(u.x) < eps){
+        s = (a.x - p.x) / v.x;
+        t = ( p.y + s * v.y - a.y ) / u.y;
+    } else {
+        s = ( p.y * ( u.x / u.y ) - a.y * ( u.x / u.y ) - p.x + a.x ) / ( v.x - (v.y * u.x ) / u.y );
+        t = ( p.x + s * v.x - a.x ) / u.x;
+    }
+    //From the theory of parametric representation of a line segment,
+    //s and t must be between 0 and 1
+    if(s <=1+eps && s+eps >= 0 && t <=1+eps && t +eps >= 0 ) return true;
+    else return false;
+}
+
+bool isWithin(const QPointF &p, double xStart, double xEnd, double yStart, double yEnd) {
+    return p.x() > xStart && p.x() < xEnd && p.y() > yStart && p.y() < yEnd;
+}
 }
 
 MapWidget::MapWidget(QWidget *parent) :
@@ -62,6 +117,7 @@ MapWidget::MapWidget(QWidget *parent) :
     mDrawOpenStreetmap = true;
     mOsmZoomLevel = 15;
     mOsmRes = 1.0;
+    mOsmMaxZoomLevel = 19;
 
     // Set this to the SP base station position for now
     mRefLat = 57.71495867;
@@ -70,9 +126,10 @@ MapWidget::MapWidget(QWidget *parent) :
 
     // Hardcoded for now
     mOsm->setCacheDir("osm_tiles");
-//    mOsm->setTileServerUrl("http://tile.openstreetmap.org");
-//    mOsm->setTileServerUrl("http://home.vedder.se/osm_tiles");
-    mOsm->setTileServerUrl("https://c.osm.rrze.fau.de/osmhd");
+    //    mOsm->setTileServerUrl("http://tile.openstreetmap.org");
+    //    mOsm->setTileServerUrl("http://c.osm.rrze.fau.de/osmhd"); // Also https
+    //    mOsm->setTileServerUrl("http://home.vedder.se/osm_tiles");
+    mOsm->setTileServerUrl("http://home.vedder.se/osm_tiles_hd");
 
     connect(mOsm, SIGNAL(tileReady(OsmTile)),
             this, SLOT(tileReady(OsmTile)));
@@ -375,10 +432,10 @@ void MapWidget::paintEvent(QPaintEvent *event)
         i_llh[1] = mRefLon;
         i_llh[2] = mRefHeight;
 
-        mOsmZoomLevel = (int)round(log2(mScaleFactor * mOsmRes * 130000000.0 *
+        mOsmZoomLevel = (int)round(log2(mScaleFactor * mOsmRes * 100000000.0 *
                                         cos(i_llh[0] * M_PI / 180.0)));
-        if (mOsmZoomLevel > 19) {
-            mOsmZoomLevel = 19;
+        if (mOsmZoomLevel > mOsmMaxZoomLevel) {
+            mOsmZoomLevel = mOsmMaxZoomLevel;
         } else if (mOsmZoomLevel < 0) {
             mOsmZoomLevel = 0;
         }
@@ -560,23 +617,102 @@ void MapWidget::paintEvent(QPaintEvent *event)
     painter.setPen(pen);
     painter.setBrush(Qt::green);
     painter.setTransform(drawTrans);
+
+    int info_segments = 0;
+    int info_points = 0;
+
+    double xStart2 = (cx - view_w / 2.0) * 1000.0;
+    double yStart2 = (cy - view_w / 2.0) * 1000.0;
+    double xEnd2 = (cx + view_w / 2.0) * 1000.0;
+    double yEnd2 = (cy + view_w / 2.0) * 1000.0;
+
+    int last_visible = 0;
     for (int i = 1;i < mInfoTrace.size();i++) {
-        painter.drawLine(mInfoTrace[i - 1].getX() * 1000.0, mInfoTrace[i - 1].getY() * 1000.0,
-                mInfoTrace[i].getX() * 1000.0, mInfoTrace[i].getY() * 1000.0);
+        bool draw = isWithin(mInfoTrace[last_visible].getPointMm(), xStart2, xEnd2, yStart2, yEnd2);
+
+        if (!draw) {
+            draw = isWithin(mInfoTrace[i].getPointMm(), xStart2, xEnd2, yStart2, yEnd2);
+        }
+
+        double dist_view = mInfoTrace.at(i).getDistanceTo(mInfoTrace.at(last_visible)) * mScaleFactor;
+        if (draw && dist_view < 0.02) {
+            continue;
+        }
+
+        if (!draw) {
+            Point p1, q1, p2, q2;
+            p1.x = mInfoTrace[last_visible].getX() * 1000.0;
+            p1.y = mInfoTrace[last_visible].getY() * 1000.0;
+            q1.x = mInfoTrace[i].getX() * 1000.0;
+            q1.y = mInfoTrace[i].getY() * 1000.0;
+
+            p2.x = xStart2;
+            p2.y = yStart2;
+            q2.x = (xEnd2 - xStart2);
+            q2.y = yStart2;
+            draw = intersect(p1, q1, p2, q2);
+
+            if (!draw) {
+                p2.x = xStart2;
+                p2.y = yStart2;
+                q2.x = xStart2;
+                q2.y = (yEnd2 - yStart2);
+                draw = intersect(p1, q1, p2, q2);
+            }
+
+            if (!draw) {
+                p2.x = xStart2;
+                p2.y = (yEnd2 - yStart2);
+                q2.x = xEnd2;
+                q2.y = yEnd2;
+                draw = intersect(p1, q1, p2, q2);
+            }
+
+            if (!draw) {
+                p2.x = (xEnd2 - xStart2);
+                p2.y = yStart2;
+                q2.x = xEnd2;
+                q2.y = yEnd2;
+                draw = intersect(p1, q1, p2, q2);
+            }
+        }
+
+        if (draw) {
+            painter.drawLine(mInfoTrace[last_visible].getX() * 1000.0, mInfoTrace[last_visible].getY() * 1000.0,
+                             mInfoTrace[i].getX() * 1000.0, mInfoTrace[i].getY() * 1000.0);
+            info_segments++;
+        }
+
+        last_visible = i;
     }
 
     // Draw green points first
+    last_visible = 0;
+    int drawn = 0;
     for (int i = 0;i < mInfoTrace.size();i++) {
         const LocPoint &ip = mInfoTrace[i];
         QPointF p = ip.getPointMm();
 
         if ((ip.getColor() == Qt::green || ip.getColor() == Qt::darkGreen) &&
-                p.x() > xStart && p.x() < xEnd && p.y() > yStart && p.y() < yEnd) {
+                isWithin(p, xStart2, xEnd2, yStart2, yEnd2)) {
+
+            if (drawn > 0) {
+                double dist_view = mInfoTrace.at(i).getDistanceTo(mInfoTrace.at(last_visible)) * mScaleFactor;
+                if (dist_view < 0.02) {
+                    continue;
+                }
+
+                last_visible = i;
+            }
+
+            drawn++;
+
             painter.setTransform(drawTrans);
             pen.setColor(ip.getColor());
             painter.setBrush(ip.getColor());
             painter.setPen(pen);
             painter.drawEllipse(p, 5 / mScaleFactor, 5 / mScaleFactor);
+            info_points++;
 
             if (mScaleFactor > mInfoTraceTextZoom) {
                 pt_txt.setX(p.x() + 5 / mScaleFactor);
@@ -594,17 +730,32 @@ void MapWidget::paintEvent(QPaintEvent *event)
     }
 
     // Draw other points after the green ones so that they come on top
+    last_visible = 0;
+    drawn = 0;
     for (int i = 0;i < mInfoTrace.size();i++) {
         const LocPoint &ip = mInfoTrace[i];
         QPointF p = ip.getPointMm();
 
         if (ip.getColor() != Qt::green && ip.getColor() != Qt::darkGreen &&
-                p.x() > xStart && p.x() < xEnd && p.y() > yStart && p.y() < yEnd) {
+                isWithin(p, xStart2, xEnd2, yStart2, yEnd2)) {
+
+            if (drawn > 0) {
+                double dist_view = mInfoTrace.at(i).getDistanceTo(mInfoTrace.at(last_visible)) * mScaleFactor;
+                if (dist_view < 0.02) {
+                    continue;
+                }
+
+                last_visible = i;
+            }
+
+            drawn++;
+
             painter.setTransform(drawTrans);
             pen.setColor(ip.getColor());
             painter.setBrush(ip.getColor());
             painter.setPen(pen);
             painter.drawEllipse(p, 5 / mScaleFactor, 5 / mScaleFactor);
+            info_points++;
 
             if (mScaleFactor > mInfoTraceTextZoom) {
                 pt_txt.setX(p.x() + 5 / mScaleFactor);
@@ -739,19 +890,23 @@ void MapWidget::paintEvent(QPaintEvent *event)
         painter.drawText(rect_txt, txt);
     }
 
+    double start_txt = 30.0;
+
     // Draw units (m)
     painter.setTransform(txtTrans);
     font.setPointSize(12);
     painter.setFont(font);
     txt = "Grid unit: m";
-    painter.drawText(width() - 140, 30, txt);
+    painter.drawText(width() - 140.0, start_txt, txt);
+    start_txt += 25.0;
 
     // Draw zoom level
     painter.setTransform(txtTrans);
     font.setPointSize(12);
     painter.setFont(font);
     txt.sprintf("Zoom: %.7f", mScaleFactor);
-    painter.drawText(width() - 140, 55, txt);
+    painter.drawText(width() - 140.0, start_txt, txt);
+    start_txt += 25.0;
 
     // Draw OSM zoom level
     if (mDrawOpenStreetmap) {
@@ -759,7 +914,27 @@ void MapWidget::paintEvent(QPaintEvent *event)
         font.setPointSize(12);
         painter.setFont(font);
         txt.sprintf("OSM zoom: %d", mOsmZoomLevel);
-        painter.drawText(width() - 140, 80, txt);
+        painter.drawText(width() - 140.0, start_txt, txt);
+        start_txt += 25.0;
+    }
+
+    // Some info
+    if (info_segments > 0) {
+        painter.setTransform(txtTrans);
+        font.setPointSize(12);
+        painter.setFont(font);
+        txt.sprintf("Info seg: %d", info_segments);
+        painter.drawText(width() - 140.0, start_txt, txt);
+        start_txt += 25.0;
+    }
+
+    if (info_points > 0) {
+        painter.setTransform(txtTrans);
+        font.setPointSize(12);
+        painter.setFont(font);
+        txt.sprintf("Info pts: %d", info_points);
+        painter.drawText(width() - 140.0, start_txt, txt);
+        start_txt += 25.0;
     }
 
     painter.end();
@@ -876,6 +1051,21 @@ void MapWidget::wheelEvent(QWheelEvent *e)
         emit offsetChanged(mXOffset, mYOffset);
         repaintAfterEvents();
     }
+}
+
+int MapWidget::getOsmZoomLevel() const
+{
+    return mOsmZoomLevel;
+}
+
+int MapWidget::getOsmMaxZoomLevel() const
+{
+    return mOsmMaxZoomLevel;
+}
+
+void MapWidget::setOsmMaxZoomLevel(int osmMaxZoomLevel)
+{
+    mOsmMaxZoomLevel = osmMaxZoomLevel;
 }
 
 double MapWidget::getInfoTraceTextZoom() const

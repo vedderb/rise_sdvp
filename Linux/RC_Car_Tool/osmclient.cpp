@@ -8,7 +8,7 @@ OsmClient::OsmClient(QObject *parent) : QObject(parent)
     mMaxDownloadingTiles = 6;
 
     // Generate status pixmaps
-    for (int i = 0;i < 2;i++) {
+    for (int i = 0;i < 3;i++) {
         QPixmap pix(512, 512);
         QPainter *p = new QPainter(&pix);
 
@@ -16,9 +16,10 @@ OsmClient::OsmClient(QObject *parent) : QObject(parent)
         case 0: {
             // Downloading
             p->fillRect(pix.rect(), Qt::white);
-            p->setBrush(QBrush(QColor(200, 200, 255)));
-            p->setPen(QPen(QBrush(Qt::blue), 10));
-            p->drawRoundedRect(pix.rect(), 30, 30);
+            p->setBrush(QBrush(QColor(200, 255, 200)));
+            p->setPen(QPen(QBrush(Qt::green), 3, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin));
+            QRect r(3, 3, 506, 506);
+            p->drawRect(r);
             QString txt = "Downloading\ntile...";
             p->setPen(QColor(Qt::black));
             QFont font;
@@ -32,10 +33,11 @@ OsmClient::OsmClient(QObject *parent) : QObject(parent)
         case 1: {
             // Waiting for other downloads.
             p->fillRect(pix.rect(), Qt::white);
-            p->setBrush(QBrush(QColor(255, 200, 200)));
-            p->setPen(QPen(QBrush(Qt::red), 10));
-            p->drawRoundedRect(pix.rect(), 30, 30);
-            QString txt = "Waiting...";
+            p->setBrush(QBrush(QColor(255, 255, 200)));
+            p->setPen(QPen(QBrush(Qt::yellow), 3, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin));
+            QRect r(3, 3, 506, 506);
+            p->drawRect(r);
+            QString txt = "Waiting for\nother downloads...";
             p->setPen(QColor(Qt::black));
             QFont font;
             font.setPointSize(32);
@@ -45,6 +47,22 @@ OsmClient::OsmClient(QObject *parent) : QObject(parent)
             p->drawText(rect, Qt::AlignCenter, txt);
         } break;
 
+        case 2: {
+            // Download error.
+            p->fillRect(pix.rect(), Qt::white);
+            p->setBrush(QBrush(QColor(255, 200, 200)));
+            p->setPen(QPen(QBrush(Qt::red), 3, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin));
+            QRect r(3, 3, 506, 506);
+            p->drawRect(r);
+            QString txt = "Download\nerror";
+            p->setPen(QColor(Qt::black));
+            QFont font;
+            font.setPointSize(32);
+            p->setFont(font);
+            QRect rect;
+            rect.setRect(0, 0, 512, 512);
+            p->drawText(rect, Qt::AlignCenter, txt);
+        } break;
 
         }
 
@@ -215,8 +233,9 @@ void OsmClient::fileDownloaded(QNetworkReply *pReply)
     path = path.left(ind);
     ind = path.lastIndexOf("/");
     int zoom = path.mid(ind + 1).toInt();
+    quint64 key = calcKey(zoom, x, y);
 
-    mDownloadingTiles.remove(calcKey(zoom, x, y));
+    mDownloadingTiles.remove(key);
 
     if (pReply->error() == QNetworkReply::NoError) {
         QPixmap pm;
@@ -232,16 +251,18 @@ void OsmClient::fileDownloaded(QNetworkReply *pReply)
             if (!file.exists()) {
                 QDir().mkpath(mCacheDir + "/" + QString::number(zoom) + "/" + QString::number(x));
                 if (file.open(QIODevice::ReadWrite)) {
-                     file.write(data);
-                     file.close();
+                    file.write(data);
+                    file.close();
                 } else {
                     emit errorGetTile("Cache error: " + file.errorString());
                 }
             }
         }
 
+        mDownloadErrorTiles.remove(key);
         emitTile(OsmTile(pm, zoom, x, y));
     } else {
+        mDownloadErrorTiles.insert(key, true);
         emit errorGetTile("Download error: " + pReply->errorString());
     }
 }
@@ -301,6 +322,8 @@ const QPixmap &OsmClient::getStatusPixmap(quint64 key)
 {
     if (mDownloadingTiles.contains(key)) {
         return mStatusPixmaps.at(0);
+    } else if (mDownloadErrorTiles.contains(key)) {
+        return mStatusPixmaps.at(2);
     } else {
         return mStatusPixmaps.at(1);
     }

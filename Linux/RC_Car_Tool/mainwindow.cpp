@@ -917,7 +917,7 @@ void MainWindow::on_mapOsmServerOsmButton_toggled(bool checked)
 void MainWindow::on_mapOsmServerHiResButton_toggled(bool checked)
 {
     if (checked) {
-        ui->mapWidget->osmClient()->setTileServerUrl("https://c.osm.rrze.fau.de/osmhd");
+        ui->mapWidget->osmClient()->setTileServerUrl("http://c.osm.rrze.fau.de/osmhd"); // Also https
     }
 }
 
@@ -925,5 +925,20 @@ void MainWindow::on_mapOsmServerVedderButton_toggled(bool checked)
 {
     if (checked) {
         ui->mapWidget->osmClient()->setTileServerUrl("http://home.vedder.se/osm_tiles");
+    }
+}
+
+void MainWindow::on_mapOsmServerVedderHdButton_toggled(bool checked)
+{
+    if (checked) {
+        ui->mapWidget->osmClient()->setTileServerUrl("http://home.vedder.se/osm_tiles_hd");
+    }
+}
+
+void MainWindow::on_mapOsmMaxZoomBox_valueChanged(int arg1)
+{
+    ui->mapWidget->setOsmMaxZoomLevel(arg1);
+    if (ui->mapWidget->getOsmZoomLevel() > arg1) {
+        ui->mapWidget->update();
     }
 }

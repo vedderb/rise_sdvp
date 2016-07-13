@@ -159,7 +159,7 @@ void LocPoint::setColor(const QColor &color)
     mColor = color;
 }
 
-double LocPoint::getDistanceTo(const LocPoint &point)
+double LocPoint::getDistanceTo(const LocPoint &point) const
 {
     return sqrt((point.mX - mX) * (point.mX - mX) + (point.mY - mY) * (point.mY - mY));
 }

@@ -96,6 +96,8 @@ private slots:
     void on_mapOsmServerOsmButton_toggled(bool checked);
     void on_mapOsmServerHiResButton_toggled(bool checked);
     void on_mapOsmServerVedderButton_toggled(bool checked);
+    void on_mapOsmServerVedderHdButton_toggled(bool checked);
+    void on_mapOsmMaxZoomBox_valueChanged(int arg1);
 
 private:
     Ui::MainWindow *ui;

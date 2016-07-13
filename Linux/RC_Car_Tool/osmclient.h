@@ -21,17 +21,39 @@
  * @brief The OsmClient class
  *
  * See:
+ *
+ * Tile example
  * http://tile.openstreetmap.org/17/70185/39633.png
+ *
+ * Tile names and coordinates
  * http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
+ *
+ * Zoom level description
  * http://wiki.openstreetmap.org/wiki/Zoom_levels
+ *
+ * Markartor projection
  * https://en.wikipedia.org/wiki/Web_Mercator
+ *
+ * Ubuntu tile server
  * https://switch2osm.org/serving-tiles/manually-building-a-tile-server-14-04/
+ * https://switch2osm.org/loading-osm-data/
+ *
  * http://stackoverflow.com/questions/16834983/i-am-trying-to-config-my-own-map-server-with-mapnik-mod-tile-and-apache-no-tiles
+ *
+ * Carto style
  * https://github.com/gravitystorm/openstreetmap-carto
+ *
+ * Zoom levels
  * http://wiki.openstreetmap.org/wiki/User:SomeoneElse/Tileserver_zoom_levels
+ *
+ * Another carto style
  * https://github.com/SomeoneElseOSM/openstreetmap-carto-AJT
+ *
+ * Map updates
  * http://wiki.openstreetmap.org/wiki/Minutely_Mapnik
  *
+ * HD Tiles:
+ * https://lists.openstreetmap.org/pipermail/tile-serving/2014-July/001144.html
  */
 
 class OsmClient : public QObject
@@ -68,6 +90,7 @@ private:
     QHash<quint64, OsmTile> mMemoryTiles;
     QList<quint64> mMemoryTilesOrder;
     QHash<quint64, bool> mDownloadingTiles;
+    QHash<quint64, bool> mDownloadErrorTiles;
     QList<QPixmap> mStatusPixmaps;
 
     int mMaxMemoryTiles;
