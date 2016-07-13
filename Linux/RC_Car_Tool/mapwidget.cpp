@@ -35,7 +35,7 @@ static void normalizeAngleRad(double &angle)
 
 // see http://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/
 
-double eps = 0.00000001;
+double eps = 1e-8;
 struct Point{
     double x;
     double y;
@@ -57,9 +57,11 @@ bool intersect(Point a, Point b, Point p, Point q){
     Point v(q.x-p.x,q.y-p.y);
     //when vectors are parallel (or at least one of them is 0), their cross product is 0
     if (fabs(u.x*v.y - u.y*v.x) < eps){
-        if (is_in(a,p,q) || is_in(b,p,q) || is_in(p,a,b) || is_in(q,a,b))
+        if (is_in(a,p,q) || is_in(b,p,q) || is_in(p,a,b) || is_in(q,a,b)) {
             return true;
-        else return false;
+        } else {
+            return false;
+        }
     }
     //Since we want a intersection between line segments, we have to calculate
     //parameters s and t from parametric representation of a line.
@@ -80,8 +82,11 @@ bool intersect(Point a, Point b, Point p, Point q){
     }
     //From the theory of parametric representation of a line segment,
     //s and t must be between 0 and 1
-    if(s <=1+eps && s+eps >= 0 && t <=1+eps && t +eps >= 0 ) return true;
-    else return false;
+    if(s <=1+eps && s+eps >= 0 && t <=1+eps && t +eps >= 0 ) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 bool isWithin(const QPointF &p, double xStart, double xEnd, double yStart, double yEnd) {
@@ -648,7 +653,7 @@ void MapWidget::paintEvent(QPaintEvent *event)
 
             p2.x = xStart2;
             p2.y = yStart2;
-            q2.x = (xEnd2 - xStart2);
+            q2.x = xEnd2 - xStart2;
             q2.y = yStart2;
             draw = intersect(p1, q1, p2, q2);
 
@@ -656,23 +661,23 @@ void MapWidget::paintEvent(QPaintEvent *event)
                 p2.x = xStart2;
                 p2.y = yStart2;
                 q2.x = xStart2;
-                q2.y = (yEnd2 - yStart2);
+                q2.y = yEnd2 - yStart2;
                 draw = intersect(p1, q1, p2, q2);
             }
 
             if (!draw) {
                 p2.x = xStart2;
-                p2.y = (yEnd2 - yStart2);
-                q2.x = xEnd2;
-                q2.y = yEnd2;
+                p2.y = yEnd2 - yStart2;
+                q2.x = xEnd2 - xStart2;
+                q2.y = yEnd2 - yStart2;
                 draw = intersect(p1, q1, p2, q2);
             }
 
             if (!draw) {
-                p2.x = (xEnd2 - xStart2);
+                p2.x = xEnd2 - xStart2;
                 p2.y = yStart2;
-                q2.x = xEnd2;
-                q2.y = yEnd2;
+                q2.x = xEnd2 - xStart2;
+                q2.y = yEnd2 - yStart2;
                 draw = intersect(p1, q1, p2, q2);
             }
         }
