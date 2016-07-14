@@ -174,7 +174,7 @@ void createEnuMatrix(double lat, double lon, double *enuMat)
 //    enuMat[8] = -sa;
 }
 
-void llhToEnu(double *iLlh, double *llh, double *xyz)
+void llhToEnu(const double *iLlh, const double *llh, double *xyz)
 {
     double ix, iy, iz;
     llhToXyz(iLlh[0], iLlh[1], iLlh[2], &ix, &iy, &iz);
@@ -194,7 +194,7 @@ void llhToEnu(double *iLlh, double *llh, double *xyz)
     xyz[2] = enuMat[6] * dx + enuMat[7] * dy + enuMat[8] * dz;
 }
 
-void enuToLlh(double *iLlh, double *xyz, double *llh)
+void enuToLlh(const double *iLlh, const double *xyz, double *llh)
 {
     double ix, iy, iz;
     llhToXyz(iLlh[0], iLlh[1], iLlh[2], &ix, &iy, &iz);

@@ -1263,12 +1263,12 @@
    <slot>click()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>133</x>
-     <y>391</y>
+     <x>146</x>
+     <y>460</y>
     </hint>
     <hint type="destinationlabel">
-     <x>600</x>
-     <y>391</y>
+     <x>649</x>
+     <y>460</y>
     </hint>
    </hints>
   </connection>
@@ -1279,8 +1279,8 @@
    <slot>clear()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>399</x>
-     <y>392</y>
+     <x>222</x>
+     <y>460</y>
     </hint>
     <hint type="destinationlabel">
      <x>401</x>

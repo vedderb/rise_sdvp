@@ -38,8 +38,8 @@ double map(double x, double in_min, double in_max, double out_min, double out_ma
 void llhToXyz(double lat, double lon, double height, double *x, double *y, double *z);
 void xyzToLlh(double x, double y, double z, double *lat, double *lon, double *height);
 void createEnuMatrix(double lat, double lon, double *enuMat);
-void llhToEnu(double *iLlh, double *llh, double *xyz);
-void enuToLlh(double *iLlh, double *xyz, double *llh);
+void llhToEnu(const double *iLlh, const double *llh, double *xyz);
+void enuToLlh(const double *iLlh, const double *xyz, double *llh);
 
 }
 

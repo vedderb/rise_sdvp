@@ -131,6 +131,10 @@ private:
     LocPoint mClosestInfo;
 
     void updateClosestInfoPoint();
+    int drawInfoPoints(QPainter &painter, const QList<LocPoint> &pts,
+                        QTransform drawTrans, QTransform txtTrans,
+                       double xStart, double xEnd, double yStart, double yEnd,
+                       double min_dist);
 
 };
 

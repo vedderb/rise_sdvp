@@ -4,6 +4,8 @@
 #include <QWidget>
 #include <QTcpSocket>
 #include <QFile>
+#include <QList>
+#include <QDateTime>
 #include "datatypes.h"
 #include "ping.h"
 #include "locpoint.h"
@@ -21,6 +23,16 @@ public:
     explicit NetworkLogger(QWidget *parent = 0);
     ~NetworkLogger();
     void setMap(MapWidget *map);
+
+    typedef struct {
+        QDateTime date;
+        double llh[3];
+        int fix_type;
+        int datalen;
+        QString pingRes;
+        double pingMs;
+        bool pingOk;
+    } LOGPOINT;
 
 private slots:
     void tcpInputConnected();
@@ -48,6 +60,8 @@ private:
     QFile mLog;
     LocPoint mLastPoint;
     MapWidget *mMap;
+    QList<LOGPOINT> mLogRt;
+    QList<LOGPOINT> mLogLoaded;
 
 };
 

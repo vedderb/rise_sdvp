@@ -33,95 +33,90 @@ static void normalizeAngleRad(double &angle)
     }
 }
 
-// see http://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/
+void minMaxEps(double x, double y, double &min, double &max) {
+    double eps = fabs(max) / 1e10;
 
-double eps = 1e-8;
-struct Point {
-    double x;
-    double y;
-    Point(){}
-    Point(double x1, double x2){x=x1;y=x2;}
-};
-
-double len_sq(Point a,Point b) {
-    return (a.x - b.x)*(a.x - b.x) + (a.y - b.y)*(a.y - b.y);
-}
-
-bool is_in(Point p, Point a, Point b) {
-    return fabs(len_sq(a,p) + len_sq(p,b) - len_sq(a,b)) < eps;
-}
-
-bool lineSegmentIntersection(Point a, Point b, Point p, Point q){
-    //slopes of the line segments, they can be represented as points
-    Point u(b.x-a.x,b.y-a.y);
-    Point v(q.x-p.x,q.y-p.y);
-    //when vectors are parallel (or at least one of them is 0), their cross product is 0
-    if (fabs(u.x*v.y - u.y*v.x) < eps){
-        if (is_in(a,p,q) || is_in(b,p,q) || is_in(p,a,b) || is_in(q,a,b)) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-    //Since we want a intersection between line segments, we have to calculate
-    //parameters s and t from parametric representation of a line.
-    // x = a.x +s*u.x x = p.x+t*v.x
-    // y = a.y +s*u.y y = p.y+t*v.y
-    //this below is just a solution for equation of 4 unknown variables x,y would
-    //be coordinates of the point of an intersection, but we don't need them.
-    double s,t;
-    if (fabs(u.y) < eps){
-        s = (a.y - p.y ) / v.y;
-        t = ( p.x + s * v.x - a.x ) / u.x;
-    } else if (fabs(u.x) < eps){
-        s = (a.x - p.x) / v.x;
-        t = ( p.y + s * v.y - a.y ) / u.y;
+    if (x > y) {
+        max = x + eps;
+        min = y - eps;
     } else {
-        s = ( p.y * ( u.x / u.y ) - a.y * ( u.x / u.y ) - p.x + a.x ) / ( v.x - (v.y * u.x ) / u.y );
-        t = ( p.x + s * v.x - a.x ) / u.x;
-    }
-    //From the theory of parametric representation of a line segment,
-    //s and t must be between 0 and 1
-    if(s <=1+eps && s+eps >= 0 && t <=1+eps && t +eps >= 0 ) {
-        return true;
-    } else {
-        return false;
+        max = y + eps;
+        min = x - eps;
     }
 }
 
 bool isPointWithinRect(const QPointF &p, double xStart, double xEnd, double yStart, double yEnd) {
-    return p.x() > xStart && p.x() < xEnd && p.y() > yStart && p.y() < yEnd;
+    return p.x() >= xStart && p.x() <= xEnd && p.y() >= yStart && p.y() <= yEnd;
 }
 
-bool isLineSegmentWithinRect(const QPointF &pa, const QPointF &pb, double xStart, double xEnd, double yStart, double yEnd) {
-    Point p1(pa.x(), pa.y());
-    Point q1(pb.x(), pb.y());
-    Point p2(xStart, yStart);
-    Point q2(xEnd, yEnd);
-    bool res = lineSegmentIntersection(p1, q1, p2, q2);
+// See https://www.topcoder.com/community/data-science/data-science-tutorials/geometry-concepts-line-intersection-and-its-applications/
+bool lineSegmentIntersection(const QPointF &p1, const QPointF &p2, const QPointF &q1, const QPointF &q2) {
+    bool res = false;
+
+    const double A1 = p2.y() - p1.y();
+    const double B1 = p1.x() - p2.x();
+    const double C1 = A1 * p1.x() + B1 * p1.y();
+
+    const double A2 = q2.y() - q1.y();
+    const double B2 = q1.x() - q2.x();
+    const double C2 = A2 * q1.x() + B2 * q1.y();
+
+    const double det = A1 * B2 - A2 * B1;
+
+    if(fabs(det) < 1e-6) {
+        //Lines are parallel
+    } else {
+        double x = (B2 * C1 - B1 * C2) / det;
+        double y = (A1 * C2 - A2 * C1) / det;
+
+        // Check if this point is on both line segments.
+        double p1XMin, p1XMax, p1YMin, p1YMax;
+        minMaxEps(p1.x(), p2.x(), p1XMin, p1XMax);
+        minMaxEps(p1.y(), p2.y(), p1YMin, p1YMax);
+
+        double q1XMin, q1XMax, q1YMin, q1YMax;
+        minMaxEps(q1.x(), q2.x(), q1XMin, q1XMax);
+        minMaxEps(q1.y(), q2.y(), q1YMin, q1YMax);
+
+        if (    x <= p1XMax && x >= p1XMin &&
+                y <= p1YMax && y >= p1YMin &&
+                x <= q1XMax && x >= q1XMin &&
+                y <= q1YMax && y >= q1YMin) {
+            res = true;
+        }
+    }
+
+    return res;
+}
+
+bool isLineSegmentWithinRect(const QPointF &p1, const QPointF &p2, double xStart, double xEnd, double yStart, double yEnd) {
+    QPointF q1(xStart, yStart);
+    QPointF q2(xEnd, yStart);
+
+    bool res = lineSegmentIntersection(p1, p2, q1, q2);
 
     if (!res) {
-        p2.x = xStart;
-        p2.y = yStart;
-        q2.x = xStart;
-        q2.y = yEnd;
-        res = lineSegmentIntersection(p1, q1, p2, q2);
+        q1.setX(xStart);
+        q1.setY(yStart);
+        q2.setX(xStart);
+        q2.setY(yEnd);
+        res = lineSegmentIntersection(p1, p2, q1, q2);
     }
 
     if (!res) {
-        p2.x = xStart;
-        p2.y = yEnd;
-        q2.x = xEnd;
-        q2.y = yEnd;
-        res = lineSegmentIntersection(p1, q1, p2, q2);
+        q1.setX(xStart);
+        q1.setY(yEnd);
+        q2.setX(xEnd);
+        q2.setY(yEnd);
+        res = lineSegmentIntersection(p1, p2, q1, q2);
     }
 
     if (!res) {
-        p2.x = xEnd;
-        p2.y = yStart;
-        q2.x = xEnd;
-        q2.y = yEnd;
-        res = lineSegmentIntersection(p1, q1, p2, q2);
+        q1.setX(xEnd);
+        q1.setY(yStart);
+        q2.setX(xEnd);
+        q2.setY(yEnd);
+        res = lineSegmentIntersection(p1, p2, q1, q2);
     }
 
     return res;
@@ -675,91 +670,26 @@ void MapWidget::paintEvent(QPaintEvent *event)
         last_visible = i;
     }
 
-    // Draw green points first
-    last_visible = 0;
-    int drawn = 0;
+    QList<LocPoint> pts_green;
+    QList<LocPoint> pts_red;
+    QList<LocPoint> pts_other;
     for (int i = 0;i < mInfoTrace.size();i++) {
         const LocPoint &ip = mInfoTrace[i];
-        QPointF p = ip.getPointMm();
-
-        if ((ip.getColor() == Qt::green || ip.getColor() == Qt::darkGreen) &&
-                isPointWithinRect(p, xStart2, xEnd2, yStart2, yEnd2)) {
-
-            if (drawn > 0) {
-                double dist_view = mInfoTrace.at(i).getDistanceTo(mInfoTrace.at(last_visible)) * mScaleFactor;
-                if (dist_view < info_min_dist) {
-                    continue;
-                }
-
-                last_visible = i;
-            }
-
-            drawn++;
-
-            painter.setTransform(drawTrans);
-            pen.setColor(ip.getColor());
-            painter.setBrush(ip.getColor());
-            painter.setPen(pen);
-            painter.drawEllipse(p, ip.getRadius() / mScaleFactor, ip.getRadius() / mScaleFactor);
-            info_points++;
-
-            if (mScaleFactor > mInfoTraceTextZoom) {
-                pt_txt.setX(p.x() + 5 / mScaleFactor);
-                pt_txt.setY(p.y());
-                painter.setTransform(txtTrans);
-                pt_txt = drawTrans.map(pt_txt);
-                pen.setColor(Qt::black);
-                painter.setPen(pen);
-                painter.setFont(QFont("monospace"));
-                rect_txt.setCoords(pt_txt.x(), pt_txt.y() - 20,
-                                   pt_txt.x() + 500, pt_txt.y() + 500);
-                painter.drawText(rect_txt, Qt::AlignTop | Qt::AlignLeft, ip.getInfo());
-            }
+        if (ip.getColor() == Qt::darkGreen || ip.getColor() == Qt::green) {
+            pts_green.append(ip);
+        } else if (ip.getColor() == Qt::darkRed || ip.getColor() == Qt::red) {
+            pts_red.append(ip);
+        } else {
+            pts_other.append(ip);
         }
     }
 
-    // Draw other points after the green ones so that they come on top
-    last_visible = 0;
-    drawn = 0;
-    for (int i = 0;i < mInfoTrace.size();i++) {
-        const LocPoint &ip = mInfoTrace[i];
-        QPointF p = ip.getPointMm();
-
-        if (ip.getColor() != Qt::green && ip.getColor() != Qt::darkGreen &&
-                isPointWithinRect(p, xStart2, xEnd2, yStart2, yEnd2)) {
-
-            if (drawn > 0) {
-                double dist_view = mInfoTrace.at(i).getDistanceTo(mInfoTrace.at(last_visible)) * mScaleFactor;
-                if (dist_view < info_min_dist) {
-                    continue;
-                }
-
-                last_visible = i;
-            }
-
-            drawn++;
-
-            painter.setTransform(drawTrans);
-            pen.setColor(ip.getColor());
-            painter.setBrush(ip.getColor());
-            painter.setPen(pen);
-            painter.drawEllipse(p, ip.getRadius() / mScaleFactor, ip.getRadius() / mScaleFactor);
-            info_points++;
-
-            if (mScaleFactor > mInfoTraceTextZoom) {
-                pt_txt.setX(p.x() + 5 / mScaleFactor);
-                pt_txt.setY(p.y());
-                painter.setTransform(txtTrans);
-                pt_txt = drawTrans.map(pt_txt);
-                pen.setColor(Qt::black);
-                painter.setPen(pen);
-                painter.setFont(QFont("monospace"));
-                rect_txt.setCoords(pt_txt.x(), pt_txt.y() - 20,
-                                   pt_txt.x() + 500, pt_txt.y() + 500);
-                painter.drawText(rect_txt, Qt::AlignTop | Qt::AlignLeft, ip.getInfo());
-            }
-        }
-    }
+    info_points += drawInfoPoints(painter, pts_green, drawTrans, txtTrans,
+                                  xStart2, xEnd2, yStart2, yEnd2, info_min_dist);
+    info_points += drawInfoPoints(painter, pts_other, drawTrans, txtTrans,
+                                  xStart2, xEnd2, yStart2, yEnd2, info_min_dist);
+    info_points += drawInfoPoints(painter, pts_red, drawTrans, txtTrans,
+                                  xStart2, xEnd2, yStart2, yEnd2, info_min_dist);
 
     // Draw point closest to mouse pointer
     if (mClosestInfo.getInfo().size() > 0) {
@@ -1100,6 +1030,56 @@ void MapWidget::updateClosestInfoPoint()
     if (drawBefore && !drawNow) {
         update();
     }
+}
+
+int MapWidget::drawInfoPoints(QPainter &painter, const QList<LocPoint> &pts,
+                              QTransform drawTrans, QTransform txtTrans,
+                              double xStart, double xEnd, double yStart, double yEnd,
+                              double min_dist)
+{
+    int last_visible = 0;
+    int drawn = 0;
+    QPen pen;
+    QPointF pt_txt;
+    QRectF rect_txt;
+
+    for (int i = 0;i < pts.size();i++) {
+        const LocPoint &ip = pts[i];
+        QPointF p = ip.getPointMm();
+
+        if (isPointWithinRect(p, xStart, xEnd, yStart, yEnd)) {
+            if (drawn > 0) {
+                double dist_view = pts.at(i).getDistanceTo(pts.at(last_visible)) * mScaleFactor;
+                if (dist_view < min_dist) {
+                    continue;
+                }
+
+                last_visible = i;
+            }
+
+            painter.setTransform(drawTrans);
+            pen.setColor(ip.getColor());
+            painter.setBrush(ip.getColor());
+            painter.setPen(pen);
+            painter.drawEllipse(p, ip.getRadius() / mScaleFactor, ip.getRadius() / mScaleFactor);
+            drawn++;
+
+            if (mScaleFactor > mInfoTraceTextZoom) {
+                pt_txt.setX(p.x() + 5 / mScaleFactor);
+                pt_txt.setY(p.y());
+                painter.setTransform(txtTrans);
+                pt_txt = drawTrans.map(pt_txt);
+                pen.setColor(Qt::black);
+                painter.setPen(pen);
+                painter.setFont(QFont("monospace"));
+                rect_txt.setCoords(pt_txt.x(), pt_txt.y() - 20,
+                                   pt_txt.x() + 500, pt_txt.y() + 500);
+                painter.drawText(rect_txt, Qt::AlignTop | Qt::AlignLeft, ip.getInfo());
+            }
+        }
+    }
+
+    return drawn;
 }
 
 int MapWidget::getOsmZoomLevel() const
