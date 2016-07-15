@@ -684,6 +684,7 @@ void MapWidget::paintEvent(QPaintEvent *event)
         }
     }
 
+    mVisibleInfoTracePoints.clear();
     info_points += drawInfoPoints(painter, pts_green, drawTrans, txtTrans,
                                   xStart2, xEnd2, yStart2, yEnd2, info_min_dist);
     info_points += drawInfoPoints(painter, pts_other, drawTrans, txtTrans,
@@ -1006,8 +1007,8 @@ void MapWidget::updateClosestInfoPoint()
     double dist_min = 1e30;
     LocPoint closest;
 
-    for (int i = 0;i < mInfoTrace.size();i++) {
-        const LocPoint &ip = mInfoTrace[i];
+    for (int i = 0;i < mVisibleInfoTracePoints.size();i++) {
+        const LocPoint &ip = mVisibleInfoTracePoints[i];
         if (mp.getDistanceTo(ip) < dist_min) {
             dist_min = mp.getDistanceTo(ip);
             closest = ip;
@@ -1062,7 +1063,9 @@ int MapWidget::drawInfoPoints(QPainter &painter, const QList<LocPoint> &pts,
             painter.setBrush(ip.getColor());
             painter.setPen(ip.getColor());
             painter.drawEllipse(p2, ip.getRadius(), ip.getRadius());
+
             drawn++;
+            mVisibleInfoTracePoints.append(ip);
 
             if (mScaleFactor > mInfoTraceTextZoom) {
                 pt_txt.setX(p.x() + 5 / mScaleFactor);

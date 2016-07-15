@@ -408,26 +408,7 @@ void NetworkLogger::on_statLogOpenButton_clicked()
                     mMap->addInfoPoint(p);
                 }
 
-                // Make histogram
-                // create bottom axis rect for volume bar chart:
-                QCustomPlot *customPlot = ui->statHistogramPlot;
-                int n = 100;
-                QDateTime start = QDateTime(QDate(2014, 6, 11));
-                start.setTimeSpec(Qt::UTC);
-                double startTime = 10.0;
-
-                // create two bar plottables, for positive (green) and negative (red) volume bars:
-                QCPBars *volumePos = new QCPBars(customPlot->xAxis, customPlot->yAxis);
-                for (int i=0;i < n;i++) {
-                    int v = qrand()%20000+qrand()%20000+qrand()%20000-10000*3;
-                    volumePos->addData(startTime + 0.1 * i, qAbs(v)); // add data to either volumeNeg or volumePos, depending on sign of v
-                }
-                customPlot->setAutoAddPlottableToLegend(false);
-                customPlot->addPlottable(volumePos);
-                volumePos->setWidth(0.1 * 0.9);
-                volumePos->setPen(Qt::NoPen);
-                volumePos->setBrush(QColor(100, 180, 110));
-                customPlot->rescaleAxes();
+                drawHistogram(ui->statHistBinsBox->value(), mLogLoaded);
             }
         } else {
             QMessageBox::warning(this, "Open Error", "Could not open " + log.fileName());
@@ -447,4 +428,66 @@ void NetworkLogger::on_statLogChooseButton_clicked()
     }
 
     ui->statLogLoadEdit->setText(path);
+}
+
+void NetworkLogger::drawHistogram(int bins, const QList<NetworkLogger::LOGPOINT> &log)
+{
+    QCustomPlot *customPlot = ui->statHistogramPlot;
+    customPlot->clearPlottables();
+
+    QVector<int> binVec;
+    binVec.resize(bins);
+
+    double min = 1e20;
+    double max = 0;
+    for (int i = 0;i < log.size();i++) {
+        const LOGPOINT &p = log.at(i);
+        if (p.pingOk) {
+            if (p.pingMs < min) {
+                min = p.pingMs;
+            } else if (p.pingMs > max) {
+                max = p.pingMs;
+            }
+        }
+    }
+
+    double step = (max - min) / bins;
+    double range = max - min;
+
+    for (int i = 0;i < log.size();i++) {
+        const LOGPOINT &p = log.at(i);
+
+        if (p.pingOk) {
+            double val = p.pingMs;
+            val -= min;
+            val /= range;
+            val *= (bins - 1);
+
+            int bin = (int)round(val);
+            binVec[bin]++;
+        }
+    }
+
+    QCPBars *volumePos = new QCPBars(customPlot->xAxis, customPlot->yAxis);
+    for (int i = 0;i < bins;i++) {
+        volumePos->addData(min + step * i, binVec[i]);
+    }
+
+    customPlot->addPlottable(volumePos);
+    volumePos->setWidth(step * 0.9);
+    volumePos->setPen(Qt::NoPen);
+    volumePos->setBrush(QColor(100, 180, 110));
+    customPlot->rescaleAxes();
+    customPlot->replot();
+}
+
+void NetworkLogger::on_statHistRescaleButton_clicked()
+{
+    ui->statHistogramPlot->rescaleAxes();
+    ui->statHistogramPlot->replot();
+}
+
+void NetworkLogger::on_statHistBinsBox_valueChanged(int arg1)
+{
+    drawHistogram(arg1, mLogLoaded);
 }

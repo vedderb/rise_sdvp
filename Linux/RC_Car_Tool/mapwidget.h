@@ -104,6 +104,7 @@ private:
     QList<LocPoint> mCarTraceGps;
     QList<LocPoint> mRoute;
     QList<LocPoint> mInfoTrace;
+    QList<LocPoint> mVisibleInfoTracePoints;
     QList<PerspectivePixmap> mPerspectivePixmaps;
     double mRoutePointSpeed;
     double mScaleFactor;

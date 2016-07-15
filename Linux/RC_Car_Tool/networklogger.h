@@ -49,6 +49,8 @@ private slots:
     void on_logFileActiveBox_toggled(bool checked);
     void on_statLogOpenButton_clicked();
     void on_statLogChooseButton_clicked();
+    void on_statHistRescaleButton_clicked();
+    void on_statHistBinsBox_valueChanged(int arg1);
 
 private:
     Ui::NetworkLogger *ui;
@@ -62,6 +64,8 @@ private:
     MapWidget *mMap;
     QList<LOGPOINT> mLogRt;
     QList<LOGPOINT> mLogLoaded;
+
+    void drawHistogram(int bins, const QList<LOGPOINT> &log);
 
 };
 
