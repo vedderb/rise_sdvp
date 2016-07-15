@@ -412,7 +412,7 @@ void MapWidget::paintEvent(QPaintEvent *event)
     // Text coordinates
     QTransform txtTrans;
     txtTrans.translate(0, 0);
-    txtTrans.scale( 1, 1 );
+    txtTrans.scale(1, 1);
     txtTrans.rotate(0);
 
     // Set font
@@ -694,13 +694,13 @@ void MapWidget::paintEvent(QPaintEvent *event)
     // Draw point closest to mouse pointer
     if (mClosestInfo.getInfo().size() > 0) {
         QPointF p = mClosestInfo.getPointMm();
+        QPointF p2 = drawTrans.map(p);
 
-        painter.setTransform(drawTrans);
+        painter.setTransform(txtTrans);
         pen.setColor(Qt::green);
         painter.setBrush(Qt::green);
-        painter.setPen(pen);
-        painter.drawEllipse(p, mClosestInfo.getRadius() / mScaleFactor,
-                            mClosestInfo.getRadius() / mScaleFactor);
+        painter.setPen(Qt::green);
+        painter.drawEllipse(p2, mClosestInfo.getRadius(), mClosestInfo.getRadius());
 
         pt_txt.setX(p.x() + 5 / mScaleFactor);
         pt_txt.setY(p.y());
@@ -1039,13 +1039,15 @@ int MapWidget::drawInfoPoints(QPainter &painter, const QList<LocPoint> &pts,
 {
     int last_visible = 0;
     int drawn = 0;
-    QPen pen;
     QPointF pt_txt;
     QRectF rect_txt;
+
+    painter.setTransform(txtTrans);
 
     for (int i = 0;i < pts.size();i++) {
         const LocPoint &ip = pts[i];
         QPointF p = ip.getPointMm();
+        QPointF p2 = drawTrans.map(p);
 
         if (isPointWithinRect(p, xStart, xEnd, yStart, yEnd)) {
             if (drawn > 0) {
@@ -1057,20 +1059,16 @@ int MapWidget::drawInfoPoints(QPainter &painter, const QList<LocPoint> &pts,
                 last_visible = i;
             }
 
-            painter.setTransform(drawTrans);
-            pen.setColor(ip.getColor());
             painter.setBrush(ip.getColor());
-            painter.setPen(pen);
-            painter.drawEllipse(p, ip.getRadius() / mScaleFactor, ip.getRadius() / mScaleFactor);
+            painter.setPen(ip.getColor());
+            painter.drawEllipse(p2, ip.getRadius(), ip.getRadius());
             drawn++;
 
             if (mScaleFactor > mInfoTraceTextZoom) {
                 pt_txt.setX(p.x() + 5 / mScaleFactor);
                 pt_txt.setY(p.y());
-                painter.setTransform(txtTrans);
                 pt_txt = drawTrans.map(pt_txt);
-                pen.setColor(Qt::black);
-                painter.setPen(pen);
+                painter.setPen(Qt::black);
                 painter.setFont(QFont("monospace"));
                 rect_txt.setCoords(pt_txt.x(), pt_txt.y() - 20,
                                    pt_txt.x() + 500, pt_txt.y() + 500);
