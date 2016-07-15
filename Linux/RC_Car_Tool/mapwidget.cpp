@@ -632,11 +632,11 @@ void MapWidget::paintEvent(QPaintEvent *event)
     }
 
     // Draw info trace
-    pen.setWidthF(3.0 / mScaleFactor);
+    pen.setWidthF(3.0);
     pen.setColor(Qt::darkGreen);
     painter.setPen(pen);
     painter.setBrush(Qt::green);
-    painter.setTransform(drawTrans);
+    painter.setTransform(txtTrans);
 
     int info_segments = 0;
     int info_points = 0;
@@ -662,8 +662,10 @@ void MapWidget::paintEvent(QPaintEvent *event)
         }
 
         if (draw) {
-            painter.drawLine(mInfoTrace[last_visible].getX() * 1000.0, mInfoTrace[last_visible].getY() * 1000.0,
-                             mInfoTrace[i].getX() * 1000.0, mInfoTrace[i].getY() * 1000.0);
+            QPointF p1 = drawTrans.map(mInfoTrace[last_visible].getPointMm());
+            QPointF p2 = drawTrans.map(mInfoTrace[i].getPointMm());
+
+            painter.drawLine(p1, p2);
             info_segments++;
         }
 
