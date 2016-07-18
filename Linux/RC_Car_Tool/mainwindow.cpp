@@ -938,7 +938,9 @@ void MainWindow::on_mapOsmServerVedderHdButton_toggled(bool checked)
 void MainWindow::on_mapOsmMaxZoomBox_valueChanged(int arg1)
 {
     ui->mapWidget->setOsmMaxZoomLevel(arg1);
-    if (ui->mapWidget->getOsmZoomLevel() > arg1) {
-        ui->mapWidget->update();
-    }
+}
+
+void MainWindow::on_mapDrawGridBox_toggled(bool checked)
+{
+    ui->mapWidget->setDrawGrid(checked);
 }

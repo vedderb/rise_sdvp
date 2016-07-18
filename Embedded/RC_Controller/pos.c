@@ -31,8 +31,6 @@
 
 // Defines
 #define ITERATION_TIMER_FREQ			50000
-#define FE_WGS84						(D(1.0)/D(298.257223563)) // earth flattening (WGS84)
-#define RE_WGS84						D(6378137.0)           // earth semimajor axis (WGS84) (m)
 
 // Private variables
 static ATTITUDE_INFO m_att;
@@ -148,6 +146,57 @@ void pos_set_yaw_offset(float angle) {
 	m_pos.yaw = m_imu_yaw - m_yaw_offset;
 
 	chMtxUnlock(&m_mutex_pos);
+}
+
+void pos_set_enu_ref(double lat, double lon, double height) {
+	double x, y, z;
+	utils_llh_to_xyz(lat, lon, height, &x, &y, &z);
+
+	chMtxLock(&m_mutex_gps);
+
+	m_gps.ix = x;
+	m_gps.iy = y;
+	m_gps.iz = z;
+
+	float so = sinf((float)lon * M_PI / 180.0);
+	float co = cosf((float)lon * M_PI / 180.0);
+	float sa = sinf((float)lat * M_PI / 180.0);
+	float ca = cosf((float)lat * M_PI / 180.0);
+
+	// ENU
+	m_gps.r1c1 = -so;
+	m_gps.r1c2 = co;
+	m_gps.r1c3 = 0.0;
+
+	m_gps.r2c1 = -sa * co;
+	m_gps.r2c2 = -sa * so;
+	m_gps.r2c3 = ca;
+
+	m_gps.r3c1 = ca * co;
+	m_gps.r3c2 = ca * so;
+	m_gps.r3c3 = sa;
+
+	m_gps.lx = 0.0;
+	m_gps.ly = 0.0;
+	m_gps.lz = 0.0;
+
+	m_gps.ox = 0.0;
+	m_gps.oy = 0.0;
+
+	const float s_yaw = sinf(-m_pos.yaw * M_PI / 180.0);
+	const float c_yaw = cosf(-m_pos.yaw * M_PI / 180.0);
+	m_gps.ox += c_yaw * main_config.gps_ant_x + s_yaw * main_config.gps_ant_y;
+	m_gps.oy += s_yaw * main_config.gps_ant_x + c_yaw * main_config.gps_ant_y;
+
+	m_gps.local_init_done = true;
+
+	chMtxUnlock(&m_mutex_gps);
+}
+
+void pos_get_enu_ref(double *llh) {
+	chMtxLock(&m_mutex_gps);
+	utils_xyz_to_llh(m_gps.ix, m_gps.iy, m_gps.iz, &llh[0], &llh[1], &llh[2]);
+	chMtxUnlock(&m_mutex_gps);
 }
 
 void pos_get_mc_val(mc_values *v) {
@@ -509,19 +558,6 @@ static void init_gps_local(GPS_STATE *gps) {
 	gps->r3c1 = ca * co;
 	gps->r3c2 = ca * so;
 	gps->r3c3 = sa;
-
-	// NED
-	//	gps->r1c1 = -sa * co;
-	//	gps->r1c2 = -sa * so;
-	//	gps->r1c3 = ca;
-	//
-	//	gps->r2c1 = -so;
-	//	gps->r2c2 = co;
-	//	gps->r2c3 = 0;
-	//
-	//	gps->r3c1 = -ca * co;
-	//	gps->r3c2 = -ca * so;
-	//	gps->r3c3 = -sa;
 
 	gps->lx = 0.0;
 	gps->ly = 0.0;

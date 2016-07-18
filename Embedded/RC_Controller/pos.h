@@ -28,6 +28,8 @@ void pos_get_pos(POS_STATE *p);
 float pos_get_speed(void);
 void pos_set_xya(float x, float y, float angle);
 void pos_set_yaw_offset(float angle);
+void pos_set_enu_ref(double lat, double lon, double height);
+void pos_get_enu_ref(double *llh);
 void pos_get_mc_val(mc_values *v);
 void pos_input_nmea(const char *data);
 

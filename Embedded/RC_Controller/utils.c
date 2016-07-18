@@ -13,7 +13,7 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-    */
+ */
 
 #include "utils.h"
 #include "ch.h"
@@ -24,19 +24,19 @@
 static volatile int sys_lock_cnt = 0;
 
 void utils_step_towards(float *value, float goal, float step) {
-    if (*value < goal) {
-        if ((*value + step) < goal) {
-            *value += step;
-        } else {
-            *value = goal;
-        }
-    } else if (*value > goal) {
-        if ((*value - step) > goal) {
-            *value -= step;
-        } else {
-            *value = goal;
-        }
-    }
+	if (*value < goal) {
+		if ((*value + step) < goal) {
+			*value += step;
+		} else {
+			*value = goal;
+		}
+	} else if (*value > goal) {
+		if ((*value - step) > goal) {
+			*value -= step;
+		} else {
+			*value = goal;
+		}
+	}
 }
 
 float utils_calc_ratio(float low, float high, float val) {
@@ -129,18 +129,18 @@ void utils_deadband(float *value, float tres, float max) {
  * The difference between the angles
  */
 float utils_angle_difference(float angle1, float angle2) {
-//	utils_norm_angle(&angle1);
-//	utils_norm_angle(&angle2);
-//
-//	if (fabsf(angle1 - angle2) > 180.0) {
-//		if (angle1 < angle2) {
-//			angle1 += 360.0;
-//		} else {
-//			angle2 += 360.0;
-//		}
-//	}
-//
-//	return angle1 - angle2;
+	//	utils_norm_angle(&angle1);
+	//	utils_norm_angle(&angle2);
+	//
+	//	if (fabsf(angle1 - angle2) > 180.0) {
+	//		if (angle1 < angle2) {
+	//			angle1 += 360.0;
+	//		} else {
+	//			angle2 += 360.0;
+	//		}
+	//	}
+	//
+	//	return angle1 - angle2;
 
 	// Faster in most cases
 	float difference = angle1 - angle2;
@@ -486,9 +486,9 @@ float utils_point_distance(float x1, float y1, float x2, float y2) {
  * The distance between the route points
  */
 float utils_rp_distance(const ROUTE_POINT *p1, const ROUTE_POINT *p2) {
-    float dx = p2->px - p1->px;
-    float dy = p2->py - p1->py;
-    return sqrtf(dx * dx + dy * dy);
+	float dx = p2->px - p1->px;
+	float dy = p2->py - p1->py;
+	return sqrtf(dx * dx + dy * dy);
 }
 
 /**
@@ -529,77 +529,77 @@ int utils_circle_line_int(float cx, float cy, float rad,
 	const float p2x = point2->px;
 	const float p2y = point2->py;
 
-    float maxx = p1x;
-    float minx = p2x;
-    float maxy = p1y;
-    float miny = p2y;
+	float maxx = p1x;
+	float minx = p2x;
+	float maxy = p1y;
+	float miny = p2y;
 
-    if (maxx < minx) {
-        maxx = p2x;
-        minx = p1x;
-    }
+	if (maxx < minx) {
+		maxx = p2x;
+		minx = p1x;
+	}
 
-    if (maxy < miny) {
-        maxy = p2y;
-        miny = p1y;
-    }
+	if (maxy < miny) {
+		maxy = p2y;
+		miny = p1y;
+	}
 
-    dx = p2x - p1x;
-    dy = p2y - p1y;
+	dx = p2x - p1x;
+	dy = p2y - p1y;
 
-    a = dx * dx + dy * dy;
-    b = 2 * (dx * (p1x - cx) + dy * (p1y - cy));
-    c = (p1x - cx) * (p1x - cx) + (p1y - cy) * (p1y - cy) - rad * rad;
+	a = dx * dx + dy * dy;
+	b = 2 * (dx * (p1x - cx) + dy * (p1y - cy));
+	c = (p1x - cx) * (p1x - cx) + (p1y - cy) * (p1y - cy) - rad * rad;
 
-    det = b * b - 4 * a * c;
+	det = b * b - 4 * a * c;
 
-    int ints = 0;
-    if ((a <= 1e-6) || (det < 0.0)) {
-        // No real solutions.
-    } else if (det == 0) {
-        // One solution.
-        t = -b / (2 * a);
-        x = p1x + t * dx;
-        y = p1y + t * dy;
+	int ints = 0;
+	if ((a <= 1e-6) || (det < 0.0)) {
+		// No real solutions.
+	} else if (det == 0) {
+		// One solution.
+		t = -b / (2 * a);
+		x = p1x + t * dx;
+		y = p1y + t * dy;
 
-        if (x >= minx && x <= maxx &&
-                y >= miny && y <= maxy) {
-            int1->px = x;
-            int1->py = y;
-            ints++;
-        }
-    } else {
-        // Two solutions.
-        t = (-b + sqrtf(det)) / (2 * a);
-        x = p1x + t * dx;
-        y = p1y + t * dy;
+		if (x >= minx && x <= maxx &&
+				y >= miny && y <= maxy) {
+			int1->px = x;
+			int1->py = y;
+			ints++;
+		}
+	} else {
+		// Two solutions.
+		t = (-b + sqrtf(det)) / (2 * a);
+		x = p1x + t * dx;
+		y = p1y + t * dy;
 
-        if (x >= minx && x <= maxx &&
-                y >= miny && y <= maxy) {
-            int1->px = x;
-            int1->py = y;
-            ints++;
-        }
+		if (x >= minx && x <= maxx &&
+				y >= miny && y <= maxy) {
+			int1->px = x;
+			int1->py = y;
+			ints++;
+		}
 
-        t = (-b - sqrtf(det)) / (2 * a);
-        x = p1x + t * dx;
-        y = p1y + t * dy;
+		t = (-b - sqrtf(det)) / (2 * a);
+		x = p1x + t * dx;
+		y = p1y + t * dy;
 
-        if (x >= minx && x <= maxx &&
-                y >= miny && y <= maxy) {
-            if (ints) {
-                int2->px = x;
-                int2->py = y;
-            } else {
-                int1->px = x;
-                int1->py = y;
-            }
+		if (x >= minx && x <= maxx &&
+				y >= miny && y <= maxy) {
+			if (ints) {
+				int2->px = x;
+				int2->py = y;
+			} else {
+				int1->px = x;
+				int1->py = y;
+			}
 
-            ints++;
-        }
-    }
+			ints++;
+		}
+	}
 
-    return ints;
+	return ints;
 }
 
 /**
@@ -625,26 +625,112 @@ void utils_closest_point_line(const ROUTE_POINT *point1, const ROUTE_POINT *poin
 		float px, float py, ROUTE_POINT *res) {
 	const float p1x = point1->px;
 	const float p1y = point1->py;
-    const float p2x = point2->px;
-    const float p2y = point2->py;
+	const float p2x = point2->px;
+	const float p2y = point2->py;
 
-    const float d1x = px - p1x;
-    const float d1y = py - p1y;
-    const float dx = p2x - p1x;
-    const float dy = p2y - p1y;
+	const float d1x = px - p1x;
+	const float d1y = py - p1y;
+	const float dx = p2x - p1x;
+	const float dy = p2y - p1y;
 
-    const float ab2 = dx * dx + dy * dy;
-    const float ap_ab = d1x * dx + d1y * dy;
-    float t = ap_ab / ab2;
+	const float ab2 = dx * dx + dy * dy;
+	const float ap_ab = d1x * dx + d1y * dy;
+	float t = ap_ab / ab2;
 
-    if (t < 0.0) {
-        t = 0.0;
-    } else if (t > 1.0) {
-        t = 1.0;
-    }
+	if (t < 0.0) {
+		t = 0.0;
+	} else if (t > 1.0) {
+		t = 1.0;
+	}
 
-    res->px = p1x + dx * t;
-    res->py = p1y + dy * t;
+	res->px = p1x + dx * t;
+	res->py = p1y + dy * t;
+}
+
+void utils_llh_to_xyz(double lat, double lon, double height, double *x, double *y, double *z) {
+	double sinp = sin(lat * D_PI / D(180.0));
+	double cosp = cos(lat * D_PI / D(180.0));
+	double sinl = sin(lon * D_PI / D(180.0));
+	double cosl = cos(lon * D_PI / D(180.0));
+	double e2 = FE_WGS84 * (D(2.0) - FE_WGS84);
+	double v = RE_WGS84 / sqrt(D(1.0) - e2 * sinp * sinp);
+
+	*x = (v + height) * cosp * cosl;
+	*y = (v + height) * cosp * sinl;
+	*z = (v * (D(1.0) - e2) + height) * sinp;
+}
+
+void utils_xyz_to_llh(double x, double y, double z, double *lat, double *lon, double *height) {
+	double e2 = FE_WGS84 * (D(2.0) - FE_WGS84);
+	double r2 = x * x + y * y;
+	double za = z;
+	double zk = 0.0;
+	double sinp = 0.0;
+	double v = RE_WGS84;
+
+	while (fabs(za - zk) >= D(1E-4)) {
+		zk = za;
+		sinp = za / sqrt(r2 + za * za);
+		v = RE_WGS84 / sqrt(D(1.0) - e2 * sinp * sinp);
+		za = z + v * e2 * sinp;
+	}
+
+	*lat = (r2 > D(1E-12) ? atan(za / sqrt(r2)) : (z > D(0.0) ? D_PI / D(2.0) : -D_PI / D(2.0))) * D(180.0) / D_PI;
+	*lon = (r2 > D(1E-12) ? atan2(y, x) : D(0.0)) * D(180.0) / D_PI;
+	*height = sqrt(r2 + za * za) - v;
+}
+
+void utils_create_enu_matrix(double lat, double lon, double *enuMat) {
+	double so = sin(lon * D_PI / D(180.0));
+	double co = cos(lon * D_PI / D(180.0));
+	double sa = sin(lat * D_PI / D(180.0));
+	double ca = cos(lat * D_PI / D(180.0));
+
+	// ENU
+	enuMat[0] = -so;
+	enuMat[1] = co;
+	enuMat[2] = 0.0;
+
+	enuMat[3] = -sa * co;
+	enuMat[4] = -sa * so;
+	enuMat[5] = ca;
+
+	enuMat[6] = ca * co;
+	enuMat[7] = ca * so;
+	enuMat[8] = sa;
+}
+
+void utils_llh_to_enu(const double *iLlh, const double *llh, double *xyz) {
+	double ix, iy, iz;
+	utils_llh_to_xyz(iLlh[0], iLlh[1], iLlh[2], &ix, &iy, &iz);
+
+	double x, y, z;
+	utils_llh_to_xyz(llh[0], llh[1], llh[2], &x, &y, &z);
+
+	double enuMat[9];
+	utils_create_enu_matrix(iLlh[0], iLlh[1], enuMat);
+
+	double dx = x - ix;
+	double dy = y - iy;
+	double dz = z - iz;
+
+	xyz[0] = enuMat[0] * dx + enuMat[1] * dy + enuMat[2] * dz;
+	xyz[1] = enuMat[3] * dx + enuMat[4] * dy + enuMat[5] * dz;
+	xyz[2] = enuMat[6] * dx + enuMat[7] * dy + enuMat[8] * dz;
+}
+
+void utils_enu_to_llh(const double *iLlh, const double *xyz, double *llh) {
+	double ix, iy, iz;
+	utils_llh_to_xyz(iLlh[0], iLlh[1], iLlh[2], &ix, &iy, &iz);
+
+	double enuMat[9];
+	utils_create_enu_matrix(iLlh[0], iLlh[1], enuMat);
+
+	double x = enuMat[0] * xyz[0] + enuMat[3] * xyz[1] + enuMat[6] * xyz[2] + ix;
+	double y = enuMat[1] * xyz[0] + enuMat[4] * xyz[1] + enuMat[7] * xyz[2] + iy;
+	double z = enuMat[2] * xyz[0] + enuMat[5] * xyz[1] + enuMat[8] * xyz[2] + iz;
+
+	utils_xyz_to_llh(x, y, z, &llh[0], &llh[1], &llh[2]);
 }
 
 /**

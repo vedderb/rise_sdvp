@@ -144,6 +144,7 @@ MapWidget::MapWidget(QWidget *parent) :
     mAntialiasDrawings = false;
     mAntialiasOsm = true;
     mInfoTraceTextZoom = 0.5;
+    mDrawGrid = true;
 
     mOsm = new OsmClient(this);
     mDrawOpenStreetmap = true;
@@ -525,80 +526,82 @@ void MapWidget::paintEvent(QPaintEvent *event)
         painter.setRenderHint(QPainter::SmoothPixmapTransform, mAntialiasDrawings);
     }
 
-    painter.setTransform(txtTrans);
+    if (mDrawGrid) {
+        painter.setTransform(txtTrans);
 
-    // Draw Y-axis segments
-    for (double i = xStart;i < xEnd;i += step) {
-        if (fabs(i) < 1e-3) {
-            i = 0.0;
-        }
-
-        if ((int)(i / step) % 2) {
-            pen.setWidth(0);
-            pen.setColor(firstAxisColor);
-            painter.setPen(pen);
-        } else {
-            txt.sprintf("%.3f", i / 1000.0);
-            pt_txt.setX(i);
-            pt_txt.setY(0);
-            pt_txt = drawTrans.map(pt_txt);
-            pt_txt.setX(pt_txt.x() + 5);
-            pt_txt.setY(height() - 10);
-            painter.setPen(QPen(textColor));
-            painter.drawText(pt_txt, txt);
-
+        // Draw Y-axis segments
+        for (double i = xStart;i < xEnd;i += step) {
             if (fabs(i) < 1e-3) {
-                pen.setWidthF(zeroAxisWidth);
-                pen.setColor(zeroAxisColor);
-            } else {
-                pen.setWidth(0);
-                pen.setColor(secondAxisColor);
+                i = 0.0;
             }
-            painter.setPen(pen);
+
+            if ((int)(i / step) % 2) {
+                pen.setWidth(0);
+                pen.setColor(firstAxisColor);
+                painter.setPen(pen);
+            } else {
+                txt.sprintf("%.3f", i / 1000.0);
+                pt_txt.setX(i);
+                pt_txt.setY(0);
+                pt_txt = drawTrans.map(pt_txt);
+                pt_txt.setX(pt_txt.x() + 5);
+                pt_txt.setY(height() - 10);
+                painter.setPen(QPen(textColor));
+                painter.drawText(pt_txt, txt);
+
+                if (fabs(i) < 1e-3) {
+                    pen.setWidthF(zeroAxisWidth);
+                    pen.setColor(zeroAxisColor);
+                } else {
+                    pen.setWidth(0);
+                    pen.setColor(secondAxisColor);
+                }
+                painter.setPen(pen);
+            }
+
+            QPointF pt_start(i, yStart);
+            QPointF pt_end(i, yEnd);
+            pt_start = drawTrans.map(pt_start);
+            pt_end = drawTrans.map(pt_end);
+            painter.drawLine(pt_start, pt_end);
         }
 
-        QPointF pt_start(i, yStart);
-        QPointF pt_end(i, yEnd);
-        pt_start = drawTrans.map(pt_start);
-        pt_end = drawTrans.map(pt_end);
-        painter.drawLine(pt_start, pt_end);
-    }
-
-    // Draw X-axis segments
-    for (double i = yStart;i < yEnd;i += step) {
-        if (fabs(i) < 1e-3) {
-            i = 0.0;
-        }
-
-        if ((int)(i / step) % 2) {
-            pen.setWidth(0);
-            pen.setColor(firstAxisColor);
-            painter.setPen(pen);
-        } else {
-            txt.sprintf("%.3f", i / 1000.0);
-            pt_txt.setY(i);
-
-            pt_txt = drawTrans.map(pt_txt);
-            pt_txt.setX(10);
-            pt_txt.setY(pt_txt.y() - 5);
-            painter.setPen(QPen(textColor));
-            painter.drawText(pt_txt, txt);
-
+        // Draw X-axis segments
+        for (double i = yStart;i < yEnd;i += step) {
             if (fabs(i) < 1e-3) {
-                pen.setWidthF(zeroAxisWidth);
-                pen.setColor(zeroAxisColor);
-            } else {
-                pen.setWidth(0);
-                pen.setColor(secondAxisColor);
+                i = 0.0;
             }
-            painter.setPen(pen);
-        }
 
-        QPointF pt_start(xStart, i);
-        QPointF pt_end(xEnd, i);
-        pt_start = drawTrans.map(pt_start);
-        pt_end = drawTrans.map(pt_end);
-        painter.drawLine(pt_start, pt_end);
+            if ((int)(i / step) % 2) {
+                pen.setWidth(0);
+                pen.setColor(firstAxisColor);
+                painter.setPen(pen);
+            } else {
+                txt.sprintf("%.3f", i / 1000.0);
+                pt_txt.setY(i);
+
+                pt_txt = drawTrans.map(pt_txt);
+                pt_txt.setX(10);
+                pt_txt.setY(pt_txt.y() - 5);
+                painter.setPen(QPen(textColor));
+                painter.drawText(pt_txt, txt);
+
+                if (fabs(i) < 1e-3) {
+                    pen.setWidthF(zeroAxisWidth);
+                    pen.setColor(zeroAxisColor);
+                } else {
+                    pen.setWidth(0);
+                    pen.setColor(secondAxisColor);
+                }
+                painter.setPen(pen);
+            }
+
+            QPointF pt_start(xStart, i);
+            QPointF pt_end(xEnd, i);
+            pt_start = drawTrans.map(pt_start);
+            pt_end = drawTrans.map(pt_end);
+            painter.drawLine(pt_start, pt_end);
+        }
     }
 
     // Store trace for the selected car
@@ -1002,6 +1005,17 @@ void MapWidget::wheelEvent(QWheelEvent *e)
     updateClosestInfoPoint();
 }
 
+bool MapWidget::getDrawGrid() const
+{
+    return mDrawGrid;
+}
+
+void MapWidget::setDrawGrid(bool drawGrid)
+{
+    mDrawGrid = drawGrid;
+    update();
+}
+
 void MapWidget::updateClosestInfoPoint()
 {
     QPointF mpq = getMousePosRelative();
@@ -1098,6 +1112,7 @@ int MapWidget::getOsmMaxZoomLevel() const
 void MapWidget::setOsmMaxZoomLevel(int osmMaxZoomLevel)
 {
     mOsmMaxZoomLevel = osmMaxZoomLevel;
+    update();
 }
 
 double MapWidget::getInfoTraceTextZoom() const
@@ -1135,6 +1150,7 @@ bool MapWidget::getDrawOpenStreetmap() const
 void MapWidget::setDrawOpenStreetmap(bool drawOpenStreetmap)
 {
     mDrawOpenStreetmap = drawOpenStreetmap;
+    update();
 }
 
 void MapWidget::setEnuRef(double lat, double lon, double height)

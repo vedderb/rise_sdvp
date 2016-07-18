@@ -79,6 +79,8 @@ public:
     int getOsmMaxZoomLevel() const;
     void setOsmMaxZoomLevel(int osmMaxZoomLevel);
     int getOsmZoomLevel() const;
+    bool getDrawGrid() const;
+    void setDrawGrid(bool drawGrid);
 
 signals:
     void scaleChanged(double newScale);
@@ -130,6 +132,7 @@ private:
     double mRefLon;
     double mRefHeight;
     LocPoint mClosestInfo;
+    bool mDrawGrid;
 
     void updateClosestInfoPoint();
     int drawInfoPoints(QPainter &painter, const QList<LocPoint> &pts,

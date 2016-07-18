@@ -46,6 +46,11 @@ int utils_circle_line_int(float cx, float cy, float rad,
 		ROUTE_POINT *int1, ROUTE_POINT *int2);
 void utils_closest_point_line(const ROUTE_POINT *point1, const ROUTE_POINT *point2,
 		float px, float py, ROUTE_POINT *res);
+void utils_llh_to_xyz(double lat, double lon, double height, double *x, double *y, double *z);
+void utils_xyz_to_llh(double x, double y, double z, double *lat, double *lon, double *height);
+void utils_create_enu_matrix(double lat, double lon, double *enuMat);
+void utils_llh_to_enu(const double *iLlh, const double *llh, double *xyz);
+void utils_enu_to_llh(const double *iLlh, const double *xyz, double *llh);
 void utils_sys_lock_cnt(void);
 void utils_sys_unlock_cnt(void);
 
@@ -72,5 +77,9 @@ void utils_sys_unlock_cnt(void);
  * Filter constant. Range 0.0 to 1.0, where 1.0 gives the unfiltered value.
  */
 #define UTILS_LP_FAST(value, sample, filter_constant)	(value -= (filter_constant) * (value - (sample)))
+
+// Constants
+#define FE_WGS84						(D(1.0)/D(298.257223563)) // earth flattening (WGS84)
+#define RE_WGS84						D(6378137.0)           // earth semimajor axis (WGS84) (m)
 
 #endif /* UTILS_H_ */
