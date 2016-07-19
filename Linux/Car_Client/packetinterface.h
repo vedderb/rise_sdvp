@@ -48,6 +48,7 @@ public:
     bool setConfiguration(quint8 id, MAIN_CONFIG &conf, int retries = 10);
     bool setPosAck(quint8 id, double x, double y, double angle, int retries = 10);
     bool setYawOffsetAck(quint8 id, double angle, int retries = 10);
+    bool setEnuRef(quint8 id, double *llh, int retries = 10);
 
 signals:
     void dataToSend(QByteArray &data);
@@ -58,6 +59,7 @@ signals:
     void rtcmUsbReceived(quint8 id, QByteArray data);
     void nmeaRadioReceived(quint8 id, QByteArray data);
     void configurationReceived(quint8 id, MAIN_CONFIG conf);
+    void enuRefReceived(quint8 id, double lat, double lon, double height);
     
 public slots:
     void timerSlot();
@@ -74,6 +76,7 @@ public slots:
     void getConfiguration(quint8 id);
     void getDefaultConfiguration(quint8 id);
     void setYawOffset(quint8 id, double angle);
+    void getEnuRef(quint8 id);
 
 private:
     unsigned short crc16(const unsigned char *buf, unsigned int len);

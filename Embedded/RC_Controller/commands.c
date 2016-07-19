@@ -229,6 +229,34 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			}
 		} break;
 
+		case CMD_SET_ENU_REF: {
+			int32_t ind = 0;
+			double lat, lon, height;
+			lat = buffer_get_double64(data, 1e16, &ind);
+			lon = buffer_get_double64(data, 1e16, &ind);
+			height = buffer_get_float32(data, 1e3, &ind);
+			pos_set_enu_ref(lat, lon, height);
+
+			// Send ack
+			int32_t send_index = 0;
+			m_send_buffer[send_index++] = main_id;
+			m_send_buffer[send_index++] = packet_id;
+			commands_send_packet(m_send_buffer, send_index);
+		} break;
+
+		case CMD_GET_ENU_REF: {
+			double llh[3];
+			pos_get_enu_ref(llh);
+
+			int32_t send_index = 0;
+			m_send_buffer[send_index++] = main_id;
+			m_send_buffer[send_index++] = CMD_GET_ENU_REF;
+			buffer_append_double64(m_send_buffer, llh[0], 1e16, &send_index);
+			buffer_append_double64(m_send_buffer, llh[1], 1e16, &send_index);
+			buffer_append_float32(m_send_buffer, llh[2], 1e3, &send_index);
+			commands_send_packet(m_send_buffer, send_index);
+		} break;
+
 		case CMD_AP_ADD_POINTS: {
 			m_send_func = func;
 			int32_t ind = 0;

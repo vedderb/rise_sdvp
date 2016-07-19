@@ -920,7 +920,11 @@ void MapWidget::mouseMoveEvent(QMouseEvent *e)
 
 void MapWidget::mousePressEvent(QMouseEvent *e)
 {
-    if (mSelectedCar >= 0 && (e->buttons() & Qt::LeftButton) && (e->modifiers() & Qt::ControlModifier)) {
+    bool ctrl = e->modifiers() == Qt::ControlModifier;
+    bool shift = e->modifiers() == Qt::ShiftModifier;
+    bool ctrl_shift = e->modifiers() == (Qt::ControlModifier | Qt::ShiftModifier);
+
+    if (mSelectedCar >= 0 && (e->buttons() & Qt::LeftButton) && ctrl) {
         for (int i = 0;i < mCarInfo.size();i++) {
             CarInfo &carInfo = mCarInfo[i];
             if (carInfo.getId() == mSelectedCar) {
@@ -932,7 +936,7 @@ void MapWidget::mousePressEvent(QMouseEvent *e)
                 update();
             }
         }
-    } else if (e->modifiers() & Qt::ShiftModifier) {
+    } else if (shift) {
         if (e->buttons() & Qt::LeftButton) {
             LocPoint pos;
             QPoint p = getMousePosRelative();
@@ -949,13 +953,26 @@ void MapWidget::mousePressEvent(QMouseEvent *e)
             emit lastRoutePointRemoved(pos);
         }
         update();
+    } else if (ctrl_shift && e->buttons() & Qt::LeftButton) {
+        QPoint p = getMousePosRelative();
+        double iLlh[3], llh[3], xyz[3];
+        iLlh[0] = mRefLat;
+        iLlh[1] = mRefLon;
+        iLlh[2] = mRefHeight;
+        xyz[0] = p.x() / 1000.0;
+        xyz[1] = p.y() / 1000.0;
+        xyz[2] = 0.0;
+        utility::enuToLlh(iLlh, xyz, llh);
+        mRefLat = llh[0];
+        mRefLon = llh[1];
+        mRefHeight = 0.0;
+        update();
     }
 }
 
 void MapWidget::mouseReleaseEvent(QMouseEvent *e)
 {
-    if (!(e->buttons() & Qt::LeftButton))
-    {
+    if (!(e->buttons() & Qt::LeftButton)) {
         mMouseLastX = 1000000;
         mMouseLastY = 1000000;
     }

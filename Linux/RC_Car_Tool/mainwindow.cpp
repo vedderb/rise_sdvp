@@ -108,6 +108,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->rtcmWidget, SIGNAL(refPosGet()), this, SLOT(rtcmRefPosGet()));
     connect(mPing, SIGNAL(pingRx(int,QString)), this, SLOT(pingRx(int,QString)));
     connect(mPing, SIGNAL(pingError(QString,QString)), this, SLOT(pingError(QString,QString)));
+    connect(mPacketInterface, SIGNAL(enuRefReceived(quint8,double,double,double)),
+            this, SLOT(enuRx(quint8,double,double,double)));
 
     on_serialRefreshButton_clicked();
 
@@ -408,6 +410,12 @@ void MainWindow::pingRx(int time, QString msg)
 void MainWindow::pingError(QString msg, QString error)
 {
     QMessageBox::warning(this, "Error ping " + msg, error);
+}
+
+void MainWindow::enuRx(quint8 id, double lat, double lon, double height)
+{
+    (void)id;
+    ui->mapWidget->setEnuRef(lat, lon, height);
 }
 
 void MainWindow::on_carAddButton_clicked()
@@ -943,4 +951,16 @@ void MainWindow::on_mapOsmMaxZoomBox_valueChanged(int arg1)
 void MainWindow::on_mapDrawGridBox_toggled(bool checked)
 {
     ui->mapWidget->setDrawGrid(checked);
+}
+
+void MainWindow::on_mapGetEnuButton_clicked()
+{
+    mPacketInterface->getEnuRef(ui->mapCarBox->value());
+}
+
+void MainWindow::on_mapSetEnuButton_clicked()
+{
+    double llh[3];
+    ui->mapWidget->getEnuRef(llh);
+    mPacketInterface->setEnuRef(ui->mapCarBox->value(), llh);
 }

@@ -360,6 +360,15 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         emit vescFwdReceived(id, QByteArray::fromRawData((char*)data, len));
         break;
 
+    case CMD_GET_ENU_REF: {
+        int32_t ind = 0;
+        double lat, lon, height;
+        lat = utility::buffer_get_double64(data, 1e16, &ind);
+        lon = utility::buffer_get_double64(data, 1e16, &ind);
+        height = utility::buffer_get_double32(data, 1e3, &ind);
+        emit enuRefReceived(id, lat, lon, height);
+    } break;
+
     case CMD_SEND_RTCM_USB: {
         QByteArray tmpArray((char*)data, len);
         emit rtcmUsbReceived(id, tmpArray);
@@ -431,6 +440,9 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         break;
     case CMD_SET_POS_ACK:
         emit ackReceived(id, cmd, "CMD_SET_POS_ACK");
+        break;
+    case CMD_SET_ENU_REF:
+        emit ackReceived(id, cmd, "CMD_SET_ENU_REF");
         break;
     case CMD_SET_YAW_OFFSET_ACK:
         emit ackReceived(id, cmd, "CMD_SET_YAW_OFFSET_ACK");
@@ -577,6 +589,17 @@ bool PacketInterface::setYawOffsetAck(quint8 id, double angle, int retries)
     return sendPacketAck(mSendBuffer, send_index, retries);
 }
 
+bool PacketInterface::setEnuRef(quint8 id, double *llh, int retries)
+{
+    qint32 send_index = 0;
+    mSendBuffer[send_index++] = id;
+    mSendBuffer[send_index++] = CMD_SET_ENU_REF;
+    utility::buffer_append_double64(mSendBuffer, llh[0], 1e16, &send_index);
+    utility::buffer_append_double64(mSendBuffer, llh[1], 1e16, &send_index);
+    utility::buffer_append_double32(mSendBuffer, llh[2], 1e3, &send_index);
+    return sendPacketAck(mSendBuffer, send_index, retries);
+}
+
 void PacketInterface::sendTerminalCmd(quint8 id, QString cmd)
 {
     QByteArray packet;
@@ -695,4 +718,13 @@ void PacketInterface::setYawOffset(quint8 id, double angle)
     mSendBuffer[send_index++] = CMD_SET_YAW_OFFSET;
     utility::buffer_append_double32(mSendBuffer, angle, 1e6, &send_index);
     sendPacket(mSendBuffer, send_index);
+}
+
+void PacketInterface::getEnuRef(quint8 id)
+{
+    QByteArray packet;
+    packet.clear();
+    packet.append(id);
+    packet.append((char)CMD_GET_ENU_REF);
+    sendPacket(packet);
 }

@@ -57,6 +57,7 @@ private slots:
     void rtcmRefPosGet();
     void pingRx(int time, QString msg);
     void pingError(QString msg, QString error);
+    void enuRx(quint8 id, double lat, double lon, double height);
 
     void on_carAddButton_clicked();
     void on_carRemoveButton_clicked();
@@ -99,6 +100,8 @@ private slots:
     void on_mapOsmServerVedderHdButton_toggled(bool checked);
     void on_mapOsmMaxZoomBox_valueChanged(int arg1);
     void on_mapDrawGridBox_toggled(bool checked);
+    void on_mapGetEnuButton_clicked();
+    void on_mapSetEnuButton_clicked();
 
 private:
     Ui::MainWindow *ui;

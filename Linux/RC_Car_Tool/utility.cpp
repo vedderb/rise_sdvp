@@ -29,6 +29,30 @@ namespace utility {
 #define FE_WGS84        (1.0/298.257223563) // earth flattening (WGS84)
 #define RE_WGS84        6378137.0           // earth semimajor axis (WGS84) (m)
 
+void buffer_append_int64(uint8_t *buffer, int64_t number, int32_t *index)
+{
+    buffer[(*index)++] = number >> 56;
+    buffer[(*index)++] = number >> 48;
+    buffer[(*index)++] = number >> 40;
+    buffer[(*index)++] = number >> 32;
+    buffer[(*index)++] = number >> 24;
+    buffer[(*index)++] = number >> 16;
+    buffer[(*index)++] = number >> 8;
+    buffer[(*index)++] = number;
+}
+
+void buffer_append_uint64(uint8_t *buffer, uint64_t number, int32_t *index)
+{
+    buffer[(*index)++] = number >> 56;
+    buffer[(*index)++] = number >> 48;
+    buffer[(*index)++] = number >> 40;
+    buffer[(*index)++] = number >> 32;
+    buffer[(*index)++] = number >> 24;
+    buffer[(*index)++] = number >> 16;
+    buffer[(*index)++] = number >> 8;
+    buffer[(*index)++] = number;
+}
+
 void buffer_append_int32(uint8_t* buffer, int32_t number, int32_t *index) {
     buffer[(*index)++] = number >> 24;
     buffer[(*index)++] = number >> 16;
@@ -61,35 +85,65 @@ void buffer_append_double32(uint8_t* buffer, double number, double scale, int32_
     buffer_append_int32(buffer, (int32_t)(roundDouble(number * scale)), index);
 }
 
+void buffer_append_double64(uint8_t* buffer, double number, double scale, int32_t *index) {
+    buffer_append_int64(buffer, (int64_t)(roundDouble(number * scale)), index);
+}
+
 int16_t buffer_get_int16(const uint8_t *buffer, int32_t *index) {
-    int16_t res =	((uint8_t) buffer[*index]) << 8 |
-                    ((uint8_t) buffer[*index + 1]);
+    int16_t res =	((uint16_t) buffer[*index]) << 8 |
+                    ((uint16_t) buffer[*index + 1]);
     *index += 2;
     return res;
 }
 
 uint16_t buffer_get_uint16(const uint8_t *buffer, int32_t *index) {
-    uint16_t res = 	((uint8_t) buffer[*index]) << 8 |
-                    ((uint8_t) buffer[*index + 1]);
+    uint16_t res = 	((uint16_t) buffer[*index]) << 8 |
+                    ((uint16_t) buffer[*index + 1]);
     *index += 2;
     return res;
 }
 
 int32_t buffer_get_int32(const uint8_t *buffer, int32_t *index) {
-    int32_t res =	((uint8_t) buffer[*index]) << 24 |
-                    ((uint8_t) buffer[*index + 1]) << 16 |
-                    ((uint8_t) buffer[*index + 2]) << 8 |
-                    ((uint8_t) buffer[*index + 3]);
+    int32_t res =	((uint32_t) buffer[*index]) << 24 |
+                    ((uint32_t) buffer[*index + 1]) << 16 |
+                    ((uint32_t) buffer[*index + 2]) << 8 |
+                    ((uint32_t) buffer[*index + 3]);
     *index += 4;
     return res;
 }
 
 uint32_t buffer_get_uint32(const uint8_t *buffer, int32_t *index) {
-    uint32_t res =	((uint8_t) buffer[*index]) << 24 |
-                    ((uint8_t) buffer[*index + 1]) << 16 |
-                    ((uint8_t) buffer[*index + 2]) << 8 |
-                    ((uint8_t) buffer[*index + 3]);
+    uint32_t res =	((uint32_t) buffer[*index]) << 24 |
+                    ((uint32_t) buffer[*index + 1]) << 16 |
+                    ((uint32_t) buffer[*index + 2]) << 8 |
+                    ((uint32_t) buffer[*index + 3]);
     *index += 4;
+    return res;
+}
+
+int64_t buffer_get_int64(const uint8_t *buffer, int32_t *index) {
+    int64_t res =	((uint64_t) buffer[*index]) << 56 |
+                    ((uint64_t) buffer[*index + 1]) << 48 |
+                    ((uint64_t) buffer[*index + 2]) << 40 |
+                    ((uint64_t) buffer[*index + 3]) << 32 |
+                    ((uint64_t) buffer[*index + 4]) << 24 |
+                    ((uint64_t) buffer[*index + 5]) << 16 |
+                    ((uint64_t) buffer[*index + 6]) << 8 |
+                    ((uint64_t) buffer[*index + 7]);
+    *index += 8;
+    return res;
+}
+
+uint64_t buffer_get_uint64(const uint8_t *buffer, int32_t *index) {
+    uint64_t res =	((uint64_t) buffer[*index]) << 56 |
+                    ((uint64_t) buffer[*index + 1]) << 48 |
+                    ((uint64_t) buffer[*index + 2]) << 40 |
+                    ((uint64_t) buffer[*index + 3]) << 32 |
+                    ((uint64_t) buffer[*index + 4]) << 24 |
+                    ((uint64_t) buffer[*index + 5]) << 16 |
+                    ((uint64_t) buffer[*index + 6]) << 8 |
+                    ((uint64_t) buffer[*index + 7]);
+    *index += 8;
     return res;
 }
 
@@ -99,6 +153,10 @@ double buffer_get_double16(const uint8_t *buffer, double scale, int32_t *index) 
 
 double buffer_get_double32(const uint8_t *buffer, double scale, int32_t *index) {
     return (double)buffer_get_int32(buffer, index) / scale;
+}
+
+double buffer_get_double64(const uint8_t *buffer, double scale, int32_t *index) {
+    return (double)buffer_get_int64(buffer, index) / scale;
 }
 
 double map(double x, double in_min, double in_max, double out_min, double out_max) {

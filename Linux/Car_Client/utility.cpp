@@ -26,6 +26,33 @@ inline double roundDouble(double x) {
 
 namespace utility {
 
+#define FE_WGS84        (1.0/298.257223563) // earth flattening (WGS84)
+#define RE_WGS84        6378137.0           // earth semimajor axis (WGS84) (m)
+
+void buffer_append_int64(uint8_t *buffer, int64_t number, int32_t *index)
+{
+    buffer[(*index)++] = number >> 56;
+    buffer[(*index)++] = number >> 48;
+    buffer[(*index)++] = number >> 40;
+    buffer[(*index)++] = number >> 32;
+    buffer[(*index)++] = number >> 24;
+    buffer[(*index)++] = number >> 16;
+    buffer[(*index)++] = number >> 8;
+    buffer[(*index)++] = number;
+}
+
+void buffer_append_uint64(uint8_t *buffer, uint64_t number, int32_t *index)
+{
+    buffer[(*index)++] = number >> 56;
+    buffer[(*index)++] = number >> 48;
+    buffer[(*index)++] = number >> 40;
+    buffer[(*index)++] = number >> 32;
+    buffer[(*index)++] = number >> 24;
+    buffer[(*index)++] = number >> 16;
+    buffer[(*index)++] = number >> 8;
+    buffer[(*index)++] = number;
+}
+
 void buffer_append_int32(uint8_t* buffer, int32_t number, int32_t *index) {
     buffer[(*index)++] = number >> 24;
     buffer[(*index)++] = number >> 16;
@@ -58,35 +85,65 @@ void buffer_append_double32(uint8_t* buffer, double number, double scale, int32_
     buffer_append_int32(buffer, (int32_t)(roundDouble(number * scale)), index);
 }
 
+void buffer_append_double64(uint8_t* buffer, double number, double scale, int32_t *index) {
+    buffer_append_int64(buffer, (int64_t)(roundDouble(number * scale)), index);
+}
+
 int16_t buffer_get_int16(const uint8_t *buffer, int32_t *index) {
-    int16_t res =	((uint8_t) buffer[*index]) << 8 |
-                    ((uint8_t) buffer[*index + 1]);
+    int16_t res =	((uint16_t) buffer[*index]) << 8 |
+                    ((uint16_t) buffer[*index + 1]);
     *index += 2;
     return res;
 }
 
 uint16_t buffer_get_uint16(const uint8_t *buffer, int32_t *index) {
-    uint16_t res = 	((uint8_t) buffer[*index]) << 8 |
-                    ((uint8_t) buffer[*index + 1]);
+    uint16_t res = 	((uint16_t) buffer[*index]) << 8 |
+                    ((uint16_t) buffer[*index + 1]);
     *index += 2;
     return res;
 }
 
 int32_t buffer_get_int32(const uint8_t *buffer, int32_t *index) {
-    int32_t res =	((uint8_t) buffer[*index]) << 24 |
-                    ((uint8_t) buffer[*index + 1]) << 16 |
-                    ((uint8_t) buffer[*index + 2]) << 8 |
-                    ((uint8_t) buffer[*index + 3]);
+    int32_t res =	((uint32_t) buffer[*index]) << 24 |
+                    ((uint32_t) buffer[*index + 1]) << 16 |
+                    ((uint32_t) buffer[*index + 2]) << 8 |
+                    ((uint32_t) buffer[*index + 3]);
     *index += 4;
     return res;
 }
 
 uint32_t buffer_get_uint32(const uint8_t *buffer, int32_t *index) {
-    uint32_t res =	((uint8_t) buffer[*index]) << 24 |
-                    ((uint8_t) buffer[*index + 1]) << 16 |
-                    ((uint8_t) buffer[*index + 2]) << 8 |
-                    ((uint8_t) buffer[*index + 3]);
+    uint32_t res =	((uint32_t) buffer[*index]) << 24 |
+                    ((uint32_t) buffer[*index + 1]) << 16 |
+                    ((uint32_t) buffer[*index + 2]) << 8 |
+                    ((uint32_t) buffer[*index + 3]);
     *index += 4;
+    return res;
+}
+
+int64_t buffer_get_int64(const uint8_t *buffer, int32_t *index) {
+    int64_t res =	((uint64_t) buffer[*index]) << 56 |
+                    ((uint64_t) buffer[*index + 1]) << 48 |
+                    ((uint64_t) buffer[*index + 2]) << 40 |
+                    ((uint64_t) buffer[*index + 3]) << 32 |
+                    ((uint64_t) buffer[*index + 4]) << 24 |
+                    ((uint64_t) buffer[*index + 5]) << 16 |
+                    ((uint64_t) buffer[*index + 6]) << 8 |
+                    ((uint64_t) buffer[*index + 7]);
+    *index += 8;
+    return res;
+}
+
+uint64_t buffer_get_uint64(const uint8_t *buffer, int32_t *index) {
+    uint64_t res =	((uint64_t) buffer[*index]) << 56 |
+                    ((uint64_t) buffer[*index + 1]) << 48 |
+                    ((uint64_t) buffer[*index + 2]) << 40 |
+                    ((uint64_t) buffer[*index + 3]) << 32 |
+                    ((uint64_t) buffer[*index + 4]) << 24 |
+                    ((uint64_t) buffer[*index + 5]) << 16 |
+                    ((uint64_t) buffer[*index + 6]) << 8 |
+                    ((uint64_t) buffer[*index + 7]);
+    *index += 8;
     return res;
 }
 
@@ -98,8 +155,116 @@ double buffer_get_double32(const uint8_t *buffer, double scale, int32_t *index) 
     return (double)buffer_get_int32(buffer, index) / scale;
 }
 
+double buffer_get_double64(const uint8_t *buffer, double scale, int32_t *index) {
+    return (double)buffer_get_int64(buffer, index) / scale;
+}
+
 double map(double x, double in_min, double in_max, double out_min, double out_max) {
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
+void llhToXyz(double lat, double lon, double height, double *x, double *y, double *z)
+{
+    double sinp = sin(lat * M_PI / 180.0);
+    double cosp = cos(lat * M_PI / 180.0);
+    double sinl = sin(lon * M_PI / 180.0);
+    double cosl = cos(lon * M_PI / 180.0);
+    double e2 = FE_WGS84 * (2.0 - FE_WGS84);
+    double v = RE_WGS84 / sqrt(1.0 - e2 * sinp * sinp);
+
+    *x = (v + height) * cosp * cosl;
+    *y = (v + height) * cosp * sinl;
+    *z = (v * (1.0 - e2) + height) * sinp;
+}
+
+void xyzToLlh(double x, double y, double z, double *lat, double *lon, double *height)
+{
+    double e2 = FE_WGS84 * (2.0 - FE_WGS84);
+    double r2 = x * x + y * y;
+    double za = z;
+    double zk = 0.0;
+    double sinp = 0.0;
+    double v = RE_WGS84;
+
+    while (fabs(za - zk) >= 1E-4) {
+        zk = za;
+        sinp = za / sqrt(r2 + za * za);
+        v = RE_WGS84 / sqrt(1.0 - e2 * sinp * sinp);
+        za = z + v * e2 * sinp;
+    }
+
+    *lat = (r2 > 1E-12 ? atan(za / sqrt(r2)) : (z > 0.0 ? M_PI / 2.0 : -M_PI / 2.0)) * 180.0 / M_PI;
+    *lon = (r2 > 1E-12 ? atan2(y, x) : 0.0) * 180.0 / M_PI;
+    *height = sqrt(r2 + za * za) - v;
+}
+
+void createEnuMatrix(double lat, double lon, double *enuMat)
+{
+    double so = sin(lon * M_PI / 180.0);
+    double co = cos(lon * M_PI / 180.0);
+    double sa = sin(lat * M_PI / 180.0);
+    double ca = cos(lat * M_PI / 180.0);
+
+    // ENU
+    enuMat[0] = -so;
+    enuMat[1] = co;
+    enuMat[2] = 0.0;
+
+    enuMat[3] = -sa * co;
+    enuMat[4] = -sa * so;
+    enuMat[5] = ca;
+
+    enuMat[6] = ca * co;
+    enuMat[7] = ca * so;
+    enuMat[8] = sa;
+
+    // NED
+//    enuMat[0] = -sa * co;
+//    enuMat[1] = -sa * so;
+//    enuMat[2] = ca;
+
+//    enuMat[3] = -so;
+//    enuMat[4] = co;
+//    enuMat[5] = 0.0;
+
+//    enuMat[6] = -ca * co;
+//    enuMat[7] = -ca * so;
+//    enuMat[8] = -sa;
+}
+
+void llhToEnu(const double *iLlh, const double *llh, double *xyz)
+{
+    double ix, iy, iz;
+    llhToXyz(iLlh[0], iLlh[1], iLlh[2], &ix, &iy, &iz);
+
+    double x, y, z;
+    llhToXyz(llh[0], llh[1], llh[2], &x, &y, &z);
+
+    double enuMat[9];
+    createEnuMatrix(iLlh[0], iLlh[1], enuMat);
+
+    double dx = x - ix;
+    double dy = y - iy;
+    double dz = z - iz;
+
+    xyz[0] = enuMat[0] * dx + enuMat[1] * dy + enuMat[2] * dz;
+    xyz[1] = enuMat[3] * dx + enuMat[4] * dy + enuMat[5] * dz;
+    xyz[2] = enuMat[6] * dx + enuMat[7] * dy + enuMat[8] * dz;
+}
+
+void enuToLlh(const double *iLlh, const double *xyz, double *llh)
+{
+    double ix, iy, iz;
+    llhToXyz(iLlh[0], iLlh[1], iLlh[2], &ix, &iy, &iz);
+
+    double enuMat[9];
+    createEnuMatrix(iLlh[0], iLlh[1], enuMat);
+
+    double x = enuMat[0] * xyz[0] + enuMat[3] * xyz[1] + enuMat[6] * xyz[2] + ix;
+    double y = enuMat[1] * xyz[0] + enuMat[4] * xyz[1] + enuMat[7] * xyz[2] + iy;
+    double z = enuMat[2] * xyz[0] + enuMat[5] * xyz[1] + enuMat[8] * xyz[2] + iz;
+
+    xyzToLlh(x, y, z, &llh[0], &llh[1], &llh[2]);
 }
 
 }

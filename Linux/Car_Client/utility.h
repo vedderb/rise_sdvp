@@ -22,19 +22,30 @@
 
 namespace utility {
 
+void buffer_append_int64(uint8_t* buffer, int64_t number, int32_t *index);
+void buffer_append_uint64(uint8_t *buffer, uint64_t number, int32_t *index);
 void buffer_append_int32(uint8_t* buffer, int32_t number, int32_t *index);
 void buffer_append_uint32(uint8_t* buffer, uint32_t number, int32_t *index);
 void buffer_append_int16(uint8_t* buffer, int16_t number, int32_t *index);
 void buffer_append_uint16(uint8_t* buffer, uint16_t number, int32_t *index);
 void buffer_append_double16(uint8_t* buffer, double number, double scale, int32_t *index);
 void buffer_append_double32(uint8_t* buffer, double number, double scale, int32_t *index);
+void buffer_append_double64(uint8_t* buffer, double number, double scale, int32_t *index);
 int16_t buffer_get_int16(const uint8_t *buffer, int32_t *index);
 uint16_t buffer_get_uint16(const uint8_t *buffer, int32_t *index);
 int32_t buffer_get_int32(const uint8_t *buffer, int32_t *index);
 uint32_t buffer_get_uint32(const uint8_t *buffer, int32_t *index);
+uint64_t buffer_get_uint64(const uint8_t *buffer, int32_t *index);
+int64_t buffer_get_int64(const uint8_t *buffer, int32_t *index);
 double buffer_get_double16(const uint8_t *buffer, double scale, int32_t *index);
 double buffer_get_double32(const uint8_t *buffer, double scale, int32_t *index);
+double buffer_get_double64(const uint8_t *buffer, double scale, int32_t *index);
 double map(double x, double in_min, double in_max, double out_min, double out_max);
+void llhToXyz(double lat, double lon, double height, double *x, double *y, double *z);
+void xyzToLlh(double x, double y, double z, double *lat, double *lon, double *height);
+void createEnuMatrix(double lat, double lon, double *enuMat);
+void llhToEnu(const double *iLlh, const double *llh, double *xyz);
+void enuToLlh(const double *iLlh, const double *xyz, double *llh);
 
 }
 
