@@ -964,3 +964,8 @@ void MainWindow::on_mapSetEnuButton_clicked()
     ui->mapWidget->getEnuRef(llh);
     mPacketInterface->setEnuRef(ui->mapCarBox->value(), llh);
 }
+
+void MainWindow::on_mapOsmStatsBox_toggled(bool checked)
+{
+    ui->mapWidget->setDrawOsmStats(checked);
+}

@@ -267,4 +267,9 @@ void enuToLlh(const double *iLlh, const double *xyz, double *llh)
     xyzToLlh(x, y, z, &llh[0], &llh[1], &llh[2]);
 }
 
+double logn(double base, double number)
+{
+    return log(number) / log(base);
+}
+
 }

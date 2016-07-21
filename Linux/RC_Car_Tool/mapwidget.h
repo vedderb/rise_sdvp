@@ -76,11 +76,17 @@ public:
     double getInfoTraceTextZoom() const;
     void setInfoTraceTextZoom(double infoTraceTextZoom);
     OsmClient *osmClient();
+
     int getOsmMaxZoomLevel() const;
     void setOsmMaxZoomLevel(int osmMaxZoomLevel);
+
     int getOsmZoomLevel() const;
+
     bool getDrawGrid() const;
     void setDrawGrid(bool drawGrid);
+
+    bool getDrawOsmStats() const;
+    void setDrawOsmStats(bool drawOsmStats);
 
 signals:
     void scaleChanged(double newScale);
@@ -128,6 +134,7 @@ private:
     int mOsmZoomLevel;
     int mOsmMaxZoomLevel;
     bool mDrawOpenStreetmap;
+    bool mDrawOsmStats;
     double mRefLat;
     double mRefLon;
     double mRefHeight;

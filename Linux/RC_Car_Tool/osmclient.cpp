@@ -4,8 +4,11 @@
 
 OsmClient::OsmClient(QObject *parent) : QObject(parent)
 {
-    mMaxMemoryTiles = 300;
+    mMaxMemoryTiles = 600;
     mMaxDownloadingTiles = 6;
+    mHddTilesLoaded = 0;
+    mTilesDownloaded = 0;
+    mRamTilesLoaded = 0;
 
     // Generate status pixmaps
     for (int i = 0;i < 4;i++) {
@@ -160,7 +163,7 @@ OsmTile OsmClient::getTile(int zoom, int x, int y, int &res)
         t = OsmTile(mStatusPixmaps.at(3), zoom, x, y);
     } else if (!t.pixmap().isNull()) {
         res = 1;
-        //qDebug() << "RAM";
+        mRamTilesLoaded++;
     } else if (!mCacheDir.isEmpty()) {
         QString path = mCacheDir + "/" + QString::number(zoom) + "/" +
                 QString::number(x) + "/" + QString::number(y) + ".png";
@@ -171,7 +174,7 @@ OsmTile OsmClient::getTile(int zoom, int x, int y, int &res)
             res = 2;
             t = OsmTile(QPixmap(path), zoom, x, y);
             storeTileMemory(key, t);
-            //qDebug() << "----->HDD";
+            mHddTilesLoaded++;
         } else {
             t = OsmTile(getStatusPixmap(key), zoom, x, y);
         }
@@ -282,12 +285,33 @@ void OsmClient::fileDownloaded(QNetworkReply *pReply)
             }
         }
 
+        mTilesDownloaded++;
         mDownloadErrorTiles.remove(key);
         emitTile(OsmTile(pm, zoom, x, y));
     } else {
         mDownloadErrorTiles.insert(key, true);
         emit errorGetTile("Download error: " + pReply->errorString());
     }
+}
+
+int OsmClient::getRamTilesLoaded() const
+{
+    return mRamTilesLoaded;
+}
+
+int OsmClient::getTilesDownloaded() const
+{
+    return mTilesDownloaded;
+}
+
+int OsmClient::getMemoryTilesNow() const
+{
+    return mMemoryTiles.size();
+}
+
+int OsmClient::getHddTilesLoaded() const
+{
+    return mHddTilesLoaded;
 }
 
 int OsmClient::getMaxDownloadingTiles() const
@@ -322,7 +346,7 @@ void OsmClient::emitTile(OsmTile tile)
 
 quint64 OsmClient::calcKey(int zoom, int x, int y)
 {
-    return ((qint64)zoom << 40) | ((qint64)x << 20) | (qint64)y;
+    return (quint64)0 | ((quint64)zoom << 50) | ((quint64)x << 25) | (quint64)y;
 }
 
 void OsmClient::storeTileMemory(quint64 key, const OsmTile &tile)
@@ -333,11 +357,7 @@ void OsmClient::storeTileMemory(quint64 key, const OsmTile &tile)
     // Remove old tiles from memory if too much memory is used.
     while (mMemoryTilesOrder.size() > mMaxMemoryTiles) {
         quint64 k = mMemoryTilesOrder.takeFirst();
-        int res = mMemoryTiles.remove(k);
-
-        if (res != 1) {
-            qDebug() << res << mMemoryTiles.size() << k;
-        }
+        mMemoryTiles.remove(k);
     }
 }
 

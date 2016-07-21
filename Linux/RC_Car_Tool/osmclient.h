@@ -73,6 +73,11 @@ public:
     int getMaxDownloadingTiles() const;
     void setMaxDownloadingTiles(int maxDownloadingTiles);
 
+    int getHddTilesLoaded() const;
+    int getTilesDownloaded() const;
+    int getMemoryTilesNow() const;
+    int getRamTilesLoaded() const;
+
 signals:
     void tileReady(OsmTile tile);
     void errorGetTile(QString reason);
@@ -94,6 +99,9 @@ private:
 
     int mMaxMemoryTiles;
     int mMaxDownloadingTiles;
+    int mHddTilesLoaded;
+    int mTilesDownloaded;
+    int mRamTilesLoaded;
 
     void emitTile(OsmTile tile);
     quint64 calcKey(int zoom, int x, int y);

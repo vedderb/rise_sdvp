@@ -1,4 +1,4 @@
-This is LuaTeX, Version beta-0.76.0-2013121407 (rev 4627)  (format=lualatex 2015.4.1)  6 JUL 2016 15:09
+This is LuaTeX, Version beta-0.76.0-2013121407 (rev 4627)  (format=lualatex 2015.3.23)  20 JUL 2016 15:16
  restricted \write18 enabled.
 **rccar_pres.tex
 (./rccar_pres.tex
@@ -1179,13 +1179,13 @@ Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 214.
 (pdftex.def)             Requested size: 455.24408pt x 256.07715pt.
  [18
 
- <./Figures/GUI/car_rtcm.png>] <Figures/GUI/car_map.png, id=207, 1395.2125pt x 
-675.52374pt>
+ <./Figures/GUI/car_rtcm.png>] <Figures/GUI/car_map.png, id=207, 1323.94624pt x
+ 678.535pt>
 File: Figures/GUI/car_map.png Graphic file (type png)
 
 <use Figures/GUI/car_map.png>
 Package pdftex.def Info: Figures/GUI/car_map.png used on input line 222.
-(pdftex.def)             Requested size: 312.9803pt x 151.53275pt.
+(pdftex.def)             Requested size: 312.9803pt x 160.39792pt.
 File: Figures/theme/slide_en.pdf Graphic file (type pdf)
  <use Figures/theme/slide_en.pdf>
 Package pdftex.def Info: Figures/theme/slide_en.pdf used on input line 222.
@@ -1235,16 +1235,15 @@ Here is how much of LuaTeX's memory you used:
  21568 multiletter control sequences out of 65536+600000
  46 fonts using 1819867 bytes
  49i,13n,53p,398b,853s stack positions out of 5000i,500n,10000p,200000b,100000s
- </home/benjamin/.texmf-var/fonts/pk/ljfour/jknappen/ec/ecsx1095.600pk> </home/b
-enjamin/.texmf-var/fonts/pk/ljfour/jknappen/ec/ecss1000.600pk> </home/benjamin/.
-texmf-var/fonts/pk/ljfour/jknappen/ec/ecss1200.600pk> </home/benjamin/.texmf-var
-/fonts/pk/ljfour/jknappen/ec/ectt1095.600pk> </home/benjamin/.texmf-var/fonts/pk
-/ljfour/jknappen/ec/ecss1095.600pk> </home/benjamin/.texmf-var/fonts/pk/ljfour/j
-knappen/ec/ecss1440.600pk> </home/benjamin/.texmf-var/fonts/pk/ljfour/jknappen/e
-c/ecss0600.600pk>
-Output written on rccar_pres.pdf (20 pages, 6527086 bytes).
+{/usr/share/texmf/fonts/enc/dvips/cm-super/cm-super-t1.enc}</usr/share/texmf/fon
+ts/type1/public/cm-super/sfss0600.pfb></usr/share/texmf/fonts/type1/public/cm-su
+per/sfss1000.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfss1095.pfb></us
+r/share/texmf/fonts/type1/public/cm-super/sfss1200.pfb></usr/share/texmf/fonts/t
+ype1/public/cm-super/sfss1440.pfb></usr/share/texmf/fonts/type1/public/cm-super/
+sfsx1095.pfb></usr/share/texmf/fonts/type1/public/cm-super/sftt1095.pfb>
+Output written on rccar_pres.pdf (20 pages, 6606255 bytes).
 
-PDF statistics: 419 PDF objects out of 1000 (max. 8388607)
+PDF statistics: 272 PDF objects out of 1000 (max. 8388607)
  40 named destinations out of 1000 (max. 131072)
  24 words of extra memory for PDF output out of 10000 (max. 10000000)
 

@@ -46,6 +46,7 @@ void xyzToLlh(double x, double y, double z, double *lat, double *lon, double *he
 void createEnuMatrix(double lat, double lon, double *enuMat);
 void llhToEnu(const double *iLlh, const double *llh, double *xyz);
 void enuToLlh(const double *iLlh, const double *xyz, double *llh);
+double logn(double base, double number);
 
 }
 

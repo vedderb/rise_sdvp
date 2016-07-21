@@ -151,6 +151,7 @@ MapWidget::MapWidget(QWidget *parent) :
     mOsmZoomLevel = 15;
     mOsmRes = 1.0;
     mOsmMaxZoomLevel = 19;
+    mDrawOsmStats = false;
 
     // Set this to the SP base station position for now
     mRefLat = 57.71495867;
@@ -421,8 +422,15 @@ void MapWidget::paintEvent(QPaintEvent *event)
     painter.setFont(font);
 
     // Grid parameters
-    const double scaleMult = 0.1 * ceil((1.0 / ((mScaleFactor * 10.0) / 50.0)));
-    const double step = 100 * scaleMult;
+    double stepGrid = 20.0 * ceil(1.0 / ((mScaleFactor * 10.0) / 50.0));
+    bool gridDiv = false;
+    if (round(log10(stepGrid)) > log10(stepGrid)) {
+        gridDiv = true;
+    }
+    stepGrid = pow(10.0, round(log10(stepGrid)));
+    if (gridDiv) {
+        stepGrid /= 2.0;
+    }
     const double zeroAxisWidth = 3;
     const QColor zeroAxisColor = Qt::red;
     const QColor firstAxisColor = Qt::gray;
@@ -430,10 +438,10 @@ void MapWidget::paintEvent(QPaintEvent *event)
     const QColor textColor = QPalette::Foreground;
 
     // Grid boundries in mm
-    const double xStart = -ceil(width() / step / mScaleFactor) * step - ceil(mXOffset / step / mScaleFactor) * step;
-    const double xEnd = ceil(width() / step / mScaleFactor) * step - floor(mXOffset / step / mScaleFactor) * step;
-    const double yStart = -ceil(height() / step / mScaleFactor) * step - ceil(mYOffset / step / mScaleFactor) * step;
-    const double yEnd = ceil(height() / step / mScaleFactor) * step - floor(mYOffset / step / mScaleFactor) * step;
+    const double xStart = -ceil(width() / stepGrid / mScaleFactor) * stepGrid - ceil(mXOffset / stepGrid / mScaleFactor) * stepGrid;
+    const double xEnd = ceil(width() / stepGrid / mScaleFactor) * stepGrid - floor(mXOffset / stepGrid / mScaleFactor) * stepGrid;
+    const double yStart = -ceil(height() / stepGrid / mScaleFactor) * stepGrid - ceil(mYOffset / stepGrid / mScaleFactor) * stepGrid;
+    const double yEnd = ceil(height() / stepGrid / mScaleFactor) * stepGrid - floor(mYOffset / stepGrid / mScaleFactor) * stepGrid;
 
     // View center, width and height in m
     const double cx = -mXOffset / mScaleFactor / 1000.0;
@@ -530,17 +538,18 @@ void MapWidget::paintEvent(QPaintEvent *event)
         painter.setTransform(txtTrans);
 
         // Draw Y-axis segments
-        for (double i = xStart;i < xEnd;i += step) {
+        for (double i = xStart;i < xEnd;i += stepGrid) {
             if (fabs(i) < 1e-3) {
                 i = 0.0;
             }
 
-            if ((int)(i / step) % 2) {
+            if ((int)(i / stepGrid) % 2) {
                 pen.setWidth(0);
                 pen.setColor(firstAxisColor);
                 painter.setPen(pen);
             } else {
-                txt.sprintf("%.3f", i / 1000.0);
+                txt.sprintf("%.2f m", i / 1000.0);
+
                 pt_txt.setX(i);
                 pt_txt.setY(0);
                 pt_txt = drawTrans.map(pt_txt);
@@ -567,17 +576,17 @@ void MapWidget::paintEvent(QPaintEvent *event)
         }
 
         // Draw X-axis segments
-        for (double i = yStart;i < yEnd;i += step) {
+        for (double i = yStart;i < yEnd;i += stepGrid) {
             if (fabs(i) < 1e-3) {
                 i = 0.0;
             }
 
-            if ((int)(i / step) % 2) {
+            if ((int)(i / stepGrid) % 2) {
                 pen.setWidth(0);
                 pen.setColor(firstAxisColor);
                 painter.setPen(pen);
             } else {
-                txt.sprintf("%.3f", i / 1000.0);
+                txt.sprintf("%.2f m", i / 1000.0);
                 pt_txt.setY(i);
 
                 pt_txt = drawTrans.map(pt_txt);
@@ -841,15 +850,25 @@ void MapWidget::paintEvent(QPaintEvent *event)
     double start_txt = 30.0;
 
     // Draw units (m)
+    if (mDrawGrid) {
+        painter.setTransform(txtTrans);
+        font.setPointSize(12);
+        painter.setFont(font);
+        double res = stepGrid / 1000.0;
+        if (res >= 1000.0) {
+            txt.sprintf("Grid res: %.0f km", res / 1000.0);
+        } else if (res >= 1.0) {
+            txt.sprintf("Grid res: %.0f m", res);
+        } else {
+            txt.sprintf("Grid res: %.0f cm", res * 100.0);
+        }
+        painter.drawText(width() - 140.0, start_txt, txt);
+        start_txt += 25.0;
+    }
+
     painter.setTransform(txtTrans);
-    font.setPointSize(12);
-    painter.setFont(font);
-    txt = "Grid unit: m";
-    painter.drawText(width() - 140.0, start_txt, txt);
-    start_txt += 25.0;
 
     // Draw zoom level
-    painter.setTransform(txtTrans);
     font.setPointSize(12);
     painter.setFont(font);
     txt.sprintf("Zoom: %.7f", mScaleFactor);
@@ -858,17 +877,35 @@ void MapWidget::paintEvent(QPaintEvent *event)
 
     // Draw OSM zoom level
     if (mDrawOpenStreetmap) {
-        painter.setTransform(txtTrans);
         font.setPointSize(12);
         painter.setFont(font);
         txt.sprintf("OSM zoom: %d", mOsmZoomLevel);
         painter.drawText(width() - 140.0, start_txt, txt);
         start_txt += 25.0;
+
+        if (mDrawOsmStats) {
+            font.setPointSize(12);
+            painter.setFont(font);
+            txt.sprintf("DL Tiles: %d", mOsm->getTilesDownloaded());
+            painter.drawText(width() - 140.0, start_txt, txt);
+            start_txt += 25.0;
+
+            font.setPointSize(12);
+            painter.setFont(font);
+            txt.sprintf("HDD Tiles: %d", mOsm->getHddTilesLoaded());
+            painter.drawText(width() - 140.0, start_txt, txt);
+            start_txt += 25.0;
+
+            font.setPointSize(12);
+            painter.setFont(font);
+            txt.sprintf("RAM Tiles: %d", mOsm->getRamTilesLoaded());
+            painter.drawText(width() - 140.0, start_txt, txt);
+            start_txt += 25.0;
+        }
     }
 
     // Some info
     if (info_segments > 0) {
-        painter.setTransform(txtTrans);
         font.setPointSize(12);
         painter.setFont(font);
         txt.sprintf("Info seg: %d", info_segments);
@@ -877,7 +914,6 @@ void MapWidget::paintEvent(QPaintEvent *event)
     }
 
     if (info_points > 0) {
-        painter.setTransform(txtTrans);
         font.setPointSize(12);
         painter.setFont(font);
         txt.sprintf("Info pts: %d", info_points);
@@ -1020,6 +1056,17 @@ void MapWidget::wheelEvent(QWheelEvent *e)
     }
 
     updateClosestInfoPoint();
+}
+
+bool MapWidget::getDrawOsmStats() const
+{
+    return mDrawOsmStats;
+}
+
+void MapWidget::setDrawOsmStats(bool drawOsmStats)
+{
+    mDrawOsmStats = drawOsmStats;
+    update();
 }
 
 bool MapWidget::getDrawGrid() const
