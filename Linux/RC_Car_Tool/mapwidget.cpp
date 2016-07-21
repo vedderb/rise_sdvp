@@ -34,7 +34,13 @@ static void normalizeAngleRad(double &angle)
 }
 
 void minMaxEps(double x, double y, double &min, double &max) {
-    double eps = fabs(max) / 1e10;
+    double eps;
+
+    if (fabs(x) > fabs(y)) {
+        eps = fabs(x) / 1e10;
+    } else {
+        eps = fabs(y) / 1e10;
+    }
 
     if (x > y) {
         max = x + eps;
@@ -848,12 +854,14 @@ void MapWidget::paintEvent(QPaintEvent *event)
     }
 
     double start_txt = 30.0;
+    const double txt_row_h = 20.0;
+
+    painter.setTransform(txtTrans);
+    font.setPointSize(10);
+    painter.setFont(font);
 
     // Draw units (m)
     if (mDrawGrid) {
-        painter.setTransform(txtTrans);
-        font.setPointSize(12);
-        painter.setFont(font);
         double res = stepGrid / 1000.0;
         if (res >= 1000.0) {
             txt.sprintf("Grid res: %.0f km", res / 1000.0);
@@ -863,62 +871,46 @@ void MapWidget::paintEvent(QPaintEvent *event)
             txt.sprintf("Grid res: %.0f cm", res * 100.0);
         }
         painter.drawText(width() - 140.0, start_txt, txt);
-        start_txt += 25.0;
+        start_txt += txt_row_h;
     }
 
-    painter.setTransform(txtTrans);
-
     // Draw zoom level
-    font.setPointSize(12);
-    painter.setFont(font);
     txt.sprintf("Zoom: %.7f", mScaleFactor);
     painter.drawText(width() - 140.0, start_txt, txt);
-    start_txt += 25.0;
+    start_txt += txt_row_h;
 
     // Draw OSM zoom level
     if (mDrawOpenStreetmap) {
-        font.setPointSize(12);
-        painter.setFont(font);
         txt.sprintf("OSM zoom: %d", mOsmZoomLevel);
         painter.drawText(width() - 140.0, start_txt, txt);
-        start_txt += 25.0;
+        start_txt += txt_row_h;
 
         if (mDrawOsmStats) {
-            font.setPointSize(12);
-            painter.setFont(font);
             txt.sprintf("DL Tiles: %d", mOsm->getTilesDownloaded());
             painter.drawText(width() - 140.0, start_txt, txt);
-            start_txt += 25.0;
+            start_txt += txt_row_h;
 
-            font.setPointSize(12);
-            painter.setFont(font);
             txt.sprintf("HDD Tiles: %d", mOsm->getHddTilesLoaded());
             painter.drawText(width() - 140.0, start_txt, txt);
-            start_txt += 25.0;
+            start_txt += txt_row_h;
 
-            font.setPointSize(12);
-            painter.setFont(font);
             txt.sprintf("RAM Tiles: %d", mOsm->getRamTilesLoaded());
             painter.drawText(width() - 140.0, start_txt, txt);
-            start_txt += 25.0;
+            start_txt += txt_row_h;
         }
     }
 
     // Some info
     if (info_segments > 0) {
-        font.setPointSize(12);
-        painter.setFont(font);
         txt.sprintf("Info seg: %d", info_segments);
         painter.drawText(width() - 140.0, start_txt, txt);
-        start_txt += 25.0;
+        start_txt += txt_row_h;
     }
 
     if (info_points > 0) {
-        font.setPointSize(12);
-        painter.setFont(font);
         txt.sprintf("Info pts: %d", info_points);
         painter.drawText(width() - 140.0, start_txt, txt);
-        start_txt += 25.0;
+        start_txt += txt_row_h;
     }
 
     painter.end();
