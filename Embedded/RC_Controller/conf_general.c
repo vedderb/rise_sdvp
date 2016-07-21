@@ -101,7 +101,7 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 
 	conf->gps_ant_x = 0.42;
 	conf->gps_ant_y = 0.0;
-	conf->gps_comp = false;
+	conf->gps_comp = true;
 	conf->gps_corr_gain_stat = 0.05;
 	conf->gps_corr_gain_dyn = 0.05;
 	conf->gps_corr_gain_yaw = 1.0;

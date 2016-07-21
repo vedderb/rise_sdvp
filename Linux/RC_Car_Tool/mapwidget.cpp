@@ -812,18 +812,19 @@ void MapWidget::paintEvent(QPaintEvent *event)
         painter.drawRoundedRect(-car_w / 12.0,-(car_h / 2), car_w / 6.0, car_h, car_corner / 3, car_corner / 3);
         painter.drawRoundedRect(car_w - car_w / 2.5,-(car_h / 2), car_w / 6.0, car_h, car_corner / 3, car_corner / 3);
         // Front bumper
-        painter.setBrush(QBrush(Qt::green));
+        painter.setBrush(Qt::green);
         painter.drawRoundedRect(-car_w / 6.0, -((car_h - car_w / 20.0) / 2.0), car_w, car_h - car_w / 20.0, car_corner, car_corner);
         // Hull
-        painter.setBrush(QBrush(carInfo.getColor()));
+        painter.setBrush(carInfo.getColor());
         painter.drawRoundedRect(-car_w / 6.0, -((car_h - car_w / 20.0) / 2.0), car_w - (car_w / 20.0), car_h - car_w / 20.0, car_corner, car_corner);
         painter.restore();
+
         // Center
-        painter.setBrush(QBrush(Qt::blue));
+        painter.setBrush(Qt::blue);
         painter.drawEllipse(QPointF(x, y), car_h / 15.0, car_h / 15.0);
 
         // GPS Location
-        painter.setBrush(QBrush(Qt::magenta));
+        painter.setBrush(Qt::magenta);
         painter.drawEllipse(QPointF(x_gps, y_gps), car_h / 15.0, car_h / 15.0);
 
         // Autopilot state
