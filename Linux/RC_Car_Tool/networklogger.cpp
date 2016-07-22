@@ -32,6 +32,8 @@ NetworkLogger::NetworkLogger(QWidget *parent) :
     connect(mPing, SIGNAL(pingError(QString,QString)), this, SLOT(pingError(QString,QString)));
 
     ui->statHistogramPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
+    ui->statHistogramPlot->xAxis->setLabel("Milliseconds (ms)");
+    ui->statHistogramPlot->yAxis->setLabel("Samples");
 }
 
 NetworkLogger::~NetworkLogger()
