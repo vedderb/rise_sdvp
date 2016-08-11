@@ -30,6 +30,8 @@ void showHelp()
     qDebug() << "--tcprtcmport : TCP server port for RTCM data";
     qDebug() << "--tcpnmeasrv : NMEA server address";
     qDebug() << "--tcpnmeaport : NMEA server port";
+    qDebug() << "--useudp : Use UDP server instead of serial port";
+    qDebug() << "--udpport : Port to use for the UDP server";
 }
 
 static void m_cleanup(int sig)
@@ -50,6 +52,8 @@ int main(int argc, char *argv[])
     int tcpRtcmPort = 8200;
     QString tcpNmeaServer = "127.0.0.1";
     int tcpNmeaPort = 2948;
+    bool useUdp = false;
+    int udpPort = 8300;
 
     signal(SIGINT, m_cleanup);
     signal(SIGTERM, m_cleanup);
@@ -127,6 +131,20 @@ int main(int argc, char *argv[])
             }
         }
 
+        if (str == "--useudp") {
+            useUdp = true;
+            found = true;
+        }
+
+        if (str == "--udpport") {
+            if ((i - 1) < args.size()) {
+                i++;
+                bool ok;
+                udpPort = args.at(i).toInt(&ok);
+                found = ok;
+            }
+        }
+
         if (!found) {
             if (dash) {
                 qCritical() << "At least one of the flags is invalid:" << str;
@@ -143,6 +161,10 @@ int main(int argc, char *argv[])
     car.connectSerial(ttyPort, baudrate);
     car.connectNmea(tcpNmeaServer, tcpNmeaPort);
     car.startRtcmServer(tcpRtcmPort);
+
+    if (useUdp) {
+        car.startUdpServer(udpPort);
+    }
 
     return a.exec();
 }

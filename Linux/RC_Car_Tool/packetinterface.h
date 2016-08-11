@@ -38,6 +38,7 @@ public:
                        int retries, int timeoutMs = 200);
     void processData(QByteArray &data);
     void startUdpConnection(QHostAddress ip, int port);
+    void startUdpConnectionServer(int port);
     void stopUdpConnection();
     bool isUdpConnected();
     void getState(quint8 id);
@@ -52,6 +53,7 @@ public:
 
 signals:
     void dataToSend(QByteArray &data);
+    void packetReceived(const QByteArray &data);
     void printReceived(quint8 id, QString str);
     void stateReceived(quint8 id, CAR_STATE state);
     void vescFwdReceived(quint8 id, QByteArray data);
@@ -87,6 +89,7 @@ private:
     QUdpSocket *mUdpSocket;
     QHostAddress mHostAddress;
     int mUdpPort;
+    bool mUdpServer;
 
     // Packet state machine variables
     static const unsigned int mMaxBufferLen = 4096;

@@ -75,6 +75,7 @@ PacketInterface::PacketInterface(QObject *parent) :
     mHostAddress = QHostAddress("0.0.0.0");
     mUdpPort = 0;
     mUdpSocket = new QUdpSocket(this);
+    mUdpServer = false;
 
     connect(mUdpSocket, SIGNAL(readyRead()),
             this, SLOT(readPendingDatagrams()));
@@ -185,6 +186,10 @@ void PacketInterface::readPendingDatagrams()
 
         mUdpSocket->readDatagram(datagram.data(), datagram.size(),
                                 &sender, &senderPort);
+
+        if (mUdpServer) {
+            mHostAddress = sender;
+        }
 
         processPacket((unsigned char*)datagram.data(), datagram.length());
     }
@@ -309,6 +314,8 @@ bool PacketInterface::sendPacketAck(const unsigned char *data, unsigned int len_
 
 void PacketInterface::processPacket(const unsigned char *data, int len)
 {
+    emit packetReceived(QByteArray((const char*)data, len));
+
     unsigned char id = data[0];
     data++;
     len--;
@@ -319,7 +326,7 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
 
     switch (cmd) {
     case CMD_PRINTF: {
-        QByteArray tmpArray = QByteArray::fromRawData((char*)data, len);
+        QByteArray tmpArray = QByteArray::fromRawData((const char*)data, len);
         tmpArray[len] = '\0';
         emit printReceived(id, QString::fromLatin1(tmpArray));
     } break;
@@ -457,14 +464,24 @@ void PacketInterface::startUdpConnection(QHostAddress ip, int port)
 {
     mHostAddress = ip;
     mUdpPort = port;
+    mUdpServer = false;
     mUdpSocket->close();
     mUdpSocket->bind(QHostAddress::Any, mUdpPort + 1);
+}
+
+void PacketInterface::startUdpConnectionServer(int port)
+{
+    mUdpPort = port + 1;
+    mUdpServer = true;
+    mUdpSocket->close();
+    mUdpSocket->bind(QHostAddress::Any, mUdpPort);
 }
 
 void PacketInterface::stopUdpConnection()
 {
     mHostAddress = QHostAddress("0.0.0.0");
     mUdpPort = 0;
+    mUdpServer = false;
     mUdpSocket->close();
 }
 

@@ -137,15 +137,12 @@ void bldc_interface_process_packet(unsigned char *data, unsigned int len) {
 
 	case COMM_GET_VALUES:
 		ind = 0;
-		values.temp_mos1 = buffer_get_float16(data, 10.0, &ind);
-		values.temp_mos2 = buffer_get_float16(data, 10.0, &ind);
-		values.temp_mos3 = buffer_get_float16(data, 10.0, &ind);
-		values.temp_mos4 = buffer_get_float16(data, 10.0, &ind);
-		values.temp_mos5 = buffer_get_float16(data, 10.0, &ind);
-		values.temp_mos6 = buffer_get_float16(data, 10.0, &ind);
-		values.temp_pcb = buffer_get_float16(data, 10.0, &ind);
+		values.temp_mos = buffer_get_float16(data, 10.0, &ind);
+		values.temp_motor = buffer_get_float16(data, 10.0, &ind);
 		values.current_motor = buffer_get_float32(data, 100.0, &ind);
 		values.current_in = buffer_get_float32(data, 100.0, &ind);
+		values.id = buffer_get_float32(data, 100.0, &ind);
+		values.iq = buffer_get_float32(data, 100.0, &ind);
 		values.duty_now = buffer_get_float16(data, 1000.0, &ind);
 		values.rpm = buffer_get_float32(data, 1.0, &ind);
 		values.v_in = buffer_get_float16(data, 10.0, &ind);
@@ -526,6 +523,13 @@ void bldc_interface_set_pos(float pos) {
 	int32_t send_index = 0;
 	send_buffer[send_index++] = COMM_SET_POS;
 	buffer_append_float32(send_buffer, pos, 1000000.0, &send_index);
+	send_packet_no_fwd(send_buffer, send_index);
+}
+
+void bldc_interface_set_handbrake(float current) {
+	int32_t send_index = 0;
+	send_buffer[send_index++] = COMM_SET_HANDBRAKE;
+	buffer_append_float32(send_buffer, current, 1e3, &send_index);
 	send_packet_no_fwd(send_buffer, send_index);
 }
 

@@ -22,6 +22,7 @@
 #include <QSerialPort>
 #include <QTcpSocket>
 #include <QTimer>
+#include <QUdpSocket>
 #include "packetinterface.h"
 #include "tcpbroadcast.h"
 
@@ -42,6 +43,7 @@ public:
     void connectSerial(QString port, int baudrate = 115200);
     void startRtcmServer(int port = 8200);
     void connectNmea(QString server, int port = 2948);
+    void startUdpServer(int port = 8300);
 
 signals:
 
@@ -54,6 +56,8 @@ public slots:
     void tcpDisconnected();
     void rtcmUsbRx(quint8 id, QByteArray data);
     void reconnectTimerSlot();
+    void readPendingDatagrams();
+    void carPacketRx(const QByteArray &data);
 
 private:
     PacketInterface *mPacketInterface;
@@ -64,6 +68,9 @@ private:
     QTimer *mReconnectTimer;
     settings_t mSettings;
     bool mTcpConnected;
+    QUdpSocket *mUdpSocket;
+    QHostAddress mHostAddress;
+    int mUdpPort;
 
 };
 

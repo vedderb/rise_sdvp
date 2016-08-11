@@ -657,7 +657,7 @@ void MainWindow::on_mapSetAbsYawButton_clicked()
 {
     CarInfo *car = ui->mapWidget->getCarInfo(ui->mapCarBox->value());
     if (car) {
-        if (mSerialPort->isOpen()) {
+        if (mSerialPort->isOpen() || mPacketInterface->isUdpConnected()) {
             ui->mapSetAbsYawButton->setEnabled(false);
             ui->mapAbsYawSlider->setEnabled(false);
             bool ok = mPacketInterface->setYawOffsetAck(car->getId(), (double)ui->mapAbsYawSlider->value());
@@ -699,7 +699,7 @@ void MainWindow::on_stopButton_clicked()
 
 void MainWindow::on_mapUploadRouteButton_clicked()
 {
-    if (!mSerialPort->isOpen()) {
+    if (!mSerialPort->isOpen() && !mPacketInterface->isUdpConnected()) {
         QMessageBox::warning(this, "Upload route",
                              "Serial port not connected.");
         return;

@@ -48,6 +48,7 @@ void bldc_interface_set_current(float current);
 void bldc_interface_set_current_brake(float current);
 void bldc_interface_set_rpm(int rpm);
 void bldc_interface_set_pos(float pos);
+void bldc_interface_set_handbrake(float current);
 void bldc_interface_set_servo_pos(float pos);
 void bldc_interface_set_mcconf(const mc_configuration *mcconf);
 void bldc_interface_set_appconf(const app_configuration *appconf);

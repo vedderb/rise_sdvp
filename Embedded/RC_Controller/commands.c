@@ -150,7 +150,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			buffer_append_float32(m_send_buffer, pos.py, 1e4, &send_index); // 60
 			buffer_append_float32(m_send_buffer, pos.speed, 1e6, &send_index); // 64
 			buffer_append_float32(m_send_buffer, mcval.v_in, 1e6, &send_index); // 68
-			buffer_append_float32(m_send_buffer, mcval.temp_mos1, 1e6, &send_index); // 72
+			buffer_append_float32(m_send_buffer, mcval.temp_mos, 1e6, &send_index); // 72
 			m_send_buffer[send_index++] = mcval.fault_code; // 73
 			buffer_append_float32(m_send_buffer, pos.px_gps, 1e4, &send_index); // 77
 			buffer_append_float32(m_send_buffer, pos.py_gps, 1e4, &send_index); // 81

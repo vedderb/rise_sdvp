@@ -32,6 +32,10 @@ CarClient::CarClient(QObject *parent) : QObject(parent)
     mReconnectTimer->start(2000);
     mTcpConnected = false;
 
+    mHostAddress = QHostAddress("0.0.0.0");
+    mUdpPort = 0;
+    mUdpSocket = new QUdpSocket(this);
+
     connect(mSerialPort, SIGNAL(readyRead()),
             this, SLOT(serialDataAvailable()));
     connect(mSerialPort, SIGNAL(error(QSerialPort::SerialPortError)),
@@ -45,6 +49,10 @@ CarClient::CarClient(QObject *parent) : QObject(parent)
             this, SLOT(packetDataToSend(QByteArray&)));
     connect(mReconnectTimer, SIGNAL(timeout()),
             this, SLOT(reconnectTimerSlot()));
+    connect(mUdpSocket, SIGNAL(readyRead()),
+            this, SLOT(readPendingDatagrams()));
+    connect(mPacketInterface, SIGNAL(packetReceived(QByteArray)),
+            this, SLOT(carPacketRx(QByteArray)));
 }
 
 void CarClient::connectSerial(QString port, int baudrate)
@@ -88,6 +96,13 @@ void CarClient::connectNmea(QString server, int port)
     mSettings.nmeaConnect = true;
     mSettings.nmeaServer = server;
     mSettings.nmeaPort = port;
+}
+
+void CarClient::startUdpServer(int port)
+{
+    mUdpPort = port + 1;
+    mUdpSocket->close();
+    mUdpSocket->bind(QHostAddress::Any, port);
 }
 
 void CarClient::serialDataAvailable()
@@ -181,5 +196,26 @@ void CarClient::reconnectTimerSlot()
     if (mSettings.nmeaConnect && !mTcpConnected) {
         qDebug() << "Trying to reconnect nmea tcp...";
         connectNmea(mSettings.nmeaServer, mSettings.nmeaPort);
+    }
+}
+
+void CarClient::readPendingDatagrams()
+{
+    while (mUdpSocket->hasPendingDatagrams()) {
+        QByteArray datagram;
+        datagram.resize(mUdpSocket->pendingDatagramSize());
+        quint16 senderPort;
+
+        mUdpSocket->readDatagram(datagram.data(), datagram.size(),
+                                &mHostAddress, &senderPort);
+
+        mPacketInterface->sendPacket(datagram);
+    }
+}
+
+void CarClient::carPacketRx(const QByteArray &data)
+{
+    if (QString::compare(mHostAddress.toString(), "0.0.0.0") != 0) {
+        mUdpSocket->writeDatagram(data, mHostAddress, mUdpPort);
     }
 }

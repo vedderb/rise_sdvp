@@ -21,7 +21,7 @@
 #include "datatypes.h"
 
 // Default car settings
-//#define CAR_TERO // Benjamins tero car
+#define CAR_TERO // Benjamins tero car
 
 // Defaults for different cars
 #ifdef CAR_TERO
@@ -36,7 +36,7 @@
 
 // Software version
 #define FW_VERSION_MAJOR			4
-#define FW_VERSION_MINOR			0
+#define FW_VERSION_MINOR			1
 
 // General settings
 #define ID_ALL						255
