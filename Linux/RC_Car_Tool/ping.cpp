@@ -20,7 +20,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <iostream>
 
 Ping::Ping(QObject *parent) : QThread(parent)
 {
@@ -140,7 +139,7 @@ void Ping::run()
     // Watch stdin (fd 0) to see when it has input.
     FD_ZERO(&rfds);
     FD_SET(mSocket, &rfds);
-    // Wait up to one seconds.
+    // Wait up to one second.
     tv.tv_sec = 1;
     tv.tv_usec = 0;
 
@@ -185,7 +184,7 @@ void Ping::run()
             }
 
             gettimeofday(&end, NULL);
-            end_t = 1000000*(end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec);
+            end_t = 1000000 * (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec);
 
             if(end_t < 1) {
                 end_t = 1;

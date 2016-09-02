@@ -21,7 +21,7 @@
 #include "datatypes.h"
 
 // Default car settings
-#define CAR_TERO // Benjamins tero car
+//#define CAR_TERO // Benjamins tero car
 
 // Defaults for different cars
 #ifdef CAR_TERO

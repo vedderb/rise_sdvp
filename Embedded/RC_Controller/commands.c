@@ -35,6 +35,7 @@
 #include "autopilot.h"
 #include "comm_cc2520.h"
 #include "comm_usb.h"
+#include "timeout.h"
 
 #include <math.h>
 #include <string.h>
@@ -115,6 +116,8 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 	if (id == main_id || id == ID_ALL) {
 		switch (packet_id) {
 		case CMD_GET_STATE: {
+			timeout_reset();
+
 			POS_STATE pos;
 			mc_values mcval;
 			float accel[3];
@@ -161,12 +164,16 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 		} break;
 
 		case CMD_TERMINAL_CMD:
+			timeout_reset();
+
 			m_send_func = func;
 			data[len] = '\0';
 			terminal_process_string((char*)data);
 			break;
 
 		case CMD_VESC_FWD:
+			timeout_reset();
+
 			m_send_func = func;
 			bldc_interface_set_forward_func(commands_forward_vesc_packet);
 			bldc_interface_send_packet(data, len);
@@ -174,6 +181,8 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			break;
 
 		case CMD_RC_CONTROL: {
+			timeout_reset();
+
 			RC_MODE mode;
 			float throttle, steering;
 			int32_t ind = 0;
@@ -213,6 +222,8 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 		case CMD_SET_POS:
 		case CMD_SET_POS_ACK: {
+			timeout_reset();
+
 			float x, y, angle;
 			int32_t ind = 0;
 			x = buffer_get_float32(data, 1e4, &ind);
@@ -230,6 +241,8 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 		} break;
 
 		case CMD_SET_ENU_REF: {
+			timeout_reset();
+
 			int32_t ind = 0;
 			double lat, lon, height;
 			lat = buffer_get_double64(data, 1e16, &ind);
@@ -245,6 +258,8 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 		} break;
 
 		case CMD_GET_ENU_REF: {
+			timeout_reset();
+
 			double llh[3];
 			pos_get_enu_ref(llh);
 
@@ -258,6 +273,8 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 		} break;
 
 		case CMD_AP_ADD_POINTS: {
+			timeout_reset();
+
 			m_send_func = func;
 			int32_t ind = 0;
 
@@ -277,6 +294,8 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 		} break;
 
 		case CMD_AP_REMOVE_LAST_POINT: {
+			timeout_reset();
+
 			autopilot_remove_last_point();
 
 			// Send ack
@@ -287,6 +306,8 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 		} break;
 
 		case CMD_AP_CLEAR_POINTS: {
+			timeout_reset();
+
 			autopilot_clear_route();
 
 			// Send ack
@@ -297,6 +318,8 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 		} break;
 
 		case CMD_AP_SET_ACTIVE: {
+			timeout_reset();
+
 			autopilot_set_active(data[0]);
 
 			// Send ack
@@ -307,6 +330,8 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 		} break;
 
 		case CMD_SET_SERVO_DIRECT: {
+			timeout_reset();
+
 			int32_t ind = 0;
 			float steering = buffer_get_float32(data, 1e6, &ind);
 			utils_truncate_number(&steering, 0.0, 1.0);
@@ -349,6 +374,8 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 		} break;
 
 		case CMD_SET_MAIN_CONFIG: {
+			timeout_reset();
+
 			int32_t ind = 0;
 			main_config.mag_comp = data[ind++];
 			main_config.yaw_imu_gain = buffer_get_float32(data, 1e6, &ind);
@@ -396,6 +423,8 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 		case CMD_GET_MAIN_CONFIG:
 		case CMD_GET_MAIN_CONFIG_DEFAULT: {
+			timeout_reset();
+
 			if (packet_id == CMD_GET_MAIN_CONFIG) {
 				main_cfg_tmp = main_config;
 			} else {
@@ -446,6 +475,8 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 		case CMD_SET_YAW_OFFSET:
 		case CMD_SET_YAW_OFFSET_ACK: {
+			timeout_reset();
+
 			float angle;
 			int32_t ind = 0;
 			angle = buffer_get_float32(data, 1e6, &ind);

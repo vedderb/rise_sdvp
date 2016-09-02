@@ -39,6 +39,7 @@
 #include "comm_can.h"
 #include "servo_simple.h"
 #include "autopilot.h"
+#include "timeout.h"
 
 /*
  * Timers used:
@@ -72,6 +73,9 @@ int main(void) {
 	commands_set_send_func(comm_cc2520_send_buffer);
 	comm_can_init();
 	autopilot_init();
+	timeout_init();
+
+	timeout_configure(2000, 20.0);
 
 	for(;;) {
 		chThdSleepMilliseconds(2);
