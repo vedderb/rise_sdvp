@@ -40,6 +40,7 @@
 #include "servo_simple.h"
 #include "autopilot.h"
 #include "timeout.h"
+#include "log.h"
 
 /*
  * Timers used:
@@ -74,8 +75,11 @@ int main(void) {
 	comm_can_init();
 	autopilot_init();
 	timeout_init();
+	log_init();
 
 	timeout_configure(2000, 20.0);
+	log_set_enabled(main_config.log_en);
+	log_set_name(main_config.log_name);
 
 	for(;;) {
 		chThdSleepMilliseconds(2);

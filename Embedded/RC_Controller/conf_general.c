@@ -109,6 +109,9 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 	conf->ap_repeat_routes = true;
 	conf->ap_base_rad = 1.2;
 
+	conf->log_en = false;
+	strcpy(conf->log_name, "New Log");
+
 	// Custom parameters based on car ID
 	switch (main_id) {
 	case 0:

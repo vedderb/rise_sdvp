@@ -82,4 +82,3 @@ void TcpBroadcast::newTcpConnection()
     mSockets.append(mTcpServer->nextPendingConnection());
     qDebug() << "TCP connection accepted:" << mSockets[mSockets.size() - 1]->peerAddress();
 }
-

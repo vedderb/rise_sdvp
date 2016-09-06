@@ -53,7 +53,7 @@ public:
 
 signals:
     void dataToSend(QByteArray &data);
-    void packetReceived(const QByteArray &data);
+    void packetReceived(quint8 id, CMD_PACKET cmd, const QByteArray &data);
     void printReceived(quint8 id, QString str);
     void stateReceived(quint8 id, CAR_STATE state);
     void vescFwdReceived(quint8 id, QByteArray data);
@@ -62,6 +62,7 @@ signals:
     void nmeaRadioReceived(quint8 id, QByteArray data);
     void configurationReceived(quint8 id, MAIN_CONFIG conf);
     void enuRefReceived(quint8 id, double lat, double lon, double height);
+    void logLineUsbReceived(quint8 id, QString str);
     
 public slots:
     void timerSlot();

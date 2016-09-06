@@ -698,6 +698,9 @@ void CarInterface::getConfGui(MAIN_CONFIG &conf)
     conf.ap_base_rad = ui->confApBaseRadBox->value();
 
     conf.steering_max_angle_rad = atan(ui->confAxisDistanceBox->value() / ui->confTurnRadBox->value());
+
+    conf.log_en = ui->confLogEnBox->isChecked();
+    strcpy(conf.log_name, ui->confLogNameEdit->text().toLocal8Bit().data());
 }
 
 void CarInterface::setConfGui(MAIN_CONFIG &conf)
@@ -737,6 +740,9 @@ void CarInterface::setConfGui(MAIN_CONFIG &conf)
     ui->confApBaseRadBox->setValue(conf.ap_base_rad);
 
     ui->confTurnRadBox->setValue(conf.axis_distance / tan(conf.steering_max_angle_rad));
+
+    ui->confLogEnBox->setChecked(conf.log_en);
+    ui->confLogNameEdit->setText(QString::fromLocal8Bit(conf.log_name));
 }
 
 void CarInterface::on_nmeaLogChooseButton_clicked()

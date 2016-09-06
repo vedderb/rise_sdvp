@@ -343,6 +343,7 @@ void pos_input_nmea(const char *data) {
 			chMtxLock(&m_mutex_pos);
 			m_pos.px_gps = px;
 			m_pos.py_gps = py;
+			m_pos.pz_gps = m_gps.lz;
 
 			// Correct position
 			if (main_config.gps_comp) {

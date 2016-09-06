@@ -19,6 +19,7 @@
 #include "carclient.h"
 #include <QDebug>
 #include <signal.h>
+#include <QDir>
 
 void showHelp()
 {
@@ -32,6 +33,8 @@ void showHelp()
     qDebug() << "--tcpnmeaport : NMEA server port";
     qDebug() << "--useudp : Use UDP server instead of serial port";
     qDebug() << "--udpport : Port to use for the UDP server";
+    qDebug() << "--logusb : Store log files";
+    qDebug() << "--logusbdir : Directory to store USB logs to";
 }
 
 static void m_cleanup(int sig)
@@ -54,6 +57,8 @@ int main(int argc, char *argv[])
     int tcpNmeaPort = 2948;
     bool useUdp = false;
     int udpPort = 8300;
+    bool logUsb = false;
+    QString logUsbDir = QDir::currentPath() + "/logs";
 
     signal(SIGINT, m_cleanup);
     signal(SIGTERM, m_cleanup);
@@ -145,6 +150,19 @@ int main(int argc, char *argv[])
             }
         }
 
+        if (str == "--logusb") {
+            logUsb = true;
+            found = true;
+        }
+
+        if (str == "--logusbdir") {
+            if ((i - 1) < args.size()) {
+                i++;
+                logUsbDir = args.at(i);
+                found = true;
+            }
+        }
+
         if (!found) {
             if (dash) {
                 qCritical() << "At least one of the flags is invalid:" << str;
@@ -164,6 +182,10 @@ int main(int argc, char *argv[])
 
     if (useUdp) {
         car.startUdpServer(udpPort);
+    }
+
+    if (logUsb) {
+        car.enableLogging(logUsbDir);
     }
 
     return a.exec();

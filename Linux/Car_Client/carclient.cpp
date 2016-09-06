@@ -17,6 +17,8 @@
 
 #include "carclient.h"
 #include <QDebug>
+#include <QDateTime>
+#include <QDir>
 
 CarClient::CarClient(QObject *parent) : QObject(parent)
 {
@@ -31,6 +33,8 @@ CarClient::CarClient(QObject *parent) : QObject(parent)
     mReconnectTimer = new QTimer(this);
     mReconnectTimer->start(2000);
     mTcpConnected = false;
+    mLogFlushTimer = new QTimer(this);
+    mLogFlushTimer->start(2000);
 
     mHostAddress = QHostAddress("0.0.0.0");
     mUdpPort = 0;
@@ -51,8 +55,17 @@ CarClient::CarClient(QObject *parent) : QObject(parent)
             this, SLOT(reconnectTimerSlot()));
     connect(mUdpSocket, SIGNAL(readyRead()),
             this, SLOT(readPendingDatagrams()));
-    connect(mPacketInterface, SIGNAL(packetReceived(QByteArray)),
-            this, SLOT(carPacketRx(QByteArray)));
+    connect(mPacketInterface, SIGNAL(packetReceived(quint8,CMD_PACKET,QByteArray)),
+            this, SLOT(carPacketRx(quint8,CMD_PACKET,QByteArray)));
+    connect(mPacketInterface, SIGNAL(logLineUsbReceived(quint8,QString)),
+            this, SLOT(logLineUsbReceived(quint8,QString)));
+    connect(mLogFlushTimer, SIGNAL(timeout()),
+            this, SLOT(logFlushTimerSlot()));
+}
+
+CarClient::~CarClient()
+{
+    logStop();
 }
 
 void CarClient::connectSerial(QString port, int baudrate)
@@ -103,6 +116,32 @@ void CarClient::startUdpServer(int port)
     mUdpPort = port + 1;
     mUdpSocket->close();
     mUdpSocket->bind(QHostAddress::Any, port);
+}
+
+bool CarClient::enableLogging(QString directory)
+{
+    if (mLog.isOpen()) {
+        mLog.close();
+    }
+
+    QString name = QDateTime::currentDateTime().
+            toString("LOG_yyyy-MM-dd_hh.mm.ss.log");
+
+    QDir dir;
+    dir.mkpath(directory);
+
+    mLog.setFileName(directory + "/" + name);
+    return mLog.open(QIODevice::ReadWrite | QIODevice::Truncate);
+}
+
+void CarClient::logStop()
+{
+    if (mLog.isOpen()) {
+        qDebug() << "Closing log:" << mLog.fileName();
+        mLog.close();
+    } else {
+        qDebug() << "Log not open";
+    }
 }
 
 void CarClient::serialDataAvailable()
@@ -199,6 +238,13 @@ void CarClient::reconnectTimerSlot()
     }
 }
 
+void CarClient::logFlushTimerSlot()
+{
+    if (mLog.isOpen()) {
+        mLog.flush();
+    }
+}
+
 void CarClient::readPendingDatagrams()
 {
     while (mUdpSocket->hasPendingDatagrams()) {
@@ -213,9 +259,22 @@ void CarClient::readPendingDatagrams()
     }
 }
 
-void CarClient::carPacketRx(const QByteArray &data)
+void CarClient::carPacketRx(quint8 id, CMD_PACKET cmd, const QByteArray &data)
 {
+    (void)id;
+
     if (QString::compare(mHostAddress.toString(), "0.0.0.0") != 0) {
-        mUdpSocket->writeDatagram(data, mHostAddress, mUdpPort);
+        if (cmd != CMD_LOG_LINE_USB) {
+            mUdpSocket->writeDatagram(data, mHostAddress, mUdpPort);
+        }
+    }
+}
+
+void CarClient::logLineUsbReceived(quint8 id, QString str)
+{
+    (void)id;
+
+    if (mLog.isOpen()) {
+        mLog.write(str.toLocal8Bit());
     }
 }

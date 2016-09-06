@@ -36,6 +36,7 @@
 #include "comm_cc2520.h"
 #include "comm_usb.h"
 #include "timeout.h"
+#include "log.h"
 
 #include <math.h>
 #include <string.h>
@@ -412,6 +413,13 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			main_config.ap_repeat_routes = data[ind++];
 			main_config.ap_base_rad = buffer_get_float32(data, 1e6, &ind);
 
+			main_config.log_en = data[ind++];
+			strcpy(main_config.log_name, (const char*)(data + ind));
+			ind += strlen(main_config.log_name) + 1;
+
+			log_set_enabled(main_config.log_en);
+			log_set_name(main_config.log_name);
+
 			conf_general_store_main_config(&main_config);
 
 			// Send ack
@@ -470,6 +478,10 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			m_send_buffer[send_index++] = main_cfg_tmp.ap_repeat_routes;
 			buffer_append_float32(m_send_buffer, main_cfg_tmp.ap_base_rad, 1e6, &send_index);
 
+			m_send_buffer[send_index++] = main_cfg_tmp.log_en;
+			strcpy((char*)(m_send_buffer + send_index), main_cfg_tmp.log_name);
+			send_index += strlen(main_config.log_name) + 1;
+
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
 
@@ -510,6 +522,22 @@ void commands_printf(char* format, ...) {
 
 	if(len > 0) {
 		commands_send_packet((unsigned char*)print_buffer, (len<253) ? len + 2: 255);
+	}
+}
+
+void commands_printf_log_usb(char* format, ...) {
+	va_list arg;
+	va_start (arg, format);
+	int len;
+	static char print_buffer[255];
+
+	print_buffer[0] = main_id;
+	print_buffer[1] = CMD_LOG_LINE_USB;
+	len = vsnprintf(print_buffer + 2, 253, format, arg);
+	va_end (arg);
+
+	if(len > 0) {
+		comm_usb_send_packet((unsigned char*)print_buffer, (len<253) ? len + 2: 255);
 	}
 }
 

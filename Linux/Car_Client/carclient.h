@@ -23,6 +23,7 @@
 #include <QTcpSocket>
 #include <QTimer>
 #include <QUdpSocket>
+#include <QFile>
 #include "packetinterface.h"
 #include "tcpbroadcast.h"
 
@@ -40,10 +41,13 @@ public:
     } settings_t;
 
     explicit CarClient(QObject *parent = 0);
+    ~CarClient();
     void connectSerial(QString port, int baudrate = 115200);
     void startRtcmServer(int port = 8200);
     void connectNmea(QString server, int port = 2948);
     void startUdpServer(int port = 8300);
+    bool enableLogging(QString directory);
+    void logStop();
 
 signals:
 
@@ -56,8 +60,10 @@ public slots:
     void tcpDisconnected();
     void rtcmUsbRx(quint8 id, QByteArray data);
     void reconnectTimerSlot();
+    void logFlushTimerSlot();
     void readPendingDatagrams();
-    void carPacketRx(const QByteArray &data);
+    void carPacketRx(quint8 id, CMD_PACKET cmd, const QByteArray &data);
+    void logLineUsbReceived(quint8 id, QString str);
 
 private:
     PacketInterface *mPacketInterface;
@@ -66,11 +72,13 @@ private:
     QTcpSocket *mTcpSocket;
     int mCarId;
     QTimer *mReconnectTimer;
+    QTimer *mLogFlushTimer;
     settings_t mSettings;
     bool mTcpConnected;
     QUdpSocket *mUdpSocket;
     QHostAddress mHostAddress;
     int mUdpPort;
+    QFile mLog;
 
 };
 

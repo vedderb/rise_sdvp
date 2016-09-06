@@ -28,6 +28,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+// Sizes
+#define LOG_NAME_MAX_LEN			20
+
 // Orientation data
 typedef struct {
 	float q0;
@@ -121,6 +124,10 @@ typedef struct {
     // Autopilot parameters
     bool ap_repeat_routes; // Repeat the same route when the end is reached
     float ap_base_rad; // Radius around car at 0 speed
+
+    // Logging
+    bool log_en;
+    char log_name[LOG_NAME_MAX_LEN + 1];
 } MAIN_CONFIG;
 
 typedef enum {
@@ -144,7 +151,8 @@ typedef enum {
     CMD_GET_MAIN_CONFIG,
     CMD_GET_MAIN_CONFIG_DEFAULT,
     CMD_SET_YAW_OFFSET,
-    CMD_SET_YAW_OFFSET_ACK
+    CMD_SET_YAW_OFFSET_ACK,
+    CMD_LOG_LINE_USB
 } CMD_PACKET;
 
 // RC control modes

@@ -29,8 +29,11 @@
 #include <stdbool.h>
 
 // For double precision literals
-#define D(x) 		((double)x##L)
-#define D_PI		D(3.14159265358979323846)
+#define D(x) 						((double)x##L)
+#define D_PI						D(3.14159265358979323846)
+
+// Sizes
+#define LOG_NAME_MAX_LEN			20
 
 // Orientation data
 typedef struct {
@@ -62,6 +65,7 @@ typedef struct {
 	float q3;
 	float px_gps;
 	float py_gps;
+	float pz_gps;
 	float gps_corr_cnt;
 	float gps_ang_corr_x_last_gps;
 	float gps_ang_corr_y_last_gps;
@@ -114,7 +118,8 @@ typedef enum {
 	CMD_GET_MAIN_CONFIG,
 	CMD_GET_MAIN_CONFIG_DEFAULT,
 	CMD_SET_YAW_OFFSET,
-	CMD_SET_YAW_OFFSET_ACK
+	CMD_SET_YAW_OFFSET_ACK,
+	CMD_LOG_LINE_USB
 } CMD_PACKET;
 
 // RC control modes
@@ -166,6 +171,10 @@ typedef struct {
 	// Autopilot parameters
 	bool ap_repeat_routes; // Repeat the same route when the end is reached
 	float ap_base_rad; // Radius around car at 0 speed
+
+	// Logging
+	bool log_en;
+	char log_name[LOG_NAME_MAX_LEN + 1];
 } MAIN_CONFIG;
 
 typedef struct {

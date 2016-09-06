@@ -314,7 +314,7 @@ bool PacketInterface::sendPacketAck(const unsigned char *data, unsigned int len_
 
 void PacketInterface::processPacket(const unsigned char *data, int len)
 {
-    emit packetReceived(QByteArray((const char*)data, len));
+    QByteArray pkt = QByteArray((const char*)data, len);
 
     unsigned char id = data[0];
     data++;
@@ -323,6 +323,8 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
     CMD_PACKET cmd = (CMD_PACKET)(quint8)data[0];
     data++;
     len--;
+
+    emit packetReceived(id, cmd, pkt);
 
     switch (cmd) {
     case CMD_PRINTF: {
@@ -426,7 +428,17 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         conf.ap_repeat_routes = data[ind++];
         conf.ap_base_rad = utility::buffer_get_double32(data, 1e6, &ind);
 
+        conf.log_en = data[ind++];
+        strcpy(conf.log_name, (const char*)(data + ind));
+        ind += strlen(conf.log_name) + 1;
+
         emit configurationReceived(id, conf);
+    } break;
+
+    case CMD_LOG_LINE_USB: {
+        QByteArray tmpArray = QByteArray::fromRawData((const char*)data, len);
+        tmpArray[len] = '\0';
+        emit logLineUsbReceived(id, QString::fromLatin1(tmpArray));
     } break;
 
         // Acks
@@ -582,6 +594,10 @@ bool PacketInterface::setConfiguration(quint8 id, MAIN_CONFIG &conf, int retries
 
     mSendBuffer[send_index++] = conf.ap_repeat_routes;
     utility::buffer_append_double32(mSendBuffer, conf.ap_base_rad, 1e6, &send_index);
+
+    mSendBuffer[send_index++] = conf.log_en;
+    strcpy((char*)(mSendBuffer + send_index), conf.log_name);
+    send_index += strlen(conf.log_name) + 1;
 
     return sendPacketAck(mSendBuffer, send_index, retries, 500);
 }

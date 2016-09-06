@@ -28,6 +28,10 @@
 #define IMU_ROT_180					1
 #endif
 
+// Log settings
+#define LOG_EN_CARREL
+#define LOG_INTERVAL_MS				20
+
 // CC2520 Settings
 #define CC2520_RF_CHANNEL			12
 #define CC2520_PAN_ID				0xfa11

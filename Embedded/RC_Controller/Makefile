@@ -146,7 +146,8 @@ CSRC = $(STARTUPSRC) \
        servo_simple.c \
        autopilot.c \
        eeprom.c \
-       timeout.c
+       timeout.c \
+       log.c
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
