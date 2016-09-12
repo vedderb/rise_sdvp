@@ -117,11 +117,17 @@ OrientationWidget::OrientationWidget(QWidget *parent)
 
 #ifdef HAS_ASSIMP
     Assimp::Importer importer;
-    QString path = "Models/car.3ds";
-    const aiScene *scene = importer.ReadFile(path.toLocal8Bit().data(),
-                                             aiProcessPreset_TargetRealtime_Quality);
+    const aiScene *scene = 0;
+
+    QFile file(":/models/Models/car.3ds");
+    if (file.open(QIODevice::ReadOnly)) {
+        QByteArray data = file.readAll();
+        scene = importer.ReadFileFromMemory(data.data(), data.size(),
+                                            aiProcessPreset_TargetRealtime_Quality);
+    }
+
     if (!scene) {
-        qWarning() << "Could not load" << path;
+        qWarning() << "Could not load scene";
         return;
     }
 
@@ -190,7 +196,7 @@ OrientationWidget::OrientationWidget(QWidget *parent)
 
 //    saveModel("car.model");
 #else
-    loadModel("Models/car.model");
+    loadModel(":/models/Models/car.model");
 #endif
 }
 

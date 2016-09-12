@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/models">
+        <file>Models/car.model</file>
+        <file>Models/car.3ds</file>
+    </qresource>
+</RCC>

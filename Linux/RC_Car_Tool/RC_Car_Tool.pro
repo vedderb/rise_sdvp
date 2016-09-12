@@ -79,3 +79,6 @@ contains(DEFINES, HAS_JOYSTICK) {
     SOURCES += joystick.cpp
     HEADERS += joystick.h
 }
+
+RESOURCES += \
+    resources.qrc
