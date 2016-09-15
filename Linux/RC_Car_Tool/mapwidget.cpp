@@ -151,6 +151,7 @@ MapWidget::MapWidget(QWidget *parent) :
     mAntialiasOsm = true;
     mInfoTraceTextZoom = 0.5;
     mDrawGrid = true;
+    mRoutePointSelected = -1;
 
     mOsm = new OsmClient(this);
     mDrawOpenStreetmap = true;
@@ -944,6 +945,15 @@ void MapWidget::mouseMoveEvent(QMouseEvent *e)
         mMouseLastY = y;
     }
 
+    if (mRoutePointSelected >= 0) {
+        LocPoint pos;
+        QPoint p = getMousePosRelative();
+        pos.setXY(p.x() / 1000.0, p.y() / 1000.0);
+
+        mRoute[mRoutePointSelected].setXY(pos.getX(), pos.getY());
+        update();
+    }
+
     updateClosestInfoPoint();
 }
 
@@ -953,48 +963,72 @@ void MapWidget::mousePressEvent(QMouseEvent *e)
     bool shift = e->modifiers() == Qt::ShiftModifier;
     bool ctrl_shift = e->modifiers() == (Qt::ControlModifier | Qt::ShiftModifier);
 
-    if (mSelectedCar >= 0 && (e->buttons() & Qt::LeftButton) && ctrl) {
-        for (int i = 0;i < mCarInfo.size();i++) {
-            CarInfo &carInfo = mCarInfo[i];
-            if (carInfo.getId() == mSelectedCar) {
-                LocPoint pos = carInfo.getLocation();
-                QPoint p = getMousePosRelative();
-                pos.setXY(p.x() / 1000.0, p.y() / 1000.0);
-                carInfo.setLocation(pos);
-                emit posSet(mSelectedCar, pos);
-                update();
-            }
-        }
-    } else if (shift) {
+    LocPoint pos;
+    QPoint p = getMousePosRelative();
+    pos.setXY(p.x() / 1000.0, p.y() / 1000.0);
+    pos.setSpeed(mRoutePointSpeed);
+    double routeDist = 0.0;
+    int routeInd = getClosestPoint(pos, mRoute, routeDist);
+    bool routeFound = (routeDist * mScaleFactor * 1000.0) < 20 && routeDist >= 0.0;
+
+    if (ctrl) {
         if (e->buttons() & Qt::LeftButton) {
-            LocPoint pos;
-            QPoint p = getMousePosRelative();
-            pos.setXY(p.x() / 1000.0, p.y() / 1000.0);
-            pos.setSpeed(mRoutePointSpeed);
-            mRoute.append(pos);
-            emit routePointAdded(pos);
-        } else if (e->buttons() & Qt::RightButton) {
-            LocPoint pos;
-            if (mRoute.size() > 0) {
-                pos = mRoute.last();
-                mRoute.removeLast();
+            if (mSelectedCar >= 0 && (e->buttons() & Qt::LeftButton)) {
+                for (int i = 0;i < mCarInfo.size();i++) {
+                    CarInfo &carInfo = mCarInfo[i];
+                    if (carInfo.getId() == mSelectedCar) {
+                        LocPoint pos = carInfo.getLocation();
+                        QPoint p = getMousePosRelative();
+                        pos.setXY(p.x() / 1000.0, p.y() / 1000.0);
+                        carInfo.setLocation(pos);
+                        emit posSet(mSelectedCar, pos);
+                    }
+                }
             }
-            emit lastRoutePointRemoved(pos);
+        } else if (e->buttons() & Qt::RightButton) {
+            if (routeFound) {
+                mRoute[routeInd].setSpeed(mRoutePointSpeed);
+            }
         }
         update();
-    } else if (ctrl_shift && e->buttons() & Qt::LeftButton) {
-        QPoint p = getMousePosRelative();
-        double iLlh[3], llh[3], xyz[3];
-        iLlh[0] = mRefLat;
-        iLlh[1] = mRefLon;
-        iLlh[2] = mRefHeight;
-        xyz[0] = p.x() / 1000.0;
-        xyz[1] = p.y() / 1000.0;
-        xyz[2] = 0.0;
-        utility::enuToLlh(iLlh, xyz, llh);
-        mRefLat = llh[0];
-        mRefLon = llh[1];
-        mRefHeight = 0.0;
+    } else if (shift) {
+        if (e->buttons() & Qt::LeftButton) {
+            if (routeFound) {
+                mRoutePointSelected = routeInd;
+                mRoute[routeInd].setXY(pos.getX(), pos.getY());
+            } else {
+                mRoute.append(pos);
+                emit routePointAdded(pos);
+            }
+        } else if (e->buttons() & Qt::RightButton) {
+            if (routeFound) {
+                mRoute.removeAt(routeInd);
+            } else {
+                LocPoint pos;
+                if (mRoute.size() > 0) {
+                    pos = mRoute.last();
+                    mRoute.removeLast();
+                }
+                emit lastRoutePointRemoved(pos);
+            }
+        }
+        update();
+    } else if (ctrl_shift) {
+        if (e->buttons() & Qt::LeftButton) {
+            QPoint p = getMousePosRelative();
+            double iLlh[3], llh[3], xyz[3];
+            iLlh[0] = mRefLat;
+            iLlh[1] = mRefLon;
+            iLlh[2] = mRefHeight;
+            xyz[0] = p.x() / 1000.0;
+            xyz[1] = p.y() / 1000.0;
+            xyz[2] = 0.0;
+            utility::enuToLlh(iLlh, xyz, llh);
+            mRefLat = llh[0];
+            mRefLon = llh[1];
+            mRefHeight = 0.0;
+        }
+
         update();
     }
 }
@@ -1004,6 +1038,7 @@ void MapWidget::mouseReleaseEvent(QMouseEvent *e)
     if (!(e->buttons() & Qt::LeftButton)) {
         mMouseLastX = 1000000;
         mMouseLastY = 1000000;
+        mRoutePointSelected = -1;
     }
 }
 
@@ -1154,6 +1189,21 @@ int MapWidget::drawInfoPoints(QPainter &painter, const QList<LocPoint> &pts,
     }
 
     return drawn;
+}
+
+int MapWidget::getClosestPoint(LocPoint p, QList<LocPoint> points, double &dist)
+{
+    int closest = -1;
+    dist = -1.0;
+    for (int i = 0;i < points.size();i++) {
+        double d = points[i].getDistanceTo(p);
+        if (dist < 0.0 || d < dist) {
+            dist = d;
+            closest = i;
+        }
+    }
+
+    return closest;
 }
 
 int MapWidget::getOsmZoomLevel() const

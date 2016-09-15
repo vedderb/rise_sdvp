@@ -31,7 +31,14 @@
         <bool>false</bool>
        </property>
        <widget class="QWidget" name="tab">
+        <attribute name="icon">
+         <iconset resource="resources.qrc">
+          <normaloff>:/models/Icons/Orthogonal View-96.png</normaloff>:/models/Icons/Orthogonal View-96.png</iconset>
+        </attribute>
         <attribute name="title">
+         <string/>
+        </attribute>
+        <attribute name="toolTip">
          <string>Orientation</string>
         </attribute>
         <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -109,8 +116,15 @@
         </layout>
        </widget>
        <widget class="QWidget" name="tab_2">
+        <attribute name="icon">
+         <iconset resource="resources.qrc">
+          <normaloff>:/models/Icons/Gyroscope-96.png</normaloff>:/models/Icons/Gyroscope-96.png</iconset>
+        </attribute>
         <attribute name="title">
-         <string>IMU</string>
+         <string/>
+        </attribute>
+        <attribute name="toolTip">
+         <string>Gyro</string>
         </attribute>
         <layout class="QVBoxLayout" name="verticalLayout_4">
          <item>
@@ -126,7 +140,14 @@
         </layout>
        </widget>
        <widget class="QWidget" name="tab_3">
+        <attribute name="icon">
+         <iconset resource="resources.qrc">
+          <normaloff>:/models/Icons/Console-96.png</normaloff>:/models/Icons/Console-96.png</iconset>
+        </attribute>
         <attribute name="title">
+         <string/>
+        </attribute>
+        <attribute name="toolTip">
          <string>Terminal</string>
         </attribute>
         <layout class="QVBoxLayout" name="verticalLayout_5">
@@ -163,7 +184,14 @@
         </layout>
        </widget>
        <widget class="QWidget" name="tab_4">
+        <attribute name="icon">
+         <iconset resource="resources.qrc">
+          <normaloff>:/models/Icons/Magnet-96.png</normaloff>:/models/Icons/Magnet-96.png</iconset>
+        </attribute>
         <attribute name="title">
+         <string/>
+        </attribute>
+        <attribute name="toolTip">
          <string>Calibration</string>
         </attribute>
         <layout class="QVBoxLayout" name="verticalLayout_9">
@@ -204,15 +232,29 @@
               </item>
               <item>
                <widget class="QPushButton" name="magSampleClearButton">
-                <property name="text">
+                <property name="toolTip">
                  <string>Clear</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="icon">
+                 <iconset resource="resources.qrc">
+                  <normaloff>:/models/Icons/Delete2-96.png</normaloff>:/models/Icons/Delete2-96.png</iconset>
                 </property>
                </widget>
               </item>
               <item>
                <widget class="QPushButton" name="magSampleSaveButton">
+                <property name="toolTip">
+                 <string>Save samples to file</string>
+                </property>
                 <property name="text">
-                 <string>Save...</string>
+                 <string/>
+                </property>
+                <property name="icon">
+                 <iconset resource="resources.qrc">
+                  <normaloff>:/models/Icons/Save as-96.png</normaloff>:/models/Icons/Save as-96.png</iconset>
                 </property>
                </widget>
               </item>
@@ -322,7 +364,14 @@
         </layout>
        </widget>
        <widget class="QWidget" name="tab_6">
+        <attribute name="icon">
+         <iconset resource="resources.qrc">
+          <normaloff>:/models/Icons/GPS Receiving-96.png</normaloff>:/models/Icons/GPS Receiving-96.png</iconset>
+        </attribute>
         <attribute name="title">
+         <string/>
+        </attribute>
+        <attribute name="toolTip">
          <string>GPS</string>
         </attribute>
         <layout class="QVBoxLayout" name="verticalLayout_8">
@@ -372,8 +421,15 @@
               </item>
               <item>
                <widget class="QPushButton" name="nmeaLogChooseButton">
+                <property name="toolTip">
+                 <string>Choose file</string>
+                </property>
                 <property name="text">
-                 <string>Choose...</string>
+                 <string/>
+                </property>
+                <property name="icon">
+                 <iconset resource="resources.qrc">
+                  <normaloff>:/models/Icons/Open Folder-96.png</normaloff>:/models/Icons/Open Folder-96.png</iconset>
                 </property>
                </widget>
               </item>
@@ -427,8 +483,15 @@
            </item>
            <item>
             <widget class="QPushButton" name="nmeaClearButton">
+             <property name="toolTip">
+              <string>Clear printed values</string>
+             </property>
              <property name="text">
-              <string>Clear</string>
+              <string/>
+             </property>
+             <property name="icon">
+              <iconset resource="resources.qrc">
+               <normaloff>:/models/Icons/Delete2-96.png</normaloff>:/models/Icons/Delete2-96.png</iconset>
              </property>
             </widget>
            </item>
@@ -450,7 +513,14 @@
         </layout>
        </widget>
        <widget class="QWidget" name="tab_5">
+        <attribute name="icon">
+         <iconset resource="resources.qrc">
+          <normaloff>:/models/Icons/Settings-96.png</normaloff>:/models/Icons/Settings-96.png</iconset>
+        </attribute>
         <attribute name="title">
+         <string/>
+        </attribute>
+        <attribute name="toolTip">
          <string>Configuration</string>
         </attribute>
         <layout class="QVBoxLayout" name="verticalLayout_12">
@@ -1165,6 +1235,16 @@
       </widget>
      </item>
      <item>
+      <widget class="QLabel" name="mcFaultLabel">
+       <property name="text">
+        <string>Fault code...</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item>
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
         <widget class="QLabel" name="fwLabel">
@@ -1197,16 +1277,6 @@
         </widget>
        </item>
       </layout>
-     </item>
-     <item>
-      <widget class="QLabel" name="mcFaultLabel">
-       <property name="text">
-        <string>Fault code...</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
-       </property>
-      </widget>
      </item>
     </layout>
    </item>
@@ -1245,8 +1315,21 @@
      </item>
      <item>
       <widget class="QCheckBox" name="updateRouteFromMapBox">
+       <property name="toolTip">
+        <string>Upload route points as soon as they are created on the map</string>
+       </property>
        <property name="text">
-        <string>Update Route from Map</string>
+        <string>Route from map</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="bldcToolUdpBox">
+       <property name="toolTip">
+        <string>Run UDP server for BLDC Tool</string>
+       </property>
+       <property name="text">
+        <string>BLDC Tool UDP</string>
        </property>
       </widget>
      </item>
@@ -1254,6 +1337,10 @@
       <widget class="QPushButton" name="clearRouteButton">
        <property name="text">
         <string>Clear Route</string>
+       </property>
+       <property name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/models/Icons/Delete2-96.png</normaloff>:/models/Icons/Delete2-96.png</iconset>
        </property>
       </widget>
      </item>
@@ -1269,13 +1356,6 @@
         </size>
        </property>
       </spacer>
-     </item>
-     <item>
-      <widget class="QCheckBox" name="bldcToolUdpBox">
-       <property name="text">
-        <string>BLDC Tool UDP Server</string>
-       </property>
-      </widget>
      </item>
     </layout>
    </item>
@@ -1295,7 +1375,9 @@
    <container>1</container>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>terminalEdit</sender>

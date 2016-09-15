@@ -162,7 +162,7 @@ void autopilot_set_motor_speed(float speed) {
  * Steering scale factor. 1.0 at low speed, decreasing at high speed.
  */
 float autopilot_get_steering_scale(void) {
-	const float div = 1.0 + fabsf(pos_get_speed()) * 0.1;
+	const float div = 1.0 + fabsf(pos_get_speed()) * 0.05;
 	return 1.0 / (div * div);
 }
 

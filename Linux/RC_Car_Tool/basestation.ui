@@ -64,6 +64,10 @@
            <property name="text">
             <string>Connect</string>
            </property>
+           <property name="icon">
+            <iconset resource="resources.qrc">
+             <normaloff>:/models/Icons/Connected-96.png</normaloff>:/models/Icons/Connected-96.png</iconset>
+           </property>
           </widget>
          </item>
         </layout>
@@ -102,6 +106,10 @@
            <property name="text">
             <string>Clear</string>
            </property>
+           <property name="icon">
+            <iconset resource="resources.qrc">
+             <normaloff>:/models/Icons/Delete2-96.png</normaloff>:/models/Icons/Delete2-96.png</iconset>
+           </property>
           </widget>
          </item>
         </layout>
@@ -126,6 +134,8 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

@@ -56,6 +56,8 @@ static THD_FUNCTION(log_thread, arg) {
 
 	chRegSetThreadName("Log");
 
+	systime_t time_p = chVTGetSystemTimeX(); // T0
+
 	for(;;) {
 		if (m_log_en) {
 			if (m_write_split) {
@@ -73,8 +75,35 @@ static THD_FUNCTION(log_thread, arg) {
 			pos_get_mc_val(&val);
 			pos_get_pos(&pos);
 			pos_get_imu(accel, gyro, mag);
+			uint32_t time = chVTGetSystemTimeX();
 
-			commands_printf_log_usb("%.2f %.2f %.2f %.2f %.3f %.3f %.3f %.3f %.3f %.2f %.3f %.3f %.3f %.1f %.1f %.1f %.1f %.1f %.1f %d %.3f\n",
+			commands_printf_log_usb(
+					"%u "     // temp_mos
+					"%.2f "   // current_in
+					"%.2f "   // current_motor
+					"%.2f "   // v_in
+					"%.2f "   // px
+					"%.3f "   // py
+					"%.3f "   // px_gps
+					"%.3f "   // py_gps
+					"%.3f "   // pz_gps
+					"%.3f "   // speed
+					"%.2f "   // roll
+					"%.2f "   // pitch
+					"%.2f "   // yaw
+					"%.3f "   // accel[0]
+					"%.3f "   // accel[1]
+					"%.3f "   // accel[2]
+					"%.1f "   // gyro[0]
+					"%.1f "   // gyro[1]
+					"%.1f "   // gyro[2]
+					"%.1f "   // mag[0]
+					"%.1f "   // mag[1]
+					"%.1f "   // mag[2]
+					"%d "     // tachometer
+					"%.3f\n", // servo
+
+					time,
 					(double)val.temp_mos,
 					(double)val.current_in,
 					(double)val.current_motor,
@@ -85,6 +114,8 @@ static THD_FUNCTION(log_thread, arg) {
 					(double)pos.py_gps,
 					(double)pos.pz_gps,
 					(double)pos.speed,
+					(double)pos.roll,
+					(double)pos.pitch,
 					(double)pos.yaw,
 					(double)accel[0],
 					(double)accel[1],
@@ -100,6 +131,13 @@ static THD_FUNCTION(log_thread, arg) {
 #endif
 		}
 
-		chThdSleepMilliseconds(LOG_INTERVAL_MS);
+		time_p += MS2ST(LOG_INTERVAL_MS);
+		systime_t time = chVTGetSystemTimeX();
+
+		if (time_p >= time + 5) {
+			chThdSleepUntil(time_p);
+		} else {
+			chThdSleepMilliseconds(1);
+		}
 	}
 }

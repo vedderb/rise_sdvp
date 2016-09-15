@@ -969,3 +969,19 @@ void MainWindow::on_mapOsmStatsBox_toggled(bool checked)
 {
     ui->mapWidget->setDrawOsmStats(checked);
 }
+
+void MainWindow::on_removeTraceExtraButton_clicked()
+{
+    ui->mapWidget->clearTrace();
+}
+
+void MainWindow::on_mapEditHelpButton_clicked()
+{
+    QMessageBox::information(this, tr("Keyboard shortcuts"),
+                             tr("<b>CTRL + Left click:</b> Move selected car<br>"
+                                "<b>CTRL + Right click:</b> Update route point speed<br>"
+                                "<b>Shift + Left click:</b> Add route point<br>"
+                                "<b>Shift + Left drag:</b> Move route point<br>"
+                                "<b>Shift + right click:</b> Delete route point<br>"
+                                "<b>CTRL + SHIFT + Left click:</b> Zero map ENU coordinates<br>"));
+}

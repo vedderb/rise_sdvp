@@ -140,12 +140,14 @@ private:
     double mRefHeight;
     LocPoint mClosestInfo;
     bool mDrawGrid;
+    int mRoutePointSelected;
 
     void updateClosestInfoPoint();
     int drawInfoPoints(QPainter &painter, const QList<LocPoint> &pts,
                         QTransform drawTrans, QTransform txtTrans,
                        double xStart, double xEnd, double yStart, double yEnd,
                        double min_dist);
+    int getClosestPoint(LocPoint p, QList<LocPoint> points, double &dist);
 
 };
 

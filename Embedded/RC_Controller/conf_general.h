@@ -30,7 +30,7 @@
 
 // Log settings
 #define LOG_EN_CARREL
-#define LOG_INTERVAL_MS				20
+#define LOG_INTERVAL_MS				10
 
 // CC2520 Settings
 #define CC2520_RF_CHANNEL			12

@@ -356,10 +356,10 @@ void pos_input_nmea(const char *data) {
 						m_pos.px - m_pos.gps_ang_corr_x_last_car);
 				float yaw_diff = utils_angle_difference_rad(yaw_gps, yaw_car) * 180.0 / M_PI;
 
-				utils_step_towards(&m_yaw_offset, m_yaw_offset + yaw_diff,
-						main_config.gps_corr_gain_yaw * m_pos.gps_corr_cnt);
-
-				//				m_yaw_offset += main_config.gps_corr_gain_yaw * m_pos.gps_corr_cnt * yaw_diff;
+				if (fabsf(m_pos.speed * 3.6) > 1.0) {
+					utils_step_towards(&m_yaw_offset, m_yaw_offset + yaw_diff,
+							main_config.gps_corr_gain_yaw * m_pos.gps_corr_cnt);
+				}
 
 				utils_norm_angle(&m_yaw_offset);
 

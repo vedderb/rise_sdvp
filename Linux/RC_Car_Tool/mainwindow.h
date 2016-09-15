@@ -103,6 +103,8 @@ private slots:
     void on_mapGetEnuButton_clicked();
     void on_mapSetEnuButton_clicked();
     void on_mapOsmStatsBox_toggled(bool checked);
+    void on_removeTraceExtraButton_clicked();
+    void on_mapEditHelpButton_clicked();
 
 private:
     Ui::MainWindow *ui;

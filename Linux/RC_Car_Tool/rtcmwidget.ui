@@ -137,15 +137,29 @@
         </item>
         <item>
          <widget class="QPushButton" name="ntripDisconnectButton">
-          <property name="text">
+          <property name="toolTip">
            <string>Disconnect</string>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="icon">
+           <iconset resource="resources.qrc">
+            <normaloff>:/models/Icons/Disconnected-96.png</normaloff>:/models/Icons/Disconnected-96.png</iconset>
           </property>
          </widget>
         </item>
         <item>
          <widget class="QPushButton" name="ntripConnectButton">
-          <property name="text">
+          <property name="toolTip">
            <string>Connect</string>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="icon">
+           <iconset resource="resources.qrc">
+            <normaloff>:/models/Icons/Connected-96.png</normaloff>:/models/Icons/Connected-96.png</iconset>
           </property>
          </widget>
         </item>
@@ -162,8 +176,15 @@
      <layout class="QHBoxLayout" name="horizontalLayout_4">
       <item>
        <widget class="QPushButton" name="rtcmSerialRefreshButton">
-        <property name="text">
+        <property name="toolTip">
          <string>Refresh</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="icon">
+         <iconset resource="resources.qrc">
+          <normaloff>:/models/Icons/Refresh-96.png</normaloff>:/models/Icons/Refresh-96.png</iconset>
         </property>
        </widget>
       </item>
@@ -208,15 +229,29 @@
       </item>
       <item>
        <widget class="QPushButton" name="rtcmSerialDisconnectButton">
-        <property name="text">
+        <property name="toolTip">
          <string>Disconnect</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="icon">
+         <iconset resource="resources.qrc">
+          <normaloff>:/models/Icons/Disconnected-96.png</normaloff>:/models/Icons/Disconnected-96.png</iconset>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QPushButton" name="rtcmSerialConnectButton">
-        <property name="text">
+        <property name="toolTip">
          <string>Connect</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="icon">
+         <iconset resource="resources.qrc">
+          <normaloff>:/models/Icons/Connected-96.png</normaloff>:/models/Icons/Connected-96.png</iconset>
         </property>
        </widget>
       </item>
@@ -339,8 +374,15 @@
       </item>
       <item>
        <widget class="QPushButton" name="refGetButton">
+        <property name="toolTip">
+         <string>Get average from base station tab</string>
+        </property>
         <property name="text">
-         <string>Get</string>
+         <string/>
+        </property>
+        <property name="icon">
+         <iconset resource="resources.qrc">
+          <normaloff>:/models/Icons/Radio Tower-96.png</normaloff>:/models/Icons/Radio Tower-96.png</iconset>
         </property>
        </widget>
       </item>
@@ -485,6 +527,10 @@
          <widget class="QPushButton" name="resetAllCountersButton">
           <property name="text">
            <string>Reset All</string>
+          </property>
+          <property name="icon">
+           <iconset resource="resources.qrc">
+            <normaloff>:/models/Icons/Delete2-96.png</normaloff>:/models/Icons/Delete2-96.png</iconset>
           </property>
          </widget>
         </item>
@@ -791,6 +837,8 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections/>
 </ui>
