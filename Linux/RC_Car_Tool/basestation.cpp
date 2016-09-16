@@ -2,6 +2,7 @@
 #include "ui_basestation.h"
 #include <QDebug>
 #include <QMessageBox>
+#include <QIcon>
 #include "nmeaserver.h"
 #include "utility.h"
 
@@ -53,14 +54,16 @@ int BaseStation::getAvgPosLlh(double &lat, double &lon, double &height)
 void BaseStation::tcpInputConnected()
 {
     ui->nmeaConnectButton->setEnabled(true);
-    ui->nmeaConnectButton->setText("Disconnect");
+    ui->nmeaConnectButton->setToolTip("Disconnect");
+    ui->nmeaConnectButton->setIcon(QIcon(":/models/Icons/Disconnected-96.png"));
     mTcpConnected = true;
 }
 
 void BaseStation::tcpInputDisconnected()
 {
     ui->nmeaConnectButton->setEnabled(true);
-    ui->nmeaConnectButton->setText("Connect");
+    ui->nmeaConnectButton->setToolTip("Connect");
+    ui->nmeaConnectButton->setIcon(QIcon(":/models/Icons/Connected-96.png"));
     mTcpConnected = false;
 }
 
@@ -121,7 +124,8 @@ void BaseStation::tcpInputError(QAbstractSocket::SocketError socketError)
     mTcpSocket->close();
 
     ui->nmeaConnectButton->setEnabled(true);
-    ui->nmeaConnectButton->setText("Connect");
+    ui->nmeaConnectButton->setToolTip("Connect");
+    ui->nmeaConnectButton->setIcon(QIcon(":/models/Icons/Connected-96.png"));
     mTcpConnected = false;
 }
 
@@ -131,7 +135,8 @@ void BaseStation::on_nmeaConnectButton_clicked()
         mTcpSocket->abort();
 
         ui->nmeaConnectButton->setEnabled(true);
-        ui->nmeaConnectButton->setText("Connect");
+        ui->nmeaConnectButton->setToolTip("Connect");
+        ui->nmeaConnectButton->setIcon(QIcon(":/models/Icons/Connected-96.png"));
         mTcpConnected = false;
     } else {
         mTcpSocket->abort();

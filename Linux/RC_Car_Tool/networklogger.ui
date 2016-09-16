@@ -26,7 +26,14 @@
       <number>0</number>
      </property>
      <widget class="QWidget" name="tab">
+      <attribute name="icon">
+       <iconset resource="resources.qrc">
+        <normaloff>:/models/Icons/GPS Receiving-96.png</normaloff>:/models/Icons/GPS Receiving-96.png</iconset>
+      </attribute>
       <attribute name="title">
+       <string/>
+      </attribute>
+      <attribute name="toolTip">
        <string>Logging</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -54,8 +61,15 @@
          </item>
          <item row="0" column="4">
           <widget class="QPushButton" name="nmeaServerConnectButton">
-           <property name="text">
+           <property name="toolTip">
             <string>Connect</string>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="icon">
+            <iconset resource="resources.qrc">
+             <normaloff>:/models/Icons/Connected-96.png</normaloff>:/models/Icons/Connected-96.png</iconset>
            </property>
           </widget>
          </item>
@@ -75,8 +89,15 @@
          </item>
          <item row="2" column="3">
           <widget class="QPushButton" name="logFileChooseButton">
-           <property name="text">
+           <property name="toolTip">
             <string>Choose...</string>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="icon">
+            <iconset resource="resources.qrc">
+             <normaloff>:/models/Icons/Open Folder-96.png</normaloff>:/models/Icons/Open Folder-96.png</iconset>
            </property>
           </widget>
          </item>
@@ -96,8 +117,15 @@
          </item>
          <item row="1" column="3">
           <widget class="QPushButton" name="pingTestButton">
+           <property name="toolTip">
+            <string>Test ping</string>
+           </property>
            <property name="text">
-            <string>Test</string>
+            <string/>
+           </property>
+           <property name="icon">
+            <iconset resource="resources.qrc">
+             <normaloff>:/models/Icons/Ping Pong-96.png</normaloff>:/models/Icons/Ping Pong-96.png</iconset>
            </property>
           </widget>
          </item>
@@ -179,8 +207,15 @@
          </item>
          <item>
           <widget class="QPushButton" name="logClearButton">
+           <property name="toolTip">
+            <string>Clear print</string>
+           </property>
            <property name="text">
-            <string>Clear</string>
+            <string/>
+           </property>
+           <property name="icon">
+            <iconset resource="resources.qrc">
+             <normaloff>:/models/Icons/Delete2-96.png</normaloff>:/models/Icons/Delete2-96.png</iconset>
            </property>
           </widget>
          </item>
@@ -202,8 +237,15 @@
       </layout>
      </widget>
      <widget class="QWidget" name="tab_3">
+      <attribute name="icon">
+       <iconset resource="resources.qrc">
+        <normaloff>:/models/Icons/Polyline-96.png</normaloff>:/models/Icons/Polyline-96.png</iconset>
+      </attribute>
       <attribute name="title">
-       <string>Stats</string>
+       <string/>
+      </attribute>
+      <attribute name="toolTip">
+       <string>Analyze</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
@@ -220,15 +262,29 @@
          </item>
          <item>
           <widget class="QPushButton" name="statLogChooseButton">
-           <property name="text">
+           <property name="toolTip">
             <string>Choose...</string>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="icon">
+            <iconset resource="resources.qrc">
+             <normaloff>:/models/Icons/Open Folder-96.png</normaloff>:/models/Icons/Open Folder-96.png</iconset>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QPushButton" name="statLogOpenButton">
+           <property name="toolTip">
+            <string>Process</string>
+           </property>
            <property name="text">
-            <string>Open</string>
+            <string/>
+           </property>
+           <property name="icon">
+            <iconset resource="resources.qrc">
+             <normaloff>:/models/Icons/Process-96.png</normaloff>:/models/Icons/Process-96.png</iconset>
            </property>
           </widget>
          </item>
@@ -256,7 +312,14 @@
           <number>0</number>
          </property>
          <widget class="QWidget" name="tab_2">
+          <attribute name="icon">
+           <iconset resource="resources.qrc">
+            <normaloff>:/models/Icons/Align Justify-96.png</normaloff>:/models/Icons/Align Justify-96.png</iconset>
+          </attribute>
           <attribute name="title">
+           <string/>
+          </attribute>
+          <attribute name="toolTip">
            <string>Stats</string>
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayout_5">
@@ -272,7 +335,14 @@
           </layout>
          </widget>
          <widget class="QWidget" name="tab_4">
+          <attribute name="icon">
+           <iconset resource="resources.qrc">
+            <normaloff>:/models/Icons/Bar Chart-96.png</normaloff>:/models/Icons/Bar Chart-96.png</iconset>
+          </attribute>
           <attribute name="title">
+           <string/>
+          </attribute>
+          <attribute name="toolTip">
            <string>Histogram</string>
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -344,6 +414,8 @@
    <container>1</container>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

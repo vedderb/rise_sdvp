@@ -42,5 +42,7 @@
         <file>Icons/Magnet-96.png</file>
         <file>Icons/Save as-96.png</file>
         <file>Icons/Help-96.png</file>
+        <file>Icons/Align Justify-96.png</file>
+        <file>Icons/NMEA-96.png</file>
     </qresource>
 </RCC>
