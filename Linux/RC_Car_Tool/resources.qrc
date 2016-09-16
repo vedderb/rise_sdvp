@@ -44,5 +44,8 @@
         <file>Icons/Help-96.png</file>
         <file>Icons/Align Justify-96.png</file>
         <file>Icons/NMEA-96.png</file>
+        <file>Icons/Hashtag-96.png</file>
+        <file>Icons/HDD-96.png</file>
+        <file>Icons/Send File-96.png</file>
     </qresource>
 </RCC>

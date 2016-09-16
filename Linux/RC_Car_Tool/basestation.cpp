@@ -55,6 +55,7 @@ void BaseStation::tcpInputConnected()
 {
     ui->nmeaConnectButton->setEnabled(true);
     ui->nmeaConnectButton->setToolTip("Disconnect");
+    ui->nmeaConnectButton->setText("");
     ui->nmeaConnectButton->setIcon(QIcon(":/models/Icons/Disconnected-96.png"));
     mTcpConnected = true;
 }
@@ -63,6 +64,7 @@ void BaseStation::tcpInputDisconnected()
 {
     ui->nmeaConnectButton->setEnabled(true);
     ui->nmeaConnectButton->setToolTip("Connect");
+    ui->nmeaConnectButton->setText("");
     ui->nmeaConnectButton->setIcon(QIcon(":/models/Icons/Connected-96.png"));
     mTcpConnected = false;
 }
@@ -125,6 +127,7 @@ void BaseStation::tcpInputError(QAbstractSocket::SocketError socketError)
 
     ui->nmeaConnectButton->setEnabled(true);
     ui->nmeaConnectButton->setToolTip("Connect");
+    ui->nmeaConnectButton->setText("");
     ui->nmeaConnectButton->setIcon(QIcon(":/models/Icons/Connected-96.png"));
     mTcpConnected = false;
 }
@@ -136,6 +139,7 @@ void BaseStation::on_nmeaConnectButton_clicked()
 
         ui->nmeaConnectButton->setEnabled(true);
         ui->nmeaConnectButton->setToolTip("Connect");
+        ui->nmeaConnectButton->setText("");
         ui->nmeaConnectButton->setIcon(QIcon(":/models/Icons/Connected-96.png"));
         mTcpConnected = false;
     } else {

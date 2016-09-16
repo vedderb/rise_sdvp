@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>983</width>
-    <height>598</height>
+    <width>803</width>
+    <height>530</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -124,7 +124,7 @@
          <string/>
         </attribute>
         <attribute name="toolTip">
-         <string>Gyro</string>
+         <string>IMU realtime</string>
         </attribute>
         <layout class="QVBoxLayout" name="verticalLayout_4">
          <item>
@@ -167,15 +167,29 @@
            </item>
            <item>
             <widget class="QPushButton" name="terminalSendButton">
+             <property name="toolTip">
+              <string>Send command to car</string>
+             </property>
              <property name="text">
-              <string>Send</string>
+              <string/>
+             </property>
+             <property name="icon">
+              <iconset resource="resources.qrc">
+               <normaloff>:/models/Icons/Send File-96.png</normaloff>:/models/Icons/Send File-96.png</iconset>
              </property>
             </widget>
            </item>
            <item>
             <widget class="QPushButton" name="terminalClearButton">
+             <property name="toolTip">
+              <string>Clear terminal</string>
+             </property>
              <property name="text">
-              <string>Clear</string>
+              <string/>
+             </property>
+             <property name="icon">
+              <iconset resource="resources.qrc">
+               <normaloff>:/models/Icons/Delete2-96.png</normaloff>:/models/Icons/Delete2-96.png</iconset>
              </property>
             </widget>
            </item>
@@ -422,7 +436,7 @@
               <item>
                <widget class="QPushButton" name="nmeaLogChooseButton">
                 <property name="toolTip">
-                 <string>Choose file</string>
+                 <string>Choose file...</string>
                 </property>
                 <property name="text">
                  <string/>
@@ -697,7 +711,14 @@
             <number>0</number>
            </property>
            <widget class="QWidget" name="tab_7">
+            <attribute name="icon">
+             <iconset resource="resources.qrc">
+              <normaloff>:/models/Icons/Gyroscope-96.png</normaloff>:/models/Icons/Gyroscope-96.png</iconset>
+            </attribute>
             <attribute name="title">
+             <string/>
+            </attribute>
+            <attribute name="toolTip">
              <string>IMU</string>
             </attribute>
             <layout class="QVBoxLayout" name="verticalLayout_10">
@@ -762,8 +783,15 @@
                </item>
                <item row="4" column="0">
                 <widget class="QPushButton" name="magCalChooseButton">
+                 <property name="toolTip">
+                  <string>Choose magnetometer calibration file...</string>
+                 </property>
                  <property name="text">
-                  <string>Choose File...</string>
+                  <string/>
+                 </property>
+                 <property name="icon">
+                  <iconset resource="resources.qrc">
+                   <normaloff>:/models/Icons/Open Folder-96.png</normaloff>:/models/Icons/Open Folder-96.png</iconset>
                  </property>
                 </widget>
                </item>
@@ -864,8 +892,15 @@
                </item>
                <item row="4" column="3">
                 <widget class="QPushButton" name="magCalLoadButton">
+                 <property name="toolTip">
+                  <string>Load magnetometer calibration from file</string>
+                 </property>
                  <property name="text">
-                  <string>Load</string>
+                  <string/>
+                 </property>
+                 <property name="icon">
+                  <iconset resource="resources.qrc">
+                   <normaloff>:/models/Icons/Process-96.png</normaloff>:/models/Icons/Process-96.png</iconset>
                  </property>
                 </widget>
                </item>
@@ -890,6 +925,9 @@
                </item>
                <item row="4" column="1" colspan="2">
                 <widget class="QLineEdit" name="magCalFileEdit">
+                 <property name="toolTip">
+                  <string>Magnetometer calibration file</string>
+                 </property>
                  <property name="text">
                   <string>../magnetometer_calibration/res_raw.txt</string>
                  </property>
@@ -980,7 +1018,14 @@
             </layout>
            </widget>
            <widget class="QWidget" name="tab_8">
+            <attribute name="icon">
+             <iconset resource="resources.qrc">
+              <normaloff>:/models/Icons/GPS Receiving-96.png</normaloff>:/models/Icons/GPS Receiving-96.png</iconset>
+            </attribute>
             <attribute name="title">
+             <string/>
+            </attribute>
+            <attribute name="toolTip">
              <string>GPS</string>
             </attribute>
             <layout class="QVBoxLayout" name="verticalLayout_11">
@@ -1012,29 +1057,6 @@
                  </property>
                  <property name="minimum">
                   <double>-99.989999999999995</double>
-                 </property>
-                 <property name="singleStep">
-                  <double>0.010000000000000</double>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="0">
-                <widget class="QCheckBox" name="confGpsCorrBox">
-                 <property name="text">
-                  <string>Enable Corr</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="1">
-                <widget class="QDoubleSpinBox" name="confGpsCorrStatBox">
-                 <property name="prefix">
-                  <string>Static: </string>
-                 </property>
-                 <property name="decimals">
-                  <number>3</number>
-                 </property>
-                 <property name="maximum">
-                  <double>1000.000000000000000</double>
                  </property>
                  <property name="singleStep">
                   <double>0.010000000000000</double>
@@ -1073,6 +1095,29 @@
                  </property>
                 </widget>
                </item>
+               <item row="0" column="0">
+                <widget class="QCheckBox" name="confGpsCorrBox">
+                 <property name="text">
+                  <string>Enable GPS correction</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QDoubleSpinBox" name="confGpsCorrStatBox">
+                 <property name="prefix">
+                  <string>Static: </string>
+                 </property>
+                 <property name="decimals">
+                  <number>3</number>
+                 </property>
+                 <property name="maximum">
+                  <double>1000.000000000000000</double>
+                 </property>
+                 <property name="singleStep">
+                  <double>0.010000000000000</double>
+                 </property>
+                </widget>
+               </item>
               </layout>
              </item>
              <item>
@@ -1091,7 +1136,14 @@
             </layout>
            </widget>
            <widget class="QWidget" name="tab_9">
+            <attribute name="icon">
+             <iconset resource="resources.qrc">
+              <normaloff>:/models/Icons/Computer-96.png</normaloff>:/models/Icons/Computer-96.png</iconset>
+            </attribute>
             <attribute name="title">
+             <string/>
+            </attribute>
+            <attribute name="toolTip">
              <string>Autopilot</string>
             </attribute>
             <layout class="QVBoxLayout" name="verticalLayout_13">
@@ -1137,7 +1189,14 @@
             </layout>
            </widget>
            <widget class="QWidget" name="tab_10">
+            <attribute name="icon">
+             <iconset resource="resources.qrc">
+              <normaloff>:/models/Icons/Align Justify-96.png</normaloff>:/models/Icons/Align Justify-96.png</iconset>
+            </attribute>
             <attribute name="title">
+             <string/>
+            </attribute>
+            <attribute name="toolTip">
              <string>Logging</string>
             </attribute>
             <layout class="QVBoxLayout" name="verticalLayout_14">
@@ -1195,27 +1254,6 @@
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_7">
            <item>
-            <widget class="QPushButton" name="confReadButton">
-             <property name="text">
-              <string>Read</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="confReadDefaultButton">
-             <property name="text">
-              <string>Read Default</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="confWriteButton">
-             <property name="text">
-              <string>Write</string>
-             </property>
-            </widget>
-           </item>
-           <item>
             <spacer name="horizontalSpacer_3">
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
@@ -1227,6 +1265,48 @@
               </size>
              </property>
             </spacer>
+           </item>
+           <item>
+            <widget class="QPushButton" name="confReadButton">
+             <property name="toolTip">
+              <string>Read configuration from car</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="icon">
+              <iconset resource="resources.qrc">
+               <normaloff>:/models/Icons/Upload-96.png</normaloff>:/models/Icons/Upload-96.png</iconset>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="confReadDefaultButton">
+             <property name="toolTip">
+              <string>Read default configuration from car</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="icon">
+              <iconset resource="resources.qrc">
+               <normaloff>:/models/Icons/HDD-96.png</normaloff>:/models/Icons/HDD-96.png</iconset>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="confWriteButton">
+             <property name="toolTip">
+              <string>Write configuration to car</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="icon">
+              <iconset resource="resources.qrc">
+               <normaloff>:/models/Icons/Download-96.png</normaloff>:/models/Icons/Download-96.png</iconset>
+             </property>
+            </widget>
            </item>
           </layout>
          </item>
@@ -1335,8 +1415,11 @@
      </item>
      <item>
       <widget class="QPushButton" name="clearRouteButton">
+       <property name="toolTip">
+        <string>Clear stored route</string>
+       </property>
        <property name="text">
-        <string>Clear Route</string>
+        <string/>
        </property>
        <property name="icon">
         <iconset resource="resources.qrc">
@@ -1363,15 +1446,15 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>OrientationWidget</class>
-   <extends>QWidget</extends>
-   <header>orientationwidget.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
    <class>QCustomPlot</class>
    <extends>QWidget</extends>
    <header>qcustomplot.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>OrientationWidget</class>
+   <extends>QWidget</extends>
+   <header>orientationwidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
