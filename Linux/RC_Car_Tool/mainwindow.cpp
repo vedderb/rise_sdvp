@@ -23,7 +23,6 @@
 #include <QMessageBox>
 #include <QFileDialog>
 
-#include "nmeaserver.h"
 #include "utility.h"
 
 namespace {
@@ -80,6 +79,7 @@ MainWindow::MainWindow(QWidget *parent) :
 #endif
 
     mPing = new Ping(this);
+    mNmea = new NmeaServer(this);
 
     mKeyUp = false;
     mKeyDown = false;
@@ -323,6 +323,18 @@ void MainWindow::timerSlot()
         }
     }
 #endif
+
+    // Update nmea stream connected label
+    static bool wasNmeaStreamConnected = false;
+    if (wasNmeaStreamConnected != mNmea->isClientTcpConnected()) {
+        wasNmeaStreamConnected = mNmea->isClientTcpConnected();
+
+        if (wasNmeaStreamConnected) {
+            ui->mapStreamNmeaConnectedLabel->setText("Connected");
+        } else {
+            ui->mapStreamNmeaConnectedLabel->setText("Not connected");
+        }
+    }
 }
 
 void MainWindow::showStatusInfo(QString info, bool isGood)
@@ -416,6 +428,55 @@ void MainWindow::enuRx(quint8 id, double lat, double lon, double height)
 {
     (void)id;
     ui->mapWidget->setEnuRef(lat, lon, height);
+}
+
+void MainWindow::nmeaGgaRx(int fields, NmeaServer::nmea_gga_info_t gga)
+{
+    if (fields >= 5) {
+        if (gga.fix_type == 4 || gga.fix_type == 5 ||
+                (gga.fix_type == 1 && !ui->mapStreamNmeaRtkOnlyBox->isChecked())) {
+            double i_llh[3];
+
+            if (ui->mapStreamNmeaZeroEnuBox->isChecked()) {
+                i_llh[0] = gga.lat;
+                i_llh[1] = gga.lon;
+                i_llh[2] = gga.height;
+                ui->mapWidget->setEnuRef(i_llh[0], i_llh[1], i_llh[2]);
+                ui->mapStreamNmeaZeroEnuBox->setChecked(false);
+            } else {
+                ui->mapWidget->getEnuRef(i_llh);
+            }
+
+            double llh[3];
+            double xyz[3];
+
+            llh[0] = gga.lat;
+            llh[1] = gga.lon;
+            llh[2] = gga.height;
+            utility::llhToEnu(i_llh, llh, xyz);
+
+            LocPoint p;
+            p.setXY(xyz[0], xyz[1]);
+            QString info;
+
+            QString fix_t = "Unknown";
+            if (gga.fix_type == 4) {
+                fix_t = "RTK fix";
+            } else if (gga.fix_type == 5) {
+                fix_t = "RTK float";
+            } else if (gga.fix_type == 1) {
+                fix_t = "Single";
+            }
+
+            info.sprintf("Fix type: %s\n"
+                         "Height  : %.2f",
+                         fix_t.toLocal8Bit().data(),
+                         gga.height);
+
+            p.setInfo(info);
+            ui->mapWidget->addInfoPoint(p);
+        }
+    }
 }
 
 void MainWindow::on_carAddButton_clicked()
@@ -984,4 +1045,20 @@ void MainWindow::on_mapEditHelpButton_clicked()
                                 "<b>Shift + Left drag:</b> Move route point<br>"
                                 "<b>Shift + right click:</b> Delete route point<br>"
                                 "<b>CTRL + SHIFT + Left click:</b> Zero map ENU coordinates<br>"));
+}
+
+void MainWindow::on_mapStreamNmeaConnectButton_clicked()
+{
+    mNmea->connectClientTcp(ui->mapStreamNmeaServerEdit->text(),
+                            ui->mapStreamNmeaPortBox->value());
+}
+
+void MainWindow::on_mapStreamNmeaDisconnectButton_clicked()
+{
+    mNmea->disconnectClientTcp();
+}
+
+void MainWindow::on_mapStreamNmeaClearTraceButton_clicked()
+{
+    ui->mapWidget->clearInfoTrace();
 }

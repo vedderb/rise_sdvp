@@ -46,7 +46,7 @@ signals:
     void rtcmReceived(QByteArray data, int type);
     void refPosReceived(double lat, double lon, double height, double antenna_height);
 
-public slots:
+private slots:
     void tcpInputConnected();
     void tcpInputDisconnected();
     void tcpInputDataAvailable();

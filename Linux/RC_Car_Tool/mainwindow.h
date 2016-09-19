@@ -26,6 +26,7 @@
 #include "carinterface.h"
 #include "packetinterface.h"
 #include "ping.h"
+#include "nmeaserver.h"
 
 #ifdef HAS_JOYSTICK
 #include "joystick.h"
@@ -58,6 +59,7 @@ private slots:
     void pingRx(int time, QString msg);
     void pingError(QString msg, QString error);
     void enuRx(quint8 id, double lat, double lon, double height);
+    void nmeaGgaRx(int fields, NmeaServer::nmea_gga_info_t gga);
 
     void on_carAddButton_clicked();
     void on_carRemoveButton_clicked();
@@ -105,6 +107,9 @@ private slots:
     void on_mapOsmStatsBox_toggled(bool checked);
     void on_removeTraceExtraButton_clicked();
     void on_mapEditHelpButton_clicked();
+    void on_mapStreamNmeaConnectButton_clicked();
+    void on_mapStreamNmeaDisconnectButton_clicked();
+    void on_mapStreamNmeaClearTraceButton_clicked();
 
 private:
     Ui::MainWindow *ui;
@@ -121,6 +126,7 @@ private:
     double mThrottle;
     double mSteering;
     Ping *mPing;
+    NmeaServer *mNmea;
 
 #ifdef HAS_JOYSTICK
     Joystick *mJoystick;

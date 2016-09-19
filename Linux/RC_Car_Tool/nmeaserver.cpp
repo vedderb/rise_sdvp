@@ -21,6 +21,7 @@
 #include <ctime>
 #include <cstring>
 #include <locale.h>
+#include <QMessageBox>
 
 namespace
 {
@@ -88,6 +89,14 @@ static double nmea_parse_val(char *str) {
 NmeaServer::NmeaServer(QObject *parent) : QObject(parent)
 {
     mTcpBroadcast = new TcpBroadcast(this);
+    mTcpClient = new QTcpSocket(this);
+
+    connect(mTcpClient, SIGNAL(readyRead()), this, SLOT(tcpInputDataAvailable()));
+    connect(mTcpClient, SIGNAL(connected()), this, SLOT(tcpInputConnected()));
+    connect(mTcpClient, SIGNAL(disconnected()),
+            this, SLOT(tcpInputDisconnected()));
+    connect(mTcpClient, SIGNAL(error(QAbstractSocket::SocketError)),
+            this, SLOT(tcpInputError(QAbstractSocket::SocketError)));
 }
 
 NmeaServer::~NmeaServer()
@@ -282,6 +291,24 @@ void NmeaServer::logStop()
     }
 }
 
+bool NmeaServer::connectClientTcp(QString server, int port)
+{
+    mTcpClient->abort();
+    mTcpClient->connectToHost(server, port);
+
+    return true;
+}
+
+bool NmeaServer::isClientTcpConnected()
+{
+    return mTcpClient->isOpen();
+}
+
+void NmeaServer::disconnectClientTcp()
+{
+    mTcpClient->close();
+}
+
 /**
  * @brief NmeaServer::decodeNmeaGGA
  * Decode NMEA GGA message.
@@ -426,4 +453,38 @@ int NmeaServer::decodeNmeaGGA(QByteArray data, NmeaServer::nmea_gga_info_t &gga)
     gga.h_dop = hdop;
 
     return dec_fields;
+}
+
+void NmeaServer::tcpInputConnected()
+{
+    qDebug() << "NMEA TCP connected";
+}
+
+void NmeaServer::tcpInputDisconnected()
+{
+    qDebug() << "NMEA TCP disconnected";
+}
+
+void NmeaServer::tcpInputDataAvailable()
+{
+    QByteArray data =  mTcpClient->readAll();
+    QTextStream in(data);
+
+    while(!in.atEnd()) {
+        QString line = in.readLine();
+        nmea_gga_info_t gga;
+        int res = decodeNmeaGGA(line.toLocal8Bit(), gga);
+        emit clientGgaRx(res, gga);
+    }
+}
+
+void NmeaServer::tcpInputError(QAbstractSocket::SocketError socketError)
+{
+    (void)socketError;
+
+    QString errorStr = mTcpClient->errorString();
+    qWarning() << "NMEA TcpError:" << errorStr;
+    QMessageBox::warning(0, "NMEA TCP Error", errorStr);
+
+    mTcpClient->close();
 }

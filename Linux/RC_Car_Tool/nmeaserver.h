@@ -57,11 +57,24 @@ public:
     bool sendNmeaRaw(QString msg);
     bool logToFile(QString file);
     void logStop();
+    bool connectClientTcp(QString server, int port = 80);
+    bool isClientTcpConnected();
+    void disconnectClientTcp();
 
     static int decodeNmeaGGA(QByteArray data, nmea_gga_info_t &gga);
 
+signals:
+    void clientGgaRx(int fields, nmea_gga_info_t gga);
+
+private slots:
+    void tcpInputConnected();
+    void tcpInputDisconnected();
+    void tcpInputDataAvailable();
+    void tcpInputError(QAbstractSocket::SocketError socketError);
+
 private:
     TcpBroadcast *mTcpBroadcast;
+    QTcpSocket *mTcpClient;
     QFile mLog;
 
 };

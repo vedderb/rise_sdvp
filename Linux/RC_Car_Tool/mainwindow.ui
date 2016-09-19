@@ -974,9 +974,15 @@
              <attribute name="toolTip">
               <string>Import</string>
              </attribute>
-             <layout class="QVBoxLayout" name="verticalLayout_9">
+             <layout class="QVBoxLayout" name="verticalLayout_12">
               <item>
                <widget class="QGroupBox" name="groupBox_11">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
                 <property name="title">
                  <string>Import NMEA</string>
                 </property>
@@ -1022,6 +1028,117 @@
                    </property>
                    <property name="checked">
                     <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <widget class="QGroupBox" name="groupBox_14">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="title">
+                 <string>Stream NMEA over TCP</string>
+                </property>
+                <layout class="QVBoxLayout" name="verticalLayout_9">
+                 <item>
+                  <widget class="QLineEdit" name="mapStreamNmeaServerEdit">
+                   <property name="text">
+                    <string>127.0.0.1</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QSpinBox" name="mapStreamNmeaPortBox">
+                   <property name="prefix">
+                    <string>Port: </string>
+                   </property>
+                   <property name="maximum">
+                    <number>65535</number>
+                   </property>
+                   <property name="value">
+                    <number>2948</number>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QCheckBox" name="mapStreamNmeaZeroEnuBox">
+                   <property name="toolTip">
+                    <string>Zero ENU frame on next NMEA message</string>
+                   </property>
+                   <property name="text">
+                    <string>Zero ENU</string>
+                   </property>
+                   <property name="checked">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QCheckBox" name="mapStreamNmeaRtkOnlyBox">
+                   <property name="text">
+                    <string>RTK only</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_13">
+                   <item>
+                    <widget class="QPushButton" name="mapStreamNmeaClearTraceButton">
+                     <property name="toolTip">
+                      <string>Clear trace</string>
+                     </property>
+                     <property name="text">
+                      <string/>
+                     </property>
+                     <property name="icon">
+                      <iconset resource="resources.qrc">
+                       <normaloff>:/models/Icons/Delete2-96.png</normaloff>:/models/Icons/Delete2-96.png</iconset>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="mapStreamNmeaDisconnectButton">
+                     <property name="toolTip">
+                      <string>Disconnect</string>
+                     </property>
+                     <property name="text">
+                      <string/>
+                     </property>
+                     <property name="icon">
+                      <iconset resource="resources.qrc">
+                       <normaloff>:/models/Icons/Disconnected-96.png</normaloff>:/models/Icons/Disconnected-96.png</iconset>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="mapStreamNmeaConnectButton">
+                     <property name="toolTip">
+                      <string>Connect</string>
+                     </property>
+                     <property name="text">
+                      <string/>
+                     </property>
+                     <property name="icon">
+                      <iconset resource="resources.qrc">
+                       <normaloff>:/models/Icons/Connected-96.png</normaloff>:/models/Icons/Connected-96.png</iconset>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="mapStreamNmeaConnectedLabel">
+                   <property name="text">
+                    <string>Not connected</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
