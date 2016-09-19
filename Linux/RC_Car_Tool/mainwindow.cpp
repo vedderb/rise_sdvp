@@ -462,10 +462,13 @@ void MainWindow::nmeaGgaRx(int fields, NmeaServer::nmea_gga_info_t gga)
             QString fix_t = "Unknown";
             if (gga.fix_type == 4) {
                 fix_t = "RTK fix";
+                p.setColor(Qt::green);
             } else if (gga.fix_type == 5) {
                 fix_t = "RTK float";
+                p.setColor(Qt::yellow);
             } else if (gga.fix_type == 1) {
                 fix_t = "Single";
+                p.setColor(Qt::red);
             }
 
             info.sprintf("Fix type: %s\n"
@@ -938,9 +941,22 @@ void MainWindow::on_mapImportNmeaButton_clicked()
                     p.setXY(xyz[0], xyz[1]);
                     QString info;
 
-                    info.sprintf("Fix type: %d\n"
+                    QString fix_t = "Unknown";
+                    if (gga.fix_type == 4) {
+                        fix_t = "RTK fix";
+                        p.setColor(Qt::green);
+                    } else if (gga.fix_type == 5) {
+                        fix_t = "RTK float";
+                        p.setColor(Qt::yellow);
+                    } else if (gga.fix_type == 1) {
+                        fix_t = "Single";
+                        p.setColor(Qt::red);
+                    }
+
+                    info.sprintf("Fix type: %s\n"
                                  "Height  : %.2f",
-                                 gga.fix_type, gga.height);
+                                 fix_t.toLocal8Bit().data(),
+                                 gga.height);
 
                     p.setInfo(info);
                     ui->mapWidget->addInfoPoint(p);
