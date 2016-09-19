@@ -64,7 +64,7 @@ public:
     static int decodeNmeaGGA(QByteArray data, nmea_gga_info_t &gga);
 
 signals:
-    void clientGgaRx(int fields, nmea_gga_info_t gga);
+    void clientGgaRx(int fields, NmeaServer::nmea_gga_info_t gga);
 
 private slots:
     void tcpInputConnected();

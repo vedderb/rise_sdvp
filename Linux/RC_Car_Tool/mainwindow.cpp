@@ -110,6 +110,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(mPing, SIGNAL(pingError(QString,QString)), this, SLOT(pingError(QString,QString)));
     connect(mPacketInterface, SIGNAL(enuRefReceived(quint8,double,double,double)),
             this, SLOT(enuRx(quint8,double,double,double)));
+    connect(mNmea, SIGNAL(clientGgaRx(int,NmeaServer::nmea_gga_info_t)),
+            this, SLOT(nmeaGgaRx(int,NmeaServer::nmea_gga_info_t)));
 
     on_serialRefreshButton_clicked();
 
