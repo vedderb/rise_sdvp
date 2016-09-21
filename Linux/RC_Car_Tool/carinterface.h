@@ -27,6 +27,10 @@
 #include "packetinterface.h"
 #include "tcpbroadcast.h"
 
+#ifdef HAS_OPENGL
+#include "orientationwidget.h"
+#endif
+
 namespace Ui {
 class CarInterface;
 }
@@ -104,6 +108,10 @@ private:
     int maxSampleSize;
     MapWidget *mMap;
     PacketInterface *mPacketInterface;
+
+#ifdef HAS_OPENGL
+    OrientationWidget *mOrientationWidget;
+#endif
 
     int mId;
     QVector<QVector<double> > mMagSamples;

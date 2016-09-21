@@ -18,6 +18,9 @@ QT       += opengl
 # Linux only
 DEFINES += HAS_JOYSTICK
 
+# OpenGL support
+DEFINES += HAS_OPENGL
+
 TARGET = RC_Car_Tool
 TEMPLATE = app
 
@@ -35,7 +38,6 @@ SOURCES += main.cpp\
     locpoint.cpp \
     perspectivepixmap.cpp \
     carinterface.cpp \
-    orientationwidget.cpp \
     nmeaserver.cpp \
     rtcm3_simple.c \
     rtcmclient.cpp \
@@ -57,7 +59,6 @@ HEADERS  += mainwindow.h \
     locpoint.h \
     perspectivepixmap.h \
     carinterface.h \
-    orientationwidget.h \
     nmeaserver.h \
     rtcm3_simple.h \
     rtcmclient.h \
@@ -78,6 +79,11 @@ FORMS    += mainwindow.ui \
 contains(DEFINES, HAS_JOYSTICK) {
     SOURCES += joystick.cpp
     HEADERS += joystick.h
+}
+
+contains(DEFINES, HAS_OPENGL) {
+    SOURCES += orientationwidget.cpp
+    HEADERS += orientationwidget.h
 }
 
 RESOURCES += \

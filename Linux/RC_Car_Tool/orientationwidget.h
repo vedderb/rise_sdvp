@@ -15,8 +15,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
     */
 
-#ifndef GLWIDGET_H
-#define GLWIDGET_H
+#ifndef ORIENTATIONWIDGET_H
+#define ORIENTATIONWIDGET_H
 
 #include <QGLWidget>
 #include <QtOpenGL/QGLFunctions>

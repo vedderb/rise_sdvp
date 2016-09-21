@@ -46,6 +46,12 @@ CarInterface::CarInterface(QWidget *parent) :
 {
     ui->setupUi(this);
 
+#ifdef HAS_OPENGL
+    mOrientationWidget = new OrientationWidget(this);
+    ui->orientationLayout->removeItem(ui->orientationSpacer);
+    ui->orientationLayout->insertWidget(0, mOrientationWidget, 1);
+#endif
+
     // Plots
     ui->accelPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
     ui->gyroPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
@@ -175,10 +181,16 @@ bool CarInterface::updateRouteFromMap()
 
 void CarInterface::setOrientation(double roll, double pitch, double yaw)
 {
+#ifdef HAS_OPENGL
     ui->rollBar->setValue(roll);
     ui->pitchBar->setValue(pitch);
     ui->yawBar->setValue(yaw);
-    ui->orientationWidget->setRollPitchYaw(roll, pitch, yaw);
+    mOrientationWidget->setRollPitchYaw(roll, pitch, yaw);
+#else
+    (void)roll;
+    (void)pitch;
+    (void)yaw;
+#endif
 }
 
 void CarInterface::setStateData(CAR_STATE data)
