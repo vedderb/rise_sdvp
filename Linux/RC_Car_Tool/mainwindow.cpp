@@ -22,6 +22,7 @@
 #include <cmath>
 #include <QMessageBox>
 #include <QFileDialog>
+#include <QHostInfo>
 
 #include "utility.h"
 
@@ -80,6 +81,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     mPing = new Ping(this);
     mNmea = new NmeaServer(this);
+    mUdpSocket = new QUdpSocket(this);
 
     mKeyUp = false;
     mKeyDown = false;
@@ -480,6 +482,59 @@ void MainWindow::nmeaGgaRx(int fields, NmeaServer::nmea_gga_info_t gga)
 
             p.setInfo(info);
             ui->mapWidget->addInfoPoint(p);
+
+            // Optionally stream the data over UDP
+            if (ui->mapStreamNmeaForwardUdpBox->isChecked()) {
+                QString hostString = ui->mapStreamNmeaForwardUdpHostEdit->text();
+                QHostAddress host;
+
+                host.setAddress(hostString);
+
+                // In case setting the address failed try DNS lookup. Notice
+                // that the lookup is stored in a static QHostInfo as long as
+                // the host line does not change. This is to avoid some delay.
+                if (host.isNull()) {
+                    static QString hostStringBefore;
+                    static QHostInfo hostBefore;
+
+                    QList<QHostAddress> addresses = hostBefore.addresses();
+
+                    // Make a new lookup if the address has changed or the old one is invalid.
+                    if (hostString != hostStringBefore || addresses.isEmpty()) {
+                        hostBefore = QHostInfo::fromName(hostString);
+                        hostStringBefore = hostString;
+                    }
+
+                    if (!addresses.isEmpty()) {
+                        host.setAddress(addresses.first().toString());
+                    }
+                }
+
+                if (!host.isNull()) {
+                    static int seq = 0;
+                    QByteArray datagram;
+                    QTextStream out(&datagram);
+
+                    out << QString::asprintf("%d\n", seq);          // Seq
+                    out << QString::asprintf("%05f\n", xyz[0]);     // X
+                    out << QString::asprintf("%05f\n", xyz[1]);     // Y
+                    out << QString::asprintf("%05f\n", xyz[2]);     // Height
+                    out << QString::asprintf("%05f\n", gga.t_tow);  // GPS time of week
+                    out << QString::asprintf("%d\n", 2);            // Vehicle ID
+                    out.flush();
+
+                    mUdpSocket->writeDatagram(datagram,
+                                              host,
+                                              ui->mapStreamNmeaForwardUdpPortBox->value());
+
+                    seq++;
+                } else {
+                    QMessageBox::warning(this,
+                                         tr("Host not found"),
+                                         tr("Could not find %1").arg(hostString));
+                    ui->mapStreamNmeaForwardUdpBox->setChecked(false);
+                }
+            }
         }
     }
 }

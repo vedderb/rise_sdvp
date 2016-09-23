@@ -78,11 +78,12 @@ static THD_FUNCTION(log_thread, arg) {
 			uint32_t time = chVTGetSystemTimeX();
 
 			commands_printf_log_usb(
-					"%u "     // temp_mos
+					"%u "     // timestamp
+					"%.2f "   // temp_mos
 					"%.2f "   // current_in
 					"%.2f "   // current_motor
 					"%.2f "   // v_in
-					"%.2f "   // px
+					"%.3f "   // px
 					"%.3f "   // py
 					"%.3f "   // px_gps
 					"%.3f "   // py_gps

@@ -127,6 +127,7 @@ private:
     double mSteering;
     Ping *mPing;
     NmeaServer *mNmea;
+    QUdpSocket *mUdpSocket;
 
 #ifdef HAS_JOYSTICK
     Joystick *mJoystick;
