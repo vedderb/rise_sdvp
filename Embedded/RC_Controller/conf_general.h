@@ -29,7 +29,8 @@
 #endif
 
 // Log settings
-#define LOG_EN_CARREL
+//#define LOG_EN_CARREL
+#define LOG_EN_ITRANSIT
 #define LOG_INTERVAL_MS				10
 
 // CC2520 Settings

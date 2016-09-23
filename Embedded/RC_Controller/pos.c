@@ -120,6 +120,12 @@ void pos_get_pos(POS_STATE *p) {
 	chMtxUnlock(&m_mutex_pos);
 }
 
+void pos_get_gps(GPS_STATE *p) {
+	chMtxLock(&m_mutex_gps);
+	*p = m_gps;
+	chMtxUnlock(&m_mutex_gps);
+}
+
 float pos_get_speed(void) {
 	return m_pos.speed;
 }

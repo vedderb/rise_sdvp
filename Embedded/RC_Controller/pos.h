@@ -25,6 +25,7 @@ void pos_init(void);
 void pos_get_imu(float *accel, float *gyro, float *mag);
 void pos_get_quaternions(float *q);
 void pos_get_pos(POS_STATE *p);
+void pos_get_gps(GPS_STATE *p);
 float pos_get_speed(void);
 void pos_set_xya(float x, float y, float angle);
 void pos_set_yaw_offset(float angle);

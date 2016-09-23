@@ -72,6 +72,11 @@ static THD_FUNCTION(log_thread, arg) {
 			float gyro[3];
 			float mag[3];
 
+			float steering_angle = (servo_simple_get_pos_now()
+									- main_config.steering_center)
+											* ((2.0 * main_config.steering_max_angle_rad)
+													/ main_config.steering_range);
+
 			pos_get_mc_val(&val);
 			pos_get_pos(&pos);
 			pos_get_imu(accel, gyro, mag);
@@ -128,7 +133,72 @@ static THD_FUNCTION(log_thread, arg) {
 					(double)mag[1],
 					(double)mag[2],
 					val.tachometer,
-					(double)servo_simple_get_pos_now());
+					(double)steering_angle);
+#elif defined(LOG_EN_ITRANSIT)
+			mc_values val;
+			GPS_STATE gps;
+			float accel[3];
+			float gyro[3];
+			float mag[3];
+
+			float steering_angle = (servo_simple_get_pos_now()
+						- main_config.steering_center)
+								* ((2.0 * main_config.steering_max_angle_rad)
+										/ main_config.steering_range);
+
+			pos_get_mc_val(&val);
+			pos_get_gps(&gps);
+			pos_get_imu(accel, gyro, mag);
+			uint32_t time = chVTGetSystemTimeX();
+
+			commands_printf_log_usb(
+					"%u "     // timestamp
+					"%u "     // gps ms
+					"%.8f "   // Lat
+					"%.8f "   // Lon
+					"%.3f "   // height
+					"%u "     // fix type
+					"%.3f "   // x
+					"%.3f "   // y
+					"%.3f "   // z
+					"%.3f "   // ix
+					"%.3f "   // iy
+					"%.3f "   // iz
+					"%.3f "   // accel[0]
+					"%.3f "   // accel[1]
+					"%.3f "   // accel[2]
+					"%.1f "   // gyro[0]
+					"%.1f "   // gyro[1]
+					"%.1f "   // gyro[2]
+					"%.1f "   // mag[0]
+					"%.1f "   // mag[1]
+					"%.1f "   // mag[2]
+					"%d "     // tachometer
+					"%.3f\n", // steering angle
+
+					time,
+					gps.ms,
+					gps.lat,
+					gps.lon,
+					gps.height,
+					gps.fix_type,
+					(double)gps.lx,
+					(double)gps.ly,
+					(double)gps.lz,
+					gps.ix,
+					gps.iy,
+					gps.iz,
+					(double)accel[0],
+					(double)accel[1],
+					(double)accel[2],
+					(double)gyro[0],
+					(double)gyro[1],
+					(double)gyro[2],
+					(double)mag[0],
+					(double)mag[1],
+					(double)mag[2],
+					val.tachometer,
+					(double)steering_angle);
 #endif
 		}
 
