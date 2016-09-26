@@ -515,6 +515,9 @@ void MainWindow::nmeaGgaRx(int fields, NmeaServer::nmea_gga_info_t gga)
                     QByteArray datagram;
                     QTextStream out(&datagram);
 
+                    utility::llhToXyz(llh[0], llh[1], llh[2],
+                            &xyz[0], &xyz[1], &xyz[2]);
+
                     out << QString::asprintf("%d\n", seq);          // Seq
                     out << QString::asprintf("%05f\n", xyz[0]);     // X
                     out << QString::asprintf("%05f\n", xyz[1]);     // Y
