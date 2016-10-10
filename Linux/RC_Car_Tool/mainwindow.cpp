@@ -721,20 +721,24 @@ void MainWindow::on_genCircButton_clicked()
     double speed = ui->mapRouteSpeedBox->value() / 3.6;
     double ang_ofs = M_PI;
     double cx = 0;
-    double cy = rad;
+    double cy = 0;
     int points = ui->genCircPointsBox->value();
 
-    CarInfo *car = ui->mapWidget->getCarInfo(ui->mapCarBox->value());
-    if (car) {
-        LocPoint p = car->getLocation();
-        double ang = p.getAlpha();
+    if (ui->genCircCenterBox->currentIndex() > 0) {
+        CarInfo *car = ui->mapWidget->getCarInfo(ui->mapCarBox->value());
+        if (car) {
+            LocPoint p = car->getLocation();
+            double ang = p.getAlpha();
 
-        cx = p.getX();
-        cy = p.getY();
+            cx = p.getX();
+            cy = p.getY();
 
-        cx += rad * sin(ang);
-        cy += rad * cos(ang);
-        ang_ofs = ang + M_PI;
+            if (ui->genCircCenterBox->currentIndex() == 1) {
+                cx += rad * sin(ang);
+                cy += rad * cos(ang);
+                ang_ofs = ang + M_PI;
+            }
+        }
     }
 
     for (int i = 1;i <= points;i++) {

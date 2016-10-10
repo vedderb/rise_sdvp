@@ -426,6 +426,7 @@ void MapWidget::paintEvent(QPaintEvent *event)
 
     // Set font
     font.setPointSize(10);
+    font.setFamily("Monospace");
     painter.setFont(font);
 
     // Grid parameters
@@ -730,7 +731,6 @@ void MapWidget::paintEvent(QPaintEvent *event)
         pt_txt = drawTrans.map(pt_txt);
         pen.setColor(Qt::black);
         painter.setPen(pen);
-        painter.setFont(QFont("monospace"));
         rect_txt.setCoords(pt_txt.x(), pt_txt.y() - 20,
                            pt_txt.x() + 500, pt_txt.y() + 500);
         painter.drawText(rect_txt, Qt::AlignTop | Qt::AlignLeft, mClosestInfo.getInfo());
