@@ -26,6 +26,7 @@
 #include "mapwidget.h"
 #include "packetinterface.h"
 #include "tcpbroadcast.h"
+#include "tcpserversimple.h"
 
 #ifdef HAS_OPENGL
 #include "orientationwidget.h"
@@ -67,6 +68,7 @@ signals:
 private slots:
     void timerSlot();
     void udpReadReady();
+    void tcpRx(QByteArray &data);
     void terminalPrint(quint8 id, QString str);
     void vescFwdReceived(quint8 id, QByteArray data);
     void routePointSet(LocPoint pos);
@@ -80,6 +82,7 @@ private slots:
     void on_magSampleClearButton_clicked();
     void on_magSampleSaveButton_clicked();
     void on_bldcToolUdpBox_toggled(bool checked);
+    void on_vescToolTcpBox_toggled(bool checked);
     void on_autopilotBox_toggled(bool checked);
     void on_clearRouteButton_clicked();
     void on_servoDirectSlider_valueChanged(int value);
@@ -120,6 +123,7 @@ private:
     QHostAddress mLastHostAddress;
     quint16 mUdpPort;
     TcpBroadcast *mNmeaForwardServer;
+    TcpServerSimple *mTcpServer;
 
     void getConfGui(MAIN_CONFIG &conf);
     void setConfGui(MAIN_CONFIG &conf);

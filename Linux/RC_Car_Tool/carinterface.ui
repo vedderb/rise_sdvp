@@ -1421,6 +1421,13 @@
       </widget>
      </item>
      <item>
+      <widget class="QCheckBox" name="vescToolTcpBox">
+       <property name="text">
+        <string>VESC Tool TCP</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="clearRouteButton">
        <property name="toolTip">
         <string>Clear stored route</string>

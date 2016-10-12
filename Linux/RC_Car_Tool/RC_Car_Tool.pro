@@ -47,7 +47,9 @@ SOURCES += main.cpp\
     ping.cpp \
     networklogger.cpp \
     osmclient.cpp \
-    osmtile.cpp
+    osmtile.cpp \
+    tcpserversimple.cpp \
+    packet.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
@@ -68,7 +70,9 @@ HEADERS  += mainwindow.h \
     ping.h \
     networklogger.h \
     osmclient.h \
-    osmtile.h
+    osmtile.h \
+    tcpserversimple.h \
+    packet.h
 
 FORMS    += mainwindow.ui \
     carinterface.ui \

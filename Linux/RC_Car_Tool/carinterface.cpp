@@ -83,11 +83,14 @@ CarInterface::CarInterface(QWidget *parent) :
     mUdpSocket = new QUdpSocket(this);
     mLastHostAddress.clear();
     mUdpPort = 27800;
+    mTcpServer = new TcpServerSimple(this);
 
     mNmeaForwardServer = new TcpBroadcast(this);
 
     connect(mTimer, SIGNAL(timeout()), this, SLOT(timerSlot()));
     connect(mUdpSocket, SIGNAL(readyRead()), this, SLOT(udpReadReady()));
+    connect(mTcpServer->packet(), SIGNAL(packetReceived(QByteArray&)),
+            this, SLOT(tcpRx(QByteArray&)));
 
     ui->accelPlot->clearGraphs();
     ui->accelPlot->addGraph();
@@ -420,6 +423,11 @@ void CarInterface::udpReadReady()
     }
 }
 
+void CarInterface::tcpRx(QByteArray &data)
+{
+    emit forwardVesc(mId, data);
+}
+
 void CarInterface::terminalPrint(quint8 id, QString str)
 {
     if (id == mId) {
@@ -429,8 +437,12 @@ void CarInterface::terminalPrint(quint8 id, QString str)
 
 void CarInterface::vescFwdReceived(quint8 id, QByteArray data)
 {
-    if (id == mId && QString::compare(mLastHostAddress.toString(), "0.0.0.0") != 0) {
-        mUdpSocket->writeDatagram(data, mLastHostAddress, mUdpPort + 1);
+    if (id == mId) {
+        if (QString::compare(mLastHostAddress.toString(), "0.0.0.0") != 0) {
+            mUdpSocket->writeDatagram(data, mLastHostAddress, mUdpPort + 1);
+        }
+
+        mTcpServer->packet()->sendPacket(data);
     }
 }
 
@@ -578,6 +590,21 @@ void CarInterface::on_bldcToolUdpBox_toggled(bool checked)
         }
     } else {
         mUdpSocket->close();
+    }
+}
+
+void CarInterface::on_vescToolTcpBox_toggled(bool checked)
+{
+    if (checked) {
+        if (!mTcpServer->startServer(65102)) {
+            qWarning() << "Starting TCP server failed:" << mTcpServer->errorString();
+            QMessageBox::warning(this, "TCP Server Error",
+                                 tr("Starting TCP server failed. Make sure that the port is not "
+                                 "already in use. Error: %1").arg(mTcpServer->errorString()));
+            ui->vescToolTcpBox->setChecked(false);
+        }
+    } else {
+        mTcpServer->stopServer();
     }
 }
 
