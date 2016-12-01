@@ -32,12 +32,12 @@
 static THD_WORKING_AREA(ap_thread_wa, 512);
 static ROUTE_POINT m_route[AP_ROUTE_SIZE];
 static bool m_is_active;
-static int m_point_last;
-static int m_point_now;
+static int m_point_last; // The last point on the route
+static int m_point_now; // The first point in the currently considered part of the route
 static bool m_has_prev_point;
 static float m_override_speed;
 static bool m_is_speed_override;
-static ROUTE_POINT m_rp_now;
+static ROUTE_POINT m_rp_now; // The point in space we are following now
 static float m_rad_now;
 static ROUTE_POINT m_point_rx_prev;
 static bool m_point_rx_prev_set;
@@ -85,10 +85,11 @@ void autopilot_add_point(ROUTE_POINT *p) {
 		m_point_last = 0;
 	}
 
+	// Make sure that there always is a valid point when looking backwards in the route
 	if (!m_has_prev_point) {
 		int p_last = m_point_now - 1;
 		if (p_last < 0) {
-			p_last = AP_ROUTE_SIZE - 1;
+			p_last += AP_ROUTE_SIZE;
 		}
 
 		m_route[p_last] = *p;
@@ -104,7 +105,7 @@ void autopilot_add_point(ROUTE_POINT *p) {
 
 void autopilot_remove_last_point(void) {
 	if (m_point_last != m_point_now) {
-		m_point_last --;
+		m_point_last--;
 		if (m_point_last < 0) {
 			m_point_last = AP_ROUTE_SIZE - 1;
 		}
@@ -194,12 +195,17 @@ static THD_FUNCTION(ap_thread, arg) {
 	for(;;) {
 		chThdSleep(CH_CFG_ST_FREQUENCY / AP_HZ);
 
+		bool route_end = false;
+
 		if (!m_is_active) {
 			m_rad_now = -1.0;
 			continue;
 		}
 
+		// the length of the route that is left
 		int len = m_point_last;
+
+		// This means that the route has wrapped around
 		if (m_point_now > m_point_last) {
 			len = AP_ROUTE_SIZE + m_point_last - m_point_now;
 		}
@@ -208,6 +214,14 @@ static THD_FUNCTION(ap_thread, arg) {
 			POS_STATE p;
 			pos_get_pos(&p);
 
+			// Car center
+			const float car_cx = p.px;
+			const float car_cy = p.py;
+			ROUTE_POINT car_pos;
+			car_pos.px = car_cx;
+			car_pos.py = car_cy;
+
+			// Look 5 points ahead, or less than that if the route is shorter
 			int add = 5;
 			if (add > len) {
 				add = len;
@@ -216,22 +230,25 @@ static THD_FUNCTION(ap_thread, arg) {
 			int start = m_point_now;
 			int end = m_point_now + add;
 
-			float cx = p.px;
-			float cy = p.py;
-
 			// Speed-dependent radius
 			m_rad_now = main_config.ap_base_rad / autopilot_get_steering_scale();
 
-			ROUTE_POINT last;
-			ROUTE_POINT *closest1 = &m_route[0];
-			ROUTE_POINT *closest2 = &m_route[1];
-			bool has = false;
-			bool closest_set = false;
-			int current = 0;
-			for (int i = start;i < end;i++) {
-				int ind = i;
-				int indn = i + 1;
+			ROUTE_POINT rp_now; // The point we should follow now.
+			int circle_intersections = 0;
+			bool last_point_reached = false;
 
+			// Last point in route
+			int last_point_ind = m_point_last - 1;
+			if (last_point_ind < 0) {
+				last_point_ind += AP_ROUTE_SIZE;
+			}
+			ROUTE_POINT *rp_last = &m_route[last_point_ind];
+
+			for (int i = start;i < end;i++) {
+				int ind = i; // First point index for this iteration
+				int indn = i + 1; // Next point index for this iteration
+
+				// Wrap around
 				if (ind >= m_point_last) {
 					if (m_point_now <= m_point_last) {
 						ind -= m_point_last;
@@ -242,6 +259,7 @@ static THD_FUNCTION(ap_thread, arg) {
 					}
 				}
 
+				// Wrap around
 				if (indn >= m_point_last) {
 					if (m_point_now <= m_point_last) {
 						indn -= m_point_last;
@@ -252,82 +270,58 @@ static THD_FUNCTION(ap_thread, arg) {
 					}
 				}
 
+				// Check for circle intersection. If there are many intersections
+				// found in this loop, the last one will be used.
 				ROUTE_POINT int1, int2;
 				ROUTE_POINT *p1, *p2;
 				p1 = &m_route[ind];
 				p2 = &m_route[indn];
 
-				if (!closest_set) {
-					closest1 = p1;
-					closest_set = true;
-				}
+				int res = utils_circle_line_int(car_cx, car_cy, m_rad_now, p1, p2, &int1, &int2);
 
-				// Closest point
-				if (utils_point_distance(cx, cy, p1->px, p1->py) <
-						utils_point_distance(cx, cy, closest1->px, closest1->py)) {
-					closest1 = p1;
-				} else {
-					// Make sure that closest2 is at least further away
-					closest2 = p1;
-				}
-
-				int res = utils_circle_line_int(cx, cy, m_rad_now, p1, p2, &int1, &int2);
-
-				if (!has && res > 0) {
-					has = true;
-					last = int1;
-					current = i;
-				}
-
+				// One intersection. Use it.
 				if (res == 1) {
-					if (utils_rp_distance(p2, &int1) <
-							utils_rp_distance(&last, p2)) {
-						last = int1;
-						current = i;
-					}
+					circle_intersections++;
+					rp_now = int1;
 				}
 
+				// Two intersections. Use the point with the most "progress" on the route.
 				if (res == 2) {
-					if (utils_rp_distance(p2, &int2) <
-							utils_rp_distance(&last, p2)) {
-						last = int2;
-						current = i;
-					}
-				}
-			}
+					circle_intersections += 2;
 
-			// Next closest point
-			for (int i = start;i < end;i++) {
-				int ind = i;
-				if (ind >= m_point_last) {
-					if (m_point_now <= m_point_last) {
-						ind -= m_point_last;
+					if (utils_rp_distance(&int1, p2) < utils_rp_distance(&int2, p2)) {
+						rp_now = int1;
 					} else {
-						if (ind >= AP_ROUTE_SIZE) {
-							ind -= AP_ROUTE_SIZE;
-						}
+						rp_now = int2;
 					}
 				}
 
-				ROUTE_POINT *p1 = &m_route[ind];
-
-				if (utils_point_distance(cx, cy, p1->px, p1->py) <
-						utils_point_distance(cx, cy, closest2->px, closest2->py) &&
-						p1 != closest1) {
-					closest2 = p1;
+				// If we aren't repeating routes and there is an intersecion on the last
+				// line segment, go straight to the last point.
+				if (!main_config.ap_repeat_routes) {
+					if (indn == last_point_ind && circle_intersections > 0) {
+						if (res > 0) {
+							last_point_reached = true;
+						}
+						break;
+					}
 				}
 			}
 
-			if (!has) {
-				ROUTE_POINT carp;
-				carp.px = cx;
-				carp.py = cy;
-				bool lastSet = false;
+			// Look for closest points
+			ROUTE_POINT closest; // Closest point on route to car
+			ROUTE_POINT *closest1 = &m_route[0]; // Start of closest line segment
+			ROUTE_POINT *closest2 = &m_route[1]; // End of closest line segment
+			int closest1_ind = 0; // Index of the first closest point
+
+			{
+				bool closest_set = false;
 
 				for (int i = start;i < end;i++) {
-					int ind = i;
-					int indn = i + 1;
+					int ind = i; // First point index for this iteration
+					int indn = i + 1; // Next point index for this iteration
 
+					// Wrap around
 					if (ind >= m_point_last) {
 						if (m_point_now <= m_point_last) {
 							ind -= m_point_last;
@@ -338,6 +332,7 @@ static THD_FUNCTION(ap_thread, arg) {
 						}
 					}
 
+					// Wrap around
 					if (indn >= m_point_last) {
 						if (m_point_now <= m_point_last) {
 							indn -= m_point_last;
@@ -352,69 +347,92 @@ static THD_FUNCTION(ap_thread, arg) {
 					ROUTE_POINT *p1, *p2;
 					p1 = &m_route[ind];
 					p2 = &m_route[indn];
-					utils_closest_point_line(p1, p2, cx, cy, &tmp);
+					utils_closest_point_line(p1, p2, car_cx, car_cy, &tmp);
 
-					if (!lastSet || utils_rp_distance(&tmp, &carp) < utils_rp_distance(&last, &carp)) {
-						last = tmp;
-						lastSet = true;
-						current = i;
+					if (!closest_set || utils_rp_distance(&tmp, &car_pos) < utils_rp_distance(&closest, &car_pos)) {
+						closest_set = true;
+						closest = tmp;
+						closest1 = p1;
+						closest2 = p2;
+						closest1_ind = ind;
+					}
+
+					// Do not look pas the last point if we aren't repeating routes.
+					if (!main_config.ap_repeat_routes) {
+						if (indn == last_point_ind) {
+							break;
+						}
 					}
 				}
 			}
 
-			if (current > (m_point_now + 1) && current > 0) {
-				m_point_now = current -  1;
-
-				if (m_point_now >= m_point_last && main_config.ap_repeat_routes) {
-					m_point_now = 0;
+			if (last_point_reached) {
+				rp_now = *rp_last;
+			} else {
+				// Use the closest point on the considered route if no
+				// circle intersection is found.
+				if (circle_intersections == 0) {
+					rp_now = closest;
 				}
 			}
 
-			m_rp_now = last;
-
-			float distance, steering_angle;
-			float servo_pos;
-			static int max_steering = 0;
-
-			steering_angle_to_point(p.px, p.py, -p.yaw * M_PI / 180.0, last.px,
-					last.py, &steering_angle, &distance);
-
-			// Scale maximum steering by speed
-			float max_rad = main_config.steering_max_angle_rad * autopilot_get_steering_scale();
-
-			if (steering_angle >= max_rad) {
-				steering_angle = max_rad;
-				max_steering++;
-			} else if (steering_angle <= -max_rad) {
-				steering_angle = -max_rad;
-				max_steering++;
-			} else {
-				max_steering = 0;
+			// Check if the end of route is reached
+			if (!main_config.ap_repeat_routes &&
+					utils_rp_distance(&m_route[last_point_ind], &car_pos) < m_rad_now) {
+				route_end = true;
 			}
 
-			servo_pos = steering_angle
-					/ ((2.0 * main_config.steering_max_angle_rad)
-							/ main_config.steering_range)
-							+ main_config.steering_center;
+			m_point_now = closest1_ind;
+			m_rp_now = rp_now;
 
-			const float dist_next = utils_point_distance(cx, cy, closest1->px, closest1->py);
-			const float dist_previous = utils_point_distance(cx, cy, closest2->px, closest2->py);
-			const float fract_prev = dist_next / (dist_previous + dist_next);
+			if (!route_end) {
+				float distance, steering_angle;
+				float servo_pos;
+				static int max_steering = 0;
 
-			float speed;
-			if (m_is_speed_override) {
-				speed = m_override_speed;
-			} else {
-				speed = (closest2->speed * fract_prev) + (closest1->speed * (1.0 - fract_prev));
+				steering_angle_to_point(p.px, p.py, -p.yaw * M_PI / 180.0, rp_now.px,
+						rp_now.py, &steering_angle, &distance);
+
+				// Scale maximum steering by speed
+				float max_rad = main_config.steering_max_angle_rad * autopilot_get_steering_scale();
+
+				if (steering_angle >= max_rad) {
+					steering_angle = max_rad;
+					max_steering++;
+				} else if (steering_angle <= -max_rad) {
+					steering_angle = -max_rad;
+					max_steering++;
+				} else {
+					max_steering = 0;
+				}
+
+				servo_pos = steering_angle
+						/ ((2.0 * main_config.steering_max_angle_rad)
+								/ main_config.steering_range)
+								+ main_config.steering_center;
+
+				const float dist_next = utils_point_distance(car_cx, car_cy, closest1->px, closest1->py);
+				const float dist_previous = utils_point_distance(car_cx, car_cy, closest2->px, closest2->py);
+				const float fract_prev = dist_next / (dist_previous + dist_next);
+
+				float speed;
+				if (m_is_speed_override) {
+					speed = m_override_speed;
+				} else {
+					speed = (closest2->speed * fract_prev) + (closest1->speed * (1.0 - fract_prev));
+				}
+
+				servo_simple_set_pos_ramp(servo_pos);
+				autopilot_set_motor_speed(speed);
 			}
-
-			servo_simple_set_pos_ramp(servo_pos);
-			autopilot_set_motor_speed(speed);
 		} else {
+			route_end = true;
+		}
+
+		if (route_end) {
 			servo_simple_set_pos_ramp(main_config.steering_center);
 			bldc_interface_set_current_brake(10.0);
 			m_rad_now = -1.0;
-			continue;
 		}
 	}
 }

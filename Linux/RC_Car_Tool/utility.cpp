@@ -89,6 +89,26 @@ void buffer_append_double64(uint8_t* buffer, double number, double scale, int32_
     buffer_append_int64(buffer, (int64_t)(roundDouble(number * scale)), index);
 }
 
+void buffer_append_double32_auto(uint8_t *buffer, double number, int32_t *index)
+{
+    int e = 0;
+    float sig = frexpf(number, &e);
+    float sig_abs = fabsf(sig);
+    uint32_t sig_i = 0;
+
+    if (sig_abs >= 0.5) {
+        sig_i = (uint32_t)((sig_abs - 0.5f) * 2.0f * 8388608.0f);
+        e += 126;
+    }
+
+    uint32_t res = ((e & 0xFF) << 23) | (sig_i & 0x7FFFFF);
+    if (sig < 0) {
+        res |= 1 << 31;
+    }
+
+    buffer_append_uint32(buffer, res, index);
+}
+
 int16_t buffer_get_int16(const uint8_t *buffer, int32_t *index) {
     int16_t res =	((uint16_t) buffer[*index]) << 8 |
                     ((uint16_t) buffer[*index + 1]);
@@ -272,4 +292,24 @@ double logn(double base, double number)
     return log(number) / log(base);
 }
 
+double buffer_get_double32_auto(const uint8_t *buffer, int32_t *index)
+{
+    uint32_t res = buffer_get_uint32(buffer, index);
+
+    int e = (res >> 23) & 0xFF;
+    uint32_t sig_i = res & 0x7FFFFF;
+    bool neg = res & (1 << 31);
+
+    float sig = 0.0;
+    if (e != 0 || sig_i != 0) {
+        sig = (float)sig_i / (8388608.0 * 2.0) + 0.5;
+        e -= 126;
+    }
+
+    if (neg) {
+        sig = -sig;
+    }
+
+    return ldexpf(sig, e);
+}
 }

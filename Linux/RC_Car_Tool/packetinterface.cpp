@@ -438,7 +438,20 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
     case CMD_LOG_LINE_USB: {
         QByteArray tmpArray = QByteArray::fromRawData((const char*)data, len);
         tmpArray[len] = '\0';
-        emit logLineUsbReceived(id, QString::fromLatin1(tmpArray));
+        emit logLineUsbReceived(id, QString::fromLocal8Bit(tmpArray));
+    } break;
+
+    case CMD_PLOT_INIT: {
+        QString xL = QString::fromLocal8Bit((const char*)data);
+        QString yL = QString::fromLocal8Bit((const char*)data + xL.size() + 1);
+        emit plotInitReceived(id, xL, yL);
+    } break;
+
+    case CMD_PLOT_DATA: {
+        int32_t ind = 0;
+        double x = utility::buffer_get_double32_auto(data, &ind);
+        double y = utility::buffer_get_double32_auto(data, &ind);
+        emit plotDataReceived(id, x, y);
     } break;
 
         // Acks
@@ -465,6 +478,9 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         break;
     case CMD_SET_YAW_OFFSET_ACK:
         emit ackReceived(id, cmd, "CMD_SET_YAW_OFFSET_ACK");
+        break;
+    case CMD_SETUP_RADAR:
+        emit ackReceived(id, cmd, "CMD_SETUP_RADAR");
         break;
 
     default:
@@ -630,6 +646,23 @@ bool PacketInterface::setEnuRef(quint8 id, double *llh, int retries)
     utility::buffer_append_double64(mSendBuffer, llh[0], 1e16, &send_index);
     utility::buffer_append_double64(mSendBuffer, llh[1], 1e16, &send_index);
     utility::buffer_append_double32(mSendBuffer, llh[2], 1e3, &send_index);
+    return sendPacketAck(mSendBuffer, send_index, retries);
+}
+
+bool PacketInterface::setupRadar(quint8 id, radar_settings_t *s, int retries)
+{
+    qint32 send_index = 0;
+    mSendBuffer[send_index++] = id;
+    mSendBuffer[send_index++] = CMD_SETUP_RADAR;
+    utility::buffer_append_double32_auto(mSendBuffer, s->f_center, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, s->f_span, &send_index);
+    utility::buffer_append_int16(mSendBuffer, s->points, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, s->t_sweep, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, s->cc_x, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, s->cc_y, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, s->cc_rad, &send_index);
+    utility::buffer_append_int32(mSendBuffer, s->log_rate_ms, &send_index);
+    mSendBuffer[send_index++] = s->log_en;
     return sendPacketAck(mSendBuffer, send_index, retries);
 }
 

@@ -1,0 +1,6 @@
+=== FW 5.1 ===
+* Autopilot major bug fixes.
+
+=== FW 5.0 ===
+* New float32_auto implementation for communication.
+* Radar support.

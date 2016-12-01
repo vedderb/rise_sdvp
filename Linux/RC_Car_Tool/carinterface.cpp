@@ -56,6 +56,7 @@ CarInterface::CarInterface(QWidget *parent) :
     ui->accelPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
     ui->gyroPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
     ui->magPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
+    ui->experimentPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
 
     // The raw IMU plots
     maxSampleSize = 1000;
@@ -76,6 +77,7 @@ CarInterface::CarInterface(QWidget *parent) :
     mMap = 0;
     mPacketInterface = 0;
     mId = 0;
+    mExperimentReplot = false;
 
     mTimer = new QTimer(this);
     mTimer->start(20);
@@ -347,6 +349,10 @@ void CarInterface::setPacketInterface(PacketInterface *packetInterface)
             this, SLOT(nmeaReceived(quint8,QByteArray)));
     connect(mPacketInterface, SIGNAL(configurationReceived(quint8,MAIN_CONFIG)),
             this, SLOT(configurationReceived(quint8,MAIN_CONFIG)));
+    connect(mPacketInterface, SIGNAL(plotInitReceived(quint8,QString,QString)),
+            this, SLOT(plotInitReceived(quint8,QString,QString)));
+    connect(mPacketInterface, SIGNAL(plotDataReceived(quint8,double,double)),
+            SLOT(plotDataReceived(quint8,double,double)));
 }
 
 void CarInterface::setControlValues(double throttle, double steering, double max, bool currentMode)
@@ -404,6 +410,13 @@ void CarInterface::timerSlot()
     if (mMagSamples.size() != lastMagSamples) {
         ui->magSampleLabel->setText(QString::number(mMagSamples.size()) + " Samples");
         lastMagSamples = mMagSamples.size();
+    }
+
+    if (mExperimentReplot) {
+        ui->experimentPlot->graph()->setData(experimentDataX, experimentDataY);
+        ui->experimentPlot->rescaleAxes();
+        ui->experimentPlot->replot();
+        mExperimentReplot = false;
     }
 }
 
@@ -531,10 +544,46 @@ void CarInterface::configurationReceived(quint8 id, MAIN_CONFIG config)
     }
 }
 
+void CarInterface::plotInitReceived(quint8 id, QString xLabel, QString yLabel)
+{
+    if (id == mId) {
+        experimentDataX.clear();
+        experimentDataY.clear();
+
+        ui->experimentPlot->clearGraphs();
+        ui->experimentPlot->addGraph();
+        ui->experimentPlot->xAxis->setLabel(xLabel);
+        ui->experimentPlot->yAxis->setLabel(yLabel);
+
+        mExperimentReplot = true;
+    }
+}
+
+void CarInterface::plotDataReceived(quint8 id, double x, double y)
+{
+    if (id == mId) {
+        experimentDataX.append(x);
+        experimentDataY.append(y);
+        mExperimentReplot = true;
+    }
+}
+
 void CarInterface::on_terminalSendButton_clicked()
 {
     emit terminalCmd(mId, ui->terminalEdit->text());
     ui->terminalEdit->clear();
+}
+
+void CarInterface::on_terminalSendVescButton_clicked()
+{
+    emit terminalCmd(mId, "vesc " + ui->terminalEditVesc->text());
+    ui->terminalEditVesc->clear();
+}
+
+void CarInterface::on_terminalSendRadarButton_clicked()
+{
+    emit terminalCmd(mId, "radar_cmd " + ui->terminalEditRadar->text());
+    ui->terminalEditRadar->clear();
 }
 
 void CarInterface::on_terminalClearButton_clicked()
@@ -852,5 +901,44 @@ void CarInterface::on_magCalLoadButton_clicked()
     if (!ok) {
         QMessageBox::warning(this, "Mag Cal",
                              "Could not load calibration file.");
+    }
+}
+
+void CarInterface::on_radarReadButton_clicked()
+{
+
+}
+
+void CarInterface::on_radarWriteButton_clicked()
+{
+    radar_settings_t s;
+    s.f_center = ui->radarFCenterBox->value() * 1e9;
+    s.f_span = ui->radarFSpanBox->value() * 1e9;
+    s.points = ui->radarPointsBox->value();
+    s.t_sweep = ui->radarTSweepBox->value();
+    s.cc_x = ui->radarCcXBox->value();
+    s.cc_y = ui->radarCcYBox->value();
+    s.cc_rad = ui->radarCRadBox->value();
+    s.log_rate_ms = (int)ui->radarLogRateBox->value() * 1000;
+    s.log_en = ui->radarLogEnBox->isChecked();
+
+    if (mPacketInterface) {
+        ui->radarWriteButton->setEnabled(false);
+        bool ok = mPacketInterface->setupRadar(mId, &s);
+        ui->radarWriteButton->setEnabled(true);
+
+        if (!ok) {
+            QMessageBox::warning(this, "Setup Radar",
+                                 "Could not write radar settings.");
+        }
+    }
+}
+
+void CarInterface::on_radarGetRadCCButton_clicked()
+{
+    if (mMap) {
+        CarInfo *car = mMap->getCarInfo(mId);
+        ui->radarCcXBox->setValue(car->getLocation().getX());
+        ui->radarCcYBox->setValue(car->getLocation().getY());
     }
 }

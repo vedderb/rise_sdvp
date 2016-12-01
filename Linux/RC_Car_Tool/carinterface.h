@@ -75,8 +75,12 @@ private slots:
     void lastRoutePointRemoved();
     void nmeaReceived(quint8 id, QByteArray nmea_msg);
     void configurationReceived(quint8 id, MAIN_CONFIG config);
+    void plotInitReceived(quint8 id, QString xLabel, QString yLabel);
+    void plotDataReceived(quint8 id, double x, double y);
 
     void on_terminalSendButton_clicked();
+    void on_terminalSendVescButton_clicked();
+    void on_terminalSendRadarButton_clicked();
     void on_terminalClearButton_clicked();
     void on_idBox_valueChanged(int arg1);
     void on_magSampleClearButton_clicked();
@@ -96,6 +100,12 @@ private slots:
     void on_magCalChooseButton_clicked();
     void on_magCalLoadButton_clicked();
 
+    void on_radarReadButton_clicked();
+
+    void on_radarWriteButton_clicked();
+
+    void on_radarGetRadCCButton_clicked();
+
 private:
     Ui::CarInterface *ui;
     QVector<double> accelXData;
@@ -108,6 +118,8 @@ private:
     QVector<double> magYData;
     QVector<double> magZData;
     QVector<double> accelGyroMagXAxis;
+    QVector<double> experimentDataX;
+    QVector<double> experimentDataY;
     int maxSampleSize;
     MapWidget *mMap;
     PacketInterface *mPacketInterface;
@@ -124,6 +136,7 @@ private:
     quint16 mUdpPort;
     TcpBroadcast *mNmeaForwardServer;
     TcpServerSimple *mTcpServer;
+    bool mExperimentReplot;
 
     void getConfGui(MAIN_CONFIG &conf);
     void setConfGui(MAIN_CONFIG &conf);

@@ -41,6 +41,8 @@
 #include "autopilot.h"
 #include "timeout.h"
 #include "log.h"
+#include "radar.h"
+#include "comm_cc1120.h"
 
 /*
  * Timers used:
@@ -76,6 +78,14 @@ int main(void) {
 	autopilot_init();
 	timeout_init();
 	log_init();
+	comm_cc1120_init();
+
+	commands_printf_log_usb("Test");
+
+#if RADAR_EN
+	radar_init();
+	radar_setup_measurement_default();
+#endif
 
 	timeout_configure(2000, 20.0);
 	log_set_enabled(main_config.log_en);

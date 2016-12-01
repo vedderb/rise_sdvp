@@ -147,7 +147,10 @@ CSRC = $(STARTUPSRC) \
        autopilot.c \
        eeprom.c \
        timeout.c \
-       log.c
+       log.c \
+       radar.c \
+       digital_filter.c \
+       comm_cc1120.c
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
@@ -270,6 +273,9 @@ upload-olimex: build/$(PROJECT).bin
 
 debug-start:
 	openocd -f stm32-bv_openocd.cfg
+	
+upload_remote: build/$(PROJECT).elf
+	./upload_remote build/$(PROJECT).elf elpgem 10.42.0.79 22
 
 RULESPATH = $(CHIBIOS)/os/common/ports/ARMCMx/compilers/GCC
 include $(RULESPATH)/rules.mk

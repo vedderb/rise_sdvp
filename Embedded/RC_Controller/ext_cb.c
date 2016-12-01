@@ -19,13 +19,14 @@
 #include "ch.h"
 #include "hal.h"
 #include "hal_rf.h"
+#include "cc1120.h"
 
 static const EXTConfig extcfg = {
 		{
 				{EXT_CH_MODE_DISABLED, NULL},
 				{EXT_CH_MODE_DISABLED, NULL},
 				{EXT_CH_MODE_DISABLED, NULL},
-				{EXT_CH_MODE_DISABLED, NULL},
+				{EXT_CH_MODE_RISING_EDGE | EXT_MODE_GPIOA, cc1120_ext_cb},
 				{EXT_CH_MODE_DISABLED, NULL},
 				{EXT_CH_MODE_DISABLED, NULL},
 				{EXT_CH_MODE_DISABLED, NULL},

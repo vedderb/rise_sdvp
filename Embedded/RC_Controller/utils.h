@@ -19,6 +19,7 @@
 #define UTILS_H_
 
 #include <stdbool.h>
+#include <string.h>
 #include "conf_general.h"
 
 void utils_step_towards(float *value, float goal, float step);
@@ -51,11 +52,13 @@ void utils_xyz_to_llh(double x, double y, double z, double *lat, double *lon, do
 void utils_create_enu_matrix(double lat, double lon, double *enuMat);
 void utils_llh_to_enu(const double *iLlh, const double *llh, double *xyz);
 void utils_enu_to_llh(const double *iLlh, const double *xyz, double *llh);
+void utils_byte_to_binary(int x, char *b);
 void utils_sys_lock_cnt(void);
 void utils_sys_unlock_cnt(void);
 
 // Return the sign of the argument. -1 if negative, 1 if zero or positive.
-#define SIGN(x)				((x<0)?-1:1)
+#define SIGN(x)				((x < 0) ? -1 : 1)
+#define MIN(a, b)			((a < b) ? a : b)
 
 // Return the age of a timestamp in seconds
 #define UTILS_AGE_S(x)		((float)chVTTimeElapsedSinceX(x) / (float)CH_CFG_ST_FREQUENCY)

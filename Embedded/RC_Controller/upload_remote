@@ -1,0 +1,20 @@
+#!/bin/bash
+
+bin=$1
+user=$2
+server=$3
+port=$4
+
+# Upload elf file to server
+scp -P $port $bin $user@$server:/home/$user/
+
+# Run programming command on server
+filename="$(basename $bin)"
+#ssh $user@$server -p $port "stm32flash '$dev' -i -rts,dtr,-dtr:rts,dtr,-dtr -b 1000000 -w '$filename' -v -g 0x0"
+ssh $user@$server -p $port "openocd -f board/stm32f4discovery.cfg -c 'reset_config trst_only combined' -c 'program $filename verify reset exit'"
+
+# Remove elf file from server
+ssh $user@$server -p $port "rm /home/$user/$(basename $bin)"
+
+#openocd -f board/stm32f4discovery.cfg -c "reset_config trst_only combined" -c "program build/$(PROJECT).elf verify reset exit"
+

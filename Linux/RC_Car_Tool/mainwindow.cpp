@@ -723,8 +723,9 @@ void MainWindow::on_genCircButton_clicked()
     double cx = 0;
     double cy = 0;
     int points = ui->genCircPointsBox->value();
+    int type = ui->genCircCenterBox->currentIndex();
 
-    if (ui->genCircCenterBox->currentIndex() > 0) {
+    if (type == 1 || type == 2) {
         CarInfo *car = ui->mapWidget->getCarInfo(ui->mapCarBox->value());
         if (car) {
             LocPoint p = car->getLocation();
@@ -739,6 +740,11 @@ void MainWindow::on_genCircButton_clicked()
                 ang_ofs = ang + M_PI;
             }
         }
+    }
+
+    if (type == 3) {
+        cx = ui->genCircXBox->value();
+        cy = ui->genCircYBox->value();
     }
 
     for (int i = 1;i <= points;i++) {

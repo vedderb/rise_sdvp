@@ -50,6 +50,7 @@ public:
     bool setPosAck(quint8 id, double x, double y, double angle, int retries = 10);
     bool setYawOffsetAck(quint8 id, double angle, int retries = 10);
     bool setEnuRef(quint8 id, double *llh, int retries = 10);
+    bool setupRadar(quint8 id, radar_settings_t *s, int retries = 10);
 
 signals:
     void dataToSend(QByteArray &data);
@@ -63,6 +64,8 @@ signals:
     void configurationReceived(quint8 id, MAIN_CONFIG conf);
     void enuRefReceived(quint8 id, double lat, double lon, double height);
     void logLineUsbReceived(quint8 id, QString str);
+    void plotInitReceived(quint8 id, QString xLabel, QString yLabel);
+    void plotDataReceived(quint8 id, double x, double y);
     
 public slots:
     void timerSlot();

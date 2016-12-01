@@ -734,6 +734,24 @@ void utils_enu_to_llh(const double *iLlh, const double *xyz, double *llh) {
 }
 
 /**
+ * Create string representation of the binary content of a byte
+ *
+ * @param x
+ * The byte.
+ *
+ * @param b
+ * Array to store the string representation in.
+ */
+void utils_byte_to_binary(int x, char *b) {
+	b[0] = '\0';
+
+	int z;
+	for (z = 128; z > 0; z >>= 1) {
+		strcat(b, ((x & z) == z) ? "1" : "0");
+	}
+}
+
+/**
  * A system locking function with a counter. For every lock, a corresponding unlock must
  * exist to unlock the system. That means, if lock is called five times, unlock has to
  * be called five times as well. Note that chSysLock and chSysLockFromIsr are the same

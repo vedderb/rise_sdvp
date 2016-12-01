@@ -19,6 +19,7 @@
 #include "pos.h"
 #include "commands.h"
 #include "servo_simple.h"
+#include "radar.h"
 
 #include <string.h>
 
@@ -68,6 +69,7 @@ static THD_FUNCTION(log_thread, arg) {
 #ifdef LOG_EN_CARREL
 			mc_values val;
 			POS_STATE pos;
+			GPS_STATE gps;
 			float accel[3];
 			float gyro[3];
 			float mag[3];
@@ -79,6 +81,7 @@ static THD_FUNCTION(log_thread, arg) {
 
 			pos_get_mc_val(&val);
 			pos_get_pos(&pos);
+			pos_get_gps(&gps);
 			pos_get_imu(accel, gyro, mag);
 			uint32_t time = chVTGetSystemTimeX();
 
@@ -88,11 +91,14 @@ static THD_FUNCTION(log_thread, arg) {
 					"%.2f "   // current_in
 					"%.2f "   // current_motor
 					"%.2f "   // v_in
-					"%.3f "   // px
-					"%.3f "   // py
-					"%.3f "   // px_gps
-					"%.3f "   // py_gps
-					"%.3f "   // pz_gps
+					"%.3f "   // car x
+					"%.3f "   // car y
+					"%.3f "   // gps x
+					"%.3f "   // gps y
+					"%.3f "   // gps z
+					"%.3f "   // gps ENU initial x
+					"%.3f "   // gps ENU initial y
+					"%.3f "   // gps ENU initial z
 					"%.3f "   // speed
 					"%.2f "   // roll
 					"%.2f "   // pitch
@@ -107,7 +113,7 @@ static THD_FUNCTION(log_thread, arg) {
 					"%.1f "   // mag[1]
 					"%.1f "   // mag[2]
 					"%d "     // tachometer
-					"%.3f\n", // servo
+					"%.3f\n", // commanded steering angle
 
 					time,
 					(double)val.temp_mos,
@@ -116,9 +122,12 @@ static THD_FUNCTION(log_thread, arg) {
 					(double)val.v_in,
 					(double)pos.px,
 					(double)pos.py,
-					(double)pos.px_gps,
-					(double)pos.py_gps,
-					(double)pos.pz_gps,
+					(double)gps.lx,
+					(double)gps.ly,
+					(double)gps.lz,
+					gps.ix,
+					gps.iy,
+					gps.iz,
 					(double)pos.speed,
 					(double)pos.roll,
 					(double)pos.pitch,
@@ -174,7 +183,7 @@ static THD_FUNCTION(log_thread, arg) {
 					"%.1f "   // mag[1]
 					"%.1f "   // mag[2]
 					"%d "     // tachometer
-					"%.3f\n", // steering angle
+					"%.3f\n", // commanded steering angle
 
 					time,
 					gps.ms,

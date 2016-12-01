@@ -152,7 +152,10 @@ typedef enum {
     CMD_GET_MAIN_CONFIG_DEFAULT,
     CMD_SET_YAW_OFFSET,
     CMD_SET_YAW_OFFSET_ACK,
-    CMD_LOG_LINE_USB
+    CMD_LOG_LINE_USB,
+    CMD_PLOT_INIT,
+    CMD_PLOT_DATA,
+    CMD_SETUP_RADAR
 } CMD_PACKET;
 
 // RC control modes
@@ -162,6 +165,18 @@ typedef enum {
     RC_MODE_PID,
     RC_MODE_CURRENT_BRAKE
 } RC_MODE;
+
+typedef struct {
+    bool log_en;
+    float f_center;
+    float f_span;
+    int points;
+    float t_sweep;
+    float cc_x;
+    float cc_y;
+    float cc_rad;
+    int log_rate_ms;
+} radar_settings_t;
 
 typedef enum {
     JS_TYPE_HK = 0,

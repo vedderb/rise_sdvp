@@ -20,6 +20,10 @@
 
 #include "datatypes.h"
 
+// Firmware version
+#define FW_VERSION_MAJOR			5
+#define FW_VERSION_MINOR			1
+
 // Default car settings
 //#define CAR_TERO // Benjamins tero car
 
@@ -39,10 +43,6 @@
 #define CC2520_NODE_ADDRESS			0x001
 #define CC2520_DEST_ADDRESS			0xffff // 0xffff = broadcast
 
-// Software version
-#define FW_VERSION_MAJOR			4
-#define FW_VERSION_MINOR			1
-
 // General settings
 #define ID_ALL						255
 #define VESC_ID						ID_ALL // id, or ID_ALL for any VESC
@@ -51,6 +51,13 @@
 #ifndef IMU_ROT_180
 #define IMU_ROT_180					0
 #endif
+
+// Radar settings
+#define RADAR_EN					0
+#define RADAR_CENTER_FREQ			76.5e9
+#define RADAR_FREQ_SPAN				1.0e9
+#define RADAR_FREQ_PONTS			1024
+#define RADAR_SWEEP_TIME			0.075
 
 // Servo settings
 #define SERVO_OUT_RATE_HZ			50

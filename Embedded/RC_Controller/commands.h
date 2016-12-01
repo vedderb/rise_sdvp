@@ -36,5 +36,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 void commands_printf(char* format, ...);
 void commands_printf_log_usb(char* format, ...);
 void commands_forward_vesc_packet(unsigned char *data, unsigned int len);
+void commands_init_plot(char *namex, char *namey);
+void commands_send_plot_points(float x, float y);
 
 #endif /* COMMANDS_H_ */

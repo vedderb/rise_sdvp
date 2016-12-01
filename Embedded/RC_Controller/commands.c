@@ -37,6 +37,7 @@
 #include "comm_usb.h"
 #include "timeout.h"
 #include "log.h"
+#include "radar.h"
 
 #include <math.h>
 #include <string.h>
@@ -50,12 +51,14 @@
 static uint8_t m_send_buffer[PACKET_MAX_PL_LEN];
 static void(*m_send_func)(unsigned char *data, unsigned int len) = 0;
 static virtual_timer_t vt;
+static mutex_t m_print_gps;
 
 // Private functions
 static void stop_forward(void *p);
 
 void commands_init(void) {
 	m_send_func = 0;
+	chMtxObjectInit(&m_print_gps);
 	chVTObjectInit(&vt);
 }
 
@@ -503,6 +506,34 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			}
 		} break;
 
+		case CMD_SETUP_RADAR: {
+#if RADAR_EN
+			timeout_reset();
+			radar_settings_t s;
+			int32_t ind = 0;
+
+			s.f_center = buffer_get_float32_auto(data, &ind);
+			s.f_span = buffer_get_float32_auto(data, &ind);
+			s.points = buffer_get_int16(data, &ind);
+			s.t_sweep = buffer_get_float32_auto(data, &ind);
+			s.cc_x = buffer_get_float32_auto(data, &ind);
+			s.cc_y = buffer_get_float32_auto(data, &ind);
+			s.cc_rad = buffer_get_float32_auto(data, &ind);
+			s.log_rate_ms = buffer_get_int32(data, &ind);
+			s.log_en = data[ind++];
+
+			// Send ack
+			int32_t send_index = 0;
+			m_send_buffer[send_index++] = main_id;
+			m_send_buffer[send_index++] = packet_id;
+			commands_send_packet(m_send_buffer, send_index);
+
+			timeout_reset();
+
+			radar_setup_measurement(&s);
+#endif
+		} break;
+
 		default:
 			break;
 		}
@@ -510,6 +541,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 }
 
 void commands_printf(char* format, ...) {
+	chMtxLock(&m_print_gps);
 	va_list arg;
 	va_start (arg, format);
 	int len;
@@ -523,6 +555,7 @@ void commands_printf(char* format, ...) {
 	if(len > 0) {
 		commands_send_packet((unsigned char*)print_buffer, (len<253) ? len + 2: 255);
 	}
+	chMtxUnlock(&m_print_gps);
 }
 
 void commands_printf_log_usb(char* format, ...) {
@@ -546,6 +579,28 @@ void commands_forward_vesc_packet(unsigned char *data, unsigned int len) {
 	m_send_buffer[1] = CMD_VESC_FWD;
 	memcpy(m_send_buffer + 2, data, len);
 	commands_send_packet((unsigned char*)m_send_buffer, len + 2);
+}
+
+void commands_init_plot(char *namex, char *namey) {
+	int ind = 0;
+	m_send_buffer[ind++] = main_id;
+	m_send_buffer[ind++] = CMD_PLOT_INIT;
+	memcpy(m_send_buffer + ind, namex, strlen(namex));
+	ind += strlen(namex);
+	m_send_buffer[ind++] = '\0';
+	memcpy(m_send_buffer + ind, namey, strlen(namey));
+	ind += strlen(namey);
+	m_send_buffer[ind++] = '\0';
+	commands_send_packet((unsigned char*)m_send_buffer, ind);
+}
+
+void commands_send_plot_points(float x, float y) {
+	int32_t ind = 0;
+	m_send_buffer[ind++] = main_id;
+	m_send_buffer[ind++] = CMD_PLOT_DATA;
+	buffer_append_float32_auto(m_send_buffer, x, &ind);
+	buffer_append_float32_auto(m_send_buffer, y, &ind);
+	commands_send_packet((unsigned char*)m_send_buffer, ind);
 }
 
 static void stop_forward(void *p) {

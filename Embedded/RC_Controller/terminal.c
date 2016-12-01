@@ -21,6 +21,7 @@
 #include "commands.h"
 #include "utils.h"
 #include "bldc_interface.h"
+#include "radar.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -76,6 +77,27 @@ void terminal_process_string(char *str) {
 		bldc_interface_terminal_cmd(buffer);
 	}
 
+#if RADAR_EN
+	else if (strcmp(argv[0], "radar_sample") == 0) {
+		commands_printf("Sampling radar...");
+		radar_setup_measurement_default();
+		radar_sample();
+	} else if (strcmp(argv[0], "radar_cmd") == 0) {
+		buffer[0] = '\0';
+		int ind = 0;
+		for (int i = 1;i < argc;i++) {
+			if (i == 1) {
+				sprintf(buffer + ind, "%s", argv[i]);
+				ind += strlen(argv[i]);
+			} else {
+				sprintf(buffer + ind, " %s", argv[i]);
+				ind += strlen(argv[i]) + 1;
+			}
+		}
+		radar_cmd(buffer);
+	}
+#endif
+
 	// The help command
 	else if (strcmp(argv[0], "help") == 0) {
 		commands_printf("Valid commands are:");
@@ -92,7 +114,17 @@ void terminal_process_string(char *str) {
 		commands_printf("  List all threads");
 
 		commands_printf("vesc");
-		commands_printf("  Forward command to VESC\n");
+		commands_printf("  Forward command to VESC");
+
+#if RADAR_EN
+		commands_printf("radar_sample");
+		commands_printf("  Start radar sampling");
+
+		commands_printf("radar_cmd");
+		commands_printf("  Forward command to radar");
+#endif
+
+		commands_printf("");
 	} else {
 		commands_printf("Invalid command: %s\n"
 				"type help to list all available commands\n", argv[0]);

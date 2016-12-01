@@ -119,7 +119,10 @@ typedef enum {
 	CMD_GET_MAIN_CONFIG_DEFAULT,
 	CMD_SET_YAW_OFFSET,
 	CMD_SET_YAW_OFFSET_ACK,
-	CMD_LOG_LINE_USB
+	CMD_LOG_LINE_USB,
+	CMD_PLOT_INIT,
+	CMD_PLOT_DATA,
+	CMD_SETUP_RADAR
 } CMD_PACKET;
 
 // RC control modes
@@ -187,7 +190,7 @@ typedef struct {
 	double z;
 	int fix_type; // 0=Invalid, 1=SPP, 4=RTK fix, 5=RTK float
 	int sats;
-	int ms; // Milliseconds today
+	int32_t ms; // Milliseconds today
 	unsigned int update_time;
 	// Local position (ENU frame)
 	bool local_init_done;
@@ -257,6 +260,18 @@ typedef enum {
 	FAULT_CODE_OVER_TEMP_FET,
 	FAULT_CODE_OVER_TEMP_MOTOR
 } mc_fault_code;
+
+typedef struct {
+	bool log_en;
+	float f_center;
+	float f_span;
+	int points;
+	float t_sweep;
+	float cc_x;
+	float cc_y;
+	float cc_rad;
+	int log_rate_ms;
+} radar_settings_t;
 
 // VESC Types
 typedef struct {

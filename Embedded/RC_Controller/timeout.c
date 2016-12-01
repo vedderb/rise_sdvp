@@ -30,7 +30,7 @@ static THD_WORKING_AREA(timeout_thread_wa, 512);
 static THD_FUNCTION(timeout_thread, arg);
 
 void timeout_init(void) {
-	m_timeout_msec = 1000;
+	m_timeout_msec = 2000;
 	m_last_update_time = 0;
 	m_timeout_brake_current = 0.0;
 	m_has_timeout = false;

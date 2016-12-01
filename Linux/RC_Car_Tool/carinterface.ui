@@ -157,7 +157,7 @@
         <attribute name="toolTip">
          <string>Terminal</string>
         </attribute>
-        <layout class="QVBoxLayout" name="verticalLayout_5">
+        <layout class="QVBoxLayout" name="verticalLayout_3">
          <item>
           <widget class="QTextBrowser" name="terminalBrowser">
            <property name="font">
@@ -168,7 +168,7 @@
           </widget>
          </item>
          <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <layout class="QHBoxLayout" name="horizontalLayout_12">
            <item>
             <widget class="QLineEdit" name="terminalEdit"/>
            </item>
@@ -197,6 +197,52 @@
              <property name="icon">
               <iconset resource="resources.qrc">
                <normaloff>:/models/Icons/Delete2-96.png</normaloff>:/models/Icons/Delete2-96.png</iconset>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <item>
+            <widget class="QLabel" name="label_4">
+             <property name="text">
+              <string>VESC</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="terminalEditVesc"/>
+           </item>
+           <item>
+            <widget class="QPushButton" name="terminalSendVescButton">
+             <property name="text">
+              <string/>
+             </property>
+             <property name="icon">
+              <iconset resource="resources.qrc">
+               <normaloff>:/models/Icons/Send File-96.png</normaloff>:/models/Icons/Send File-96.png</iconset>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_5">
+             <property name="text">
+              <string>Radar</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="terminalEditRadar"/>
+           </item>
+           <item>
+            <widget class="QPushButton" name="terminalSendRadarButton">
+             <property name="text">
+              <string/>
+             </property>
+             <property name="icon">
+              <iconset resource="resources.qrc">
+               <normaloff>:/models/Icons/Send File-96.png</normaloff>:/models/Icons/Send File-96.png</iconset>
              </property>
             </widget>
            </item>
@@ -1319,6 +1365,234 @@
          </item>
         </layout>
        </widget>
+       <widget class="QWidget" name="tab">
+        <attribute name="icon">
+         <iconset resource="resources.qrc">
+          <normaloff>:/models/Icons/Polyline-96.png</normaloff>:/models/Icons/Polyline-96.png</iconset>
+        </attribute>
+        <attribute name="title">
+         <string/>
+        </attribute>
+        <attribute name="toolTip">
+         <string>Experiment Plot</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_5">
+         <item>
+          <widget class="QCustomPlot" name="experimentPlot" native="true"/>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="tab_11">
+        <attribute name="icon">
+         <iconset resource="resources.qrc">
+          <normaloff>:/models/Icons/Wi-Fi-96.png</normaloff>:/models/Icons/Wi-Fi-96.png</iconset>
+        </attribute>
+        <attribute name="title">
+         <string/>
+        </attribute>
+        <attribute name="toolTip">
+         <string>Radar</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_16">
+         <item>
+          <widget class="QCheckBox" name="radarLogEnBox">
+           <property name="text">
+            <string>Enable Logging</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QDoubleSpinBox" name="radarFCenterBox">
+           <property name="prefix">
+            <string>F_Center: </string>
+           </property>
+           <property name="suffix">
+            <string> GHz</string>
+           </property>
+           <property name="decimals">
+            <number>3</number>
+           </property>
+           <property name="singleStep">
+            <double>0.010000000000000</double>
+           </property>
+           <property name="value">
+            <double>76.500000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QDoubleSpinBox" name="radarFSpanBox">
+           <property name="prefix">
+            <string>F_Span: </string>
+           </property>
+           <property name="suffix">
+            <string> GHz</string>
+           </property>
+           <property name="decimals">
+            <number>3</number>
+           </property>
+           <property name="singleStep">
+            <double>0.010000000000000</double>
+           </property>
+           <property name="value">
+            <double>1.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSpinBox" name="radarPointsBox">
+           <property name="prefix">
+            <string>Points: </string>
+           </property>
+           <property name="maximum">
+            <number>1536</number>
+           </property>
+           <property name="value">
+            <number>1024</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QDoubleSpinBox" name="radarTSweepBox">
+           <property name="prefix">
+            <string>T_Sweep: </string>
+           </property>
+           <property name="suffix">
+            <string> s</string>
+           </property>
+           <property name="decimals">
+            <number>4</number>
+           </property>
+           <property name="singleStep">
+            <double>0.001000000000000</double>
+           </property>
+           <property name="value">
+            <double>0.075000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QDoubleSpinBox" name="radarCcXBox">
+           <property name="prefix">
+            <string>CC X: </string>
+           </property>
+           <property name="decimals">
+            <number>3</number>
+           </property>
+           <property name="minimum">
+            <double>-999.000000000000000</double>
+           </property>
+           <property name="maximum">
+            <double>999.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QDoubleSpinBox" name="radarCcYBox">
+           <property name="prefix">
+            <string>CC Y: </string>
+           </property>
+           <property name="decimals">
+            <number>3</number>
+           </property>
+           <property name="minimum">
+            <double>-999.000000000000000</double>
+           </property>
+           <property name="maximum">
+            <double>999.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QDoubleSpinBox" name="radarCRadBox">
+           <property name="prefix">
+            <string>C Rad: </string>
+           </property>
+           <property name="decimals">
+            <number>3</number>
+           </property>
+           <property name="minimum">
+            <double>-999.000000000000000</double>
+           </property>
+           <property name="maximum">
+            <double>999.000000000000000</double>
+           </property>
+           <property name="value">
+            <double>10.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QDoubleSpinBox" name="radarLogRateBox">
+           <property name="prefix">
+            <string>Log Rate: </string>
+           </property>
+           <property name="suffix">
+            <string> s</string>
+           </property>
+           <property name="singleStep">
+            <double>0.100000000000000</double>
+           </property>
+           <property name="value">
+            <double>1.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="verticalSpacer_7">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>108</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_13">
+           <item>
+            <widget class="QPushButton" name="radarGetRadCCButton">
+             <property name="toolTip">
+              <string>Get car center and circle rad from map</string>
+             </property>
+             <property name="text">
+              <string>Get Rad CC</string>
+             </property>
+             <property name="icon">
+              <iconset resource="resources.qrc">
+               <normaloff>:/models/Icons/Waypoint Map-96.png</normaloff>:/models/Icons/Waypoint Map-96.png</iconset>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="radarReadButton">
+             <property name="text">
+              <string>Read</string>
+             </property>
+             <property name="icon">
+              <iconset resource="resources.qrc">
+               <normaloff>:/models/Icons/Upload-96.png</normaloff>:/models/Icons/Upload-96.png</iconset>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="radarWriteButton">
+             <property name="text">
+              <string>Write</string>
+             </property>
+             <property name="icon">
+              <iconset resource="resources.qrc">
+               <normaloff>:/models/Icons/Download-96.png</normaloff>:/models/Icons/Download-96.png</iconset>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </widget>
       </widget>
      </item>
      <item>
@@ -1477,12 +1751,12 @@
    <slot>click()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>146</x>
-     <y>460</y>
+     <x>159</x>
+     <y>396</y>
     </hint>
     <hint type="destinationlabel">
-     <x>649</x>
-     <y>460</y>
+     <x>608</x>
+     <y>397</y>
     </hint>
    </hints>
   </connection>
@@ -1493,12 +1767,44 @@
    <slot>clear()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>222</x>
-     <y>460</y>
+     <x>148</x>
+     <y>429</y>
     </hint>
     <hint type="destinationlabel">
      <x>401</x>
      <y>359</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>terminalEditVesc</sender>
+   <signal>returnPressed()</signal>
+   <receiver>terminalSendVescButton</receiver>
+   <slot>click()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>268</x>
+     <y>416</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>309</x>
+     <y>422</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>terminalEditRadar</sender>
+   <signal>returnPressed()</signal>
+   <receiver>terminalSendRadarButton</receiver>
+   <slot>click()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>565</x>
+     <y>414</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>622</x>
+     <y>420</y>
     </hint>
    </hints>
   </connection>

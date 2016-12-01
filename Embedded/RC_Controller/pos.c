@@ -45,6 +45,7 @@ static float m_imu_yaw;
 static float m_yaw_offset;
 static mutex_t m_mutex_pos;
 static mutex_t m_mutex_gps;
+static int32_t m_ms_today;
 
 // Private functions
 static void mpu9150_read(void);
@@ -61,6 +62,7 @@ void pos_init(void) {
 	memset(&m_mc_val, 0, sizeof(m_mc_val));
 	m_imu_yaw = 0.0;
 	m_yaw_offset = 0.0;
+	m_ms_today = -1;
 	chMtxObjectInit(&m_mutex_pos);
 	chMtxObjectInit(&m_mutex_gps);
 
@@ -211,7 +213,7 @@ void pos_get_mc_val(mc_values *v) {
 
 void pos_input_nmea(const char *data) {
 	static char nmea_str[1024];
-	int ms = -1;
+	int32_t ms = -1;
 	double lat = 0.0;
 	double lon = 0.0;
 	double height = 0.0;
@@ -301,6 +303,10 @@ void pos_input_nmea(const char *data) {
 			gga = strsep(&str, ",");
 			ind++;
 		}
+	}
+
+	if (ms >= 0) {
+		m_ms_today = ms;
 	}
 
 	// Only use RTK float or fix
@@ -407,6 +413,13 @@ static void mpu9150_read(void) {
 		mc_read_cnt = 0;
 		bldc_interface_get_values();
 	}
+
+	// Update time today based on system clock
+	static int time_last = 0;
+	if (m_ms_today >= 0) {
+		m_ms_today += (1000 * chVTTimeElapsedSinceX(time_last)) / CH_CFG_ST_FREQUENCY;
+	}
+	time_last = chVTGetSystemTimeX();
 }
 
 static void update_orientation_angles(float *accel, float *gyro, float *mag, float dt) {
