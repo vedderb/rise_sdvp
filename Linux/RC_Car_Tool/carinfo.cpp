@@ -23,6 +23,7 @@ CarInfo::CarInfo(int id, Qt::GlobalColor color)
     mColor = color;
     mName = "";
     mName.sprintf("Car %d", mId);
+    mTime = 0;
 }
 
 int CarInfo::getId()
@@ -83,6 +84,16 @@ LocPoint CarInfo::getApGoal() const
 void CarInfo::setApGoal(const LocPoint &apGoal)
 {
     mApGoal = apGoal;
+}
+
+qint32 CarInfo::getTime() const
+{
+    return mTime;
+}
+
+void CarInfo::setTime(const qint32 &time)
+{
+    mTime = time;
 }
 
 LocPoint CarInfo::getLocation() const

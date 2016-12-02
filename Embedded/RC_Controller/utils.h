@@ -27,6 +27,7 @@ float utils_calc_ratio(float low, float high, float val);
 void utils_norm_angle(float *angle);
 void utils_norm_angle_rad(float *angle);
 int utils_truncate_number(float *number, float min, float max);
+int utils_truncate_number_abs(float *number, float max);
 float utils_map(float x, float in_min, float in_max, float out_min, float out_max);
 int utils_map_int(int x, int in_min, int in_max, int out_min, int out_max);
 void utils_deadband(float *value, float tres, float max);
@@ -53,6 +54,7 @@ void utils_create_enu_matrix(double lat, double lon, double *enuMat);
 void utils_llh_to_enu(const double *iLlh, const double *llh, double *xyz);
 void utils_enu_to_llh(const double *iLlh, const double *xyz, double *llh);
 void utils_byte_to_binary(int x, char *b);
+bool utils_time_before(int32_t t1, int32_t t2);
 void utils_sys_lock_cnt(void);
 void utils_sys_unlock_cnt(void);
 

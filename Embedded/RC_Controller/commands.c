@@ -164,6 +164,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			buffer_append_float32(m_send_buffer, rp_goal.px, 1e4, &send_index); // 85
 			buffer_append_float32(m_send_buffer, rp_goal.py, 1e4, &send_index); // 89
 			buffer_append_float32(m_send_buffer, autopilot_get_rad_now(), 1e6, &send_index); // 93
+			buffer_append_int32(m_send_buffer, pos_get_ms_today(), &send_index); // 97
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
 
@@ -287,6 +288,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 				p.px = buffer_get_float32(data, 1e4, &ind);
 				p.py = buffer_get_float32(data, 1e4, &ind);
 				p.speed = buffer_get_float32(data, 1e6, &ind);
+				p.time = buffer_get_int32(data, &ind);
 				autopilot_add_point(&p);
 			}
 
@@ -415,6 +417,9 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 			main_config.ap_repeat_routes = data[ind++];
 			main_config.ap_base_rad = buffer_get_float32(data, 1e6, &ind);
+			main_config.ap_mode_time = data[ind++];
+			main_config.ap_max_speed = buffer_get_float32(data, 1e6, &ind);
+			main_config.ap_time_add_repeat_ms = buffer_get_int32(data, &ind);
 
 			main_config.log_en = data[ind++];
 			strcpy(main_config.log_name, (const char*)(data + ind));
@@ -480,6 +485,9 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 			m_send_buffer[send_index++] = main_cfg_tmp.ap_repeat_routes;
 			buffer_append_float32(m_send_buffer, main_cfg_tmp.ap_base_rad, 1e6, &send_index);
+			m_send_buffer[send_index++] = main_cfg_tmp.ap_mode_time;
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.ap_max_speed, 1e6, &send_index);
+			buffer_append_int32(m_send_buffer, main_cfg_tmp.ap_time_add_repeat_ms, &send_index);
 
 			m_send_buffer[send_index++] = main_cfg_tmp.log_en;
 			strcpy((char*)(m_send_buffer + send_index), main_cfg_tmp.log_name);
@@ -532,6 +540,15 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 			radar_setup_measurement(&s);
 #endif
+		} break;
+
+		case CMD_SET_MS_TODAY: {
+			timeout_reset();
+
+			int32_t time;
+			int32_t ind = 0;
+			time = buffer_get_int32(data, &ind);
+			pos_set_ms_today(time);
 		} break;
 
 		default:

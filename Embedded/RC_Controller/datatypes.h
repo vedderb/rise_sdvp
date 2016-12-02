@@ -35,6 +35,9 @@
 // Sizes
 #define LOG_NAME_MAX_LEN			20
 
+// Constants
+#define MS_PER_DAY					(24 * 60 * 60 * 1000)
+
 // Orientation data
 typedef struct {
 	float q0;
@@ -78,6 +81,7 @@ typedef struct {
 	float px;
 	float py;
 	float speed;
+	int32_t time;
 } ROUTE_POINT;
 
 typedef enum {
@@ -122,7 +126,8 @@ typedef enum {
 	CMD_LOG_LINE_USB,
 	CMD_PLOT_INIT,
 	CMD_PLOT_DATA,
-	CMD_SETUP_RADAR
+	CMD_SETUP_RADAR,
+	CMD_SET_MS_TODAY
 } CMD_PACKET;
 
 // RC control modes
@@ -174,6 +179,9 @@ typedef struct {
 	// Autopilot parameters
 	bool ap_repeat_routes; // Repeat the same route when the end is reached
 	float ap_base_rad; // Radius around car at 0 speed
+	bool ap_mode_time; // Drive to route points based on timestamps instead of speed
+	float ap_max_speed; // Maximum allowed speed for autopilot
+	int32_t ap_time_add_repeat_ms; // Time to add to each point for each repetition of the route
 
 	// Logging
 	bool log_en;

@@ -21,8 +21,8 @@
 #include "datatypes.h"
 
 // Firmware version
-#define FW_VERSION_MAJOR			5
-#define FW_VERSION_MINOR			1
+#define FW_VERSION_MAJOR			6
+#define FW_VERSION_MINOR			0
 
 // Default car settings
 //#define CAR_TERO // Benjamins tero car

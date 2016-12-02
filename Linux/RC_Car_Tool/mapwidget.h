@@ -63,6 +63,7 @@ public:
     QList<LocPoint> getRoute();
     void setRoute(QList<LocPoint> route);
     void clearRoute();
+    void clearAllRoutes();
     void setRoutePointSpeed(double speed);
     void addInfoPoint(LocPoint &info);
     void clearInfoTrace();
@@ -92,6 +93,12 @@ public:
     bool getDrawOsmStats() const;
     void setDrawOsmStats(bool drawOsmStats);
 
+    int getRouteNow() const;
+    void setRouteNow(int routeNow);
+
+    qint32 getRoutePointTime() const;
+    void setRoutePointTime(const qint32 &routePointTime);
+
 signals:
     void scaleChanged(double newScale);
     void offsetChanged(double newXOffset, double newYOffset);
@@ -114,11 +121,12 @@ private:
     QList<CarInfo> mCarInfo;
     QList<LocPoint> mCarTrace;
     QList<LocPoint> mCarTraceGps;
-    QList<LocPoint> mRoute;
+    QList<QList<LocPoint> > mRoutes;
     QList<LocPoint> mInfoTrace;
     QList<LocPoint> mVisibleInfoTracePoints;
     QList<PerspectivePixmap> mPerspectivePixmaps;
     double mRoutePointSpeed;
+    qint32 mRoutePointTime;
     double mScaleFactor;
     double mRotation;
     double mXOffset;
@@ -145,6 +153,7 @@ private:
     LocPoint mClosestInfo;
     bool mDrawGrid;
     int mRoutePointSelected;
+    int mRouteNow;
 
     void updateClosestInfoPoint();
     int drawInfoPoints(QPainter &painter, const QList<LocPoint> &pts,

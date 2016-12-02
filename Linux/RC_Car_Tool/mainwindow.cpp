@@ -23,6 +23,7 @@
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QHostInfo>
+#include <QInputDialog>
 
 #include "utility.h"
 
@@ -114,6 +115,8 @@ MainWindow::MainWindow(QWidget *parent) :
             this, SLOT(enuRx(quint8,double,double,double)));
     connect(mNmea, SIGNAL(clientGgaRx(int,NmeaServer::nmea_gga_info_t)),
             this, SLOT(nmeaGgaRx(int,NmeaServer::nmea_gga_info_t)));
+    connect(ui->mapWidget, SIGNAL(routePointAdded(LocPoint)),
+            this, SLOT(routePointAdded(LocPoint)));
 
     on_serialRefreshButton_clicked();
 
@@ -540,6 +543,14 @@ void MainWindow::nmeaGgaRx(int fields, NmeaServer::nmea_gga_info_t gga)
             }
         }
     }
+}
+
+void MainWindow::routePointAdded(LocPoint pos)
+{
+    (void)pos;
+    QTime t = ui->mapRouteTimeEdit->time();
+    t = t.addMSecs(ui->mapRouteAddTimeEdit->time().msecsSinceStartOfDay());
+    ui->mapRouteTimeEdit->setTime(t);
 }
 
 void MainWindow::on_carAddButton_clicked()
@@ -1147,4 +1158,43 @@ void MainWindow::on_mapStreamNmeaDisconnectButton_clicked()
 void MainWindow::on_mapStreamNmeaClearTraceButton_clicked()
 {
     ui->mapWidget->clearInfoTrace();
+}
+
+void MainWindow::on_mapRouteBox_valueChanged(int arg1)
+{
+    ui->mapWidget->setRouteNow(arg1);
+}
+
+void MainWindow::on_mapRemoveRouteAllButton_clicked()
+{
+    ui->mapWidget->clearAllRoutes();
+}
+
+void MainWindow::on_mapUpdateTimeButton_clicked()
+{
+    bool ok;
+    int res = QInputDialog::getInt(this,
+                                   tr("Set new route start time"),
+                                   tr("Seconds from now"), 30, 0, 60000, 1, &ok);
+
+    if (ok) {
+        QList<LocPoint> route = ui->mapWidget->getRoute();
+        qint32 now = QTime::currentTime().msecsSinceStartOfDay() + res * 1000;
+        qint32 start_diff = 0;
+
+        for (int i = 0;i < route.size();i++) {
+            if (i == 0) {
+                start_diff = now - route[i].getTime();
+            }
+
+            route[i].setTime(route[i].getTime() + start_diff);
+        }
+
+        ui->mapWidget->setRoute(route);
+    }
+}
+
+void MainWindow::on_mapRouteTimeEdit_timeChanged(const QTime &time)
+{
+    ui->mapWidget->setRoutePointTime(time.msecsSinceStartOfDay());
 }

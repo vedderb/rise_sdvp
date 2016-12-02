@@ -60,6 +60,7 @@ private slots:
     void pingError(QString msg, QString error);
     void enuRx(quint8 id, double lat, double lon, double height);
     void nmeaGgaRx(int fields, NmeaServer::nmea_gga_info_t gga);
+    void routePointAdded(LocPoint pos);
 
     void on_carAddButton_clicked();
     void on_carRemoveButton_clicked();
@@ -110,6 +111,10 @@ private slots:
     void on_mapStreamNmeaConnectButton_clicked();
     void on_mapStreamNmeaDisconnectButton_clicked();
     void on_mapStreamNmeaClearTraceButton_clicked();
+    void on_mapRouteBox_valueChanged(int arg1);
+    void on_mapRemoveRouteAllButton_clicked();
+    void on_mapUpdateTimeButton_clicked();
+    void on_mapRouteTimeEdit_timeChanged(const QTime &time);
 
 private:
     Ui::MainWindow *ui;

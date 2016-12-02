@@ -93,6 +93,20 @@ int utils_truncate_number(float *number, float min, float max) {
 	return did_trunc;
 }
 
+int utils_truncate_number_abs(float *number, float max) {
+	int did_trunc = 0;
+
+	if (*number > max) {
+		*number = max;
+		did_trunc = 1;
+	} else if (*number < -max) {
+		*number = -max;
+		did_trunc = 1;
+	}
+
+	return did_trunc;
+}
+
 float utils_map(float x, float in_min, float in_max, float out_min, float out_max) {
 	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
@@ -748,6 +762,26 @@ void utils_byte_to_binary(int x, char *b) {
 	int z;
 	for (z = 128; z > 0; z >>= 1) {
 		strcat(b, ((x & z) == z) ? "1" : "0");
+	}
+}
+
+/**
+ * Check if t1 is before t2. Considers wrap-around at 24h.
+ *
+ * @param t1
+ * Time t1, milliseconds today
+ *
+ * @param t2
+ * Time t2, milliseconds today
+ *
+ * @return
+ * true if t1 is before t2, false otherwise.
+ */
+bool utils_time_before(int32_t t1, int32_t t2) {
+	if (t1 < t2 && (t2 - t1) < (MS_PER_DAY / 2)) {
+		return true;
+	} else {
+		return false;
 	}
 }
 

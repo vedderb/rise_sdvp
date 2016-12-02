@@ -108,6 +108,9 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 
 	conf->ap_repeat_routes = true;
 	conf->ap_base_rad = 1.2;
+	conf->ap_mode_time = false;
+	conf->ap_max_speed = 30.0 / 3.6;
+	conf->ap_time_add_repeat_ms = 60 * 1000;
 
 	conf->log_en = false;
 	strcpy(conf->log_name, "New Log");

@@ -38,6 +38,8 @@ public:
     void setColor(Qt::GlobalColor color);
     LocPoint getApGoal() const;
     void setApGoal(const LocPoint &apGoal);
+    qint32 getTime() const;
+    void setTime(const qint32 &time);
 
 private:
     int mId;
@@ -46,6 +48,8 @@ private:
     LocPoint mLocationGps;
     LocPoint mApGoal;
     Qt::GlobalColor mColor;
+    qint32 mTime;
+
 };
 
 #endif // CARINFO_H

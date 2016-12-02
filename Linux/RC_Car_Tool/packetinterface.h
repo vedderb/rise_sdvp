@@ -83,6 +83,7 @@ public slots:
     void getDefaultConfiguration(quint8 id);
     void setYawOffset(quint8 id, double angle);
     void getEnuRef(quint8 id);
+    void setMsToday(quint8 id, qint32 time);
 
 private:
     unsigned short crc16(const unsigned char *buf, unsigned int len);

@@ -206,9 +206,13 @@ static THD_FUNCTION(ap_thread, arg) {
 		int len = m_point_last;
 
 		// This means that the route has wrapped around
+		// (should only happen when ap_repeat_routes == false)
 		if (m_point_now > m_point_last) {
 			len = AP_ROUTE_SIZE + m_point_last - m_point_now;
 		}
+
+		// Time of today according to our clock
+		int ms_today = pos_get_ms_today();
 
 		if (len >= 2) {
 			POS_STATE p;
@@ -242,7 +246,10 @@ static THD_FUNCTION(ap_thread, arg) {
 			if (last_point_ind < 0) {
 				last_point_ind += AP_ROUTE_SIZE;
 			}
-			ROUTE_POINT *rp_last = &m_route[last_point_ind];
+
+			ROUTE_POINT *rp_last = &m_route[last_point_ind]; // Last point on route
+			ROUTE_POINT *rp_ls1 = &m_route[0]; // First point on goal line segment
+			ROUTE_POINT *rp_ls2 = &m_route[1]; // Second point on goal line segment
 
 			for (int i = start;i < end;i++) {
 				int ind = i; // First point index for this iteration
@@ -277,6 +284,15 @@ static THD_FUNCTION(ap_thread, arg) {
 				p1 = &m_route[ind];
 				p2 = &m_route[indn];
 
+				// If the next point has a time before the current point and repeat route is
+				// active we have completed a full route. Increase its time by the repetition time.
+				if (main_config.ap_repeat_routes && utils_time_before(p2->time, p1->time)) {
+					p2->time += main_config.ap_time_add_repeat_ms;
+					if (p2->time > MS_PER_DAY) {
+						p2->time -= MS_PER_DAY;
+					}
+				}
+
 				int res = utils_circle_line_int(car_cx, car_cy, m_rad_now, p1, p2, &int1, &int2);
 
 				// One intersection. Use it.
@@ -294,6 +310,11 @@ static THD_FUNCTION(ap_thread, arg) {
 					} else {
 						rp_now = int2;
 					}
+				}
+
+				if (res > 0) {
+					rp_ls1 = &m_route[ind];
+					rp_ls2 = &m_route[indn];
 				}
 
 				// If we aren't repeating routes and there is an intersecion on the last
@@ -373,6 +394,8 @@ static THD_FUNCTION(ap_thread, arg) {
 				// circle intersection is found.
 				if (circle_intersections == 0) {
 					rp_now = closest;
+					rp_ls1 = closest1;
+					rp_ls2 = closest2;
 				}
 			}
 
@@ -411,16 +434,46 @@ static THD_FUNCTION(ap_thread, arg) {
 								/ main_config.steering_range)
 								+ main_config.steering_center;
 
-				const float dist_next = utils_point_distance(car_cx, car_cy, closest1->px, closest1->py);
-				const float dist_previous = utils_point_distance(car_cx, car_cy, closest2->px, closest2->py);
-				const float fract_prev = dist_next / (dist_previous + dist_next);
+				float speed = 0.0;
 
-				float speed;
+				if (main_config.ap_mode_time) {
+					if (ms_today >= 0) {
+						// Calculate speed such that the route points are reached at their
+						// specified time. Notice that the direct distance between the car
+						// and the points is used and not the arc that the car drives. This
+						// should still work well enough.
+
+						int32_t dist_prev = (int32_t)(utils_rp_distance(&rp_now, rp_ls1) * 1000.0);
+						int32_t dist_tot = (int32_t)(utils_rp_distance(&rp_now, rp_ls1) * 1000.0);
+						dist_tot += (int32_t)(utils_rp_distance(&rp_now, rp_ls2) * 1000.0);
+						int32_t time = utils_map_int(dist_prev, 0, dist_tot, rp_ls1->time, rp_ls2->time);
+						float dist_car = utils_rp_distance(&car_pos, &rp_now);
+
+						int32_t t_diff = time - ms_today;
+						if (t_diff < 0) {
+							t_diff += 24 * 60 * 60 * 1000;
+						}
+
+						if (t_diff > 0) {
+							speed = dist_car / ((float)t_diff / 1000.0);
+						} else {
+							speed = 0.0;
+						}
+					} else {
+						speed = 0.0;
+					}
+				} else {
+					// Calculate the speed based on the average speed between the two closest points
+					const float dist_prev = utils_rp_distance(&rp_now, closest1);
+					const float dist_tot = utils_rp_distance(&rp_now, closest1) + utils_rp_distance(&rp_now, closest2);
+					speed = utils_map(dist_prev, 0.0, dist_tot, closest1->speed, closest2->speed);
+				}
+
 				if (m_is_speed_override) {
 					speed = m_override_speed;
-				} else {
-					speed = (closest2->speed * fract_prev) + (closest1->speed * (1.0 - fract_prev));
 				}
+
+				utils_truncate_number_abs(&speed, main_config.ap_max_speed);
 
 				servo_simple_set_pos_ramp(servo_pos);
 				autopilot_set_motor_speed(speed);

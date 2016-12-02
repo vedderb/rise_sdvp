@@ -1,3 +1,7 @@
+=== FW 6.0 ===
+* Time set and get command.
+* Autopilot time-based implementation.
+
 === FW 5.1 ===
 * Autopilot major bug fixes.
 

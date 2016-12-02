@@ -23,6 +23,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <cmath>
+#include <QTime>
 
 namespace {
 void faultToStr(mc_fault_code fault, QString &str, bool &isOk)
@@ -302,6 +303,7 @@ void CarInterface::setStateData(CAR_STATE data)
         car->setLocation(loc);
         car->setLocationGps(loc_gps);
         car->setApGoal(ap_goal);
+        car->setTime(data.ms_today);
         mMap->update();
     }
 
@@ -312,6 +314,14 @@ void CarInterface::setStateData(CAR_STATE data)
 
     if (ui->magSampleStoreBox->isChecked()) {
         mMagSamples.append(magXYZ);
+    }
+
+    // Clock
+    if (data.ms_today >= 0) {
+        QTime time = QTime::fromMSecsSinceStartOfDay(data.ms_today);
+        ui->clockLabel->setText(time.toString("HH:mm:ss"));
+    } else {
+        ui->clockLabel->setText("00:00:00");
     }
 }
 
@@ -784,6 +794,9 @@ void CarInterface::getConfGui(MAIN_CONFIG &conf)
 
     conf.ap_repeat_routes = ui->confApRepeatBox->isChecked();
     conf.ap_base_rad = ui->confApBaseRadBox->value();
+    conf.ap_mode_time = ui->confApModeTimeBox->isChecked();
+    conf.ap_max_speed = ui->confApMaxSpeedBox->value() / 3.6;
+    conf.ap_time_add_repeat_ms = ui->confApAddRepeatTimeEdit->time().msecsSinceStartOfDay();
 
     conf.steering_max_angle_rad = atan(ui->confAxisDistanceBox->value() / ui->confTurnRadBox->value());
 
@@ -826,6 +839,9 @@ void CarInterface::setConfGui(MAIN_CONFIG &conf)
 
     ui->confApRepeatBox->setChecked(conf.ap_repeat_routes);
     ui->confApBaseRadBox->setValue(conf.ap_base_rad);
+    ui->confApModeTimeBox->setChecked(conf.ap_mode_time);
+    ui->confApMaxSpeedBox->setValue(conf.ap_max_speed * 3.6);
+    ui->confApAddRepeatTimeEdit->setTime(QTime::fromMSecsSinceStartOfDay(conf.ap_time_add_repeat_ms));
 
     ui->confTurnRadBox->setValue(conf.axis_distance / tan(conf.steering_max_angle_rad));
 
@@ -940,5 +956,13 @@ void CarInterface::on_radarGetRadCCButton_clicked()
         CarInfo *car = mMap->getCarInfo(mId);
         ui->radarCcXBox->setValue(car->getLocation().getX());
         ui->radarCcYBox->setValue(car->getLocation().getY());
+    }
+}
+
+void CarInterface::on_setClockButton_clicked()
+{
+    if (mPacketInterface) {
+        QTime current = QTime::currentTime();
+        mPacketInterface->setMsToday(mId, current.msecsSinceStartOfDay());
     }
 }

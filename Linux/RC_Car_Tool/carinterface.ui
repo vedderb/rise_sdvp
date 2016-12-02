@@ -1201,11 +1201,22 @@
             </attribute>
             <layout class="QVBoxLayout" name="verticalLayout_13">
              <item>
-              <widget class="QCheckBox" name="confApRepeatBox">
-               <property name="text">
-                <string>Repeat Routes</string>
-               </property>
-              </widget>
+              <layout class="QHBoxLayout" name="horizontalLayout_14">
+               <item>
+                <widget class="QCheckBox" name="confApRepeatBox">
+                 <property name="text">
+                  <string>Repeat Routes</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QCheckBox" name="confApModeTimeBox">
+                 <property name="text">
+                  <string>Time mode</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
              </item>
              <item>
               <widget class="QDoubleSpinBox" name="confApBaseRadBox">
@@ -1223,6 +1234,26 @@
                </property>
                <property name="singleStep">
                 <double>0.100000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QDoubleSpinBox" name="confApMaxSpeedBox">
+               <property name="prefix">
+                <string>Max speed: </string>
+               </property>
+               <property name="suffix">
+                <string> km/h</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QTimeEdit" name="confApAddRepeatTimeEdit">
+               <property name="toolTip">
+                <string>Time to add to each point on route when repeating routes.</string>
+               </property>
+               <property name="displayFormat">
+                <string>'Repetition time': HH:mm:ss:zzz</string>
                </property>
               </widget>
              </item>
@@ -1637,6 +1668,13 @@
          </property>
         </widget>
        </item>
+       <item>
+        <widget class="QLabel" name="clockLabel">
+         <property name="text">
+          <string>00:00:00</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </item>
     </layout>
@@ -1712,6 +1750,20 @@
        <property name="icon">
         <iconset resource="resources.qrc">
          <normaloff>:/models/Icons/Delete2-96.png</normaloff>:/models/Icons/Delete2-96.png</iconset>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="setClockButton">
+       <property name="toolTip">
+        <string>Set clock</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/models/Icons/Clock-96.png</normaloff>:/models/Icons/Clock-96.png</iconset>
        </property>
       </widget>
      </item>

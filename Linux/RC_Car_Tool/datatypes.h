@@ -74,6 +74,7 @@ typedef struct {
     double ap_goal_px;
     double ap_goal_py;
     double ap_rad;
+    int32_t ms_today;
 } CAR_STATE;
 
 typedef enum {
@@ -124,6 +125,9 @@ typedef struct {
     // Autopilot parameters
     bool ap_repeat_routes; // Repeat the same route when the end is reached
     float ap_base_rad; // Radius around car at 0 speed
+    bool ap_mode_time; // Drive to route points based on timestamps instead of speed
+    float ap_max_speed; // Maximum allowed speed for autopilot
+    int32_t ap_time_add_repeat_ms; // Time to add to each point for each repetition of the route
 
     // Logging
     bool log_en;
@@ -155,7 +159,8 @@ typedef enum {
     CMD_LOG_LINE_USB,
     CMD_PLOT_INIT,
     CMD_PLOT_DATA,
-    CMD_SETUP_RADAR
+    CMD_SETUP_RADAR,
+    CMD_SET_MS_TODAY
 } CMD_PACKET;
 
 // RC control modes

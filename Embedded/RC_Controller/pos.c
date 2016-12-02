@@ -211,6 +211,14 @@ void pos_get_mc_val(mc_values *v) {
 	*v = m_mc_val;
 }
 
+int32_t pos_get_ms_today(void) {
+	return m_ms_today;
+}
+
+void pos_set_ms_today(int32_t ms) {
+	m_ms_today = ms;
+}
+
 void pos_input_nmea(const char *data) {
 	static char nmea_str[1024];
 	int32_t ms = -1;
@@ -418,6 +426,10 @@ static void mpu9150_read(void) {
 	static int time_last = 0;
 	if (m_ms_today >= 0) {
 		m_ms_today += (1000 * chVTTimeElapsedSinceX(time_last)) / CH_CFG_ST_FREQUENCY;
+
+		if (m_ms_today >= MS_PER_DAY) {
+			m_ms_today -= MS_PER_DAY;
+		}
 	}
 	time_last = chVTGetSystemTimeX();
 }

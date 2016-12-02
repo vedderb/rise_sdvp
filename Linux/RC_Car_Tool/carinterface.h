@@ -99,12 +99,10 @@ private slots:
     void on_nmeaLogActiveBox_toggled(bool checked);
     void on_magCalChooseButton_clicked();
     void on_magCalLoadButton_clicked();
-
     void on_radarReadButton_clicked();
-
     void on_radarWriteButton_clicked();
-
     void on_radarGetRadCCButton_clicked();
+    void on_setClockButton_clicked();
 
 private:
     Ui::CarInterface *ui;

@@ -362,6 +362,7 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         state.ap_goal_px = utility::buffer_get_double32(data, 1e4, &ind);
         state.ap_goal_py = utility::buffer_get_double32(data, 1e4, &ind);
         state.ap_rad = utility::buffer_get_double32(data, 1e6, &ind);
+        state.ms_today = utility::buffer_get_int32(data, &ind);
         emit stateReceived(id, state);
     } break;
 
@@ -427,6 +428,9 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
 
         conf.ap_repeat_routes = data[ind++];
         conf.ap_base_rad = utility::buffer_get_double32(data, 1e6, &ind);
+        conf.ap_mode_time = data[ind++];
+        conf.ap_max_speed = utility::buffer_get_double32(data, 1e6, &ind);
+        conf.ap_time_add_repeat_ms = utility::buffer_get_int32(data, &ind);
 
         conf.log_en = data[ind++];
         strcpy(conf.log_name, (const char*)(data + ind));
@@ -537,6 +541,7 @@ bool PacketInterface::setRoutePoints(quint8 id, QList<LocPoint> points, int retr
         utility::buffer_append_double32(mSendBuffer, p->getX(), 1e4, &send_index);
         utility::buffer_append_double32(mSendBuffer, p->getY(), 1e4, &send_index);
         utility::buffer_append_double32(mSendBuffer, p->getSpeed(), 1e6, &send_index);
+        utility::buffer_append_int32(mSendBuffer, p->getTime(), &send_index);
     }
 
     return sendPacketAck(mSendBuffer, send_index, retries);
@@ -610,6 +615,9 @@ bool PacketInterface::setConfiguration(quint8 id, MAIN_CONFIG &conf, int retries
 
     mSendBuffer[send_index++] = conf.ap_repeat_routes;
     utility::buffer_append_double32(mSendBuffer, conf.ap_base_rad, 1e6, &send_index);
+    mSendBuffer[send_index++] = conf.ap_mode_time;
+    utility::buffer_append_double32(mSendBuffer, conf.ap_max_speed, 1e6, &send_index);
+    utility::buffer_append_int32(mSendBuffer, conf.ap_time_add_repeat_ms, &send_index);
 
     mSendBuffer[send_index++] = conf.log_en;
     strcpy((char*)(mSendBuffer + send_index), conf.log_name);
@@ -793,4 +801,13 @@ void PacketInterface::getEnuRef(quint8 id)
     packet.append(id);
     packet.append((char)CMD_GET_ENU_REF);
     sendPacket(packet);
+}
+
+void PacketInterface::setMsToday(quint8 id, qint32 time)
+{
+    qint32 send_index = 0;
+    mSendBuffer[send_index++] = id;
+    mSendBuffer[send_index++] = CMD_SET_MS_TODAY;
+    utility::buffer_append_int32(mSendBuffer, time, &send_index);
+    sendPacket(mSendBuffer, send_index);
 }
