@@ -16,6 +16,8 @@ public:
     bool sendData(const QByteArray &data);
     QString errorString();
     Packet *packet();
+    bool usePacket() const;
+    void setUsePacket(bool usePacket);
 
 signals:
     void dataRx(const QByteArray &data);
@@ -32,6 +34,7 @@ private:
     QTcpServer *mTcpServer;
     QTcpSocket *mTcpSocket;
     Packet *mPacket;
+    bool mUsePacket;
 
 };
 

@@ -48,5 +48,6 @@
         <file>Icons/HDD-96.png</file>
         <file>Icons/Send File-96.png</file>
         <file>Icons/Clock-96.png</file>
+        <file>Icons/VPN-96.png</file>
     </qresource>
 </RCC>

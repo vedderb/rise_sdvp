@@ -91,6 +91,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->mapWidget->setRoutePointSpeed(ui->mapRouteSpeedBox->value() / 3.6);
     ui->networkLoggerWidget->setMap(ui->mapWidget);
+    ui->networkInterface->setMap(ui->mapWidget);
+    ui->networkInterface->setPacketInterface(mPacketInterface);
 
     connect(mTimer, SIGNAL(timeout()), this, SLOT(timerSlot()));
     connect(mSerialPort, SIGNAL(readyRead()),
@@ -517,16 +519,17 @@ void MainWindow::nmeaGgaRx(int fields, NmeaServer::nmea_gga_info_t gga)
                     static int seq = 0;
                     QByteArray datagram;
                     QTextStream out(&datagram);
+                    QString str;
 
                     utility::llhToXyz(llh[0], llh[1], llh[2],
                             &xyz[0], &xyz[1], &xyz[2]);
 
-                    out << QString::asprintf("%d\n", seq);          // Seq
-                    out << QString::asprintf("%05f\n", xyz[0]);     // X
-                    out << QString::asprintf("%05f\n", xyz[1]);     // Y
-                    out << QString::asprintf("%05f\n", xyz[2]);     // Height
-                    out << QString::asprintf("%05f\n", gga.t_tow);  // GPS time of week
-                    out << QString::asprintf("%d\n", 2);            // Vehicle ID
+                    out << str.sprintf("%d\n", seq);          // Seq
+                    out << str.sprintf("%05f\n", xyz[0]);     // X
+                    out << str.sprintf("%05f\n", xyz[1]);     // Y
+                    out << str.sprintf("%05f\n", xyz[2]);     // Height
+                    out << str.sprintf("%05f\n", gga.t_tow);  // GPS time of week
+                    out << str.sprintf("%d\n", 2);            // Vehicle ID
                     out.flush();
 
                     mUdpSocket->writeDatagram(datagram,

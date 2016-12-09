@@ -1,47 +1,48 @@
 #include "ping.h"
 #include <QDebug>
 
+#ifdef Q_OS_UNIX
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/socket.h>
 #include <sys/file.h>
 #include <sys/time.h>
-
 #include <netinet/in_systm.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <netinet/ip_icmp.h>
 #include <netdb.h>
 #include <unistd.h>
-#include <stdio.h>
-#include <ctype.h>
 #include <errno.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdint.h>
+#endif
 
 Ping::Ping(QObject *parent) : QThread(parent)
 {
     mSocket = -1;
+#ifdef Q_OS_UNIX
     mPacket = new u_char[120000];
     mOutpack = new u_char[120000];
+#endif
 }
 
 Ping::~Ping()
 {
     this->wait();
 
+#ifdef Q_OS_UNIX
     if (mSocket >= 0) {
         close(mSocket);
     }
 
     delete mPacket;
     delete mOutpack;
+#endif
 }
 
 bool Ping::pingHost(QString host, int len, QString msg)
 {
+#ifdef Q_OS_UNIX
     if (this->isRunning()) {
         //emit pingError(msg, "Ping already in progress");
         return false;
@@ -57,6 +58,13 @@ bool Ping::pingHost(QString host, int len, QString msg)
         this->start();
         return true;
     }
+#else
+    (void)host;
+    (void)len;
+    (void)msg;
+    emit pingError(mMsg, "Ping support is not implemented for your operating system");
+    return false;
+#endif
 }
 
 // From http://www.linuxforums.org/forum/linux-networking/60389-implementing-ping-c.html#post382967
@@ -66,6 +74,7 @@ bool Ping::pingHost(QString host, int len, QString msg)
 
 void Ping::run()
 {
+#ifdef Q_OS_UNIX
     int i, cc, packlen;
     int datalen = mLen - ICMP_MINLEN;
     struct hostent *hp;
@@ -197,6 +206,7 @@ void Ping::run()
             return;
         }
     }
+#endif
 }
 
 uint16_t Ping::in_cksum(uint16_t *addr, unsigned len)

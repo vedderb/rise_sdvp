@@ -50,7 +50,7 @@ public:
     bool setPosAck(quint8 id, double x, double y, double angle, int retries = 10);
     bool setYawOffsetAck(quint8 id, double angle, int retries = 10);
     bool setEnuRef(quint8 id, double *llh, int retries = 10);
-    bool setupRadar(quint8 id, radar_settings_t *s, int retries = 10);
+    bool radarSetupSet(quint8 id, radar_settings_t *s, int retries = 10);
 
 signals:
     void dataToSend(QByteArray &data);
@@ -66,6 +66,8 @@ signals:
     void logLineUsbReceived(quint8 id, QString str);
     void plotInitReceived(quint8 id, QString xLabel, QString yLabel);
     void plotDataReceived(quint8 id, double x, double y);
+    void radarSetupReceived(quint8 id, radar_settings_t s);
+    void radarSamplesReceived(quint8 id, QVector<QPair<double, double> > samples);
     
 public slots:
     void timerSlot();
@@ -84,6 +86,7 @@ public slots:
     void setYawOffset(quint8 id, double angle);
     void getEnuRef(quint8 id);
     void setMsToday(quint8 id, qint32 time);
+    void radarSetupGet(quint8 id);
 
 private:
     unsigned short crc16(const unsigned char *buf, unsigned int len);

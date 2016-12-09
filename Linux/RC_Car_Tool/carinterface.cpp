@@ -24,6 +24,7 @@
 #include <QMessageBox>
 #include <cmath>
 #include <QTime>
+#include <QDateTime>
 
 namespace {
 void faultToStr(mc_fault_code fault, QString &str, bool &isOk)
@@ -94,6 +95,8 @@ CarInterface::CarInterface(QWidget *parent) :
     connect(mUdpSocket, SIGNAL(readyRead()), this, SLOT(udpReadReady()));
     connect(mTcpServer->packet(), SIGNAL(packetReceived(QByteArray&)),
             this, SLOT(tcpRx(QByteArray&)));
+
+    mTcpServer->setUsePacket(true);
 
     ui->accelPlot->clearGraphs();
     ui->accelPlot->addGraph();
@@ -319,9 +322,14 @@ void CarInterface::setStateData(CAR_STATE data)
     // Clock
     if (data.ms_today >= 0) {
         QTime time = QTime::fromMSecsSinceStartOfDay(data.ms_today);
-        ui->clockLabel->setText(time.toString("HH:mm:ss"));
+        QDateTime date = QDateTime::currentDateTime();
+        QTime current = QTime::currentTime().addSecs(-date.offsetFromUtc());
+
+        int diff = data.ms_today - current.msecsSinceStartOfDay();
+        ui->clockLabel->setText(time.toString("HH:mm:ss:zzz") + " " +
+                                QString("%1").arg(diff, 6, 10, QChar('0')) + " ms");
     } else {
-        ui->clockLabel->setText("00:00:00");
+        ui->clockLabel->setText("00:00:00:000");
     }
 }
 
@@ -363,6 +371,10 @@ void CarInterface::setPacketInterface(PacketInterface *packetInterface)
             this, SLOT(plotInitReceived(quint8,QString,QString)));
     connect(mPacketInterface, SIGNAL(plotDataReceived(quint8,double,double)),
             SLOT(plotDataReceived(quint8,double,double)));
+    connect(mPacketInterface, SIGNAL(radarSetupReceived(quint8,radar_settings_t)),
+            this, SLOT(radarSetupReceived(quint8,radar_settings_t)));
+    connect(mPacketInterface, SIGNAL(radarSamplesReceived(quint8,QVector<QPair<double,double> >)),
+            this, SLOT(radarSamplesReceived(quint8,QVector<QPair<double,double> >)));
 }
 
 void CarInterface::setControlValues(double throttle, double steering, double max, bool currentMode)
@@ -575,6 +587,51 @@ void CarInterface::plotDataReceived(quint8 id, double x, double y)
         experimentDataX.append(x);
         experimentDataY.append(y);
         mExperimentReplot = true;
+    }
+}
+
+void CarInterface::radarSetupReceived(quint8 id, radar_settings_t s)
+{
+    if (id == mId) {
+        ui->radarFCenterBox->setValue(s.f_center / 1e9);
+        ui->radarFSpanBox->setValue(s.f_span / 1e9);
+        ui->radarPointsBox->setValue(s.points);
+        ui->radarTSweepBox->setValue(s.t_sweep);
+        ui->radarCcXBox->setValue(s.cc_x);
+        ui->radarCcYBox->setValue(s.cc_y);
+        ui->radarCRadBox->setValue(s.cc_rad);
+        ui->radarLogRateBox->setValue((double)s.log_rate_ms / 1000.0);
+        ui->radarLogEnBox->setChecked(s.log_en);
+
+        QString str;
+        str.sprintf("Car %d: Radar Setup Received", id);
+        emit showStatusInfo(str, true);
+    }
+}
+
+void CarInterface::radarSamplesReceived(quint8 id, QVector<QPair<double, double> > samples)
+{
+    if (mMap && ui->plotRadarBox->isChecked() && id == mId) {
+        CarInfo *ci = mMap->getCarInfo(mId);
+        if (ci) {
+            LocPoint p_car = ci->getLocation();
+            for (int i = 0;i < samples.size();i++) {
+                LocPoint p;
+
+                double cx = 0;
+                double cy = 0;
+
+                cx = p_car.getX() + samples[i].first * sin(p_car.getAlpha());
+                cy = p_car.getY() + samples[i].first * cos(p_car.getAlpha());
+                p.setXY(cx, cy);
+
+                QString info;
+                info.sprintf("%.1f", samples[i].second);
+
+                p.setInfo(info);
+                mMap->addInfoPoint(p);
+            }
+        }
     }
 }
 
@@ -922,7 +979,9 @@ void CarInterface::on_magCalLoadButton_clicked()
 
 void CarInterface::on_radarReadButton_clicked()
 {
-
+    if (mPacketInterface) {
+        mPacketInterface->radarSetupGet(mId);
+    }
 }
 
 void CarInterface::on_radarWriteButton_clicked()
@@ -940,7 +999,7 @@ void CarInterface::on_radarWriteButton_clicked()
 
     if (mPacketInterface) {
         ui->radarWriteButton->setEnabled(false);
-        bool ok = mPacketInterface->setupRadar(mId, &s);
+        bool ok = mPacketInterface->radarSetupSet(mId, &s);
         ui->radarWriteButton->setEnabled(true);
 
         if (!ok) {
@@ -962,7 +1021,8 @@ void CarInterface::on_radarGetRadCCButton_clicked()
 void CarInterface::on_setClockButton_clicked()
 {
     if (mPacketInterface) {
-        QTime current = QTime::currentTime();
+        QDateTime date = QDateTime::currentDateTime();
+        QTime current = QTime::currentTime().addSecs(-date.offsetFromUtc());
         mPacketInterface->setMsToday(mId, current.msecsSinceStartOfDay());
     }
 }

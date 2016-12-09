@@ -24,6 +24,25 @@ DEFINES += HAS_OPENGL
 TARGET = RC_Car_Tool
 TEMPLATE = app
 
+release_win {
+    DESTDIR = build/win
+    OBJECTS_DIR = build/win/obj
+    MOC_DIR = build/win/obj
+    RCC_DIR = build/win/obj
+    UI_DIR = build/win/obj
+}
+
+release_lin {
+    # http://micro.nicholaswilson.me.uk/post/31855915892/rules-of-static-linking-libstdc-libc-libgcc
+    # http://insanecoding.blogspot.se/2012/07/creating-portable-linux-binaries.html
+    QMAKE_LFLAGS += -static-libstdc++ -static-libgcc
+    DESTDIR = build/lin
+    OBJECTS_DIR = build/lin/obj
+    MOC_DIR = build/lin/obj
+    RCC_DIR = build/lin/obj
+    UI_DIR = build/lin/obj
+}
+
 contains(DEFINES, HAS_ASSIMP) {
     LIBS += -lassimp
 }
@@ -49,7 +68,8 @@ SOURCES += main.cpp\
     osmclient.cpp \
     osmtile.cpp \
     tcpserversimple.cpp \
-    packet.cpp
+    packet.cpp \
+    networkinterface.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
@@ -72,13 +92,15 @@ HEADERS  += mainwindow.h \
     osmclient.h \
     osmtile.h \
     tcpserversimple.h \
-    packet.h
+    packet.h \
+    networkinterface.h
 
 FORMS    += mainwindow.ui \
     carinterface.ui \
     rtcmwidget.ui \
     basestation.ui \
-    networklogger.ui
+    networklogger.ui \
+    networkinterface.ui
 
 contains(DEFINES, HAS_JOYSTICK) {
     SOURCES += joystick.cpp

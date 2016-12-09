@@ -409,8 +409,11 @@ static void mpu9150_read(void) {
 	float accel[3], gyro[3], mag[3];
 	mpu9150_get_accel_gyro_mag(accel, gyro, mag);
 
-	float dt = (float)TIM6->CNT / (float)ITERATION_TIMER_FREQ;
-	TIM6->CNT = 0;
+	static unsigned int cnt_last = 0;
+	volatile unsigned int cnt = TIM6->CNT;
+	unsigned int time_elapsed = (cnt - cnt_last) % 65536;
+	cnt_last = cnt;
+	float dt = (float)time_elapsed / (float)ITERATION_TIMER_FREQ;
 
 	update_orientation_angles(accel, gyro, mag, dt);
 
@@ -422,16 +425,22 @@ static void mpu9150_read(void) {
 		bldc_interface_get_values();
 	}
 
-	// Update time today based on system clock
-	static int time_last = 0;
+	// Update time today
 	if (m_ms_today >= 0) {
-		m_ms_today += (1000 * chVTTimeElapsedSinceX(time_last)) / CH_CFG_ST_FREQUENCY;
+		int time_elapsed_ms = time_elapsed / (ITERATION_TIMER_FREQ / 1000);
+
+		// Accumulated error to avoid drift over time
+		static int diff = 0;
+		diff += time_elapsed % (ITERATION_TIMER_FREQ / 1000);
+		int diff_div = diff / (ITERATION_TIMER_FREQ / 1000);
+		diff -= diff_div * (ITERATION_TIMER_FREQ / 1000);
+
+		m_ms_today += time_elapsed_ms + diff_div;
 
 		if (m_ms_today >= MS_PER_DAY) {
 			m_ms_today -= MS_PER_DAY;
 		}
 	}
-	time_last = chVTGetSystemTimeX();
 }
 
 static void update_orientation_angles(float *accel, float *gyro, float *mag, float dt) {

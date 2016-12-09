@@ -128,7 +128,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			float gyro[3];
 			float mag[3];
 			ROUTE_POINT rp_goal;
-			
+
 			m_send_func = func;
 
 			pos_get_imu(accel, gyro, mag);
@@ -196,25 +196,25 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			steering = buffer_get_float32(data, 1e6, &ind);
 
 			switch (mode) {
-				case RC_MODE_CURRENT:
-					bldc_interface_set_current(throttle);
-					break;
+			case RC_MODE_CURRENT:
+				bldc_interface_set_current(throttle);
+				break;
 
-				case RC_MODE_DUTY:
-					utils_truncate_number(&throttle, -1.0, 1.0);
-					bldc_interface_set_duty_cycle(throttle);
-					break;
+			case RC_MODE_DUTY:
+				utils_truncate_number(&throttle, -1.0, 1.0);
+				bldc_interface_set_duty_cycle(throttle);
+				break;
 
-				case RC_MODE_PID: // In m/s
-					autopilot_set_motor_speed(throttle);
-					break;
+			case RC_MODE_PID: // In m/s
+				autopilot_set_motor_speed(throttle);
+				break;
 
-				case RC_MODE_CURRENT_BRAKE:
-					bldc_interface_set_current_brake(throttle);
-					break;
+			case RC_MODE_CURRENT_BRAKE:
+				bldc_interface_set_current_brake(throttle);
+				break;
 
-				default:
-					break;
+			default:
+				break;
 			}
 
 			utils_truncate_number(&steering, -1.0, 1.0);
@@ -514,7 +514,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			}
 		} break;
 
-		case CMD_SETUP_RADAR: {
+		case CMD_RADAR_SETUP_SET: {
 #if RADAR_EN
 			timeout_reset();
 			radar_settings_t s;
@@ -539,6 +539,28 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			timeout_reset();
 
 			radar_setup_measurement(&s);
+#endif
+		} break;
+
+		case CMD_RADAR_SETUP_GET: {
+#if RADAR_EN
+			timeout_reset();
+			const radar_settings_t *s = radar_get_settings();
+			int32_t send_index = 0;
+
+			m_send_buffer[send_index++] = main_id;
+			m_send_buffer[send_index++] = packet_id;
+			buffer_append_float32_auto(m_send_buffer, s->f_center, &send_index);
+			buffer_append_float32_auto(m_send_buffer, s->f_span, &send_index);
+			buffer_append_int16(m_send_buffer, s->points, &send_index);
+			buffer_append_float32_auto(m_send_buffer, s->t_sweep, &send_index);
+			buffer_append_float32_auto(m_send_buffer, s->cc_x, &send_index);
+			buffer_append_float32_auto(m_send_buffer, s->cc_y, &send_index);
+			buffer_append_float32_auto(m_send_buffer, s->cc_rad, &send_index);
+			buffer_append_int32(m_send_buffer, s->log_rate_ms, &send_index);
+			m_send_buffer[send_index++] = s->log_en;
+
+			commands_send_packet(m_send_buffer, send_index);
 #endif
 		} break;
 
@@ -617,6 +639,20 @@ void commands_send_plot_points(float x, float y) {
 	m_send_buffer[ind++] = CMD_PLOT_DATA;
 	buffer_append_float32_auto(m_send_buffer, x, &ind);
 	buffer_append_float32_auto(m_send_buffer, y, &ind);
+	commands_send_packet((unsigned char*)m_send_buffer, ind);
+}
+
+void commands_send_radar_samples(float *dists, int num) {
+	if (num > 24) {
+		num = 24;
+	}
+
+	int32_t ind = 0;
+	m_send_buffer[ind++] = main_id;
+	m_send_buffer[ind++] = CMD_RADAR_SAMPLES;
+	for (int i = 0;i < num;i++) {
+		buffer_append_float32_auto(m_send_buffer, dists[i], &ind);
+	}
 	commands_send_packet((unsigned char*)m_send_buffer, ind);
 }
 

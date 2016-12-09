@@ -458,6 +458,36 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         emit plotDataReceived(id, x, y);
     } break;
 
+    case CMD_RADAR_SETUP_GET: {
+        int32_t ind = 0;
+        radar_settings_t s;
+
+        s.f_center = utility::buffer_get_double32_auto(data, &ind);
+        s.f_span = utility::buffer_get_double32_auto(data, &ind);
+        s.points = utility::buffer_get_int16(data, &ind);
+        s.t_sweep = utility::buffer_get_double32_auto(data, &ind);
+        s.cc_x = utility::buffer_get_double32_auto(data, &ind);
+        s.cc_y = utility::buffer_get_double32_auto(data, &ind);
+        s.cc_rad = utility::buffer_get_double32_auto(data, &ind);
+        s.log_rate_ms = utility::buffer_get_int32(data, &ind);
+        s.log_en = data[ind++];
+
+        emit radarSetupReceived(id, s);
+    } break;
+
+    case CMD_RADAR_SAMPLES: {
+        int32_t ind = 0;
+        QVector<QPair<double, double> > samples;
+        while (ind < len) {
+            QPair<double, double> p;
+            p.first = utility::buffer_get_double32_auto(data, &ind);
+            p.second = utility::buffer_get_double32_auto(data, &ind);
+            samples.append(p);
+        }
+
+        emit radarSamplesReceived(id, samples);
+    } break;
+
         // Acks
     case CMD_AP_ADD_POINTS:
         emit ackReceived(id, cmd, "CMD_AP_ADD_POINTS");
@@ -483,8 +513,8 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
     case CMD_SET_YAW_OFFSET_ACK:
         emit ackReceived(id, cmd, "CMD_SET_YAW_OFFSET_ACK");
         break;
-    case CMD_SETUP_RADAR:
-        emit ackReceived(id, cmd, "CMD_SETUP_RADAR");
+    case CMD_RADAR_SETUP_SET:
+        emit ackReceived(id, cmd, "CMD_RADAR_SETUP_SET");
         break;
 
     default:
@@ -657,11 +687,11 @@ bool PacketInterface::setEnuRef(quint8 id, double *llh, int retries)
     return sendPacketAck(mSendBuffer, send_index, retries);
 }
 
-bool PacketInterface::setupRadar(quint8 id, radar_settings_t *s, int retries)
+bool PacketInterface::radarSetupSet(quint8 id, radar_settings_t *s, int retries)
 {
     qint32 send_index = 0;
     mSendBuffer[send_index++] = id;
-    mSendBuffer[send_index++] = CMD_SETUP_RADAR;
+    mSendBuffer[send_index++] = CMD_RADAR_SETUP_SET;
     utility::buffer_append_double32_auto(mSendBuffer, s->f_center, &send_index);
     utility::buffer_append_double32_auto(mSendBuffer, s->f_span, &send_index);
     utility::buffer_append_int16(mSendBuffer, s->points, &send_index);
@@ -810,4 +840,13 @@ void PacketInterface::setMsToday(quint8 id, qint32 time)
     mSendBuffer[send_index++] = CMD_SET_MS_TODAY;
     utility::buffer_append_int32(mSendBuffer, time, &send_index);
     sendPacket(mSendBuffer, send_index);
+}
+
+void PacketInterface::radarSetupGet(quint8 id)
+{
+    QByteArray packet;
+    packet.clear();
+    packet.append(id);
+    packet.append((char)CMD_RADAR_SETUP_GET);
+    sendPacket(packet);
 }

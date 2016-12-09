@@ -120,7 +120,7 @@ void radar_init(void) {
 	m_settings.cc_x = 0.0;
 	m_settings.cc_y = 0.0;
 	m_settings.cc_rad = 10.0;
-	m_settings.log_en = true;
+	m_settings.log_en = false;
 	m_settings.log_rate_ms = 1000;
 
 	chThdCreateStatic(radar_thread_wa, sizeof(radar_thread_wa), NORMALPRIO, radar_thread, NULL);
@@ -156,6 +156,10 @@ void radar_setup_measurement(radar_settings_t *settings) {
 	radar_wait();
 	printf_blocking("SWEEP:TIME %e\r", (double)m_settings.t_sweep);
 	radar_wait();
+}
+
+const radar_settings_t *radar_get_settings(void) {
+	return &m_settings;
 }
 
 void radar_setup_measurement_default(void) {
@@ -276,6 +280,51 @@ static THD_FUNCTION(radar_thread, arg) {
 
 			for (int i = 0;i < 1024;i++) {
 				samples_fft[i] = sqrtf(samples_fft[i] * samples_fft[i] + im[i] * im[i]);
+			}
+
+			// Range of interest
+			const int sample_first = 100;
+			const int sample_last = 900;
+
+			// Look for maximum and minimum values in range of interest
+			float max = 0;
+			float min = 1e20;
+			for (int i = sample_first;i < sample_last;i++) {
+				if (samples_fft[i] > max) {
+					max = samples_fft[i];
+				}
+
+				if (samples_fft[i] < min) {
+					min = samples_fft[i];
+				}
+			}
+
+			// Send samples that are over threshold if there is a significant
+			// difference between max and min.
+			// TODO: Look for absolute threshold
+			if (max > (min * 10.0)) {
+				float vec[24];
+				int vec_ind = 0;
+				for (int i = sample_first;i < sample_last;i++) {
+					const float val = samples_fft[i];
+
+					if (val > (max / 4)) {
+						const float c = 3e8;
+						const float deltaD = c / (2.0 * m_settings.f_span);
+						const float dist = (float)i * deltaD;
+
+						vec[vec_ind++] = dist;
+						vec[vec_ind++] = val;
+
+						if (vec_ind >= 24) {
+							break;
+						}
+					}
+				}
+
+				if (vec_ind > 0) {
+					commands_send_radar_samples(vec, vec_ind);
+				}
 			}
 
 #if PLOT_MODE == 1

@@ -6,6 +6,7 @@ TcpServerSimple::TcpServerSimple(QObject *parent) : QObject(parent)
     mTcpServer = new QTcpServer(this);
     mPacket = new Packet(this);
     mTcpSocket = 0;
+    mUsePacket = false;
 
     connect(mTcpServer, SIGNAL(newConnection()), this, SLOT(newTcpConnection()));
     connect(mPacket, SIGNAL(dataToSend(QByteArray&)),
@@ -24,6 +25,13 @@ bool TcpServerSimple::startServer(int port)
 void TcpServerSimple::stopServer()
 {
     mTcpServer->close();
+
+    if (mTcpSocket) {
+        mTcpSocket->close();
+        delete mTcpSocket;
+        mTcpSocket = 0;
+        emit connectionChanged(false);
+    }
 }
 
 bool TcpServerSimple::sendData(const QByteArray &data)
@@ -80,7 +88,10 @@ void TcpServerSimple::tcpInputDataAvailable()
 {
     QByteArray data = mTcpSocket->readAll();
     emit dataRx(data);
-    mPacket->processData(data);
+
+    if (mUsePacket) {
+        mPacket->processData(data);
+    }
 }
 
 void TcpServerSimple::tcpInputError(QAbstractSocket::SocketError socketError)
@@ -95,4 +106,14 @@ void TcpServerSimple::tcpInputError(QAbstractSocket::SocketError socketError)
 void TcpServerSimple::dataToSend(QByteArray &data)
 {
     sendData(data);
+}
+
+bool TcpServerSimple::usePacket() const
+{
+    return mUsePacket;
+}
+
+void TcpServerSimple::setUsePacket(bool usePacket)
+{
+    mUsePacket = usePacket;
 }

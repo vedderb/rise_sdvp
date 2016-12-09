@@ -1740,6 +1740,16 @@
       </widget>
      </item>
      <item>
+      <widget class="QCheckBox" name="plotRadarBox">
+       <property name="toolTip">
+        <string>Plot radar samples when they arrive</string>
+       </property>
+       <property name="text">
+        <string>Plot radar</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="clearRouteButton">
        <property name="toolTip">
         <string>Clear stored route</string>

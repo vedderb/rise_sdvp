@@ -450,6 +450,9 @@
     </item>
     <item>
      <widget class="QTabWidget" name="tabWidget">
+      <property name="toolTip">
+       <string/>
+      </property>
       <property name="tabPosition">
        <enum>QTabWidget::North</enum>
       </property>
@@ -1170,7 +1173,7 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>199</width>
+                   <width>188</width>
                    <height>440</height>
                   </rect>
                  </property>
@@ -1720,6 +1723,23 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="tab_7">
+       <attribute name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/models/Icons/VPN-96.png</normaloff>:/models/Icons/VPN-96.png</iconset>
+       </attribute>
+       <attribute name="title">
+        <string/>
+       </attribute>
+       <attribute name="toolTip">
+        <string>Network Interface</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_14">
+        <item>
+         <widget class="NetworkInterface" name="networkInterface" native="true"/>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
    </layout>
@@ -1760,6 +1780,12 @@
    <class>NetworkLogger</class>
    <extends>QWidget</extends>
    <header>networklogger.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>NetworkInterface</class>
+   <extends>QWidget</extends>
+   <header>networkinterface.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

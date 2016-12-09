@@ -250,11 +250,12 @@ void MapWidget::clearTrace()
     update();
 }
 
-void MapWidget::addRoutePoint(double px, double py, double speed)
+void MapWidget::addRoutePoint(double px, double py, double speed, qint32 time)
 {
     LocPoint pos;
     pos.setXY(px, py);
     pos.setSpeed(speed);
+    pos.setTime(time);
     mRoutes[mRouteNow].append(pos);
     update();
 }
@@ -803,21 +804,24 @@ void MapWidget::paintEvent(QPaintEvent *event)
             painter.setPen(pen);
             painter.drawEllipse(p, 10 / mScaleFactor, 10 / mScaleFactor);
 
-            QTime t = QTime::fromMSecsSinceStartOfDay(routeNow[i].getTime());
-            txt.sprintf("%.1f km/h\n"
-                        "%02d:%02d:%02d:%03d",
-                        routeNow[i].getSpeed() * 3.6,
-                        t.hour(), t.minute(), t.second(), t.msec());
+            // Draw text only for selected route
+            if (mRouteNow == rn) {
+                QTime t = QTime::fromMSecsSinceStartOfDay(routeNow[i].getTime());
+                txt.sprintf("%.1f km/h\n"
+                            "%02d:%02d:%02d:%03d",
+                            routeNow[i].getSpeed() * 3.6,
+                            t.hour(), t.minute(), t.second(), t.msec());
 
-            pt_txt.setX(p.x() + 10 / mScaleFactor);
-            pt_txt.setY(p.y());
-            painter.setTransform(txtTrans);
-            pt_txt = drawTrans.map(pt_txt);
-            pen.setColor(Qt::black);
-            painter.setPen(pen);
-            rect_txt.setCoords(pt_txt.x(), pt_txt.y() - 20,
-                               pt_txt.x() + 150, pt_txt.y() + 25);
-            painter.drawText(rect_txt, txt);
+                pt_txt.setX(p.x() + 10 / mScaleFactor);
+                pt_txt.setY(p.y());
+                painter.setTransform(txtTrans);
+                pt_txt = drawTrans.map(pt_txt);
+                pen.setColor(Qt::black);
+                painter.setPen(pen);
+                rect_txt.setCoords(pt_txt.x(), pt_txt.y() - 20,
+                                   pt_txt.x() + 150, pt_txt.y() + 25);
+                painter.drawText(rect_txt, txt);
+            }
         }
     }
 

@@ -77,6 +77,8 @@ private slots:
     void configurationReceived(quint8 id, MAIN_CONFIG config);
     void plotInitReceived(quint8 id, QString xLabel, QString yLabel);
     void plotDataReceived(quint8 id, double x, double y);
+    void radarSetupReceived(quint8 id, radar_settings_t s);
+    void radarSamplesReceived(quint8 id, QVector<QPair<double, double> > samples);
 
     void on_terminalSendButton_clicked();
     void on_terminalSendVescButton_clicked();
