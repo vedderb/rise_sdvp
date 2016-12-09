@@ -84,6 +84,25 @@ static double nmea_parse_val(char *str) {
 
     return retval;
 }
+
+#ifndef Q_OS_UNIX
+// see http://stackoverflow.com/questions/8512958/is-there-a-windows-variant-of-strsep
+static char* mystrsep(char** stringp, const char* delim) {
+    char* start = *stringp;
+    char* p;
+
+    p = (start != NULL) ? strpbrk(start, delim) : NULL;
+
+    if (p == NULL) {
+        *stringp = NULL;
+    } else {
+        *p = '\0';
+        *stringp = p + 1;
+    }
+
+    return start;
+}
+#endif
 }
 
 NmeaServer::NmeaServer(QObject *parent) : QObject(parent)
@@ -343,7 +362,11 @@ int NmeaServer::decodeNmeaGGA(QByteArray data, NmeaServer::nmea_gga_info_t &gga)
         int ind = 0;
 
         str = nmea_str;
+#ifdef Q_OS_UNIX
         gga = strsep(&str, ",");
+#else
+        gga = mystrsep(&str, ",");
+#endif
 
         while (gga != 0) {
             switch (ind) {
@@ -437,7 +460,11 @@ int NmeaServer::decodeNmeaGGA(QByteArray data, NmeaServer::nmea_gga_info_t &gga)
                 break;
             }
 
+#ifdef Q_OS_UNIX
             gga = strsep(&str, ",");
+#else
+            gga = mystrsep(&str, ",");
+#endif
             ind++;
         }
     } else {
