@@ -16,7 +16,9 @@ QT       += opengl
 #DEFINES += HAS_ASSIMP
 
 # Linux only
-DEFINES += HAS_JOYSTICK
+unix {
+    DEFINES += HAS_JOYSTICK
+}
 
 # OpenGL support
 DEFINES += HAS_OPENGL
