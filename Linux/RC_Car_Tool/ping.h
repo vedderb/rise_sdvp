@@ -31,8 +31,8 @@ private:
     int mLen;
 
     int mSocket;
-    u_char *mPacket;
-    u_char *mOutpack;
+    unsigned char *mPacket;
+    unsigned char *mOutpack;
 
 };
 

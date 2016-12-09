@@ -21,8 +21,8 @@ Ping::Ping(QObject *parent) : QThread(parent)
 {
     mSocket = -1;
 #ifdef Q_OS_UNIX
-    mPacket = new u_char[120000];
-    mOutpack = new u_char[120000];
+    mPacket = new unsigned char[120000];
+    mOutpack = new unsigned char[120000];
 #endif
 }
 
