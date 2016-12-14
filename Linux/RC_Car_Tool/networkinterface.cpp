@@ -1,3 +1,20 @@
+/*
+    Copyright 2016 Benjamin Vedder	benjamin@vedder.se
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    */
+
 #include "networkinterface.h"
 #include "ui_networkinterface.h"
 #include <QMessageBox>
@@ -40,9 +57,11 @@ void NetworkInterface::setPacketInterface(PacketInterface *packetInterface)
 
     connect(mPacketInterface, SIGNAL(stateReceived(quint8,CAR_STATE)),
             this, SLOT(stateReceived(quint8,CAR_STATE)));
+    connect(mPacketInterface, SIGNAL(enuRefReceived(quint8,double,double,double)),
+            this, SLOT(enuRefReceived(quint8,double,double,double)));
 }
 
-void NetworkInterface::sendState(quint8 car, const CAR_STATE &state)
+void NetworkInterface::sendState(quint8 id, const CAR_STATE &state)
 {
     if (ui->noForwardStateBox->isChecked()) {
         return;
@@ -55,8 +74,8 @@ void NetworkInterface::sendState(quint8 car, const CAR_STATE &state)
     stream.writeStartDocument();
     stream.writeStartElement("message");
     stream.writeStartElement("getState");
-    stream.writeTextElement("car_id", QString::number(car));
 
+    stream.writeTextElement("id", QString::number(id));
     stream.writeTextElement("fw_major", QString::number(state.fw_major));
     stream.writeTextElement("fw_minor", QString::number(state.fw_minor));
     stream.writeTextElement("roll", QString::number(state.roll));
@@ -88,7 +107,30 @@ void NetworkInterface::sendState(quint8 car, const CAR_STATE &state)
     sendData(data);
 }
 
-void NetworkInterface::sendError(const QString &txt)
+void NetworkInterface::sendEnuRef(quint8 id, double lat, double lon, double height)
+{
+    if (ui->noForwardStateBox->isChecked()) {
+        return;
+    }
+
+    QByteArray data;
+    QXmlStreamWriter stream(&data);
+    stream.setAutoFormatting(true);
+
+    stream.writeStartDocument();
+    stream.writeStartElement("message");
+    stream.writeStartElement("getEnuRef");
+
+    stream.writeTextElement("id", QString::number(id));
+    stream.writeTextElement("lat", QString::number(lat, 'g', 10));
+    stream.writeTextElement("lon", QString::number(lon, 'g', 10));
+    stream.writeTextElement("height", QString::number(height));
+
+    stream.writeEndDocument();
+    sendData(data);
+}
+
+void NetworkInterface::sendError(const QString &txt, const QString &cmd)
 {
     QByteArray data;
     QXmlStreamWriter stream(&data);
@@ -97,10 +139,15 @@ void NetworkInterface::sendError(const QString &txt)
     stream.writeStartDocument();
     stream.writeStartElement("message");
     stream.writeStartElement("error");
+    if (!cmd.isEmpty()) {
+        stream.writeTextElement("command", cmd);
+    }
     stream.writeTextElement("description", txt);
 
     stream.writeEndDocument();
     sendData(data);
+
+    qWarning() << "NetworkIf:" << cmd << ":" << txt;
 }
 
 void NetworkInterface::tcpDataRx(const QByteArray &data)
@@ -145,6 +192,11 @@ void NetworkInterface::udpReadReady()
 void NetworkInterface::stateReceived(quint8 id, CAR_STATE state)
 {
     sendState(id, state);
+}
+
+void NetworkInterface::enuRefReceived(quint8 id, double lat, double lon, double height)
+{
+    sendEnuRef(id, lat, lon, height);
 }
 
 void NetworkInterface::on_tcpActivateBox_toggled(bool checked)
@@ -211,13 +263,14 @@ void NetworkInterface::processXml(const QByteArray &xml)
 {
     QXmlStreamReader stream(xml);
     stream.readNextStartElement();
+    QString name;
 
     while (stream.readNextStartElement()) {
         if (stream.hasError()) {
             break;
         }
 
-        QString name = stream.name().toString();
+        name = stream.name().toString();
 
         if (name == "getState") {
             quint8 id = 0;
@@ -230,9 +283,8 @@ void NetworkInterface::processXml(const QByteArray &xml)
                     id = stream.readElementText().toDouble();
                 } else {
                     QString str;
-                    str += name + ": argument not found: " + name2;
-                    sendError(str);
-                    qWarning() << str;
+                    str += "argument not found: " + name2;
+                    sendError(str, name);
                     stream.skipCurrentElement();
                     ok = false;
                 }
@@ -272,9 +324,8 @@ void NetworkInterface::processXml(const QByteArray &xml)
                     time = stream.readElementText().toInt();
                 } else {
                     QString str;
-                    str += name + ": argument not found: " + name2;
-                    sendError(str);
-                    qWarning() << str;
+                    str += "argument not found: " + name2;
+                    sendError(str, name);
                     stream.skipCurrentElement();
                     ok = false;
                 }
@@ -295,22 +346,266 @@ void NetworkInterface::processXml(const QByteArray &xml)
                 p.setTime(time);
                 QList<LocPoint> route;
                 route.append(p);
-                bool res = mPacketInterface->setRoutePoints(id, route);
 
-                if (!res) {
-                    sendError("Sending route point to car failed. Make sure that the car connection "
-                              "works.");
+                if (!mPacketInterface->setRoutePoints(id, route)) {
+                    sendError("No ACK received from car. Make sure that the car connection "
+                              "works.", name);
                 }
             }
 
             if (mMap && ui->plotRouteMapBox->isChecked()) {
                 mMap->addRoutePoint(px, py, speed, time);
             }
+        } else if (name == "removeLastPoint") {
+            quint8 id = 0;
+            bool ok = true;
+
+            while (stream.readNextStartElement()) {
+                QString name2 = stream.name().toString();
+
+                if (name2 == "id") {
+                    id = stream.readElementText().toDouble();
+                } else {
+                    QString str;
+                    str += "argument not found: " + name2;
+                    sendError(str, name);
+                    stream.skipCurrentElement();
+                    ok = false;
+                }
+            }
+
+            if (stream.hasError()) {
+                break;
+            }
+
+            if (!ok) {
+                continue;
+            }
+
+            if (!ui->disableSendCarBox->isChecked() && mPacketInterface) {
+                if (!mPacketInterface->removeLastRoutePoint(id)) {
+                    sendError("No ACK received from car. Make sure that the car connection "
+                              "works.", name);
+                }
+            }
+        } else if (name == "clearRoute") {
+            quint8 id = 0;
+            bool ok = true;
+
+            while (stream.readNextStartElement()) {
+                QString name2 = stream.name().toString();
+
+                if (name2 == "id") {
+                    id = stream.readElementText().toDouble();
+                } else {
+                    QString str;
+                    str += "argument not found: " + name2;
+                    sendError(str, name);
+                    stream.skipCurrentElement();
+                    ok = false;
+                }
+            }
+
+            if (stream.hasError()) {
+                break;
+            }
+
+            if (!ok) {
+                continue;
+            }
+
+            if (!ui->disableSendCarBox->isChecked() && mPacketInterface) {
+                if (!mPacketInterface->clearRoute(id)) {
+                    sendError("No ACK received from car. Make sure that the car connection "
+                              "works.", name);
+                }
+            }
+        } else if (name == "setAutopilotActive") {
+            quint8 id = 0;
+            bool enabled = false;
+            bool ok = true;
+
+            while (stream.readNextStartElement()) {
+                QString name2 = stream.name().toString();
+
+                if (name2 == "id") {
+                    id = stream.readElementText().toDouble();
+                } else if (name2 == "enabled") {
+                    enabled = stream.readElementText().toInt();
+                } else {
+                    QString str;
+                    str += "argument not found: " + name2;
+                    sendError(str, name);
+                    stream.skipCurrentElement();
+                    ok = false;
+                }
+            }
+
+            if (stream.hasError()) {
+                break;
+            }
+
+            if (!ok) {
+                continue;
+            }
+
+            if (!ui->disableSendCarBox->isChecked() && mPacketInterface) {
+                if (!mPacketInterface->setApActive(id, enabled)) {
+                    sendError("No ACK received from car. Make sure that the car connection "
+                              "works.", name);
+                }
+            }
+        } else if (name == "getEnuRef") {
+            quint8 id = 0;
+            bool ok = true;
+            bool fromMap = false;
+
+            while (stream.readNextStartElement()) {
+                QString name2 = stream.name().toString();
+
+                if (name2 == "id") {
+                    id = stream.readElementText().toDouble();
+                } else if (name2 == "fromMap") {
+                    fromMap = stream.readElementText().toInt();
+                } else {
+                    QString str;
+                    str += "argument not found: " + name2;
+                    sendError(str, name);
+                    stream.skipCurrentElement();
+                    ok = false;
+                }
+            }
+
+            if (stream.hasError()) {
+                break;
+            }
+
+            if (!ok) {
+                continue;
+            }
+            if (fromMap) {
+                if (mMap) {
+                    double llh[3];
+                    mMap->getEnuRef(llh);
+                    sendEnuRef(255, llh[0], llh[1], llh[2]);
+                }
+            } else {
+                if (!ui->disableSendCarBox->isChecked() && mPacketInterface) {
+                    mPacketInterface->getEnuRef(id);
+                }
+            }
+        } else if (name == "setEnuRef") {
+            quint8 id = 0;
+            double lat = 0.0;
+            double lon = 0.0;
+            double height = 0.0;
+            bool ok = true;
+
+            while (stream.readNextStartElement()) {
+                QString name2 = stream.name().toString();
+
+                if (name2 == "id") {
+                    id = stream.readElementText().toDouble();
+                } else if (name2 == "lat") {
+                    lat = stream.readElementText().toDouble();
+                } else if (name2 == "lon") {
+                    lon = stream.readElementText().toDouble();
+                } else if (name2 == "height") {
+                    height = stream.readElementText().toDouble();
+                } else {
+                    QString str;
+                    str += "argument not found: " + name2;
+                    sendError(str, name);
+                    stream.skipCurrentElement();
+                    ok = false;
+                }
+            }
+
+            if (stream.hasError()) {
+                break;
+            }
+
+            if (!ok) {
+                continue;
+            }
+
+            if (!ui->disableSendCarBox->isChecked() && mPacketInterface) {
+                double llh[3];
+                llh[0] = lat;
+                llh[1] = lon;
+                llh[2] = height;
+
+                if (!mPacketInterface->setEnuRef(id, llh)) {
+                    sendError("No ACK received from car. Make sure that the car connection "
+                              "works.", name);
+                }
+            }
+
+            if (mMap && ui->plotRouteMapBox->isChecked()) {
+                mMap->setEnuRef(lat, lon, height);
+            }
+        } else if (name == "rcControl") {
+            quint8 id = 0;
+            int mode = 0;
+            double value = 0.0;
+            double steering = 0.0;
+            bool ok = true;
+
+            while (stream.readNextStartElement()) {
+                QString name2 = stream.name().toString();
+
+                if (name2 == "id") {
+                    id = stream.readElementText().toDouble();
+                } else if (name2 == "mode") {
+                    mode = stream.readElementText().toInt();
+                } else if (name2 == "value") {
+                    value = stream.readElementText().toDouble();
+                } else if (name2 == "steering") {
+                    steering = stream.readElementText().toDouble();
+                } else {
+                    QString str;
+                    str += "argument not found: " + name2;
+                    sendError(str, name);
+                    stream.skipCurrentElement();
+                    ok = false;
+                }
+            }
+
+            if (stream.hasError()) {
+                break;
+            }
+
+            if (!ok) {
+                continue;
+            }
+
+            if (!ui->disableSendCarBox->isChecked() && mPacketInterface) {
+                switch (mode) {
+                case RC_MODE_CURRENT:
+                    mPacketInterface->setRcControlCurrent(id, value, steering);
+                    break;
+
+                case RC_MODE_DUTY:
+                    mPacketInterface->setRcControlDuty(id, value / 100.0, steering);
+                    break;
+
+                case RC_MODE_PID:
+                    mPacketInterface->setRcControlPid(id, value, steering);
+                    break;
+
+                case RC_MODE_CURRENT_BRAKE:
+                    mPacketInterface->setRcControlCurrentBrake(id, value, steering);
+                    break;
+
+                default:
+                    sendError("Invaild mode", name);
+                    break;
+                }
+            }
         } else {
             QString str;
             str += "Command not found: " + name;
             sendError(str);
-            qWarning() << str;
             stream.skipCurrentElement();
         }
     }
@@ -318,8 +613,7 @@ void NetworkInterface::processXml(const QByteArray &xml)
     if (stream.hasError()) {
         QString str;
         str += "XML Parse error: " + stream.errorString();
-        sendError(str);
-        qWarning() << str;
+        sendError(str, name);
     }
 }
 

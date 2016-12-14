@@ -511,7 +511,10 @@ void NmeaServer::tcpInputError(QAbstractSocket::SocketError socketError)
 
     QString errorStr = mTcpClient->errorString();
     qWarning() << "NMEA TcpError:" << errorStr;
-    QMessageBox::warning(0, "NMEA TCP Error", errorStr);
+
+    // TODO: casting parent to QWidget might not always work. This is however
+    // required for making the dialog modal properly.
+    QMessageBox::warning((QWidget*)this->parent(), "NMEA TCP Error", errorStr);
 
     mTcpClient->close();
 }

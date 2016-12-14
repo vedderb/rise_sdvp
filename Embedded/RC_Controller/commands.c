@@ -383,6 +383,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			timeout_reset();
 
 			int32_t ind = 0;
+			main_config.mag_use = data[ind++];
 			main_config.mag_comp = data[ind++];
 			main_config.yaw_imu_gain = buffer_get_float32(data, 1e6, &ind);
 
@@ -451,6 +452,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			m_send_buffer[send_index++] = main_id;
 			m_send_buffer[send_index++] = packet_id;
 
+			m_send_buffer[send_index++] = main_cfg_tmp.mag_use;
 			m_send_buffer[send_index++] = main_cfg_tmp.mag_comp;
 			buffer_append_float32(m_send_buffer, main_cfg_tmp.yaw_imu_gain, 1e6, &send_index);
 

@@ -16,7 +16,7 @@ QT       += opengl
 #DEFINES += HAS_ASSIMP
 
 # Linux only
-unix!macx {
+unix:!macx {
     DEFINES += HAS_JOYSTICK
 }
 

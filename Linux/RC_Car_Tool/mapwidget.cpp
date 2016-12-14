@@ -853,10 +853,12 @@ void MapWidget::paintEvent(QPaintEvent *event)
         }
 
         // Draw standard deviation
-        QColor col = col_sigma;
-        col.setAlphaF(0.2);
-        painter.setBrush(QBrush(col));
-        painter.drawEllipse(pos.getPointMm(), pos.getSigma() * 1000.0, pos.getSigma() * 1000.0);
+        if (pos.getSigma() > 0.0) {
+            QColor col = col_sigma;
+            col.setAlphaF(0.2);
+            painter.setBrush(QBrush(col));
+            painter.drawEllipse(pos.getPointMm(), pos.getSigma() * 1000.0, pos.getSigma() * 1000.0);
+        }
 
         // Draw car
         painter.setBrush(QBrush(col_wheels));

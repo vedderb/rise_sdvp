@@ -74,6 +74,7 @@ void conf_general_init(void) {
  * A pointer to store the default configuration to.
  */
 void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
+	conf->mag_use = true;
 	conf->mag_comp = true;
 	conf->yaw_imu_gain = 0.1;
 

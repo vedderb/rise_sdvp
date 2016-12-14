@@ -394,6 +394,7 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         MAIN_CONFIG conf;
 
         int32_t ind = 0;
+        conf.mag_use = data[ind++];
         conf.mag_comp = data[ind++];
         conf.yaw_imu_gain = utility::buffer_get_double32(data, 1e6, &ind);
 
@@ -552,14 +553,6 @@ bool PacketInterface::isUdpConnected()
     return QString::compare(mHostAddress.toString(), "0.0.0.0") != 0;
 }
 
-void PacketInterface::getState(quint8 id)
-{
-    QByteArray packet;
-    packet.append(id);
-    packet.append(CMD_GET_STATE);
-    sendPacket(packet);
-}
-
 bool PacketInterface::setRoutePoints(quint8 id, QList<LocPoint> points, int retries)
 {
     qint32 send_index = 0;
@@ -611,6 +604,7 @@ bool PacketInterface::setConfiguration(quint8 id, MAIN_CONFIG &conf, int retries
     mSendBuffer[send_index++] = id;
     mSendBuffer[send_index++] = CMD_SET_MAIN_CONFIG;
 
+    mSendBuffer[send_index++] = conf.mag_use;
     mSendBuffer[send_index++] = conf.mag_comp;
     utility::buffer_append_double32(mSendBuffer, conf.yaw_imu_gain, 1e6, &send_index);
 
@@ -704,6 +698,14 @@ bool PacketInterface::radarSetupSet(quint8 id, radar_settings_t *s, int retries)
     return sendPacketAck(mSendBuffer, send_index, retries);
 }
 
+void PacketInterface::getState(quint8 id)
+{
+    QByteArray packet;
+    packet.append(id);
+    packet.append(CMD_GET_STATE);
+    sendPacket(packet);
+}
+
 void PacketInterface::sendTerminalCmd(quint8 id, QString cmd)
 {
     QByteArray packet;
@@ -753,6 +755,17 @@ void PacketInterface::setRcControlDuty(quint8 id, double duty, double steering)
     mSendBuffer[send_index++] = CMD_RC_CONTROL;
     mSendBuffer[send_index++] = RC_MODE_DUTY;
     utility::buffer_append_double32(mSendBuffer, duty, 1e4, &send_index);
+    utility::buffer_append_double32(mSendBuffer, steering, 1e6, &send_index);
+    sendPacket(mSendBuffer, send_index);
+}
+
+void PacketInterface::setRcControlPid(quint8 id, double speed, double steering)
+{
+    qint32 send_index = 0;
+    mSendBuffer[send_index++] = id;
+    mSendBuffer[send_index++] = CMD_RC_CONTROL;
+    mSendBuffer[send_index++] = RC_MODE_PID;
+    utility::buffer_append_double32(mSendBuffer, speed, 1e4, &send_index);
     utility::buffer_append_double32(mSendBuffer, steering, 1e6, &send_index);
     sendPacket(mSendBuffer, send_index);
 }

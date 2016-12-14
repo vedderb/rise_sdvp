@@ -15,13 +15,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
     */
 
-/*
- * packet.h
- *
- *  Created on: 21 mar 2013
- *      Author: benjamin
- */
-
 #ifndef PACKET_H_
 #define PACKET_H_
 

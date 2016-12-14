@@ -1182,7 +1182,9 @@ void MainWindow::on_mapUpdateTimeButton_clicked()
 
     if (ok) {
         QList<LocPoint> route = ui->mapWidget->getRoute();
-        qint32 now = QTime::currentTime().msecsSinceStartOfDay() + res * 1000;
+        QDateTime date = QDateTime::currentDateTime();
+        QTime current = QTime::currentTime().addSecs(-date.offsetFromUtc());
+        qint32 now = current.msecsSinceStartOfDay() + res * 1000;
         qint32 start_diff = 0;
 
         for (int i = 0;i < route.size();i++) {

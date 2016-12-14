@@ -22,7 +22,7 @@
 
 // Firmware version
 #define FW_VERSION_MAJOR			6
-#define FW_VERSION_MINOR			1
+#define FW_VERSION_MINOR			2
 
 // Default car settings
 //#define CAR_TERO // Benjamins tero car
@@ -53,7 +53,7 @@
 #endif
 
 // Radar settings
-#define RADAR_EN					1
+#define RADAR_EN					0
 #define RADAR_CENTER_FREQ			76.5e9
 #define RADAR_FREQ_SPAN				1.0e9
 #define RADAR_FREQ_PONTS			1024

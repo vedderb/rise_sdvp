@@ -15,13 +15,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
     */
 
-/*
- * servo_simple.c
- *
- *  Created on: 31 jul 2015
- *      Author: benjamin
- */
-
 #include "servo_simple.h"
 #include "ch.h"
 #include "hal.h"

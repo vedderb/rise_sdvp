@@ -15,13 +15,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
- * datatypes.h
- *
- *  Created on: 10 mars 2016
- *      Author: benjamin
- */
-
 #ifndef DATATYPES_H_
 #define DATATYPES_H_
 
@@ -143,6 +136,7 @@ typedef enum {
 // Car configuration
 typedef struct {
 	// Settings
+	bool mag_use; // Use the magnetometer
 	bool mag_comp; // Should be 0 when capturing samples for the calibration
 	float yaw_imu_gain;
 

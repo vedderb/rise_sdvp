@@ -1,3 +1,20 @@
+/*
+    Copyright 2016 Benjamin Vedder	benjamin@vedder.se
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    */
+
 #ifndef NETWORKINTERFACE_H
 #define NETWORKINTERFACE_H
 
@@ -24,8 +41,9 @@ public:
     void setMap(MapWidget *map);
     void setPacketInterface(PacketInterface *packetInterface);
 
-    void sendState(quint8 car, const CAR_STATE &state);
-    void sendError(const QString &txt);
+    void sendState(quint8 id, const CAR_STATE &state);
+    void sendEnuRef(quint8 id, double lat, double lon, double height);
+    void sendError(const QString &txt, const QString &cmd = "");
 
 private slots:
     void tcpDataRx(const QByteArray &data);
@@ -33,6 +51,7 @@ private slots:
     void udpReadReady();
 
     void stateReceived(quint8 id, CAR_STATE state);
+    void enuRefReceived(quint8 id, double lat, double lon, double height);
 
     void on_tcpActivateBox_toggled(bool checked);
     void on_udpActivateBox_toggled(bool checked);

@@ -15,13 +15,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
     */
 
-/*
- * packet.c
- *
- *  Created on: 21 mar 2013
- *      Author: benjamin
- */
-
 #include <string.h>
 #include "packet.h"
 #include "crc.h"

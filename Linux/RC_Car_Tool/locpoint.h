@@ -26,7 +26,7 @@ class LocPoint
 {
 public:
     LocPoint(double x = 0, double y = 0, double alpha = 0,
-             double speed = 0.5, double radius = 5.0, double sigma = 0,
+             double speed = 0.5, double radius = 5.0, double sigma = 0.0,
              QColor color = Qt::darkGreen, qint32 time = 0);
     LocPoint(const LocPoint &point);
 

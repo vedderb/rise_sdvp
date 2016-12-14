@@ -15,13 +15,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
     */
 
-/*
- * servo_simple.h
- *
- *  Created on: 31 jul 2015
- *      Author: benjamin
- */
-
 #ifndef SERVO_SIMPLE_H_
 #define SERVO_SIMPLE_H_
 

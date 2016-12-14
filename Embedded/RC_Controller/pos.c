@@ -376,7 +376,7 @@ void pos_input_nmea(const char *data) {
 						m_pos.px - m_pos.gps_ang_corr_x_last_car);
 				float yaw_diff = utils_angle_difference_rad(yaw_gps, yaw_car) * 180.0 / M_PI;
 
-				if (fabsf(m_pos.speed * 3.6) > 1.0) {
+				if (fabsf(m_pos.speed * 3.6) > 0.5) {
 					utils_step_towards(&m_yaw_offset, m_yaw_offset + yaw_diff,
 							main_config.gps_corr_gain_yaw * m_pos.gps_corr_cnt);
 				}
@@ -468,7 +468,7 @@ static void update_orientation_angles(float *accel, float *gyro, float *mag, flo
 		MahonyAHRSupdateInitialOrientation(accel, mag_tmp, (ATTITUDE_INFO*)&m_att);
 		m_attitude_init_done = true;
 	} else {
-		if (mpu9150_mag_updated()) {
+		if (mpu9150_mag_updated() && main_config.mag_use) {
 			MahonyAHRSupdate(gyro, accel, mag_tmp, dt, (ATTITUDE_INFO*)&m_att);
 		} else {
 			MahonyAHRSupdateIMU(gyro, accel, dt, (ATTITUDE_INFO*)&m_att);
