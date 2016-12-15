@@ -19,6 +19,7 @@
 #include <QDebug>
 #include <QDateTime>
 #include <QDir>
+#include <sys/time.h>
 
 CarClient::CarClient(QObject *parent) : QObject(parent)
 {
@@ -61,6 +62,8 @@ CarClient::CarClient(QObject *parent) : QObject(parent)
             this, SLOT(logLineUsbReceived(quint8,QString)));
     connect(mLogFlushTimer, SIGNAL(timeout()),
             this, SLOT(logFlushTimerSlot()));
+    connect(mPacketInterface, SIGNAL(systemTimeReceived(quint8,qint32,qint32)),
+            this, SLOT(systemTimeReceived(quint8,qint32,qint32)));
 }
 
 CarClient::~CarClient()
@@ -277,4 +280,23 @@ void CarClient::logLineUsbReceived(quint8 id, QString str)
     if (mLog.isOpen()) {
         mLog.write(str.toLocal8Bit());
     }
+}
+
+void CarClient::systemTimeReceived(quint8 id, qint32 sec, qint32 usec)
+{
+    (void)id;
+
+    struct timeval now;
+    int rc;
+
+    now.tv_sec = sec;
+    now.tv_usec = usec;
+    rc = settimeofday(&now, NULL);
+
+    if(rc == 0) {
+        qDebug() << "Sucessfully set system time";
+    } else {
+        qDebug() << "Setting system time failed";
+    }
+
 }

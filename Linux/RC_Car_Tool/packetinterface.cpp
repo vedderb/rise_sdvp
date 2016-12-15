@@ -489,6 +489,13 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         emit radarSamplesReceived(id, samples);
     } break;
 
+    case CMD_SET_SYSTEM_TIME: {
+        int32_t ind = 0;
+        qint32 sec = utility::buffer_get_int32(data, &ind);
+        qint32 usec = utility::buffer_get_int32(data, &ind);
+        emit systemTimeReceived(id, sec, usec);
+    } break;
+
         // Acks
     case CMD_AP_ADD_POINTS:
         emit ackReceived(id, cmd, "CMD_AP_ADD_POINTS");
@@ -516,6 +523,9 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         break;
     case CMD_RADAR_SETUP_SET:
         emit ackReceived(id, cmd, "CMD_RADAR_SETUP_SET");
+        break;
+    case CMD_SET_SYSTEM_TIME_ACK:
+        emit ackReceived(id, cmd, "CMD_SET_SYSTEM_TIME_ACK");
         break;
 
     default:
@@ -695,6 +705,16 @@ bool PacketInterface::radarSetupSet(quint8 id, radar_settings_t *s, int retries)
     utility::buffer_append_double32_auto(mSendBuffer, s->cc_rad, &send_index);
     utility::buffer_append_int32(mSendBuffer, s->log_rate_ms, &send_index);
     mSendBuffer[send_index++] = s->log_en;
+    return sendPacketAck(mSendBuffer, send_index, retries);
+}
+
+bool PacketInterface::setSystemTime(quint8 id, qint32 sec, qint32 usec, int retries)
+{
+    qint32 send_index = 0;
+    mSendBuffer[send_index++] = id;
+    mSendBuffer[send_index++] = CMD_SET_SYSTEM_TIME;
+    utility::buffer_append_int32(mSendBuffer, sec, &send_index);
+    utility::buffer_append_int32(mSendBuffer, usec, &send_index);
     return sendPacketAck(mSendBuffer, send_index, retries);
 }
 

@@ -41,7 +41,6 @@ public:
     void startUdpConnectionServer(int port);
     void stopUdpConnection();
     bool isUdpConnected();
-    void getState(quint8 id);
     bool setRoutePoints(quint8 id, QList<LocPoint> points, int retries = 10);
     bool removeLastRoutePoint(quint8 id, int retries = 10);
     bool clearRoute(quint8 id, int retries = 10);
@@ -50,6 +49,8 @@ public:
     bool setPosAck(quint8 id, double x, double y, double angle, int retries = 10);
     bool setYawOffsetAck(quint8 id, double angle, int retries = 10);
     bool setEnuRef(quint8 id, double *llh, int retries = 10);
+    bool radarSetupSet(quint8 id, radar_settings_t *s, int retries = 10);
+    bool setSystemTime(quint8 id, qint32 sec, qint32 usec, int retries = 10);
 
 signals:
     void dataToSend(QByteArray &data);
@@ -63,15 +64,22 @@ signals:
     void configurationReceived(quint8 id, MAIN_CONFIG conf);
     void enuRefReceived(quint8 id, double lat, double lon, double height);
     void logLineUsbReceived(quint8 id, QString str);
+    void plotInitReceived(quint8 id, QString xLabel, QString yLabel);
+    void plotDataReceived(quint8 id, double x, double y);
+    void radarSetupReceived(quint8 id, radar_settings_t s);
+    void radarSamplesReceived(quint8 id, QVector<QPair<double, double> > samples);
+    void systemTimeReceived(quint8 id, qint32 sec, qint32 usec);
     
 public slots:
     void timerSlot();
     void readPendingDatagrams();
+    void getState(quint8 id);
     void sendTerminalCmd(quint8 id, QString cmd);
     void forwardVesc(quint8 id, QByteArray data);
     void setRcControlCurrent(quint8 id, double current, double steering);
     void setRcControlCurrentBrake(quint8 id, double current, double steering);
     void setRcControlDuty(quint8 id, double duty, double steering);
+    void setRcControlPid(quint8 id, double speed, double steering);
     void setPos(quint8 id, double x, double y, double angle);
     void setServoDirect(quint8 id, double value);
     void sendRtcmUsb(quint8 id, QByteArray rtcm_msg);
@@ -80,6 +88,8 @@ public slots:
     void getDefaultConfiguration(quint8 id);
     void setYawOffset(quint8 id, double angle);
     void getEnuRef(quint8 id);
+    void setMsToday(quint8 id, qint32 time);
+    void radarSetupGet(quint8 id);
 
 private:
     unsigned short crc16(const unsigned char *buf, unsigned int len);

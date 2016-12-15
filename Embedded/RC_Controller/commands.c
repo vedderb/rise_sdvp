@@ -575,6 +575,21 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			pos_set_ms_today(time);
 		} break;
 
+		case CMD_SET_SYSTEM_TIME: {
+			int32_t send_index = 0;
+			m_send_buffer[send_index++] = main_id;
+			m_send_buffer[send_index++] = packet_id;
+			memcpy(m_send_buffer + send_index, data, len);
+			send_index += len;
+			comm_usb_send_packet(m_send_buffer, send_index);
+
+			// Send ack
+			send_index = 0;
+			m_send_buffer[send_index++] = main_id;
+			m_send_buffer[send_index++] = CMD_SET_SYSTEM_TIME_ACK;
+			commands_send_packet(m_send_buffer, send_index);
+		} break;
+
 		default:
 			break;
 		}

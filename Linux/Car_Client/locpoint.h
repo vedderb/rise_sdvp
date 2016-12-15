@@ -19,22 +19,27 @@
 #define LOCPOINT_H
 
 #include <QPointF>
+#include <QString>
 
 class LocPoint
 {
 public:
     LocPoint(double x = 0, double y = 0, double alpha = 0,
-             double speed = 0.5, double radius = 0, double sigma = 0);
+             double speed = 0.5, double radius = 5.0, double sigma = 0.0,
+             quint32 color = Qt::darkGreen, qint32 time = 0);
     LocPoint(const LocPoint &point);
 
-    double getX();
-    double getY();
-    double getAlpha();
-    double getSpeed();
-    QPointF getPoint();
-    QPointF getPointMm();
-    double getRadius();
-    double getSigma();
+    double getX() const;
+    double getY() const;
+    double getAlpha() const;
+    double getSpeed() const;
+    QPointF getPoint() const;
+    QPointF getPointMm() const;
+    double getRadius() const;
+    double getSigma() const;
+    QString getInfo() const;
+    quint32 getColor() const;
+    qint32 getTime() const;
 
     void setX(double x);
     void setY(double y);
@@ -44,7 +49,10 @@ public:
     void setSpeed(double speed);
     void setRadius(double radius);
     void setSigma(double sigma);
-    double getDistanceTo(const LocPoint &point);
+    double getDistanceTo(const LocPoint &point) const;
+    void setInfo(const QString &info);
+    void setColor(const quint32 &color);
+    void setTime(const qint32 &time);
 
     // Operators
     LocPoint& operator=(const LocPoint& point);
@@ -58,6 +66,10 @@ private:
     double mSpeed;
     double mRadius;
     double mSigma;
+    QString mInfo;
+    quint32 mColor;
+    qint32 mTime;
+
 };
 
 #endif // LOCPOINT_H

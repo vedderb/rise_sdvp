@@ -362,6 +362,7 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         state.ap_goal_px = utility::buffer_get_double32(data, 1e4, &ind);
         state.ap_goal_py = utility::buffer_get_double32(data, 1e4, &ind);
         state.ap_rad = utility::buffer_get_double32(data, 1e6, &ind);
+        state.ms_today = utility::buffer_get_int32(data, &ind);
         emit stateReceived(id, state);
     } break;
 
@@ -393,6 +394,7 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         MAIN_CONFIG conf;
 
         int32_t ind = 0;
+        conf.mag_use = data[ind++];
         conf.mag_comp = data[ind++];
         conf.yaw_imu_gain = utility::buffer_get_double32(data, 1e6, &ind);
 
@@ -427,6 +429,9 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
 
         conf.ap_repeat_routes = data[ind++];
         conf.ap_base_rad = utility::buffer_get_double32(data, 1e6, &ind);
+        conf.ap_mode_time = data[ind++];
+        conf.ap_max_speed = utility::buffer_get_double32(data, 1e6, &ind);
+        conf.ap_time_add_repeat_ms = utility::buffer_get_int32(data, &ind);
 
         conf.log_en = data[ind++];
         strcpy(conf.log_name, (const char*)(data + ind));
@@ -438,7 +443,57 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
     case CMD_LOG_LINE_USB: {
         QByteArray tmpArray = QByteArray::fromRawData((const char*)data, len);
         tmpArray[len] = '\0';
-        emit logLineUsbReceived(id, QString::fromLatin1(tmpArray));
+        emit logLineUsbReceived(id, QString::fromLocal8Bit(tmpArray));
+    } break;
+
+    case CMD_PLOT_INIT: {
+        QString xL = QString::fromLocal8Bit((const char*)data);
+        QString yL = QString::fromLocal8Bit((const char*)data + xL.size() + 1);
+        emit plotInitReceived(id, xL, yL);
+    } break;
+
+    case CMD_PLOT_DATA: {
+        int32_t ind = 0;
+        double x = utility::buffer_get_double32_auto(data, &ind);
+        double y = utility::buffer_get_double32_auto(data, &ind);
+        emit plotDataReceived(id, x, y);
+    } break;
+
+    case CMD_RADAR_SETUP_GET: {
+        int32_t ind = 0;
+        radar_settings_t s;
+
+        s.f_center = utility::buffer_get_double32_auto(data, &ind);
+        s.f_span = utility::buffer_get_double32_auto(data, &ind);
+        s.points = utility::buffer_get_int16(data, &ind);
+        s.t_sweep = utility::buffer_get_double32_auto(data, &ind);
+        s.cc_x = utility::buffer_get_double32_auto(data, &ind);
+        s.cc_y = utility::buffer_get_double32_auto(data, &ind);
+        s.cc_rad = utility::buffer_get_double32_auto(data, &ind);
+        s.log_rate_ms = utility::buffer_get_int32(data, &ind);
+        s.log_en = data[ind++];
+
+        emit radarSetupReceived(id, s);
+    } break;
+
+    case CMD_RADAR_SAMPLES: {
+        int32_t ind = 0;
+        QVector<QPair<double, double> > samples;
+        while (ind < len) {
+            QPair<double, double> p;
+            p.first = utility::buffer_get_double32_auto(data, &ind);
+            p.second = utility::buffer_get_double32_auto(data, &ind);
+            samples.append(p);
+        }
+
+        emit radarSamplesReceived(id, samples);
+    } break;
+
+    case CMD_SET_SYSTEM_TIME: {
+        int32_t ind = 0;
+        qint32 sec = utility::buffer_get_int32(data, &ind);
+        qint32 usec = utility::buffer_get_int32(data, &ind);
+        emit systemTimeReceived(id, sec, usec);
     } break;
 
         // Acks
@@ -465,6 +520,12 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         break;
     case CMD_SET_YAW_OFFSET_ACK:
         emit ackReceived(id, cmd, "CMD_SET_YAW_OFFSET_ACK");
+        break;
+    case CMD_RADAR_SETUP_SET:
+        emit ackReceived(id, cmd, "CMD_RADAR_SETUP_SET");
+        break;
+    case CMD_SET_SYSTEM_TIME_ACK:
+        emit ackReceived(id, cmd, "CMD_SET_SYSTEM_TIME_ACK");
         break;
 
     default:
@@ -502,14 +563,6 @@ bool PacketInterface::isUdpConnected()
     return QString::compare(mHostAddress.toString(), "0.0.0.0") != 0;
 }
 
-void PacketInterface::getState(quint8 id)
-{
-    QByteArray packet;
-    packet.append(id);
-    packet.append(CMD_GET_STATE);
-    sendPacket(packet);
-}
-
 bool PacketInterface::setRoutePoints(quint8 id, QList<LocPoint> points, int retries)
 {
     qint32 send_index = 0;
@@ -521,6 +574,7 @@ bool PacketInterface::setRoutePoints(quint8 id, QList<LocPoint> points, int retr
         utility::buffer_append_double32(mSendBuffer, p->getX(), 1e4, &send_index);
         utility::buffer_append_double32(mSendBuffer, p->getY(), 1e4, &send_index);
         utility::buffer_append_double32(mSendBuffer, p->getSpeed(), 1e6, &send_index);
+        utility::buffer_append_int32(mSendBuffer, p->getTime(), &send_index);
     }
 
     return sendPacketAck(mSendBuffer, send_index, retries);
@@ -560,6 +614,7 @@ bool PacketInterface::setConfiguration(quint8 id, MAIN_CONFIG &conf, int retries
     mSendBuffer[send_index++] = id;
     mSendBuffer[send_index++] = CMD_SET_MAIN_CONFIG;
 
+    mSendBuffer[send_index++] = conf.mag_use;
     mSendBuffer[send_index++] = conf.mag_comp;
     utility::buffer_append_double32(mSendBuffer, conf.yaw_imu_gain, 1e6, &send_index);
 
@@ -594,6 +649,9 @@ bool PacketInterface::setConfiguration(quint8 id, MAIN_CONFIG &conf, int retries
 
     mSendBuffer[send_index++] = conf.ap_repeat_routes;
     utility::buffer_append_double32(mSendBuffer, conf.ap_base_rad, 1e6, &send_index);
+    mSendBuffer[send_index++] = conf.ap_mode_time;
+    utility::buffer_append_double32(mSendBuffer, conf.ap_max_speed, 1e6, &send_index);
+    utility::buffer_append_int32(mSendBuffer, conf.ap_time_add_repeat_ms, &send_index);
 
     mSendBuffer[send_index++] = conf.log_en;
     strcpy((char*)(mSendBuffer + send_index), conf.log_name);
@@ -631,6 +689,41 @@ bool PacketInterface::setEnuRef(quint8 id, double *llh, int retries)
     utility::buffer_append_double64(mSendBuffer, llh[1], 1e16, &send_index);
     utility::buffer_append_double32(mSendBuffer, llh[2], 1e3, &send_index);
     return sendPacketAck(mSendBuffer, send_index, retries);
+}
+
+bool PacketInterface::radarSetupSet(quint8 id, radar_settings_t *s, int retries)
+{
+    qint32 send_index = 0;
+    mSendBuffer[send_index++] = id;
+    mSendBuffer[send_index++] = CMD_RADAR_SETUP_SET;
+    utility::buffer_append_double32_auto(mSendBuffer, s->f_center, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, s->f_span, &send_index);
+    utility::buffer_append_int16(mSendBuffer, s->points, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, s->t_sweep, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, s->cc_x, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, s->cc_y, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, s->cc_rad, &send_index);
+    utility::buffer_append_int32(mSendBuffer, s->log_rate_ms, &send_index);
+    mSendBuffer[send_index++] = s->log_en;
+    return sendPacketAck(mSendBuffer, send_index, retries);
+}
+
+bool PacketInterface::setSystemTime(quint8 id, qint32 sec, qint32 usec, int retries)
+{
+    qint32 send_index = 0;
+    mSendBuffer[send_index++] = id;
+    mSendBuffer[send_index++] = CMD_SET_SYSTEM_TIME;
+    utility::buffer_append_int32(mSendBuffer, sec, &send_index);
+    utility::buffer_append_int32(mSendBuffer, usec, &send_index);
+    return sendPacketAck(mSendBuffer, send_index, retries);
+}
+
+void PacketInterface::getState(quint8 id)
+{
+    QByteArray packet;
+    packet.append(id);
+    packet.append(CMD_GET_STATE);
+    sendPacket(packet);
 }
 
 void PacketInterface::sendTerminalCmd(quint8 id, QString cmd)
@@ -682,6 +775,17 @@ void PacketInterface::setRcControlDuty(quint8 id, double duty, double steering)
     mSendBuffer[send_index++] = CMD_RC_CONTROL;
     mSendBuffer[send_index++] = RC_MODE_DUTY;
     utility::buffer_append_double32(mSendBuffer, duty, 1e4, &send_index);
+    utility::buffer_append_double32(mSendBuffer, steering, 1e6, &send_index);
+    sendPacket(mSendBuffer, send_index);
+}
+
+void PacketInterface::setRcControlPid(quint8 id, double speed, double steering)
+{
+    qint32 send_index = 0;
+    mSendBuffer[send_index++] = id;
+    mSendBuffer[send_index++] = CMD_RC_CONTROL;
+    mSendBuffer[send_index++] = RC_MODE_PID;
+    utility::buffer_append_double32(mSendBuffer, speed, 1e4, &send_index);
     utility::buffer_append_double32(mSendBuffer, steering, 1e6, &send_index);
     sendPacket(mSendBuffer, send_index);
 }
@@ -759,5 +863,23 @@ void PacketInterface::getEnuRef(quint8 id)
     packet.clear();
     packet.append(id);
     packet.append((char)CMD_GET_ENU_REF);
+    sendPacket(packet);
+}
+
+void PacketInterface::setMsToday(quint8 id, qint32 time)
+{
+    qint32 send_index = 0;
+    mSendBuffer[send_index++] = id;
+    mSendBuffer[send_index++] = CMD_SET_MS_TODAY;
+    utility::buffer_append_int32(mSendBuffer, time, &send_index);
+    sendPacket(mSendBuffer, send_index);
+}
+
+void PacketInterface::radarSetupGet(quint8 id)
+{
+    QByteArray packet;
+    packet.clear();
+    packet.append(id);
+    packet.append((char)CMD_RADAR_SETUP_GET);
     sendPacket(packet);
 }

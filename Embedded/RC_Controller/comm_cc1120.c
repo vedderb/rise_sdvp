@@ -31,12 +31,12 @@ static THD_FUNCTION(rx_thread, arg);
 static THD_FUNCTION(tx_thread, arg);
 
 void comm_cc1120_init(void) {
-	cc1120_init();
-
-	chThdCreateStatic(rx_thread_wa, sizeof(rx_thread_wa),
-			NORMALPRIO, rx_thread, NULL);
-	chThdCreateStatic(tx_thread_wa, sizeof(tx_thread_wa),
-			NORMALPRIO, tx_thread, NULL);
+//	cc1120_init();
+//
+//	chThdCreateStatic(rx_thread_wa, sizeof(rx_thread_wa),
+//			NORMALPRIO, rx_thread, NULL);
+//	chThdCreateStatic(tx_thread_wa, sizeof(tx_thread_wa),
+//			NORMALPRIO, tx_thread, NULL);
 }
 
 static THD_FUNCTION(rx_thread, arg) {

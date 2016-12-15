@@ -1028,3 +1028,16 @@ void CarInterface::on_setClockButton_clicked()
         mPacketInterface->setMsToday(mId, current.msecsSinceStartOfDay());
     }
 }
+
+void CarInterface::on_setClockPiButton_clicked()
+{
+    if (mPacketInterface) {
+        QDateTime date = QDateTime::currentDateTime();
+        bool res = mPacketInterface->setSystemTime(mId, date.toTime_t(), date.time().msec() * 1000.0);
+        if (!res) {
+            QMessageBox::warning(this, "Set time on Raspberry Pi",
+                                 "Could not set time, no ack received. Make sure that the "
+                                 "connection works.");
+        }
+    }
+}

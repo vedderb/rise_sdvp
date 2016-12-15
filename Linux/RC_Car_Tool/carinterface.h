@@ -106,6 +106,8 @@ private slots:
     void on_radarGetRadCCButton_clicked();
     void on_setClockButton_clicked();
 
+    void on_setClockPiButton_clicked();
+
 private:
     Ui::CarInterface *ui;
     QVector<double> accelXData;

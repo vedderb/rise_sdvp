@@ -64,6 +64,7 @@ public slots:
     void readPendingDatagrams();
     void carPacketRx(quint8 id, CMD_PACKET cmd, const QByteArray &data);
     void logLineUsbReceived(quint8 id, QString str);
+    void systemTimeReceived(quint8 id, qint32 sec, qint32 usec);
 
 private:
     PacketInterface *mPacketInterface;

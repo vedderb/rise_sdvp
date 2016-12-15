@@ -1773,10 +1773,24 @@
      <item>
       <widget class="QPushButton" name="setClockButton">
        <property name="toolTip">
-        <string>Set clock</string>
+        <string>Set clock on STM32 board</string>
        </property>
        <property name="text">
-        <string/>
+        <string>STM</string>
+       </property>
+       <property name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/models/Icons/Clock-96.png</normaloff>:/models/Icons/Clock-96.png</iconset>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="setClockPiButton">
+       <property name="toolTip">
+        <string>Set clock on Raspberry Pi</string>
+       </property>
+       <property name="text">
+        <string>Pi</string>
        </property>
        <property name="icon">
         <iconset resource="resources.qrc">

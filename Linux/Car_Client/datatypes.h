@@ -15,13 +15,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
- * datatypes.h
- *
- *  Created on: 10 mars 2016
- *      Author: benjamin
- */
-
 #ifndef DATATYPES_H_
 #define DATATYPES_H_
 
@@ -74,6 +67,7 @@ typedef struct {
     double ap_goal_px;
     double ap_goal_py;
     double ap_rad;
+    int32_t ms_today;
 } CAR_STATE;
 
 typedef enum {
@@ -86,6 +80,7 @@ typedef enum {
 // Car configuration
 typedef struct {
     // Settings
+    bool mag_use; // Use the magnetometer
     bool mag_comp; // Should be 0 when capturing samples for the calibration
     float yaw_imu_gain;
 
@@ -124,6 +119,9 @@ typedef struct {
     // Autopilot parameters
     bool ap_repeat_routes; // Repeat the same route when the end is reached
     float ap_base_rad; // Radius around car at 0 speed
+    bool ap_mode_time; // Drive to route points based on timestamps instead of speed
+    float ap_max_speed; // Maximum allowed speed for autopilot
+    int32_t ap_time_add_repeat_ms; // Time to add to each point for each repetition of the route
 
     // Logging
     bool log_en;
@@ -152,7 +150,15 @@ typedef enum {
     CMD_GET_MAIN_CONFIG_DEFAULT,
     CMD_SET_YAW_OFFSET,
     CMD_SET_YAW_OFFSET_ACK,
-    CMD_LOG_LINE_USB
+    CMD_LOG_LINE_USB,
+    CMD_PLOT_INIT,
+    CMD_PLOT_DATA,
+    CMD_SET_MS_TODAY,
+    CMD_SET_SYSTEM_TIME,
+    CMD_SET_SYSTEM_TIME_ACK,
+    CMD_RADAR_SETUP_SET,
+    CMD_RADAR_SETUP_GET,
+    CMD_RADAR_SAMPLES
 } CMD_PACKET;
 
 // RC control modes
@@ -162,6 +168,18 @@ typedef enum {
     RC_MODE_PID,
     RC_MODE_CURRENT_BRAKE
 } RC_MODE;
+
+typedef struct {
+    bool log_en;
+    float f_center;
+    float f_span;
+    int points;
+    float t_sweep;
+    float cc_x;
+    float cc_y;
+    float cc_rad;
+    int log_rate_ms;
+} radar_settings_t;
 
 typedef enum {
     JS_TYPE_HK = 0,

@@ -1,9 +1,12 @@
+=== FW 6.3 ===
+* Added command for setting system time.
+
 === FW 6.2 ===
-* Option to disable the magnetometer
+* Option to disable the magnetometer.
 
 === FW 6.1 ===
-* Radar sample sending for plotting
-* Time update from GPS time
+* Radar sample sending for plotting.
+* Time update from GPS time.
 
 === FW 6.0 ===
 * Time set and get command.

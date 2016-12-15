@@ -73,7 +73,7 @@
         <item>
          <widget class="QLineEdit" name="ntripUserEdit">
           <property name="text">
-           <string>vedderb</string>
+           <string/>
           </property>
          </widget>
         </item>
@@ -87,7 +87,7 @@
         <item>
          <widget class="QLineEdit" name="ntripPasswordEdit">
           <property name="text">
-           <string>abc123</string>
+           <string/>
           </property>
           <property name="echoMode">
            <enum>QLineEdit::Password</enum>

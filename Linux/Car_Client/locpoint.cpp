@@ -18,8 +18,10 @@
 #include "locpoint.h"
 #include <cmath>
 
-LocPoint::LocPoint(double x, double y, double alpha, double speed, double radius, double sigma) :
-    mX(x), mY(y), mAlpha(alpha), mSpeed(speed), mRadius(radius), mSigma(sigma)
+LocPoint::LocPoint(double x, double y, double alpha, double speed,
+                   double radius, double sigma, quint32 color, qint32 time) :
+    mX(x), mY(y), mAlpha(alpha), mSpeed(speed),
+    mRadius(radius), mSigma(sigma), mColor(color), mTime(time)
 {
 
 }
@@ -29,42 +31,42 @@ LocPoint::LocPoint(const LocPoint &point)
     *this = point;
 }
 
-double LocPoint::getX()
+double LocPoint::getX() const
 {
     return mX;
 }
 
-double LocPoint::getY()
+double LocPoint::getY() const
 {
     return mY;
 }
 
-double LocPoint::getAlpha()
+double LocPoint::getAlpha() const
 {
     return mAlpha;
 }
 
-double LocPoint::getSpeed()
+double LocPoint::getSpeed() const
 {
     return mSpeed;
 }
 
-QPointF LocPoint::getPoint()
+QPointF LocPoint::getPoint() const
 {
     return QPointF(mX, mY);
 }
 
-QPointF LocPoint::getPointMm()
+QPointF LocPoint::getPointMm() const
 {
     return QPointF(mX * 1000.0, mY * 1000.0);
 }
 
-double LocPoint::getRadius()
+double LocPoint::getRadius() const
 {
     return mRadius;
 }
 
-double LocPoint::getSigma()
+double LocPoint::getSigma() const
 {
     return mSigma;
 }
@@ -85,6 +87,26 @@ void LocPoint::setXY(double x, double y)
     mY = y;
 }
 
+void LocPoint::setTime(const qint32 &time)
+{
+    mTime = time;
+}
+
+QString LocPoint::getInfo() const
+{
+    return mInfo;
+}
+
+quint32 LocPoint::getColor() const
+{
+    return mColor;
+}
+
+qint32 LocPoint::getTime() const
+{
+    return mTime;
+}
+
 LocPoint &LocPoint::operator =(const LocPoint &point)
 {
     mX = point.mX;
@@ -93,6 +115,9 @@ LocPoint &LocPoint::operator =(const LocPoint &point)
     mSpeed = point.mSpeed;
     mRadius = point.mRadius;
     mSigma = point.mSigma;
+    mInfo = point.mInfo;
+    mColor = point.mColor;
+    mTime = point.mTime;
     return *this;
 }
 
@@ -103,7 +128,10 @@ bool LocPoint::operator ==(const LocPoint &point)
             mAlpha == point.mAlpha &&
             mSpeed == point.mSpeed &&
             mRadius == point.mRadius &&
-            mSigma == point.mSigma) {
+            mSigma == point.mSigma &&
+            mInfo == point.mInfo &&
+            mColor == point.mColor &&
+            mTime == point.mTime) {
         return true;
     } else {
         return false;
@@ -113,6 +141,11 @@ bool LocPoint::operator ==(const LocPoint &point)
 bool LocPoint::operator !=(const LocPoint &point)
 {
     return !(operator==(point));
+}
+
+void LocPoint::setInfo(const QString &info)
+{
+    mInfo = info;
 }
 
 void LocPoint::setAlpha(double alpha)
@@ -135,7 +168,12 @@ void LocPoint::setSigma(double sigma)
     mSigma = sigma;
 }
 
-double LocPoint::getDistanceTo(const LocPoint &point)
+void LocPoint::setColor(const quint32 &color)
+{
+    mColor = color;
+}
+
+double LocPoint::getDistanceTo(const LocPoint &point) const
 {
     return sqrt((point.mX - mX) * (point.mX - mX) + (point.mY - mY) * (point.mY - mY));
 }

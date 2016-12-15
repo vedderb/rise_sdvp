@@ -19,6 +19,7 @@
 #include "ui_rtcmwidget.h"
 #include <QSerialPortInfo>
 #include <QMessageBox>
+#include "utility.h"
 
 RtcmWidget::RtcmWidget(QWidget *parent) :
     QWidget(parent),
@@ -44,6 +45,13 @@ RtcmWidget::RtcmWidget(QWidget *parent) :
     ui->refSendLatBox->setValue(57.71495867);
     ui->refSendLonBox->setValue(12.89134921);
     ui->refSendHBox->setValue(219.0);
+
+    // Onsala default
+//    double lon, lat, h;
+//    utility::xyzToLlh(3370667.1982, 711818.7226, 5349787.8784, &lat, &lon, &h);
+//    ui->refSendLatBox->setValue(lat);
+//    ui->refSendLonBox->setValue(lon);
+//    ui->refSendHBox->setValue(h);
 }
 
 RtcmWidget::~RtcmWidget()
