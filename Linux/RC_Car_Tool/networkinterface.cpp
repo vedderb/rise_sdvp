@@ -242,10 +242,13 @@ void NetworkInterface::processData(const QByteArray &data)
     int start = mRxBuffer.indexOf("<message>");
     int end = mRxBuffer.indexOf("</message>");
 
-    if (start >= 0 && end >= 0) {
+    while (start >= 0 && end >= 0) {
         QByteArray xml = mRxBuffer.mid(start, end - start + 10);
         mRxBuffer.remove(start, end - start + 10);
         processXml(xml);
+
+        start = mRxBuffer.indexOf("<message>");
+        end = mRxBuffer.indexOf("</message>");
     }
 
     // Clear buffer if it becomes too long
