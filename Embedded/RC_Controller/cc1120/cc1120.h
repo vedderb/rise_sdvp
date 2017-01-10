@@ -31,16 +31,14 @@ unsigned char cc1120_single_read(uint16_t addr);
 uint8_t cc1120_single_write(uint16_t addr, uint8_t value);
 void cc1120_burst_read(uint16_t addr, uint8_t *buffer, uint8_t count);
 void cc1120_burst_write(uint16_t addr, uint8_t *buffer, uint8_t count);
-uint8_t cc1120_txbytes(void);
-uint8_t cc1120_read_rxbytes(void);
 void cc1120_write_txfifo(uint8_t *data, uint8_t len);
 void cc1120_check_txfifo(void);
 void cc1120_flushrx(void);
 int cc1120_transmit(uint8_t *data, int len);
 int cc1120_on(void);
 int cc1120_off(void);
-void cc1120_calibrate_manual(void);
 void cc1120_ext_cb(EXTDriver *extp, expchannel_t channel);
+void cc1120_calibrate_manual(void);
 
 #ifndef BV
 #define BV(n)      (1 << (n))
@@ -265,7 +263,7 @@ void cc1120_ext_cb(EXTDriver *extp, expchannel_t channel);
 // Reset chip.
 #define CC1120_SRES							0x30
 
-// Enable and calibrate frequency synthesizer (if MCSM0.FS_AUTOCAL=1).
+// Enable and calibrate frequency synthesizer (if SETTLING_CFG.FS_AUTOCAL=1).
 // If in RX/TX: Go to a wait state where only the synthesizer is
 // running (for quick RX / TX turnaround).
 #define CC1120_SFSTXON						0x31
@@ -349,22 +347,11 @@ void cc1120_ext_cb(EXTDriver *extp, expchannel_t channel);
 // Variable length packets
 #define PKT_CFG0_LENGTH_CONFIG_VARIABLE		BV(5)
 #define PKT_CFG0_LENGTH_CONFIG_INFINITE		BV(6)
-#define CC1120_SETTING_PKT_CFG0				PKT_CFG0_LENGTH_CONFIG_VARIABLE
 
 // Return to RX after TX
 #define RFEND_CFG0_TXOFF_MODE_RETURN_TO_RX	(BV(4)|BV(5))
-#define CC1120_SETTING_RFEND_CFG0			RFEND_CFG0_TXOFF_MODE_RETURN_TO_RX
 
 // Return to RX after RX
 #define RFEND_CFG1_RXOFF_MODE_RETURN_TO_RX	(BV(4)|BV(5))
-#define CC1120_SETTING_RFEND_CFG1			(0x0F | RFEND_CFG1_RXOFF_MODE_RETURN_TO_RX)
-
-// GPIO configuration
-#define CC1120_SETTING_IOCFG3				IOCFG_GPIO_CFG_CS
-#define CC1120_SETTING_IOCFG2				IOCFG_GPIO_CFG_RXTX_OR_IDLE
-#define CC1120_SETTING_IOCFG1				0xB0  // GPIO1 is always used for SPI
-//#define CC1120_SETTING_IOCFG0				(IOCFG_GPIO_CFG_PKT_SYNC_RXTX | IOCFG_GPIO_CFG_INVERT)
-//#define CC1120_SETTING_IOCFG0				IOCFG_GPIO_CFG_RXFIFO_THR
-#define CC1120_SETTING_IOCFG0				IOCFG_GPIO_CFG_PKT_SYNC_RXTX
 
 #endif /* CC1120_CC1120_H_ */
