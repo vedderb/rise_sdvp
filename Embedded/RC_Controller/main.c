@@ -43,6 +43,7 @@
 #include "log.h"
 #include "radar.h"
 #include "comm_cc1120.h"
+#include "ublox.h"
 
 /*
  * Timers used:
@@ -79,6 +80,7 @@ int main(void) {
 	timeout_init();
 	log_init();
 	comm_cc1120_init();
+	ublox_init();
 
 	commands_printf_log_usb("Test");
 

@@ -355,9 +355,28 @@ int NmeaServer::decodeNmeaGGA(QByteArray data, NmeaServer::nmea_gga_info_t &gga)
 
     int dec_fields = 0;
 
-    setlocale(LC_NUMERIC,"C");
+    setlocale(LC_NUMERIC, "C");
 
-    if (sscanf(data.constData(), "$GPGGA,%s", nmea_str) >=1) {
+    bool found = false;
+    const char *str = data.constData();
+    int len = strlen(str);
+
+    for (int i = 0;i < 10;i++) {
+        if ((i + 5) >= len) {
+            break;
+        }
+
+        if (    str[i] == 'G' &&
+                str[i + 1] == 'G' &&
+                str[i + 2] == 'A' &&
+                str[i + 3] == ',') {
+            found = true;
+            strcpy(nmea_str, str + i + 4);
+            break;
+        }
+    }
+
+    if (found) {
         char *gga, *str;
         int ind = 0;
 

@@ -229,7 +229,25 @@ void pos_input_nmea(const char *data) {
 	int sats = 0;
 	int ind = 0;
 
-	if (sscanf(data, "$GPGGA,%s", nmea_str) >=1) {
+	bool found = false;
+	int len = strlen(data);
+
+	for (int i = 0;i < 10;i++) {
+		if ((i + 5) >= len) {
+			break;
+		}
+
+		if (    data[i] == 'G' &&
+				data[i + 1] == 'G' &&
+				data[i + 2] == 'A' &&
+				data[i + 3] == ',') {
+			found = true;
+			strcpy(nmea_str, data + i + 4);
+			break;
+		}
+	}
+
+	if (found) {
 		char *gga, *str;
 
 		str = nmea_str;

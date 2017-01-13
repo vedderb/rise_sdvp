@@ -1093,14 +1093,14 @@ void MainWindow::on_mapOsmServerHiResButton_toggled(bool checked)
 void MainWindow::on_mapOsmServerVedderButton_toggled(bool checked)
 {
     if (checked) {
-        ui->mapWidget->osmClient()->setTileServerUrl("http://home.vedder.se/osm_tiles");
+        ui->mapWidget->osmClient()->setTileServerUrl("http://tiles.vedder.se/osm_tiles");
     }
 }
 
 void MainWindow::on_mapOsmServerVedderHdButton_toggled(bool checked)
 {
     if (checked) {
-        ui->mapWidget->osmClient()->setTileServerUrl("http://home.vedder.se/osm_tiles_hd");
+        ui->mapWidget->osmClient()->setTileServerUrl("http://tiles.vedder.se/osm_tiles_hd");
     }
 }
 

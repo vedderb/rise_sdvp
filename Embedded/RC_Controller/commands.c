@@ -38,6 +38,7 @@
 #include "timeout.h"
 #include "log.h"
 #include "radar.h"
+#include "ublox.h"
 
 #include <math.h>
 #include <string.h>
@@ -351,6 +352,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			memcpy(m_send_buffer + send_index, data, len);
 			send_index += len;
 			comm_usb_send_packet(m_send_buffer, send_index);
+			ublox_send(data, len);
 		} break;
 
 		case CMD_SEND_NMEA_RADIO: {
