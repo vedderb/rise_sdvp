@@ -217,6 +217,51 @@ typedef struct {
 	float orot;
 } GPS_STATE;
 
+// ============== UBLOX Datatypes ================== //
+
+typedef struct {
+	uint16_t ref_station_id;
+	uint32_t i_tow;
+	float pos_n; // Position north in meters
+	float pos_e; // Position east in meters
+	float pos_d; // Position down in meters
+	float acc_n; // Accuracy north in meters
+	float acc_e; // Accuracy east in meters
+	float acc_d; // Accuracy down in meters
+	bool fix_ok; // A valid fix
+	bool diff_soln; // Differential corrections are applied
+	bool rel_pos_valid; // Relative position components and accuracies valid
+	int carr_soln; // fix_type 0: no fix, 1: float, 2: fix
+} ubx_nav_relposned;
+
+typedef struct {
+	double pr_mes;
+	double cp_mes;
+	float do_mes;
+	uint8_t gnss_id;
+	uint8_t sv_id;
+	uint8_t freq_id;
+	uint16_t locktime;
+	uint8_t cno;
+	uint8_t pr_stdev;
+	uint8_t cp_stdev;
+	uint8_t do_stdev;
+	bool pr_valid;
+	bool cp_valid;
+	bool half_cyc_valid;
+	bool half_cyc_sub;
+} ubx_rxm_rawx_obs;
+
+typedef struct {
+	double rcv_tow;
+	uint16_t week;
+	int8_t leaps;
+	uint8_t num_meas;
+	bool leap_sec;
+	bool clk_reset;
+	ubx_rxm_rawx_obs obs[40];
+} ubx_rxm_rawx;
+
 // ============== VESC Datatypes ================== //
 
 // CAN status sent by VESC

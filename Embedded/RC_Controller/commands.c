@@ -639,6 +639,15 @@ void commands_forward_vesc_packet(unsigned char *data, unsigned int len) {
 	commands_send_packet((unsigned char*)m_send_buffer, len + 2);
 }
 
+void commands_send_nmea(unsigned char *data, unsigned int len) {
+	int32_t send_index = 0;
+	m_send_buffer[send_index++] = main_id;
+	m_send_buffer[send_index++] = CMD_SEND_NMEA_RADIO;
+	memcpy(m_send_buffer + send_index, data, len);
+	send_index += len;
+	commands_send_packet(m_send_buffer, send_index);
+}
+
 void commands_init_plot(char *namex, char *namey) {
 	int ind = 0;
 	m_send_buffer[ind++] = main_id;
