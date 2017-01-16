@@ -54,6 +54,7 @@ private slots:
     void on_rtcmSerialConnectButton_clicked();
     void on_refGetButton_clicked();
     void on_tcpServerBox_toggled(bool checked);
+    void on_gpsOnlyBox_toggled(bool checked);
 
 private:
     Ui::RtcmWidget *ui;

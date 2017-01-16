@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>742</width>
-    <height>540</height>
+    <width>672</width>
+    <height>565</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -276,6 +276,19 @@
       </size>
      </property>
     </spacer>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="gpsOnlyBox">
+     <property name="toolTip">
+      <string>Only send GPS observations and to save bandwidth and decrease transmission errors.</string>
+     </property>
+     <property name="text">
+      <string>GPS Only</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
    </item>
    <item>
     <widget class="QGroupBox" name="sendRefPosBox">

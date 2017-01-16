@@ -27,6 +27,7 @@ class RtcmClient : public QObject
     Q_OBJECT
 public:
     static RtcmClient* currentMsgHandler;
+    static bool gpsOnly;
 
     explicit RtcmClient(QObject *parent = 0);
     bool connectNtrip(QString server, QString stream, QString user = "", QString pass = "", int port = 80);
@@ -36,6 +37,7 @@ public:
     bool isSerialConnected();
     void disconnectTcpNtrip();
     void disconnectSerial();
+    void setGpsOnly(bool isGpsOnly);
 
     void emitRtcmReceived(QByteArray data, int type);
     void emitRefPosReceived(double lat, double lon, double height, double antenna_height);

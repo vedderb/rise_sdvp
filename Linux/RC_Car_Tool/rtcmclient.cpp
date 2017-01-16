@@ -22,7 +22,7 @@
 
 namespace {
 void rtcm_rx(uint8_t *data, int len, int type) {
-    if (RtcmClient::currentMsgHandler && type != 1002 && type != 1004) {
+    if (RtcmClient::currentMsgHandler && type != 1002 && type != 1004 && type != 1010 && type != 1012) {
         QByteArray rtcm_data((const char*)data, len);
         RtcmClient::currentMsgHandler->emitRtcmReceived(rtcm_data, type);
     }
@@ -35,27 +35,40 @@ void rtcm_rx_1006(rtcm_ref_sta_pos_t *pos) {
     }
 }
 
-void rtcm_rx_obs_gps(rtcm_obs_header_t *header, rtcm_obs_gps_t *obs, int obs_num) {
+void rtcm_rx_obs(rtcm_obs_header_t *header, rtcm_obs_t *obs, int obs_num) {
     (void)header;
     (void)obs;
 
     // Don't send empty observations.
     if (RtcmClient::currentMsgHandler && obs_num > 0) {
-        // Re-encode to 1002 since we don't care about L2 for now.
-        static uint8_t data[2048];
-        int len;
-        int type = 1002;
+        if (header->type == 1002 || header->type == 1004) {
+            // Re-encode to 1002 since we don't care about L2 for now.
+            static uint8_t data[2048];
+            int len;
+            int type = 1002;
 
-        // Set sync to 0 since no more observations are coming. Otherwise
-        // RTKLIB has problems when discarding GLONASS. Some stations probably
-        // set this to true because GLONASS observation will come, however, we
-        // only care about GPS for now.
-        header->sync = 0;
+            // Set sync to 0 since no more observations are coming. Otherwise
+            // RTKLIB or the ublox will wait for other observations that are
+            // thrown away and RTK won't work.
+            if (RtcmClient::gpsOnly) {
+                header->sync = 0;
+            }
 
-        rtcm3_encode_1002(header, obs, obs_num, data, &len);
+            rtcm3_encode_1002(header, obs, obs_num, data, &len);
 
-        QByteArray rtcm_data((const char*)data, len);
-        RtcmClient::currentMsgHandler->emitRtcmReceived(rtcm_data, type);
+            QByteArray rtcm_data((const char*)data, len);
+            RtcmClient::currentMsgHandler->emitRtcmReceived(rtcm_data, type);
+        } if ((header->type == 1010 || header->type == 1012) && !RtcmClient::gpsOnly) {
+            // Re-encode to 1010 since we don't care about L2 for now.
+            static uint8_t data[2048];
+            int len;
+            int type = 1010;
+
+            rtcm3_encode_1010(header, obs, obs_num, data, &len);
+
+            QByteArray rtcm_data((const char*)data, len);
+            RtcmClient::currentMsgHandler->emitRtcmReceived(rtcm_data, type);
+        }
     }
 
     if (obs_num == 0) {
@@ -66,6 +79,7 @@ void rtcm_rx_obs_gps(rtcm_obs_header_t *header, rtcm_obs_gps_t *obs, int obs_num
 
 // Static member initialization
 RtcmClient *RtcmClient::currentMsgHandler = 0;
+bool RtcmClient::gpsOnly = true;
 
 RtcmClient::RtcmClient(QObject *parent) : QObject(parent)
 {
@@ -73,12 +87,12 @@ RtcmClient::RtcmClient(QObject *parent) : QObject(parent)
     mSerialPort = new QSerialPort(this);
 
     qRegisterMetaType<rtcm_obs_header_t>("rtcm_obs_header_t");
-    qRegisterMetaType<rtcm_obs_gps_t>("rtcm_obs_gps_t");
+    qRegisterMetaType<rtcm_obs_t>("rtcm_obs_gps_t");
 
     currentMsgHandler = this;
     rtcm3_set_rx_callback(rtcm_rx);
     rtcm3_set_rx_callback_1005_1006(rtcm_rx_1006);
-    rtcm3_set_rx_callback_obs_gps(rtcm_rx_obs_gps);
+    rtcm3_set_rx_callback_obs(rtcm_rx_obs);
 
     connect(mTcpSocket, SIGNAL(readyRead()), this, SLOT(tcpInputDataAvailable()));
     connect(mTcpSocket, SIGNAL(connected()), this, SLOT(tcpInputConnected()));
@@ -158,6 +172,11 @@ void RtcmClient::disconnectTcpNtrip()
 void RtcmClient::disconnectSerial()
 {
     mSerialPort->close();
+}
+
+void RtcmClient::setGpsOnly(bool isGpsOnly)
+{
+    gpsOnly = isGpsOnly;
 }
 
 void RtcmClient::emitRtcmReceived(QByteArray data, int type)

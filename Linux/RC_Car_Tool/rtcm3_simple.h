@@ -26,7 +26,8 @@ extern "C" {
 #include <stdbool.h>
 
 typedef struct {
-    double t_tow;       // Time of week
+    double t_tow;       // Time of week (GPS)
+    double t_tod;       // Time of day (GLONASS)
     double t_wn;        // Week number
     int staid;          // ref station id
     bool sync;          // True if more messages are coming
@@ -37,10 +38,11 @@ typedef struct {
     double P[2];        // Pseudorange observation
     double L[2];        // Carrier phase observation
     uint8_t cn0[2];     // Carrier-to-Noise density [dB Hz]
-    uint8_t lock[2];   // Lock. Set to 0 when the lock has changed, 127 otherwise. TODO: Really?
+    uint8_t lock[2];    // Lock. Set to 0 when the lock has changed, 127 otherwise. TODO: Really?
     uint8_t prn;        // Sattelite
+    uint8_t freq;       // Frequency slot (GLONASS)
     uint8_t code[2];    // Code indicator
-} rtcm_obs_gps_t;
+} rtcm_obs_t;
 
 typedef struct {
     int staid;
@@ -83,13 +85,15 @@ typedef struct {
   uint16_t iodc;        // Issue of clock data
 } rtcm_ephemeris_t;
 
-void rtcm3_set_rx_callback_obs_gps(void(*func)(rtcm_obs_header_t *header, rtcm_obs_gps_t *obs, int obs_num));
+void rtcm3_set_rx_callback_obs(void(*func)(rtcm_obs_header_t *header, rtcm_obs_t *obs, int obs_num));
 void rtcm3_set_rx_callback_1005_1006(void(*func)(rtcm_ref_sta_pos_t *pos));
 void rtcm3_set_rx_callback_1019(void(*func)(rtcm_ephemeris_t *eph));
 void rtcm3_set_rx_callback(void(*func)(uint8_t *data, int len, int type));
 int rtcm3_input_data(uint8_t data);
 void rtcm3_get_last_decoded_buffer(const uint8_t **data, int *len, int *type);
-int rtcm3_encode_1002(rtcm_obs_header_t *header, rtcm_obs_gps_t *obs,
+int rtcm3_encode_1002(rtcm_obs_header_t *header, rtcm_obs_t *obs,
+                       int obs_num, uint8_t *buffer, int *buffer_len);
+int rtcm3_encode_1010(rtcm_obs_header_t *header, rtcm_obs_t *obs,
                        int obs_num, uint8_t *buffer, int *buffer_len);
 int rtcm3_encode_1006(rtcm_ref_sta_pos_t pos, uint8_t *buffer, int *buffer_len);
 int rtcm3_encode_1019(rtcm_ephemeris_t *eph, uint8_t *buffer, int *buffer_len);

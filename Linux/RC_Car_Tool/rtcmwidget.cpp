@@ -246,3 +246,8 @@ void RtcmWidget::on_tcpServerBox_toggled(bool checked)
         mTcpServer->stopServer();
     }
 }
+
+void RtcmWidget::on_gpsOnlyBox_toggled(bool checked)
+{
+    mRtcm->setGpsOnly(checked);
+}

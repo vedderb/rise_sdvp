@@ -402,7 +402,10 @@ void MainWindow::rtcmReceived(QByteArray data, int type)
     case 1004:
     case 1005:
     case 1006:
+    case 1010:
+    case 1012:
     case 1019:
+    case 1020:
         mPacketInterface->sendRtcmUsb(255, data);
         break;
     default:
