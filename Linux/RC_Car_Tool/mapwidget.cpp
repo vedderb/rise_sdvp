@@ -154,6 +154,8 @@ MapWidget::MapWidget(QWidget *parent) :
     mDrawGrid = true;
     mRoutePointSelected = -1;
     mRouteNow = 0;
+    mTraceMinSpaceCar = 0.05;
+    mTraceMinSpaceGps = 0.05;
 
     mOsm = new OsmClient(this);
     mDrawOpenStreetmap = true;
@@ -651,7 +653,7 @@ void MapWidget::paintEvent(QPaintEvent *event)
                     mCarTrace.append(carInfo.getLocation());
                 }
 
-                if (mCarTrace.last().getDistanceTo(carInfo.getLocation()) > 0.05) {
+                if (mCarTrace.last().getDistanceTo(carInfo.getLocation()) > mTraceMinSpaceCar) {
                     mCarTrace.append(carInfo.getLocation());
                 }
             }
@@ -665,7 +667,7 @@ void MapWidget::paintEvent(QPaintEvent *event)
                     mCarTraceGps.append(carInfo.getLocationGps());
                 }
 
-                if (mCarTraceGps.last().getDistanceTo(carInfo.getLocationGps()) > 0.01) {
+                if (mCarTraceGps.last().getDistanceTo(carInfo.getLocationGps()) > mTraceMinSpaceGps) {
                     mCarTraceGps.append(carInfo.getLocationGps());
                 }
             }
@@ -1147,6 +1149,26 @@ void MapWidget::wheelEvent(QWheelEvent *e)
     }
 
     updateClosestInfoPoint();
+}
+
+double MapWidget::getTraceMinSpaceGps() const
+{
+    return mTraceMinSpaceGps;
+}
+
+void MapWidget::setTraceMinSpaceGps(double traceMinSpaceGps)
+{
+    mTraceMinSpaceGps = traceMinSpaceGps;
+}
+
+double MapWidget::getTraceMinSpaceCar() const
+{
+    return mTraceMinSpaceCar;
+}
+
+void MapWidget::setTraceMinSpaceCar(double traceMinSpaceCar)
+{
+    mTraceMinSpaceCar = traceMinSpaceCar;
 }
 
 qint32 MapWidget::getRoutePointTime() const

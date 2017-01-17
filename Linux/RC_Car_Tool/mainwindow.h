@@ -115,6 +115,8 @@ private slots:
     void on_mapRemoveRouteAllButton_clicked();
     void on_mapUpdateTimeButton_clicked();
     void on_mapRouteTimeEdit_timeChanged(const QTime &time);
+    void on_mapTraceMinSpaceCarBox_valueChanged(double arg1);
+    void on_mapTraceMinSpaceGpsBox_valueChanged(double arg1);
 
 private:
     Ui::MainWindow *ui;

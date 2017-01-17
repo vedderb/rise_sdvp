@@ -1206,3 +1206,13 @@ void MainWindow::on_mapRouteTimeEdit_timeChanged(const QTime &time)
 {
     ui->mapWidget->setRoutePointTime(time.msecsSinceStartOfDay());
 }
+
+void MainWindow::on_mapTraceMinSpaceCarBox_valueChanged(double arg1)
+{
+    ui->mapWidget->setTraceMinSpaceCar(arg1 / 1000.0);
+}
+
+void MainWindow::on_mapTraceMinSpaceGpsBox_valueChanged(double arg1)
+{
+    ui->mapWidget->setTraceMinSpaceGps(arg1 / 1000.0);
+}

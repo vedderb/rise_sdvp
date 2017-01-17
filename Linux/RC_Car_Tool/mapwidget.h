@@ -99,6 +99,12 @@ public:
     qint32 getRoutePointTime() const;
     void setRoutePointTime(const qint32 &routePointTime);
 
+    double getTraceMinSpaceCar() const;
+    void setTraceMinSpaceCar(double traceMinSpaceCar);
+
+    double getTraceMinSpaceGps() const;
+    void setTraceMinSpaceGps(double traceMinSpaceGps);
+
 signals:
     void scaleChanged(double newScale);
     void offsetChanged(double newXOffset, double newYOffset);
@@ -154,6 +160,8 @@ private:
     bool mDrawGrid;
     int mRoutePointSelected;
     int mRouteNow;
+    double mTraceMinSpaceCar;
+    double mTraceMinSpaceGps;
 
     void updateClosestInfoPoint();
     int drawInfoPoints(QPainter &painter, const QList<LocPoint> &pts,
