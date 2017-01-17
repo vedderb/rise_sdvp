@@ -36,6 +36,7 @@ public:
         int n_sat;
         int fix_type;
         double h_dop;
+        double diff_age;
     } nmea_gga_info_t;
 
     typedef struct {

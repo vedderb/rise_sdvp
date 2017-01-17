@@ -21,6 +21,7 @@
 #include "rtcm3_simple.h"
 #include <math.h>
 #include <string.h>
+#include <stdio.h>
 
 // Defines
 #define ROUND(x)        ((int)floor((x)+0.5))

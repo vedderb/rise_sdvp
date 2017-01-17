@@ -352,6 +352,7 @@ int NmeaServer::decodeNmeaGGA(QByteArray data, NmeaServer::nmea_gga_info_t &gga)
     int fix_type = 0;
     int sats = 0;
     double hdop = 0.0;
+    double diff_age = -1.0;
 
     int dec_fields = 0;
 
@@ -475,6 +476,14 @@ int NmeaServer::decodeNmeaGGA(QByteArray data, NmeaServer::nmea_gga_info_t &gga)
                 height += h2;
             } break;
 
+            case 12: {
+                // Correction age
+                dec_fields++;
+                if (sscanf(gga, "%lf", &diff_age) != 1) {
+                    diff_age = -1.0;
+                }
+            } break;
+
             default:
                 break;
             }
@@ -497,6 +506,7 @@ int NmeaServer::decodeNmeaGGA(QByteArray data, NmeaServer::nmea_gga_info_t &gga)
     gga.n_sat = sats;
     gga.t_tow = ms;
     gga.h_dop = hdop;
+    gga.diff_age = diff_age;
 
     return dec_fields;
 }

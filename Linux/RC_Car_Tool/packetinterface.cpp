@@ -426,6 +426,7 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         conf.gps_corr_gain_stat = utility::buffer_get_double32(data, 1e6, &ind);
         conf.gps_corr_gain_dyn = utility::buffer_get_double32(data, 1e6, &ind);
         conf.gps_corr_gain_yaw = utility::buffer_get_double32(data, 1e6, &ind);
+        conf.gps_send_nmea = data[ind++];
 
         conf.ap_repeat_routes = data[ind++];
         conf.ap_base_rad = utility::buffer_get_double32(data, 1e6, &ind);
@@ -646,6 +647,7 @@ bool PacketInterface::setConfiguration(quint8 id, MAIN_CONFIG &conf, int retries
     utility::buffer_append_double32(mSendBuffer, conf.gps_corr_gain_stat, 1e6, &send_index);
     utility::buffer_append_double32(mSendBuffer, conf.gps_corr_gain_dyn, 1e6, &send_index);
     utility::buffer_append_double32(mSendBuffer, conf.gps_corr_gain_yaw, 1e6, &send_index);
+    mSendBuffer[send_index++] = conf.gps_send_nmea;
 
     mSendBuffer[send_index++] = conf.ap_repeat_routes;
     utility::buffer_append_double32(mSendBuffer, conf.ap_base_rad, 1e6, &send_index);

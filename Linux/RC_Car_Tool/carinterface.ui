@@ -528,6 +528,13 @@
              </property>
             </widget>
            </item>
+           <item>
+            <widget class="QLabel" name="nmeaCorrAgeLabel">
+             <property name="text">
+              <string>Corr age...</string>
+             </property>
+            </widget>
+           </item>
           </layout>
          </item>
          <item>
@@ -1188,6 +1195,16 @@
                  </property>
                  <property name="singleStep">
                   <double>0.010000000000000</double>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QCheckBox" name="confGpsSendNmeaBox">
+                 <property name="toolTip">
+                  <string>Send NMEA over the radio (or USB) for logging or debugging</string>
+                 </property>
+                 <property name="text">
+                  <string>Send NMEA data</string>
                  </property>
                 </widget>
                </item>

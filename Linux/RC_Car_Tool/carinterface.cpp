@@ -551,6 +551,7 @@ void CarInterface::nmeaReceived(quint8 id, QByteArray nmea_msg)
                 }
 
                 ui->nmeaFixTypeLabel->setText(fix_type);
+                ui->nmeaCorrAgeLabel->setText(QString("Corr age: %1 s").arg(gga.diff_age));
             }
         }
     }
@@ -849,6 +850,7 @@ void CarInterface::getConfGui(MAIN_CONFIG &conf)
     conf.gps_corr_gain_stat = ui->confGpsCorrStatBox->value();
     conf.gps_corr_gain_dyn = ui->confGpsCorrDynBox->value();
     conf.gps_corr_gain_yaw = ui->confGpsCorrYawBox->value();
+    conf.gps_send_nmea = ui->confGpsSendNmeaBox->isChecked();
 
     conf.ap_repeat_routes = ui->confApRepeatBox->isChecked();
     conf.ap_base_rad = ui->confApBaseRadBox->value();
@@ -895,6 +897,7 @@ void CarInterface::setConfGui(MAIN_CONFIG &conf)
     ui->confGpsCorrStatBox->setValue(conf.gps_corr_gain_stat);
     ui->confGpsCorrDynBox->setValue(conf.gps_corr_gain_dyn);
     ui->confGpsCorrYawBox->setValue(conf.gps_corr_gain_yaw);
+    ui->confGpsSendNmeaBox->setChecked(conf.gps_send_nmea);
 
     ui->confApRepeatBox->setChecked(conf.ap_repeat_routes);
     ui->confApBaseRadBox->setValue(conf.ap_base_rad);

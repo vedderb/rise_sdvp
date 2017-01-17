@@ -38,7 +38,7 @@ typedef struct {
     double P[2];        // Pseudorange observation
     double L[2];        // Carrier phase observation
     uint8_t cn0[2];     // Carrier-to-Noise density [dB Hz]
-    uint8_t lock[2];    // Lock. Set to 0 when the lock has changed, 127 otherwise. TODO: Really?
+    uint8_t lock[2];    // Lock. Set to 0 when the lock has changed, 127 otherwise. TODO: is this correct?
     uint8_t prn;        // Sattelite
     uint8_t freq;       // Frequency slot (GLONASS)
     uint8_t code[2];    // Code indicator

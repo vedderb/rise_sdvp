@@ -356,12 +356,6 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 		} break;
 
 		case CMD_SEND_NMEA_RADIO: {
-			int32_t send_index = 0;
-			m_send_buffer[send_index++] = main_id;
-			m_send_buffer[send_index++] = packet_id;
-			memcpy(m_send_buffer + send_index, data, len);
-			send_index += len;
-
 			char *curLine = (char*)data;
 			while(curLine) {
 				char *nextLine = strchr(curLine, '\n');
@@ -378,7 +372,14 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 				curLine = nextLine ? (nextLine + 1) : NULL;
 			}
 
-			comm_cc2520_send_buffer(m_send_buffer, send_index);
+			if (main_config.gps_send_nmea) {
+				int32_t send_index = 0;
+				m_send_buffer[send_index++] = main_id;
+				m_send_buffer[send_index++] = packet_id;
+				memcpy(m_send_buffer + send_index, data, len);
+				send_index += len;
+				comm_cc2520_send_buffer(m_send_buffer, send_index);
+			}
 		} break;
 
 		case CMD_SET_MAIN_CONFIG: {
@@ -417,6 +418,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			main_config.gps_corr_gain_stat = buffer_get_float32(data, 1e6, &ind);
 			main_config.gps_corr_gain_dyn = buffer_get_float32(data, 1e6, &ind);
 			main_config.gps_corr_gain_yaw = buffer_get_float32(data, 1e6, &ind);
+			main_config.gps_send_nmea = data[ind++];
 
 			main_config.ap_repeat_routes = data[ind++];
 			main_config.ap_base_rad = buffer_get_float32(data, 1e6, &ind);
@@ -486,6 +488,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			buffer_append_float32(m_send_buffer, main_cfg_tmp.gps_corr_gain_stat, 1e6, &send_index);
 			buffer_append_float32(m_send_buffer, main_cfg_tmp.gps_corr_gain_dyn, 1e6, &send_index);
 			buffer_append_float32(m_send_buffer, main_cfg_tmp.gps_corr_gain_yaw, 1e6, &send_index);
+			m_send_buffer[send_index++] = main_cfg_tmp.gps_send_nmea;
 
 			m_send_buffer[send_index++] = main_cfg_tmp.ap_repeat_routes;
 			buffer_append_float32(m_send_buffer, main_cfg_tmp.ap_base_rad, 1e6, &send_index);
@@ -640,12 +643,14 @@ void commands_forward_vesc_packet(unsigned char *data, unsigned int len) {
 }
 
 void commands_send_nmea(unsigned char *data, unsigned int len) {
-	int32_t send_index = 0;
-	m_send_buffer[send_index++] = main_id;
-	m_send_buffer[send_index++] = CMD_SEND_NMEA_RADIO;
-	memcpy(m_send_buffer + send_index, data, len);
-	send_index += len;
-	commands_send_packet(m_send_buffer, send_index);
+	if (main_config.gps_send_nmea) {
+		int32_t send_index = 0;
+		m_send_buffer[send_index++] = main_id;
+		m_send_buffer[send_index++] = CMD_SEND_NMEA_RADIO;
+		memcpy(m_send_buffer + send_index, data, len);
+		send_index += len;
+		commands_send_packet(m_send_buffer, send_index);
+	}
 }
 
 void commands_init_plot(char *namex, char *namey) {
