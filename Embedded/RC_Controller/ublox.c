@@ -35,7 +35,7 @@
 // Threads
 static THD_FUNCTION(process_thread, arg);
 static THD_WORKING_AREA(process_thread_wa, 4096);
-static thread_t *process_tp;
+static thread_t *process_tp = 0;
 
 // Variables
 static uint8_t serial_rx_buffer[SERIAL_RX_BUFFER_SIZE];
@@ -148,6 +148,10 @@ void ublox_init(void) {
 }
 
 void ublox_send(unsigned char *data, unsigned int len) {
+	if (!process_tp) {
+		return;
+	}
+
 	// Wait for the previous transmission to finish.
 	while (HW_UART_DEV.txstate == UART_TX_ACTIVE) {
 		chThdSleep(1);

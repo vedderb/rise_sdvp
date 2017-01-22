@@ -80,9 +80,10 @@ int main(void) {
 	timeout_init();
 	log_init();
 	comm_cc1120_init();
-	ublox_init();
 
-	commands_printf_log_usb("Test");
+#if UBLOX_EN
+	ublox_init();
+#endif
 
 #if RADAR_EN
 	radar_init();

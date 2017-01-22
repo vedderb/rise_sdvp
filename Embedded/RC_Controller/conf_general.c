@@ -171,7 +171,7 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 	conf->steering_ramp_time = 0.6;
 	conf->axis_distance = 0.57;
 
-	conf->gps_ant_x = 0.0;
+	conf->gps_ant_x = 0.08;
 	conf->gps_ant_y = 0.0;
 #endif
 
