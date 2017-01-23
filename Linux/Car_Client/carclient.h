@@ -31,10 +31,15 @@ class CarClient : public QObject
 {
     Q_OBJECT
 public:
+    static CarClient* currentMsgHandler;
+
     typedef struct {
         bool serialConnect;
         QString serialPort;
         int serialBaud;
+        bool serialRtcmConnect;
+        QString serialRtcmPort;
+        int serialRtcmBaud;
         bool nmeaConnect;
         QString nmeaServer;
         int nmeaPort;
@@ -43,17 +48,21 @@ public:
     explicit CarClient(QObject *parent = 0);
     ~CarClient();
     void connectSerial(QString port, int baudrate = 115200);
+    void connectSerialRtcm(QString port, int baudrate = 9600);
     void startRtcmServer(int port = 8200);
     void connectNmea(QString server, int port = 2948);
     void startUdpServer(int port = 8300);
     bool enableLogging(QString directory);
     void logStop();
+    void rtcmRx(QByteArray data, int type);
 
 signals:
 
 public slots:
     void serialDataAvailable();
     void serialPortError(QSerialPort::SerialPortError error);
+    void serialRtcmDataAvailable();
+    void serialRtcmPortError(QSerialPort::SerialPortError error);
     void packetDataToSend(QByteArray &data);
     void tcpDataAvailable();
     void tcpConnected();
@@ -70,6 +79,7 @@ private:
     PacketInterface *mPacketInterface;
     TcpBroadcast *mRtcmBroadcaster;
     QSerialPort *mSerialPort;
+    QSerialPort *mSerialPortRtcm;
     QTcpSocket *mTcpSocket;
     int mCarId;
     QTimer *mReconnectTimer;
@@ -80,6 +90,8 @@ private:
     QHostAddress mHostAddress;
     int mUdpPort;
     QFile mLog;
+
+    void printTerminal(QString str);
 
 };
 

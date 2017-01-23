@@ -35,6 +35,9 @@ void showHelp()
     qDebug() << "--udpport : Port to use for the UDP server";
     qDebug() << "--logusb : Store log files";
     qDebug() << "--logusbdir : Directory to store USB logs to";
+    qDebug() << "--inputrtcm : Input RTCM data from serial port";
+    qDebug() << "--ttyportrtcm : Serial port for RTCM, e.g. /dev/ttyUSB0";
+    qDebug() << "--rtcmbaud : RTCM port baud rate, e.g. 9600";
 }
 
 static void m_cleanup(int sig)
@@ -59,6 +62,9 @@ int main(int argc, char *argv[])
     int udpPort = 8300;
     bool logUsb = false;
     QString logUsbDir = QDir::currentPath() + "/logs";
+    bool inputRtcm = false;
+    QString ttyPortRtcm = "/dev/ttyUSB0";
+    int rtcmBaud = 9600;
 
     signal(SIGINT, m_cleanup);
     signal(SIGTERM, m_cleanup);
@@ -163,6 +169,28 @@ int main(int argc, char *argv[])
             }
         }
 
+        if (str == "--inputrtcm") {
+            inputRtcm = true;
+            found = true;
+        }
+
+        if (str == "--ttyportrtcm") {
+            if ((i - 1) < args.size()) {
+                i++;
+                ttyPortRtcm = args.at(i);
+                found = true;
+            }
+        }
+
+        if (str == "--rtcmbaud") {
+            if ((i - 1) < args.size()) {
+                i++;
+                bool ok;
+                rtcmBaud = args.at(i).toInt(&ok);
+                found = ok;
+            }
+        }
+
         if (!found) {
             if (dash) {
                 qCritical() << "At least one of the flags is invalid:" << str;
@@ -186,6 +214,10 @@ int main(int argc, char *argv[])
 
     if (logUsb) {
         car.enableLogging(logUsbDir);
+    }
+
+    if (inputRtcm) {
+        car.connectSerialRtcm(ttyPortRtcm, rtcmBaud);
     }
 
     return a.exec();
