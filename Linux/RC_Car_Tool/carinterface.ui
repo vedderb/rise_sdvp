@@ -1816,6 +1816,28 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="rebootPiButton">
+       <property name="text">
+        <string>Reboot PI</string>
+       </property>
+       <property name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/models/Icons/Restart-96.png</normaloff>:/models/Icons/Restart-96.png</iconset>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="shutdownPiButton">
+       <property name="text">
+        <string>Shutdown PI</string>
+       </property>
+       <property name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/models/Icons/Shutdown-96.png</normaloff>:/models/Icons/Shutdown-96.png</iconset>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer name="verticalSpacer">
        <property name="orientation">
         <enum>Qt::Vertical</enum>

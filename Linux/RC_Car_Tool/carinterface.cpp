@@ -1044,3 +1044,27 @@ void CarInterface::on_setClockPiButton_clicked()
         }
     }
 }
+
+void CarInterface::on_rebootPiButton_clicked()
+{
+    if (mPacketInterface) {
+        bool res = mPacketInterface->sendReboot(mId, false);
+        if (!res) {
+            QMessageBox::warning(this, "Reboot Raspberry Pi",
+                                 "Could not reboot the Raspberry Pi, no ack received. Make sure that the "
+                                 "connection works.");
+        }
+    }
+}
+
+void CarInterface::on_shutdownPiButton_clicked()
+{
+    if (mPacketInterface) {
+        bool res = mPacketInterface->sendReboot(mId, true);
+        if (!res) {
+            QMessageBox::warning(this, "Shutdown Raspberry Pi",
+                                 "Could not shut down the Raspberry Pi, no ack received. Make sure that the "
+                                 "connection works.");
+        }
+    }
+}

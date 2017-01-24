@@ -497,6 +497,12 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         emit systemTimeReceived(id, sec, usec);
     } break;
 
+    case CMD_REBOOT_SYSTEM: {
+        int32_t ind = 0;
+        bool power_off = data[ind++];
+        emit rebootSystemReceived(id, power_off);
+    } break;
+
         // Acks
     case CMD_AP_ADD_POINTS:
         emit ackReceived(id, cmd, "CMD_AP_ADD_POINTS");
@@ -527,6 +533,9 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         break;
     case CMD_SET_SYSTEM_TIME_ACK:
         emit ackReceived(id, cmd, "CMD_SET_SYSTEM_TIME_ACK");
+        break;
+    case CMD_REBOOT_SYSTEM_ACK:
+        emit ackReceived(id, cmd, "CMD_REBOOT_SYSTEM_ACK");
         break;
 
     default:
@@ -717,6 +726,15 @@ bool PacketInterface::setSystemTime(quint8 id, qint32 sec, qint32 usec, int retr
     mSendBuffer[send_index++] = CMD_SET_SYSTEM_TIME;
     utility::buffer_append_int32(mSendBuffer, sec, &send_index);
     utility::buffer_append_int32(mSendBuffer, usec, &send_index);
+    return sendPacketAck(mSendBuffer, send_index, retries);
+}
+
+bool PacketInterface::sendReboot(quint8 id, bool powerOff, int retries)
+{
+    qint32 send_index = 0;
+    mSendBuffer[send_index++] = id;
+    mSendBuffer[send_index++] = CMD_REBOOT_SYSTEM;
+    mSendBuffer[send_index++] = powerOff;
     return sendPacketAck(mSendBuffer, send_index, retries);
 }
 

@@ -15,7 +15,8 @@ SOURCES += main.cpp \
     utility.cpp \
     carclient.cpp \
     locpoint.cpp \
-    rtcm3_simple.c
+    rtcm3_simple.c \
+    serialport.cpp
 
 HEADERS += \
     packetinterface.h \
@@ -24,5 +25,6 @@ HEADERS += \
     carclient.h \
     datatypes.h \
     locpoint.h \
-    rtcm3_simple.h
+    rtcm3_simple.h \
+    serialport.h
 

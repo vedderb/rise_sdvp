@@ -426,6 +426,7 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         conf.gps_corr_gain_stat = utility::buffer_get_double32(data, 1e6, &ind);
         conf.gps_corr_gain_dyn = utility::buffer_get_double32(data, 1e6, &ind);
         conf.gps_corr_gain_yaw = utility::buffer_get_double32(data, 1e6, &ind);
+        conf.gps_send_nmea = data[ind++];
 
         conf.ap_repeat_routes = data[ind++];
         conf.ap_base_rad = utility::buffer_get_double32(data, 1e6, &ind);
@@ -496,6 +497,12 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         emit systemTimeReceived(id, sec, usec);
     } break;
 
+    case CMD_REBOOT_SYSTEM: {
+        int32_t ind = 0;
+        bool power_off = data[ind++];
+        emit rebootSystemReceived(id, power_off);
+    } break;
+
         // Acks
     case CMD_AP_ADD_POINTS:
         emit ackReceived(id, cmd, "CMD_AP_ADD_POINTS");
@@ -526,6 +533,9 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         break;
     case CMD_SET_SYSTEM_TIME_ACK:
         emit ackReceived(id, cmd, "CMD_SET_SYSTEM_TIME_ACK");
+        break;
+    case CMD_REBOOT_SYSTEM_ACK:
+        emit ackReceived(id, cmd, "CMD_REBOOT_SYSTEM_ACK");
         break;
 
     default:
@@ -646,6 +656,7 @@ bool PacketInterface::setConfiguration(quint8 id, MAIN_CONFIG &conf, int retries
     utility::buffer_append_double32(mSendBuffer, conf.gps_corr_gain_stat, 1e6, &send_index);
     utility::buffer_append_double32(mSendBuffer, conf.gps_corr_gain_dyn, 1e6, &send_index);
     utility::buffer_append_double32(mSendBuffer, conf.gps_corr_gain_yaw, 1e6, &send_index);
+    mSendBuffer[send_index++] = conf.gps_send_nmea;
 
     mSendBuffer[send_index++] = conf.ap_repeat_routes;
     utility::buffer_append_double32(mSendBuffer, conf.ap_base_rad, 1e6, &send_index);
@@ -715,6 +726,15 @@ bool PacketInterface::setSystemTime(quint8 id, qint32 sec, qint32 usec, int retr
     mSendBuffer[send_index++] = CMD_SET_SYSTEM_TIME;
     utility::buffer_append_int32(mSendBuffer, sec, &send_index);
     utility::buffer_append_int32(mSendBuffer, usec, &send_index);
+    return sendPacketAck(mSendBuffer, send_index, retries);
+}
+
+bool PacketInterface::sendReboot(quint8 id, bool powerOff, int retries)
+{
+    qint32 send_index = 0;
+    mSendBuffer[send_index++] = id;
+    mSendBuffer[send_index++] = CMD_REBOOT_SYSTEM;
+    mSendBuffer[send_index++] = powerOff;
     return sendPacketAck(mSendBuffer, send_index, retries);
 }
 

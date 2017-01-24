@@ -51,6 +51,7 @@ public:
     bool setEnuRef(quint8 id, double *llh, int retries = 10);
     bool radarSetupSet(quint8 id, radar_settings_t *s, int retries = 10);
     bool setSystemTime(quint8 id, qint32 sec, qint32 usec, int retries = 10);
+    bool sendReboot(quint8 id, bool powerOff, int retries = 10);
 
 signals:
     void dataToSend(QByteArray &data);
@@ -69,6 +70,7 @@ signals:
     void radarSetupReceived(quint8 id, radar_settings_t s);
     void radarSamplesReceived(quint8 id, QVector<QPair<double, double> > samples);
     void systemTimeReceived(quint8 id, qint32 sec, qint32 usec);
+    void rebootSystemReceived(quint8 id, bool powerOff);
     
 public slots:
     void timerSlot();

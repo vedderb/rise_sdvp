@@ -26,6 +26,7 @@
 #include <QFile>
 #include "packetinterface.h"
 #include "tcpbroadcast.h"
+#include "serialport.h"
 
 class CarClient : public QObject
 {
@@ -60,7 +61,7 @@ signals:
 
 public slots:
     void serialDataAvailable();
-    void serialPortError(QSerialPort::SerialPortError error);
+    void serialPortError(int error);
     void serialRtcmDataAvailable();
     void serialRtcmPortError(QSerialPort::SerialPortError error);
     void packetDataToSend(QByteArray &data);
@@ -74,11 +75,12 @@ public slots:
     void carPacketRx(quint8 id, CMD_PACKET cmd, const QByteArray &data);
     void logLineUsbReceived(quint8 id, QString str);
     void systemTimeReceived(quint8 id, qint32 sec, qint32 usec);
+    void rebootSystemReceived(quint8 id, bool powerOff);
 
 private:
     PacketInterface *mPacketInterface;
     TcpBroadcast *mRtcmBroadcaster;
-    QSerialPort *mSerialPort;
+    SerialPort *mSerialPort;
     QSerialPort *mSerialPortRtcm;
     QTcpSocket *mTcpSocket;
     int mCarId;

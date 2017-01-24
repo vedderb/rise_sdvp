@@ -105,8 +105,9 @@ private slots:
     void on_radarWriteButton_clicked();
     void on_radarGetRadCCButton_clicked();
     void on_setClockButton_clicked();
-
     void on_setClockPiButton_clicked();
+    void on_rebootPiButton_clicked();
+    void on_shutdownPiButton_clicked();
 
 private:
     Ui::CarInterface *ui;

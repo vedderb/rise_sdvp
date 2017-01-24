@@ -115,6 +115,7 @@ typedef struct {
     float gps_corr_gain_stat; // Static GPS correction gain
     float gps_corr_gain_dyn; // Dynamic GPS correction gain
     float gps_corr_gain_yaw; // Gain for yaw correction
+    bool gps_send_nmea; // Send NMEA data for logging and debugging
 
     // Autopilot parameters
     bool ap_repeat_routes; // Repeat the same route when the end is reached
@@ -156,6 +157,8 @@ typedef enum {
     CMD_SET_MS_TODAY,
     CMD_SET_SYSTEM_TIME,
     CMD_SET_SYSTEM_TIME_ACK,
+    CMD_REBOOT_SYSTEM,
+    CMD_REBOOT_SYSTEM_ACK,
     CMD_RADAR_SETUP_SET,
     CMD_RADAR_SETUP_GET,
     CMD_RADAR_SAMPLES

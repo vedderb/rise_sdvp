@@ -1,3 +1,16 @@
+=== FW 7.3 ===
+* Added reboot command.
+* Only forwarn NMEA if the ublox is not enabled.
+
+=== FW 7.2 ===
+* Fixed Send RTCM to only ublox or USB, not both.
+
+=== FW 7.1 ===
+* Created ublox parser.
+
+=== FW 7.0 ===
+* Added ublox support.
+
 === FW 6.3 ===
 * Added command for setting system time.
 

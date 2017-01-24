@@ -1,0 +1,2 @@
+#!/bin/bash
+sudo setcap cap_sys_time,cap_sys_boot=+ep Car_Client

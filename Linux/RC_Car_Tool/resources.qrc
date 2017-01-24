@@ -49,5 +49,7 @@
         <file>Icons/Send File-96.png</file>
         <file>Icons/Clock-96.png</file>
         <file>Icons/VPN-96.png</file>
+        <file>Icons/Restart-96.png</file>
+        <file>Icons/Shutdown-96.png</file>
     </qresource>
 </RCC>

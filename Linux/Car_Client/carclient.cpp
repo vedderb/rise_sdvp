@@ -20,6 +20,8 @@
 #include <QDateTime>
 #include <QDir>
 #include <sys/time.h>
+#include <sys/reboot.h>
+#include <unistd.h>
 #include "rtcm3_simple.h"
 
 namespace {
@@ -38,8 +40,9 @@ CarClient::CarClient(QObject *parent) : QObject(parent)
 {
     mSettings.nmeaConnect = false;
     mSettings.serialConnect = false;
+    mSettings.serialRtcmConnect = false;
 
-    mSerialPort = new QSerialPort(this);
+    mSerialPort = new SerialPort(this);
     mSerialPortRtcm = new QSerialPort(this);
     mPacketInterface = new PacketInterface(this);
     mRtcmBroadcaster = new TcpBroadcast(this);
@@ -58,10 +61,10 @@ CarClient::CarClient(QObject *parent) : QObject(parent)
     currentMsgHandler = this;
     rtcm3_set_rx_callback(rtcm_rx);
 
-    connect(mSerialPort, SIGNAL(readyRead()),
+    connect(mSerialPort, SIGNAL(serial_data_available()),
             this, SLOT(serialDataAvailable()));
-    connect(mSerialPort, SIGNAL(error(QSerialPort::SerialPortError)),
-            this, SLOT(serialPortError(QSerialPort::SerialPortError)));
+    connect(mSerialPort, SIGNAL(serial_port_error(int)),
+            this, SLOT(serialPortError(in)));
     connect(mSerialPortRtcm, SIGNAL(readyRead()),
             this, SLOT(serialRtcmDataAvailable()));
     connect(mSerialPortRtcm, SIGNAL(error(QSerialPort::SerialPortError)),
@@ -85,6 +88,8 @@ CarClient::CarClient(QObject *parent) : QObject(parent)
             this, SLOT(logFlushTimerSlot()));
     connect(mPacketInterface, SIGNAL(systemTimeReceived(quint8,qint32,qint32)),
             this, SLOT(systemTimeReceived(quint8,qint32,qint32)));
+    connect(mPacketInterface, SIGNAL(rebootSystemReceived(quint8,bool)),
+            this, SLOT(rebootSystemReceived(quint8,bool)));
 }
 
 CarClient::~CarClient()
@@ -95,11 +100,10 @@ CarClient::~CarClient()
 void CarClient::connectSerial(QString port, int baudrate)
 {
     if(mSerialPort->isOpen()) {
-        mSerialPort->close();
+        mSerialPort->closePort();
     }
 
-    mSerialPort->setPortName(port);
-    mSerialPort->open(QIODevice::ReadWrite);
+    mSerialPort->openPort(port, baudrate);
 
     mSettings.serialConnect = true;
     mSettings.serialPort = port;
@@ -110,12 +114,6 @@ void CarClient::connectSerial(QString port, int baudrate)
     }
 
     qDebug() << "Serial port connected";
-
-    mSerialPort->setBaudRate(baudrate);
-    mSerialPort->setDataBits(QSerialPort::Data8);
-    mSerialPort->setParity(QSerialPort::NoParity);
-    mSerialPort->setStopBits(QSerialPort::OneStop);
-    mSerialPort->setFlowControl(QSerialPort::NoFlowControl);
 
     mPacketInterface->stopUdpConnection();
 }
@@ -219,41 +217,12 @@ void CarClient::serialDataAvailable()
     }
 }
 
-void CarClient::serialPortError(QSerialPort::SerialPortError error)
+void CarClient::serialPortError(int error)
 {
-    QString message;
-    switch (error) {
-    case QSerialPort::NoError:
-        break;
-    case QSerialPort::DeviceNotFoundError:
-        message = tr("Device not found");
-        break;
-    case QSerialPort::OpenError:
-        message = tr("Can't open device");
-        break;
-    case QSerialPort::NotOpenError:
-        message = tr("Not open error");
-        break;
-    case QSerialPort::ResourceError:
-        message = tr("Port disconnected");
-        break;
-    case QSerialPort::PermissionError:
-        message = tr("Permission error");
-        break;
-    case QSerialPort::UnknownError:
-        message = tr("Unknown error");
-        break;
-    default:
-        message = "Error number: " + QString::number(error);
-        break;
-    }
+    qDebug() << "Serial error:" << error;
 
-    if(!message.isEmpty()) {
-        qDebug() << "Serial error:" << message;
-
-        if(mSerialPort->isOpen()) {
-            mSerialPort->close();
-        }
+    if(mSerialPort->isOpen()) {
+        mSerialPort->closePort();
     }
 }
 
@@ -308,7 +277,7 @@ void CarClient::serialRtcmPortError(QSerialPort::SerialPortError error)
 void CarClient::packetDataToSend(QByteArray &data)
 {
     if (mSerialPort->isOpen()) {
-        mSerialPort->write(data);
+        mSerialPort->writeData(data);
     }
 }
 
@@ -349,7 +318,7 @@ void CarClient::reconnectTimerSlot()
 
     if (mSettings.serialRtcmConnect && !mSerialPortRtcm->isOpen()) {
         qDebug() << "Trying to reconnect RTCM serial...";
-        connectSerial(mSettings.serialRtcmPort, mSettings.serialRtcmBaud);
+        connectSerialRtcm(mSettings.serialRtcmPort, mSettings.serialRtcmBaud);
     }
 
     if (mSettings.nmeaConnect && !mTcpConnected) {
@@ -381,7 +350,7 @@ void CarClient::readPendingDatagrams()
 
 void CarClient::carPacketRx(quint8 id, CMD_PACKET cmd, const QByteArray &data)
 {
-    (void)id;
+    mCarId = id;
 
     if (QString::compare(mHostAddress.toString(), "0.0.0.0") != 0) {
         if (cmd != CMD_LOG_LINE_USB) {
@@ -415,7 +384,20 @@ void CarClient::systemTimeReceived(quint8 id, qint32 sec, qint32 usec)
     } else {
         qDebug() << "Setting system time failed";
     }
+}
 
+void CarClient::rebootSystemReceived(quint8 id, bool powerOff)
+{
+    (void)id;
+
+    logStop();
+    sync();
+
+    if (powerOff) {
+        reboot(RB_POWER_OFF);
+    } else {
+        reboot(RB_AUTOBOOT);
+    }
 }
 
 void CarClient::printTerminal(QString str)
