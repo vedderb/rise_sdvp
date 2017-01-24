@@ -346,13 +346,16 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 		} break;
 
 		case CMD_SEND_RTCM_USB: {
+#if UBLOX_EN
+			ublox_send(data, len);
+#else
 			int32_t send_index = 0;
 			m_send_buffer[send_index++] = main_id;
 			m_send_buffer[send_index++] = packet_id;
 			memcpy(m_send_buffer + send_index, data, len);
 			send_index += len;
 			comm_usb_send_packet(m_send_buffer, send_index);
-			ublox_send(data, len);
+#endif
 		} break;
 
 		case CMD_SEND_NMEA_RADIO: {

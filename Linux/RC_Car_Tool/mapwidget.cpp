@@ -173,6 +173,11 @@ MapWidget::MapWidget(QWidget *parent) :
     mRefLon = 12.89134921;
     mRefHeight = 219.0;
 
+    // Home
+//    mRefLat = 57.57848470;
+//    mRefLon = 13.11463205;
+//    mRefHeight = 204.626;
+
     // Hardcoded for now
     mOsm->setCacheDir("osm_tiles");
     //    mOsm->setTileServerUrl("http://tile.openstreetmap.org");

@@ -22,7 +22,7 @@
 
 // Firmware version
 #define FW_VERSION_MAJOR			7
-#define FW_VERSION_MINOR			1
+#define FW_VERSION_MINOR			2
 
 // Default car settings
 //#define CAR_TERO // Benjamins tero car
@@ -60,7 +60,7 @@
 #define RADAR_SWEEP_TIME			0.075
 
 // Ublox settings
-#define UBLOX_EN					0
+#define UBLOX_EN					1
 
 // Servo settings
 #define SERVO_OUT_RATE_HZ			50

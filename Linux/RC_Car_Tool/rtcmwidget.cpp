@@ -52,6 +52,11 @@ RtcmWidget::RtcmWidget(QWidget *parent) :
 //    ui->refSendLatBox->setValue(lat);
 //    ui->refSendLonBox->setValue(lon);
 //    ui->refSendHBox->setValue(h);
+
+    // Home
+//    ui->refSendLatBox->setValue(57.57848470);
+//    ui->refSendLonBox->setValue(13.11463205);
+//    ui->refSendHBox->setValue(204.626);
 }
 
 RtcmWidget::~RtcmWidget()
