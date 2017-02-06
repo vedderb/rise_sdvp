@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1070</width>
-    <height>721</height>
+    <width>1085</width>
+    <height>808</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -44,7 +44,7 @@
            <x>0</x>
            <y>0</y>
            <width>180</width>
-           <height>71</height>
+           <height>68</height>
           </rect>
          </property>
          <attribute name="label">
@@ -105,7 +105,7 @@
            <x>0</x>
            <y>0</y>
            <width>180</width>
-           <height>72</height>
+           <height>68</height>
           </rect>
          </property>
          <attribute name="label">
@@ -569,7 +569,7 @@
        <attribute name="toolTip">
         <string>Map</string>
        </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
         <item>
          <widget class="MapWidget" name="mapWidget" native="true">
           <property name="sizePolicy">
@@ -588,8 +588,26 @@
              <string>Selection</string>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_5">
+             <property name="spacing">
+              <number>2</number>
+             </property>
+             <property name="leftMargin">
+              <number>4</number>
+             </property>
+             <property name="topMargin">
+              <number>4</number>
+             </property>
+             <property name="rightMargin">
+              <number>4</number>
+             </property>
+             <property name="bottomMargin">
+              <number>4</number>
+             </property>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_11">
+               <property name="spacing">
+                <number>2</number>
+               </property>
                <item>
                 <widget class="QSpinBox" name="mapCarBox">
                  <property name="prefix">
@@ -644,6 +662,9 @@
              </item>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_14">
+               <property name="spacing">
+                <number>2</number>
+               </property>
                <item>
                 <widget class="QSpinBox" name="mapRouteBox">
                  <property name="prefix">
@@ -677,9 +698,46 @@
               </layout>
              </item>
              <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_2">
+               <property name="spacing">
+                <number>2</number>
+               </property>
+               <item>
+                <widget class="QSpinBox" name="mapInfoTraceBox">
+                 <property name="prefix">
+                  <string>Info Trace: </string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="removeInfoTraceExtraButton">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="toolTip">
+                  <string>Remove Info Trace</string>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="icon">
+                  <iconset resource="resources.qrc">
+                   <normaloff>:/models/Icons/Delete2-96.png</normaloff>:/models/Icons/Delete2-96.png</iconset>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
               <layout class="QHBoxLayout" name="horizontalLayout_12">
                <item>
                 <widget class="QCheckBox" name="mapFollowBox">
+                 <property name="toolTip">
+                  <string>Follow Selected Car</string>
+                 </property>
                  <property name="text">
                   <string>Follow</string>
                  </property>
@@ -687,6 +745,9 @@
                </item>
                <item>
                 <widget class="QCheckBox" name="mapTraceBox">
+                 <property name="toolTip">
+                  <string>Trace Selected Car</string>
+                 </property>
                  <property name="text">
                   <string>Trace</string>
                  </property>
@@ -720,12 +781,42 @@
               <string>Car control</string>
              </attribute>
              <layout class="QVBoxLayout" name="verticalLayout_8">
+              <property name="spacing">
+               <number>2</number>
+              </property>
+              <property name="leftMargin">
+               <number>4</number>
+              </property>
+              <property name="topMargin">
+               <number>4</number>
+              </property>
+              <property name="rightMargin">
+               <number>4</number>
+              </property>
+              <property name="bottomMargin">
+               <number>4</number>
+              </property>
               <item>
                <widget class="QGroupBox" name="groupBox_8">
                 <property name="title">
                  <string>Control</string>
                 </property>
                 <layout class="QHBoxLayout" name="horizontalLayout_7">
+                 <property name="spacing">
+                  <number>2</number>
+                 </property>
+                 <property name="leftMargin">
+                  <number>4</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>4</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>4</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>4</number>
+                 </property>
                  <item>
                   <widget class="QPushButton" name="mapApButton">
                    <property name="toolTip">
@@ -795,6 +886,21 @@
                  <string>Set Abs Yaw</string>
                 </property>
                 <layout class="QHBoxLayout" name="horizontalLayout_8">
+                 <property name="spacing">
+                  <number>2</number>
+                 </property>
+                 <property name="leftMargin">
+                  <number>4</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>4</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>4</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>4</number>
+                 </property>
                  <item>
                   <widget class="QSlider" name="mapAbsYawSlider">
                    <property name="maximum">
@@ -837,6 +943,21 @@
                  <string>ENU Reference Point</string>
                 </property>
                 <layout class="QGridLayout" name="gridLayout_7">
+                 <property name="leftMargin">
+                  <number>4</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>4</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>4</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>4</number>
+                 </property>
+                 <property name="spacing">
+                  <number>2</number>
+                 </property>
                  <item row="0" column="0">
                   <widget class="QPushButton" name="mapGetEnuButton">
                    <property name="toolTip">
@@ -895,322 +1016,401 @@
               <string>Edit</string>
              </attribute>
              <layout class="QVBoxLayout" name="verticalLayout_7">
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>0</number>
+              </property>
               <item>
-               <widget class="QGroupBox" name="groupBox_9">
-                <property name="title">
-                 <string>Current Route Point</string>
+               <widget class="QScrollArea" name="scrollArea_3">
+                <property name="horizontalScrollBarPolicy">
+                 <enum>Qt::ScrollBarAlwaysOff</enum>
                 </property>
-                <layout class="QGridLayout" name="gridLayout_6">
-                 <property name="leftMargin">
-                  <number>3</number>
+                <property name="widgetResizable">
+                 <bool>true</bool>
+                </property>
+                <widget class="QWidget" name="scrollAreaWidgetContents_3">
+                 <property name="geometry">
+                  <rect>
+                   <x>0</x>
+                   <y>0</y>
+                   <width>215</width>
+                   <height>521</height>
+                  </rect>
                  </property>
-                 <property name="topMargin">
-                  <number>3</number>
-                 </property>
-                 <property name="rightMargin">
-                  <number>3</number>
-                 </property>
-                 <property name="bottomMargin">
-                  <number>3</number>
-                 </property>
-                 <property name="spacing">
-                  <number>3</number>
-                 </property>
-                 <item row="1" column="0">
-                  <widget class="QTimeEdit" name="mapRouteTimeEdit">
-                   <property name="displayFormat">
-                    <string>T: HH:mm:ss:zzz</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="1">
-                  <widget class="QPushButton" name="mapUpdateSpeedButton">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="toolTip">
-                    <string>Set selected speed on all points</string>
-                   </property>
-                   <property name="text">
-                    <string/>
-                   </property>
-                   <property name="icon">
-                    <iconset resource="resources.qrc">
-                     <normaloff>:/models/Icons/Available Updates-96.png</normaloff>:/models/Icons/Available Updates-96.png</iconset>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="1">
-                  <widget class="QPushButton" name="mapUpdateTimeButton">
-                   <property name="toolTip">
-                    <string>Set start time to a specified time from now</string>
-                   </property>
-                   <property name="text">
-                    <string/>
-                   </property>
-                   <property name="icon">
-                    <iconset resource="resources.qrc">
-                     <normaloff>:/models/Icons/Clock-96.png</normaloff>:/models/Icons/Clock-96.png</iconset>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="0">
-                  <widget class="QDoubleSpinBox" name="mapRouteSpeedBox">
-                   <property name="prefix">
-                    <string>V: </string>
-                   </property>
-                   <property name="suffix">
-                    <string> km/h</string>
-                   </property>
-                   <property name="decimals">
-                    <number>1</number>
-                   </property>
-                   <property name="maximum">
-                    <double>120.000000000000000</double>
-                   </property>
-                   <property name="value">
-                    <double>3.000000000000000</double>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="2" column="0" colspan="2">
-                  <widget class="QTimeEdit" name="mapRouteAddTimeEdit">
-                   <property name="toolTip">
-                    <string>Time to add to each new route point from previous point</string>
-                   </property>
-                   <property name="displayFormat">
-                    <string>'Add': HH:mm:ss:zzz</string>
-                   </property>
-                   <property name="time">
-                    <time>
-                     <hour>0</hour>
-                     <minute>0</minute>
-                     <second>2</second>
-                    </time>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
+                 <layout class="QVBoxLayout" name="verticalLayout_17">
+                  <property name="spacing">
+                   <number>2</number>
+                  </property>
+                  <property name="leftMargin">
+                   <number>4</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>4</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>4</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>4</number>
+                  </property>
+                  <item>
+                   <widget class="QGroupBox" name="groupBox_9">
+                    <property name="title">
+                     <string>Current Route Point</string>
+                    </property>
+                    <layout class="QGridLayout" name="gridLayout_6">
+                     <property name="leftMargin">
+                      <number>4</number>
+                     </property>
+                     <property name="topMargin">
+                      <number>4</number>
+                     </property>
+                     <property name="rightMargin">
+                      <number>4</number>
+                     </property>
+                     <property name="bottomMargin">
+                      <number>4</number>
+                     </property>
+                     <property name="horizontalSpacing">
+                      <number>2</number>
+                     </property>
+                     <property name="verticalSpacing">
+                      <number>3</number>
+                     </property>
+                     <item row="1" column="0">
+                      <widget class="QTimeEdit" name="mapRouteTimeEdit">
+                       <property name="displayFormat">
+                        <string>T: HH:mm:ss:zzz</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="1">
+                      <widget class="QPushButton" name="mapUpdateSpeedButton">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                       <property name="toolTip">
+                        <string>Set selected speed on all points</string>
+                       </property>
+                       <property name="text">
+                        <string/>
+                       </property>
+                       <property name="icon">
+                        <iconset resource="resources.qrc">
+                         <normaloff>:/models/Icons/Available Updates-96.png</normaloff>:/models/Icons/Available Updates-96.png</iconset>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="1">
+                      <widget class="QPushButton" name="mapUpdateTimeButton">
+                       <property name="toolTip">
+                        <string>Set start time to a specified time from now</string>
+                       </property>
+                       <property name="text">
+                        <string/>
+                       </property>
+                       <property name="icon">
+                        <iconset resource="resources.qrc">
+                         <normaloff>:/models/Icons/Clock-96.png</normaloff>:/models/Icons/Clock-96.png</iconset>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="0">
+                      <widget class="QDoubleSpinBox" name="mapRouteSpeedBox">
+                       <property name="prefix">
+                        <string>V: </string>
+                       </property>
+                       <property name="suffix">
+                        <string> km/h</string>
+                       </property>
+                       <property name="decimals">
+                        <number>1</number>
+                       </property>
+                       <property name="maximum">
+                        <double>120.000000000000000</double>
+                       </property>
+                       <property name="value">
+                        <double>3.000000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="0" colspan="2">
+                      <widget class="QTimeEdit" name="mapRouteAddTimeEdit">
+                       <property name="toolTip">
+                        <string>Time to add to each new route point from previous point</string>
+                       </property>
+                       <property name="displayFormat">
+                        <string>'Add': HH:mm:ss:zzz</string>
+                       </property>
+                       <property name="time">
+                        <time>
+                         <hour>0</hour>
+                         <minute>0</minute>
+                         <second>2</second>
+                        </time>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QGroupBox" name="groupBox_4">
+                    <property name="title">
+                     <string>Generate Circle</string>
+                    </property>
+                    <layout class="QGridLayout" name="gridLayout_4">
+                     <property name="leftMargin">
+                      <number>4</number>
+                     </property>
+                     <property name="topMargin">
+                      <number>4</number>
+                     </property>
+                     <property name="rightMargin">
+                      <number>4</number>
+                     </property>
+                     <property name="bottomMargin">
+                      <number>4</number>
+                     </property>
+                     <property name="spacing">
+                      <number>2</number>
+                     </property>
+                     <item row="6" column="0" colspan="2">
+                      <widget class="QPushButton" name="genCircButton">
+                       <property name="toolTip">
+                        <string>Generate</string>
+                       </property>
+                       <property name="text">
+                        <string/>
+                       </property>
+                       <property name="icon">
+                        <iconset resource="resources.qrc">
+                         <normaloff>:/models/Icons/Process-96.png</normaloff>:/models/Icons/Process-96.png</iconset>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="4" column="0" colspan="2">
+                      <widget class="QDoubleSpinBox" name="genCircRadBox">
+                       <property name="toolTip">
+                        <string>Circle Radius</string>
+                       </property>
+                       <property name="prefix">
+                        <string>R: </string>
+                       </property>
+                       <property name="suffix">
+                        <string> m</string>
+                       </property>
+                       <property name="minimum">
+                        <double>-9999.000000000000000</double>
+                       </property>
+                       <property name="maximum">
+                        <double>9999.000000000000000</double>
+                       </property>
+                       <property name="value">
+                        <double>5.000000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="5" column="0" colspan="2">
+                      <widget class="QSpinBox" name="genCircPointsBox">
+                       <property name="toolTip">
+                        <string>Number of circle points</string>
+                       </property>
+                       <property name="prefix">
+                        <string>N: </string>
+                       </property>
+                       <property name="maximum">
+                        <number>500</number>
+                       </property>
+                       <property name="value">
+                        <number>30</number>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="0" colspan="2">
+                      <widget class="QDoubleSpinBox" name="genCircYBox">
+                       <property name="toolTip">
+                        <string>Center Y (Coordinate mode)</string>
+                       </property>
+                       <property name="prefix">
+                        <string>Y: </string>
+                       </property>
+                       <property name="suffix">
+                        <string> m</string>
+                       </property>
+                       <property name="decimals">
+                        <number>3</number>
+                       </property>
+                       <property name="minimum">
+                        <double>-999.000000000000000</double>
+                       </property>
+                       <property name="maximum">
+                        <double>999.000000000000000</double>
+                       </property>
+                       <property name="singleStep">
+                        <double>0.010000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="0" colspan="2">
+                      <widget class="QDoubleSpinBox" name="genCircXBox">
+                       <property name="toolTip">
+                        <string>Center X (Coordinate mode)</string>
+                       </property>
+                       <property name="prefix">
+                        <string>X: </string>
+                       </property>
+                       <property name="suffix">
+                        <string> m</string>
+                       </property>
+                       <property name="decimals">
+                        <number>3</number>
+                       </property>
+                       <property name="minimum">
+                        <double>-999.000000000000000</double>
+                       </property>
+                       <property name="maximum">
+                        <double>999.000000000000000</double>
+                       </property>
+                       <property name="singleStep">
+                        <double>0.010000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="0" colspan="2">
+                      <widget class="QComboBox" name="genCircCenterBox">
+                       <item>
+                        <property name="text">
+                         <string>Map Center</string>
+                        </property>
+                       </item>
+                       <item>
+                        <property name="text">
+                         <string>Car Tangent</string>
+                        </property>
+                       </item>
+                       <item>
+                        <property name="text">
+                         <string>Car Center</string>
+                        </property>
+                       </item>
+                       <item>
+                        <property name="text">
+                         <string>Coordinates</string>
+                        </property>
+                       </item>
+                      </widget>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QGroupBox" name="groupBox_6">
+                    <property name="title">
+                     <string>Upload Current Route</string>
+                    </property>
+                    <layout class="QHBoxLayout" name="horizontalLayout_9">
+                     <property name="spacing">
+                      <number>2</number>
+                     </property>
+                     <property name="leftMargin">
+                      <number>4</number>
+                     </property>
+                     <property name="topMargin">
+                      <number>4</number>
+                     </property>
+                     <property name="rightMargin">
+                      <number>4</number>
+                     </property>
+                     <property name="bottomMargin">
+                      <number>4</number>
+                     </property>
+                     <item>
+                      <widget class="QProgressBar" name="mapUploadRouteProgressBar">
+                       <property name="value">
+                        <number>0</number>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="mapUploadRouteButton">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                       <property name="toolTip">
+                        <string>Write route to car</string>
+                       </property>
+                       <property name="text">
+                        <string/>
+                       </property>
+                       <property name="icon">
+                        <iconset resource="resources.qrc">
+                         <normaloff>:/models/Icons/Download-96.png</normaloff>:/models/Icons/Download-96.png</iconset>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                  <item>
+                   <layout class="QHBoxLayout" name="horizontalLayout_5">
+                    <item>
+                     <widget class="QPushButton" name="mapEditHelpButton">
+                      <property name="toolTip">
+                       <string>Show keyboard shortcuts</string>
+                      </property>
+                      <property name="text">
+                       <string/>
+                      </property>
+                      <property name="icon">
+                       <iconset resource="resources.qrc">
+                        <normaloff>:/models/Icons/Help-96.png</normaloff>:/models/Icons/Help-96.png</iconset>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="mapRemoveRouteButton">
+                      <property name="text">
+                       <string/>
+                      </property>
+                      <property name="icon">
+                       <iconset resource="resources.qrc">
+                        <normaloff>:/models/Icons/Delete2-96.png</normaloff>:/models/Icons/Delete2-96.png</iconset>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item>
+                   <spacer name="verticalSpacer_4">
+                    <property name="orientation">
+                     <enum>Qt::Vertical</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>20</width>
+                      <height>208</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                 </layout>
+                </widget>
                </widget>
-              </item>
-              <item>
-               <widget class="QGroupBox" name="groupBox_4">
-                <property name="title">
-                 <string>Generate Circle</string>
-                </property>
-                <layout class="QGridLayout" name="gridLayout_4">
-                 <property name="leftMargin">
-                  <number>3</number>
-                 </property>
-                 <property name="topMargin">
-                  <number>3</number>
-                 </property>
-                 <property name="rightMargin">
-                  <number>3</number>
-                 </property>
-                 <property name="bottomMargin">
-                  <number>3</number>
-                 </property>
-                 <property name="spacing">
-                  <number>3</number>
-                 </property>
-                 <item row="2" column="0" colspan="2">
-                  <widget class="QDoubleSpinBox" name="genCircRadBox">
-                   <property name="prefix">
-                    <string>R: </string>
-                   </property>
-                   <property name="suffix">
-                    <string> m</string>
-                   </property>
-                   <property name="minimum">
-                    <double>-9999.000000000000000</double>
-                   </property>
-                   <property name="maximum">
-                    <double>9999.000000000000000</double>
-                   </property>
-                   <property name="value">
-                    <double>5.000000000000000</double>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="3" column="0">
-                  <widget class="QSpinBox" name="genCircPointsBox">
-                   <property name="prefix">
-                    <string>N: </string>
-                   </property>
-                   <property name="maximum">
-                    <number>500</number>
-                   </property>
-                   <property name="value">
-                    <number>30</number>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="3" column="1">
-                  <widget class="QPushButton" name="genCircButton">
-                   <property name="toolTip">
-                    <string>Generate</string>
-                   </property>
-                   <property name="text">
-                    <string/>
-                   </property>
-                   <property name="icon">
-                    <iconset resource="resources.qrc">
-                     <normaloff>:/models/Icons/Process-96.png</normaloff>:/models/Icons/Process-96.png</iconset>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="0" colspan="2">
-                  <widget class="QComboBox" name="genCircCenterBox">
-                   <item>
-                    <property name="text">
-                     <string>Map Center</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Car Tangent</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Car Center</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Coordinates</string>
-                    </property>
-                   </item>
-                  </widget>
-                 </item>
-                 <item row="0" column="0">
-                  <widget class="QDoubleSpinBox" name="genCircXBox">
-                   <property name="toolTip">
-                    <string>Center X</string>
-                   </property>
-                   <property name="prefix">
-                    <string/>
-                   </property>
-                   <property name="decimals">
-                    <number>3</number>
-                   </property>
-                   <property name="minimum">
-                    <double>-999.000000000000000</double>
-                   </property>
-                   <property name="maximum">
-                    <double>999.000000000000000</double>
-                   </property>
-                   <property name="singleStep">
-                    <double>0.010000000000000</double>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="1">
-                  <widget class="QDoubleSpinBox" name="genCircYBox">
-                   <property name="toolTip">
-                    <string>Center Y</string>
-                   </property>
-                   <property name="prefix">
-                    <string/>
-                   </property>
-                   <property name="decimals">
-                    <number>3</number>
-                   </property>
-                   <property name="minimum">
-                    <double>-999.000000000000000</double>
-                   </property>
-                   <property name="maximum">
-                    <double>999.000000000000000</double>
-                   </property>
-                   <property name="singleStep">
-                    <double>0.010000000000000</double>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-              <item>
-               <widget class="QGroupBox" name="groupBox_6">
-                <property name="title">
-                 <string>Upload Current Route</string>
-                </property>
-                <layout class="QHBoxLayout" name="horizontalLayout_9">
-                 <item>
-                  <widget class="QProgressBar" name="mapUploadRouteProgressBar">
-                   <property name="value">
-                    <number>0</number>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QPushButton" name="mapUploadRouteButton">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="toolTip">
-                    <string>Write route to car</string>
-                   </property>
-                   <property name="text">
-                    <string/>
-                   </property>
-                   <property name="icon">
-                    <iconset resource="resources.qrc">
-                     <normaloff>:/models/Icons/Download-96.png</normaloff>:/models/Icons/Download-96.png</iconset>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-              <item>
-               <spacer name="verticalSpacer_4">
-                <property name="orientation">
-                 <enum>Qt::Vertical</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>20</width>
-                  <height>90</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_5">
-                <item>
-                 <widget class="QPushButton" name="mapEditHelpButton">
-                  <property name="toolTip">
-                   <string>Show keyboard shortcuts</string>
-                  </property>
-                  <property name="text">
-                   <string/>
-                  </property>
-                  <property name="icon">
-                   <iconset resource="resources.qrc">
-                    <normaloff>:/models/Icons/Help-96.png</normaloff>:/models/Icons/Help-96.png</iconset>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QPushButton" name="mapRemoveRouteButton">
-                  <property name="text">
-                   <string/>
-                  </property>
-                  <property name="icon">
-                   <iconset resource="resources.qrc">
-                    <normaloff>:/models/Icons/Delete2-96.png</normaloff>:/models/Icons/Delete2-96.png</iconset>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
               </item>
              </layout>
             </widget>
@@ -1240,6 +1440,9 @@
               </property>
               <item>
                <widget class="QScrollArea" name="scrollArea">
+                <property name="horizontalScrollBarPolicy">
+                 <enum>Qt::ScrollBarAlwaysOff</enum>
+                </property>
                 <property name="widgetResizable">
                  <bool>true</bool>
                 </property>
@@ -1248,11 +1451,26 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>199</width>
-                   <height>440</height>
+                   <width>215</width>
+                   <height>521</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_12">
+                  <property name="spacing">
+                   <number>2</number>
+                  </property>
+                  <property name="leftMargin">
+                   <number>4</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>4</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>4</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>4</number>
+                  </property>
                   <item>
                    <widget class="QGroupBox" name="groupBox_11">
                     <property name="sizePolicy">
@@ -1478,343 +1696,442 @@
               <string>View</string>
              </attribute>
              <layout class="QVBoxLayout" name="verticalLayout_11">
+              <property name="spacing">
+               <number>0</number>
+              </property>
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>0</number>
+              </property>
               <item>
-               <widget class="QGroupBox" name="groupBox_12">
-                <property name="title">
-                 <string>OpenStreetMap</string>
+               <widget class="QScrollArea" name="scrollArea_2">
+                <property name="horizontalScrollBarPolicy">
+                 <enum>Qt::ScrollBarAlwaysOff</enum>
                 </property>
-                <property name="flat">
-                 <bool>false</bool>
+                <property name="widgetResizable">
+                 <bool>true</bool>
                 </property>
-                <property name="checkable">
-                 <bool>false</bool>
-                </property>
-                <layout class="QGridLayout" name="gridLayout_10">
-                 <property name="leftMargin">
-                  <number>4</number>
+                <widget class="QWidget" name="scrollAreaWidgetContents_2">
+                 <property name="geometry">
+                  <rect>
+                   <x>0</x>
+                   <y>0</y>
+                   <width>215</width>
+                   <height>521</height>
+                  </rect>
                  </property>
-                 <property name="topMargin">
-                  <number>4</number>
-                 </property>
-                 <property name="rightMargin">
-                  <number>4</number>
-                 </property>
-                 <property name="bottomMargin">
-                  <number>4</number>
-                 </property>
-                 <property name="spacing">
-                  <number>2</number>
-                 </property>
-                 <item row="6" column="0" colspan="2">
-                  <widget class="QPushButton" name="mapOsmClearCacheButton">
-                   <property name="toolTip">
-                    <string>Clear cached tiles</string>
-                   </property>
-                   <property name="text">
-                    <string/>
-                   </property>
-                   <property name="icon">
-                    <iconset resource="resources.qrc">
-                     <normaloff>:/models/Icons/Delete2-96.png</normaloff>:/models/Icons/Delete2-96.png</iconset>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="5" column="0">
-                  <widget class="QRadioButton" name="mapOsmServerVedderButton">
-                   <property name="text">
-                    <string>Vedder</string>
-                   </property>
-                   <property name="checked">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="4" column="1">
-                  <widget class="QRadioButton" name="mapOsmServerHiResButton">
-                   <property name="text">
-                    <string>HiRes</string>
-                   </property>
-                   <property name="checked">
-                    <bool>false</bool>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="0">
-                  <widget class="QCheckBox" name="mapOpenStreetMapBox">
-                   <property name="text">
-                    <string>Show</string>
-                   </property>
-                   <property name="checked">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="4" column="0">
-                  <widget class="QRadioButton" name="mapOsmServerOsmButton">
-                   <property name="text">
-                    <string>OSM</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="5" column="1">
-                  <widget class="QRadioButton" name="mapOsmServerVedderHdButton">
-                   <property name="toolTip">
-                    <string>Vedder high resolution tiles</string>
-                   </property>
-                   <property name="text">
-                    <string>VHR</string>
-                   </property>
-                   <property name="checked">
-                    <bool>false</bool>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="1">
-                  <widget class="QCheckBox" name="mapAntialiasOsmBox">
-                   <property name="toolTip">
-                    <string>Antialias tiles</string>
-                   </property>
-                   <property name="text">
-                    <string>AA</string>
-                   </property>
-                   <property name="checked">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="0">
-                  <widget class="QCheckBox" name="mapOsmStatsBox">
-                   <property name="text">
-                    <string>Stats</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="1">
-                  <widget class="QSpinBox" name="mapOsmMaxZoomBox">
-                   <property name="toolTip">
-                    <string>Max OSM zoom level</string>
-                   </property>
-                   <property name="prefix">
-                    <string>MZ: </string>
-                   </property>
-                   <property name="maximum">
-                    <number>22</number>
-                   </property>
-                   <property name="value">
-                    <number>19</number>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="3" column="0" colspan="2">
-                  <widget class="QSlider" name="mapOsmResSlider">
-                   <property name="minimum">
-                    <number>30</number>
-                   </property>
-                   <property name="maximum">
-                    <number>200</number>
-                   </property>
-                   <property name="value">
-                    <number>100</number>
-                   </property>
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="2" column="0" colspan="2">
-                  <widget class="QLabel" name="label_3">
-                   <property name="text">
-                    <string>Resolution</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-              <item>
-               <widget class="QDoubleSpinBox" name="traceInfoMinZoomBox">
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Minimum zoom for showing text next to info points.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-                <property name="prefix">
-                 <string>MZI: </string>
-                </property>
-                <property name="decimals">
-                 <number>6</number>
-                </property>
-                <property name="maximum">
-                 <double>100.000000000000000</double>
-                </property>
-                <property name="singleStep">
-                 <double>0.010000000000000</double>
-                </property>
-                <property name="value">
-                 <double>0.300000000000000</double>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_3">
-                <item>
-                 <widget class="QCheckBox" name="mapAntialiasBox">
-                  <property name="toolTip">
-                   <string>Antialias imported pixmaps</string>
+                 <layout class="QVBoxLayout" name="verticalLayout_15">
+                  <property name="spacing">
+                   <number>2</number>
                   </property>
-                  <property name="text">
-                   <string>AA Pixmaps</string>
+                  <property name="leftMargin">
+                   <number>4</number>
                   </property>
-                  <property name="checked">
-                   <bool>false</bool>
+                  <property name="topMargin">
+                   <number>4</number>
                   </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QCheckBox" name="mapDrawGridBox">
-                  <property name="text">
-                   <string>Draw Grid</string>
+                  <property name="rightMargin">
+                   <number>4</number>
                   </property>
-                  <property name="checked">
-                   <bool>true</bool>
+                  <property name="bottomMargin">
+                   <number>4</number>
                   </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-              <item>
-               <widget class="QGroupBox" name="groupBox_15">
-                <property name="title">
-                 <string>Trace Min Diff (mm)</string>
-                </property>
-                <layout class="QHBoxLayout" name="horizontalLayout_15">
-                 <property name="spacing">
-                  <number>0</number>
-                 </property>
-                 <property name="leftMargin">
-                  <number>2</number>
-                 </property>
-                 <property name="topMargin">
-                  <number>2</number>
-                 </property>
-                 <property name="rightMargin">
-                  <number>2</number>
-                 </property>
-                 <property name="bottomMargin">
-                  <number>2</number>
-                 </property>
-                 <item>
-                  <widget class="QDoubleSpinBox" name="mapTraceMinSpaceCarBox">
-                   <property name="prefix">
-                    <string>Car </string>
-                   </property>
-                   <property name="decimals">
-                    <number>0</number>
-                   </property>
-                   <property name="maximum">
-                    <double>9999.000000000000000</double>
-                   </property>
-                   <property name="value">
-                    <double>50.000000000000000</double>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QDoubleSpinBox" name="mapTraceMinSpaceGpsBox">
-                   <property name="prefix">
-                    <string>GPS </string>
-                   </property>
-                   <property name="decimals">
-                    <number>0</number>
-                   </property>
-                   <property name="maximum">
-                    <double>9999.000000000000000</double>
-                   </property>
-                   <property name="value">
-                    <double>50.000000000000000</double>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-              <item>
-               <spacer name="verticalSpacer_3">
-                <property name="orientation">
-                 <enum>Qt::Vertical</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>20</width>
-                  <height>40</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-              <item>
-               <widget class="QGroupBox" name="groupBox_13">
-                <property name="title">
-                 <string>Remove</string>
-                </property>
-                <layout class="QHBoxLayout" name="horizontalLayout_10">
-                 <item>
-                  <widget class="QPushButton" name="mapRemoveTraceButton">
-                   <property name="toolTip">
-                    <string>Car trace</string>
-                   </property>
-                   <property name="text">
-                    <string/>
-                   </property>
-                   <property name="icon">
-                    <iconset resource="resources.qrc">
-                     <normaloff>:/models/Icons/Polyline-96.png</normaloff>:/models/Icons/Polyline-96.png</iconset>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QPushButton" name="mapRemoveRouteAllButton">
-                   <property name="toolTip">
-                    <string>All routes</string>
-                   </property>
-                   <property name="text">
-                    <string/>
-                   </property>
-                   <property name="icon">
-                    <iconset resource="resources.qrc">
-                     <normaloff>:/models/Icons/Polygon-96.png</normaloff>:/models/Icons/Polygon-96.png</iconset>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QPushButton" name="mapRemoveInfoButton">
-                   <property name="toolTip">
-                    <string>Info trace</string>
-                   </property>
-                   <property name="text">
-                    <string/>
-                   </property>
-                   <property name="icon">
-                    <iconset resource="resources.qrc">
-                     <normaloff>:/models/Icons/Point Objects-96.png</normaloff>:/models/Icons/Point Objects-96.png</iconset>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QPushButton" name="MapRemovePixmapsButton">
-                   <property name="toolTip">
-                    <string>Imported pixmaps</string>
-                   </property>
-                   <property name="text">
-                    <string/>
-                   </property>
-                   <property name="icon">
-                    <iconset resource="resources.qrc">
-                     <normaloff>:/models/Icons/Google Images-96.png</normaloff>:/models/Icons/Google Images-96.png</iconset>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
+                  <item>
+                   <widget class="QGroupBox" name="groupBox_16">
+                    <property name="title">
+                     <string>General</string>
+                    </property>
+                    <layout class="QVBoxLayout" name="verticalLayout_18">
+                     <property name="spacing">
+                      <number>2</number>
+                     </property>
+                     <property name="leftMargin">
+                      <number>4</number>
+                     </property>
+                     <property name="topMargin">
+                      <number>4</number>
+                     </property>
+                     <property name="rightMargin">
+                      <number>4</number>
+                     </property>
+                     <property name="bottomMargin">
+                      <number>4</number>
+                     </property>
+                     <item>
+                      <widget class="QCheckBox" name="mapDrawGridBox">
+                       <property name="text">
+                        <string>Draw Grid</string>
+                       </property>
+                       <property name="checked">
+                        <bool>true</bool>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QCheckBox" name="mapAntialiasBox">
+                       <property name="toolTip">
+                        <string>Antialias imported pixmaps</string>
+                       </property>
+                       <property name="text">
+                        <string>Antialias Pixmaps</string>
+                       </property>
+                       <property name="checked">
+                        <bool>false</bool>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QGroupBox" name="groupBox_12">
+                    <property name="title">
+                     <string>OpenStreetMap</string>
+                    </property>
+                    <property name="flat">
+                     <bool>false</bool>
+                    </property>
+                    <property name="checkable">
+                     <bool>false</bool>
+                    </property>
+                    <layout class="QGridLayout" name="gridLayout_10">
+                     <property name="leftMargin">
+                      <number>4</number>
+                     </property>
+                     <property name="topMargin">
+                      <number>4</number>
+                     </property>
+                     <property name="rightMargin">
+                      <number>4</number>
+                     </property>
+                     <property name="bottomMargin">
+                      <number>4</number>
+                     </property>
+                     <property name="spacing">
+                      <number>2</number>
+                     </property>
+                     <item row="8" column="0" colspan="2">
+                      <widget class="QPushButton" name="mapOsmClearCacheButton">
+                       <property name="toolTip">
+                        <string>Clear cached tiles</string>
+                       </property>
+                       <property name="text">
+                        <string/>
+                       </property>
+                       <property name="icon">
+                        <iconset resource="resources.qrc">
+                         <normaloff>:/models/Icons/Delete2-96.png</normaloff>:/models/Icons/Delete2-96.png</iconset>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="7" column="0">
+                      <widget class="QRadioButton" name="mapOsmServerVedderButton">
+                       <property name="text">
+                        <string>Vedder</string>
+                       </property>
+                       <property name="checked">
+                        <bool>true</bool>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="6" column="1">
+                      <widget class="QRadioButton" name="mapOsmServerHiResButton">
+                       <property name="text">
+                        <string>HiRes</string>
+                       </property>
+                       <property name="checked">
+                        <bool>false</bool>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="6" column="0">
+                      <widget class="QRadioButton" name="mapOsmServerOsmButton">
+                       <property name="text">
+                        <string>OSM</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="7" column="1">
+                      <widget class="QRadioButton" name="mapOsmServerVedderHdButton">
+                       <property name="toolTip">
+                        <string>Vedder high resolution tiles</string>
+                       </property>
+                       <property name="text">
+                        <string>VHR</string>
+                       </property>
+                       <property name="checked">
+                        <bool>false</bool>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="5" column="0" colspan="2">
+                      <widget class="QSlider" name="mapOsmResSlider">
+                       <property name="minimum">
+                        <number>30</number>
+                       </property>
+                       <property name="maximum">
+                        <number>200</number>
+                       </property>
+                       <property name="value">
+                        <number>100</number>
+                       </property>
+                       <property name="orientation">
+                        <enum>Qt::Horizontal</enum>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="4" column="0" colspan="2">
+                      <widget class="QLabel" name="label_3">
+                       <property name="text">
+                        <string>Resolution</string>
+                       </property>
+                       <property name="alignment">
+                        <set>Qt::AlignCenter</set>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="3" column="0" colspan="2">
+                      <widget class="QSpinBox" name="mapOsmMaxZoomBox">
+                       <property name="toolTip">
+                        <string>Max OSM zoom level</string>
+                       </property>
+                       <property name="prefix">
+                        <string>Min Zoom: </string>
+                       </property>
+                       <property name="maximum">
+                        <number>22</number>
+                       </property>
+                       <property name="value">
+                        <number>19</number>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="0" colspan="2">
+                      <widget class="QCheckBox" name="mapOpenStreetMapBox">
+                       <property name="text">
+                        <string>Enable</string>
+                       </property>
+                       <property name="checked">
+                        <bool>true</bool>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="0" colspan="2">
+                      <widget class="QCheckBox" name="mapAntialiasOsmBox">
+                       <property name="toolTip">
+                        <string>Antialias tiles</string>
+                       </property>
+                       <property name="text">
+                        <string>Antialias</string>
+                       </property>
+                       <property name="checked">
+                        <bool>true</bool>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="0" colspan="2">
+                      <widget class="QCheckBox" name="mapOsmStatsBox">
+                       <property name="text">
+                        <string>Shot Stats</string>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QGroupBox" name="groupBox_15">
+                    <property name="title">
+                     <string>Trace</string>
+                    </property>
+                    <layout class="QVBoxLayout" name="verticalLayout_16">
+                     <property name="spacing">
+                      <number>2</number>
+                     </property>
+                     <property name="leftMargin">
+                      <number>4</number>
+                     </property>
+                     <property name="topMargin">
+                      <number>4</number>
+                     </property>
+                     <property name="rightMargin">
+                      <number>4</number>
+                     </property>
+                     <property name="bottomMargin">
+                      <number>4</number>
+                     </property>
+                     <item>
+                      <widget class="QDoubleSpinBox" name="mapTraceMinSpaceGpsBox">
+                       <property name="toolTip">
+                        <string>GPS Trace: Minimum distance from previous point for adding new point.</string>
+                       </property>
+                       <property name="prefix">
+                        <string>GPS: </string>
+                       </property>
+                       <property name="suffix">
+                        <string> mm</string>
+                       </property>
+                       <property name="decimals">
+                        <number>0</number>
+                       </property>
+                       <property name="maximum">
+                        <double>9999.000000000000000</double>
+                       </property>
+                       <property name="value">
+                        <double>50.000000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QDoubleSpinBox" name="mapTraceMinSpaceCarBox">
+                       <property name="toolTip">
+                        <string>Car Trace: Minimum distance from previous point for adding new point.</string>
+                       </property>
+                       <property name="prefix">
+                        <string>Car: </string>
+                       </property>
+                       <property name="suffix">
+                        <string> mm</string>
+                       </property>
+                       <property name="decimals">
+                        <number>0</number>
+                       </property>
+                       <property name="maximum">
+                        <double>9999.000000000000000</double>
+                       </property>
+                       <property name="value">
+                        <double>50.000000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QDoubleSpinBox" name="traceInfoMinZoomBox">
+                       <property name="toolTip">
+                        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Info Trace: Minimum zoom for showing text next to info points.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                       </property>
+                       <property name="prefix">
+                        <string>Trace MZI: </string>
+                       </property>
+                       <property name="decimals">
+                        <number>6</number>
+                       </property>
+                       <property name="maximum">
+                        <double>100.000000000000000</double>
+                       </property>
+                       <property name="singleStep">
+                        <double>0.010000000000000</double>
+                       </property>
+                       <property name="value">
+                        <double>0.300000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QGroupBox" name="groupBox_13">
+                    <property name="title">
+                     <string>Remove</string>
+                    </property>
+                    <layout class="QHBoxLayout" name="horizontalLayout_10">
+                     <property name="spacing">
+                      <number>2</number>
+                     </property>
+                     <property name="leftMargin">
+                      <number>4</number>
+                     </property>
+                     <property name="topMargin">
+                      <number>4</number>
+                     </property>
+                     <property name="rightMargin">
+                      <number>4</number>
+                     </property>
+                     <property name="bottomMargin">
+                      <number>4</number>
+                     </property>
+                     <item>
+                      <widget class="QPushButton" name="mapRemoveTraceButton">
+                       <property name="toolTip">
+                        <string>Car trace</string>
+                       </property>
+                       <property name="text">
+                        <string/>
+                       </property>
+                       <property name="icon">
+                        <iconset resource="resources.qrc">
+                         <normaloff>:/models/Icons/Polyline-96.png</normaloff>:/models/Icons/Polyline-96.png</iconset>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="mapRemoveRouteAllButton">
+                       <property name="toolTip">
+                        <string>All routes</string>
+                       </property>
+                       <property name="text">
+                        <string/>
+                       </property>
+                       <property name="icon">
+                        <iconset resource="resources.qrc">
+                         <normaloff>:/models/Icons/Polygon-96.png</normaloff>:/models/Icons/Polygon-96.png</iconset>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="mapRemoveInfoAllButton">
+                       <property name="toolTip">
+                        <string>All info traces</string>
+                       </property>
+                       <property name="text">
+                        <string/>
+                       </property>
+                       <property name="icon">
+                        <iconset resource="resources.qrc">
+                         <normaloff>:/models/Icons/Point Objects-96.png</normaloff>:/models/Icons/Point Objects-96.png</iconset>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="MapRemovePixmapsButton">
+                       <property name="toolTip">
+                        <string>Imported pixmaps</string>
+                       </property>
+                       <property name="text">
+                        <string/>
+                       </property>
+                       <property name="icon">
+                        <iconset resource="resources.qrc">
+                         <normaloff>:/models/Icons/Google Images-96.png</normaloff>:/models/Icons/Google Images-96.png</iconset>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                  <item>
+                   <spacer name="verticalSpacer_3">
+                    <property name="orientation">
+                     <enum>Qt::Vertical</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>20</width>
+                      <height>95</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                 </layout>
+                </widget>
                </widget>
               </item>
              </layout>
@@ -1824,6 +2141,8 @@
          </layout>
         </item>
        </layout>
+       <zorder>mapWidget</zorder>
+       <zorder>scrollArea_2</zorder>
       </widget>
       <widget class="QWidget" name="tab_3">
        <attribute name="icon">
@@ -1902,7 +2221,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1070</width>
+     <width>1085</width>
      <height>20</height>
     </rect>
    </property>

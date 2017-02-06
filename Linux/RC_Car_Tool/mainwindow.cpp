@@ -119,6 +119,8 @@ MainWindow::MainWindow(QWidget *parent) :
             this, SLOT(nmeaGgaRx(int,NmeaServer::nmea_gga_info_t)));
     connect(ui->mapWidget, SIGNAL(routePointAdded(LocPoint)),
             this, SLOT(routePointAdded(LocPoint)));
+    connect(ui->mapWidget, SIGNAL(infoTraceChanged(int)),
+            this, SLOT(infoTraceChanged(int)));
 
     on_serialRefreshButton_clicked();
 
@@ -559,6 +561,11 @@ void MainWindow::routePointAdded(LocPoint pos)
     ui->mapRouteTimeEdit->setTime(t);
 }
 
+void MainWindow::infoTraceChanged(int traceNow)
+{
+    ui->mapInfoTraceBox->setValue(traceNow);
+}
+
 void MainWindow::on_carAddButton_clicked()
 {
     CarInterface *car = new CarInterface(this);
@@ -986,6 +993,7 @@ void MainWindow::on_mapImportNmeaButton_clicked()
 {
     QFile file;
     file.setFileName(ui->mapImportNmeaEdit->text());
+    bool mapUpdated = false;
 
     if (file.exists()) {
         bool ok = file.open(QIODevice::ReadOnly | QIODevice::Text);
@@ -1046,6 +1054,12 @@ void MainWindow::on_mapImportNmeaButton_clicked()
                                  gga.height);
 
                     p.setInfo(info);
+
+                    if (!mapUpdated) {
+                        mapUpdated = true;
+                        ui->mapWidget->setNextEmptyOrCreateNewInfoTrace();
+                    }
+
                     ui->mapWidget->addInfoPoint(p);
                 }
             }
@@ -1058,9 +1072,9 @@ void MainWindow::on_mapImportNmeaButton_clicked()
     }
 }
 
-void MainWindow::on_mapRemoveInfoButton_clicked()
+void MainWindow::on_mapRemoveInfoAllButton_clicked()
 {
-    ui->mapWidget->clearInfoTrace();
+    ui->mapWidget->clearAllInfoTraces();
 }
 
 void MainWindow::on_traceInfoMinZoomBox_valueChanged(double arg1)
@@ -1215,4 +1229,14 @@ void MainWindow::on_mapTraceMinSpaceCarBox_valueChanged(double arg1)
 void MainWindow::on_mapTraceMinSpaceGpsBox_valueChanged(double arg1)
 {
     ui->mapWidget->setTraceMinSpaceGps(arg1 / 1000.0);
+}
+
+void MainWindow::on_mapInfoTraceBox_valueChanged(int arg1)
+{
+    ui->mapWidget->setInfoTraceNow(arg1);
+}
+
+void MainWindow::on_removeInfoTraceExtraButton_clicked()
+{
+    ui->mapWidget->clearInfoTrace();
 }

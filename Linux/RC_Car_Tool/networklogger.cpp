@@ -363,6 +363,9 @@ void NetworkLogger::on_statLogOpenButton_clicked()
 
             // Plot on map
             if (mMap) {
+                // Load points to empty info array on map or create new one
+                mMap->setNextEmptyOrCreateNewInfoTrace();
+
                 double i_llh[3];
                 bool i_llh_set = false;
                 for (int i = 0;i < mLogLoaded.size();i++) {

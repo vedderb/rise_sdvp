@@ -156,6 +156,7 @@ MapWidget::MapWidget(QWidget *parent) :
     mRouteNow = 0;
     mTraceMinSpaceCar = 0.05;
     mTraceMinSpaceGps = 0.05;
+    mInfoTraceNow = 0;
 
     mOsm = new OsmClient(this);
     mDrawOpenStreetmap = true;
@@ -167,6 +168,9 @@ MapWidget::MapWidget(QWidget *parent) :
     mRoutes.clear();
     QList<LocPoint> l;
     mRoutes.append(l);
+
+    mInfoTraces.clear();
+    mInfoTraces.append(l);
 
     // Set this to the SP base station position for now
     mRefLat = 57.71495867;
@@ -300,13 +304,22 @@ void MapWidget::setRoutePointSpeed(double speed)
 
 void MapWidget::addInfoPoint(LocPoint &info)
 {
-    mInfoTrace.append(info);
+    mInfoTraces[mInfoTraceNow].append(info);
     update();
 }
 
 void MapWidget::clearInfoTrace()
 {
-    mInfoTrace.clear();
+    mInfoTraces[mInfoTraceNow].clear();
+    update();
+}
+
+void MapWidget::clearAllInfoTraces()
+{
+    for (int i = 0;i < mInfoTraces.size();i++) {
+        mInfoTraces[i].clear();
+    }
+
     update();
 }
 
@@ -680,67 +693,84 @@ void MapWidget::paintEvent(QPaintEvent *event)
     }
 
     // Draw info trace
-    pen.setWidthF(3.0);
-    pen.setColor(Qt::darkGreen);
-    painter.setPen(pen);
-    painter.setBrush(Qt::green);
-    painter.setTransform(txtTrans);
-
     int info_segments = 0;
     int info_points = 0;
-    const double info_min_dist = 0.02;
-
-    int last_visible = 0;
-    for (int i = 1;i < mInfoTrace.size();i++) {
-        double dist_view = mInfoTrace.at(i).getDistanceTo(mInfoTrace.at(last_visible)) * mScaleFactor;
-        if (dist_view < info_min_dist) {
-            continue;
-        }
-
-        bool draw = isPointWithinRect(mInfoTrace[last_visible].getPointMm(), xStart2, xEnd2, yStart2, yEnd2);
-
-        if (!draw) {
-            draw = isPointWithinRect(mInfoTrace[i].getPointMm(), xStart2, xEnd2, yStart2, yEnd2);
-        }
-
-        if (!draw) {
-            draw = isLineSegmentWithinRect(mInfoTrace[last_visible].getPointMm(),
-                                           mInfoTrace[i].getPointMm(),
-                                           xStart2, xEnd2, yStart2, yEnd2);
-        }
-
-        if (draw) {
-            QPointF p1 = drawTrans.map(mInfoTrace[last_visible].getPointMm());
-            QPointF p2 = drawTrans.map(mInfoTrace[i].getPointMm());
-
-            painter.drawLine(p1, p2);
-            info_segments++;
-        }
-
-        last_visible = i;
-    }
-
-    QList<LocPoint> pts_green;
-    QList<LocPoint> pts_red;
-    QList<LocPoint> pts_other;
-    for (int i = 0;i < mInfoTrace.size();i++) {
-        const LocPoint &ip = mInfoTrace[i];
-        if (ip.getColor() == Qt::darkGreen || ip.getColor() == Qt::green) {
-            pts_green.append(ip);
-        } else if (ip.getColor() == Qt::darkRed || ip.getColor() == Qt::red) {
-            pts_red.append(ip);
-        } else {
-            pts_other.append(ip);
-        }
-    }
-
     mVisibleInfoTracePoints.clear();
-    info_points += drawInfoPoints(painter, pts_green, drawTrans, txtTrans,
-                                  xStart2, xEnd2, yStart2, yEnd2, info_min_dist);
-    info_points += drawInfoPoints(painter, pts_other, drawTrans, txtTrans,
-                                  xStart2, xEnd2, yStart2, yEnd2, info_min_dist);
-    info_points += drawInfoPoints(painter, pts_red, drawTrans, txtTrans,
-                                  xStart2, xEnd2, yStart2, yEnd2, info_min_dist);
+
+    for (int in = 0;in < mInfoTraces.size();in++) {
+        QList<LocPoint> &itNow = mInfoTraces[in];
+
+        if (mInfoTraceNow == in) {
+            pen.setColor(Qt::darkGreen);
+            painter.setBrush(Qt::green);
+        } else {
+            pen.setColor(Qt::darkGreen);
+            painter.setBrush(Qt::green);
+        }
+
+        pen.setWidthF(3.0);
+        painter.setPen(pen);
+        painter.setTransform(txtTrans);
+
+        const double info_min_dist = 0.02;
+
+        int last_visible = 0;
+        for (int i = 1;i < itNow.size();i++) {
+            double dist_view = itNow.at(i).getDistanceTo(itNow.at(last_visible)) * mScaleFactor;
+            if (dist_view < info_min_dist) {
+                continue;
+            }
+
+            bool draw = isPointWithinRect(itNow[last_visible].getPointMm(), xStart2, xEnd2, yStart2, yEnd2);
+
+            if (!draw) {
+                draw = isPointWithinRect(itNow[i].getPointMm(), xStart2, xEnd2, yStart2, yEnd2);
+            }
+
+            if (!draw) {
+                draw = isLineSegmentWithinRect(itNow[last_visible].getPointMm(),
+                                               itNow[i].getPointMm(),
+                                               xStart2, xEnd2, yStart2, yEnd2);
+            }
+
+            if (draw) {
+                QPointF p1 = drawTrans.map(itNow[last_visible].getPointMm());
+                QPointF p2 = drawTrans.map(itNow[i].getPointMm());
+
+                painter.drawLine(p1, p2);
+                info_segments++;
+            }
+
+            last_visible = i;
+        }
+
+        QList<LocPoint> pts_green;
+        QList<LocPoint> pts_red;
+        QList<LocPoint> pts_other;
+
+        for (int i = 0;i < itNow.size();i++) {
+            LocPoint ip = itNow[i];
+
+            if (mInfoTraceNow != in) {
+                ip.setColor(Qt::gray);
+            }
+
+            if (ip.getColor() == Qt::darkGreen || ip.getColor() == Qt::green) {
+                pts_green.append(ip);
+            } else if (ip.getColor() == Qt::darkRed || ip.getColor() == Qt::red) {
+                pts_red.append(ip);
+            } else {
+                pts_other.append(ip);
+            }
+        }
+
+        info_points += drawInfoPoints(painter, pts_green, drawTrans, txtTrans,
+                                      xStart2, xEnd2, yStart2, yEnd2, info_min_dist);
+        info_points += drawInfoPoints(painter, pts_other, drawTrans, txtTrans,
+                                      xStart2, xEnd2, yStart2, yEnd2, info_min_dist);
+        info_points += drawInfoPoints(painter, pts_red, drawTrans, txtTrans,
+                                      xStart2, xEnd2, yStart2, yEnd2, info_min_dist);
+    }
 
     // Draw point closest to mouse pointer
     if (mClosestInfo.getInfo().size() > 0) {
@@ -1194,11 +1224,32 @@ int MapWidget::getRouteNow() const
 void MapWidget::setRouteNow(int routeNow)
 {
     mRouteNow = routeNow;
-    while (mRoutes.size() < (routeNow + 1)) {
+    while (mRoutes.size() < (mRouteNow + 1)) {
         QList<LocPoint> l;
         mRoutes.append(l);
     }
     update();
+}
+
+int MapWidget::getInfoTraceNow() const
+{
+    return mInfoTraceNow;
+}
+
+void MapWidget::setInfoTraceNow(int infoTraceNow)
+{
+    int infoTraceOld = mInfoTraceNow;
+    mInfoTraceNow = infoTraceNow;
+
+    while (mInfoTraces.size() < (mInfoTraceNow + 1)) {
+        QList<LocPoint> l;
+        mInfoTraces.append(l);
+    }
+    update();
+
+    if (infoTraceOld != mInfoTraceNow) {
+        emit infoTraceChanged(mInfoTraceNow);
+    }
 }
 
 bool MapWidget::getDrawOsmStats() const
@@ -1351,6 +1402,42 @@ void MapWidget::setInfoTraceTextZoom(double infoTraceTextZoom)
 OsmClient *MapWidget::osmClient()
 {
     return mOsm;
+}
+
+int MapWidget::getInfoTraceNum()
+{
+    return mInfoTraces.size();
+}
+
+int MapWidget::getInfoPointsInTrace(int trace)
+{
+    int res = -1;
+
+    if (trace >= 0 && trace < mInfoTraces.size()) {
+        res = mInfoTraces.at(trace).size();
+    }
+
+    return res;
+}
+
+int MapWidget::setNextEmptyOrCreateNewInfoTrace()
+{
+    int next = -1;
+
+    for (int i = 0;i < mInfoTraces.size();i++) {
+        if (mInfoTraces.at(i).isEmpty()) {
+            next = i;
+            break;
+        }
+    }
+
+    if (next < 0) {
+        next = mInfoTraces.size();
+    }
+
+    setInfoTraceNow(next);
+
+    return next;
 }
 
 double MapWidget::getOsmRes() const

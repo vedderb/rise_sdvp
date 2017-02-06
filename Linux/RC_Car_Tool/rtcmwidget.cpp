@@ -52,6 +52,7 @@ RtcmWidget::RtcmWidget(QWidget *parent) :
 //    ui->refSendLatBox->setValue(lat);
 //    ui->refSendLonBox->setValue(lon);
 //    ui->refSendHBox->setValue(h);
+//    qDebug() << fixed << qSetRealNumberPrecision(8) << lat << lon << h;
 
     // Home
 //    ui->refSendLatBox->setValue(57.57848470);

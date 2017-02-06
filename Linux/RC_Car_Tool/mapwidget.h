@@ -67,6 +67,7 @@ public:
     void setRoutePointSpeed(double speed);
     void addInfoPoint(LocPoint &info);
     void clearInfoTrace();
+    void clearAllInfoTraces();
     void addPerspectivePixmap(PerspectivePixmap map);
     void clearPerspectivePixmaps();
     QPoint getMousePosRelative();
@@ -81,6 +82,9 @@ public:
     double getInfoTraceTextZoom() const;
     void setInfoTraceTextZoom(double infoTraceTextZoom);
     OsmClient *osmClient();
+    int getInfoTraceNum();
+    int getInfoPointsInTrace(int trace);
+    int setNextEmptyOrCreateNewInfoTrace();
 
     int getOsmMaxZoomLevel() const;
     void setOsmMaxZoomLevel(int osmMaxZoomLevel);
@@ -105,12 +109,16 @@ public:
     double getTraceMinSpaceGps() const;
     void setTraceMinSpaceGps(double traceMinSpaceGps);
 
+    int getInfoTraceNow() const;
+    void setInfoTraceNow(int infoTraceNow);
+
 signals:
     void scaleChanged(double newScale);
     void offsetChanged(double newXOffset, double newYOffset);
     void posSet(quint8 id, LocPoint pos);
     void routePointAdded(LocPoint pos);
     void lastRoutePointRemoved(LocPoint pos);
+    void infoTraceChanged(int traceNow);
 
 private slots:
     void tileReady(OsmTile tile);
@@ -128,7 +136,7 @@ private:
     QList<LocPoint> mCarTrace;
     QList<LocPoint> mCarTraceGps;
     QList<QList<LocPoint> > mRoutes;
-    QList<LocPoint> mInfoTrace;
+    QList<QList<LocPoint> > mInfoTraces;
     QList<LocPoint> mVisibleInfoTracePoints;
     QList<PerspectivePixmap> mPerspectivePixmaps;
     double mRoutePointSpeed;
@@ -160,6 +168,7 @@ private:
     bool mDrawGrid;
     int mRoutePointSelected;
     int mRouteNow;
+    int mInfoTraceNow;
     double mTraceMinSpaceCar;
     double mTraceMinSpaceGps;
 

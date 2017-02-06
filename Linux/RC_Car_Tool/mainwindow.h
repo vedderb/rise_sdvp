@@ -61,6 +61,7 @@ private slots:
     void enuRx(quint8 id, double lat, double lon, double height);
     void nmeaGgaRx(int fields, NmeaServer::nmea_gga_info_t gga);
     void routePointAdded(LocPoint pos);
+    void infoTraceChanged(int traceNow);
 
     void on_carAddButton_clicked();
     void on_carRemoveButton_clicked();
@@ -93,7 +94,7 @@ private slots:
     void on_mapOsmResSlider_valueChanged(int value);
     void on_mapChooseNmeaButton_clicked();
     void on_mapImportNmeaButton_clicked();
-    void on_mapRemoveInfoButton_clicked();
+    void on_mapRemoveInfoAllButton_clicked();
     void on_traceInfoMinZoomBox_valueChanged(double arg1);
     void on_removeRouteExtraButton_clicked();
     void on_mapOsmClearCacheButton_clicked();
@@ -117,6 +118,8 @@ private slots:
     void on_mapRouteTimeEdit_timeChanged(const QTime &time);
     void on_mapTraceMinSpaceCarBox_valueChanged(double arg1);
     void on_mapTraceMinSpaceGpsBox_valueChanged(double arg1);
+    void on_mapInfoTraceBox_valueChanged(int arg1);
+    void on_removeInfoTraceExtraButton_clicked();
 
 private:
     Ui::MainWindow *ui;
