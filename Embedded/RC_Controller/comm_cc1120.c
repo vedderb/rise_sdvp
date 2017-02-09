@@ -56,7 +56,13 @@ static THD_FUNCTION(rx_thread, arg) {
 //		commands_printf("State After: %s txfifo: %d\n", cc1120_state_name(),
 //				cc1120_single_read(CC1120_NUM_TXBYTES));
 
-		chThdSleepMilliseconds(1000);
+		if (cc1120_carrier_sense()) {
+			commands_printf("Carrier");
+//			chThdSleepMilliseconds(100);
+		}
+		chThdSleepMilliseconds(1);
+
+//		chThdSleepMilliseconds(1000);
 	}
 }
 

@@ -31,12 +31,13 @@ unsigned char cc1120_single_read(uint16_t addr);
 uint8_t cc1120_single_write(uint16_t addr, uint8_t value);
 void cc1120_burst_read(uint16_t addr, uint8_t *buffer, uint8_t count);
 void cc1120_burst_write(uint16_t addr, uint8_t *buffer, uint8_t count);
-void cc1120_write_txfifo(uint8_t *data, uint8_t len);
+void cc1120_write_txfifo(uint8_t *data, int len);
 void cc1120_check_txfifo(void);
 void cc1120_flushrx(void);
 int cc1120_transmit(uint8_t *data, int len);
 int cc1120_on(void);
 int cc1120_off(void);
+bool cc1120_carrier_sense(void);
 void cc1120_ext_cb(EXTDriver *extp, expchannel_t channel);
 void cc1120_calibrate_manual(void);
 
@@ -44,9 +45,10 @@ void cc1120_calibrate_manual(void);
 #define BV(n)      (1 << (n))
 #endif
 
-// Note: Many of the registers below were taken from the contiki cc1120 driver.
+// Note: Many of the definitions below were taken from the contiki cc1120 driver.
 
-// Configuration registers
+// ================ Configuration registers ================ //
+
 #define CC1120_IOCFG3						0x00
 #define CC1120_IOCFG2						0x01
 #define CC1120_IOCFG1						0x02
@@ -96,7 +98,8 @@ void cc1120_calibrate_manual(void);
 #define CC1120_PKT_LEN						0x2E
 #define CC1120_EXTENDED_MEMORY_ACCESS		0x2F
 
-// Status registers
+// ================ Status registers ================ //
+
 // Extended register space, accessed via CC1120_EXTENDED_MEMORY_ACCESS
 // NOTE: Below addresses have been increased by 0x2F00, to allow detection of extended address space registers.
 
@@ -231,8 +234,8 @@ void cc1120_calibrate_manual(void);
 #define CC1120_FIFO_NUM_TXBYTES				0x2FD8
 #define CC1120_FIFO_NUM_RXBYTES				0x2FD9
 
-#define CC1120_TXFIFO 0x3F
-#define CC1120_RXFIFO 0x3F
+#define CC1120_TXFIFO						0x3F
+#define CC1120_RXFIFO						0x3F
 
 #define CC1120_STATE_SLEEP					0
 #define CC1120_STATE_IDLE					1
@@ -258,7 +261,7 @@ void cc1120_calibrate_manual(void);
 #define CC1120_STATE_RXTX_SWITCH			21
 #define CC1120_STATE_TXFIFO_UNDERFLOW		22
 
-// Strobe commands
+// ================ Strobe commands ================ //
 
 // Reset chip.
 #define CC1120_SRES							0x30
@@ -308,50 +311,80 @@ void cc1120_calibrate_manual(void);
 // bytes for simpler software.
 #define CC1120_SNOP							0x3D
 
-// GPIO
+// ================ Settings ================ //
 
-// invert assert/de-assert
-#define IOCFG_GPIO_CFG_INVERT				BV(6)
+// IOCFG
+#define IOCFG_GPIO_CFG_INVERT				BV(6) // invert assert/de-assert
+#define IOCFG_GPIO_CFG_ATRAN				BV(7) // set pin as "Analog transfer" (==pin not used as GPIO)
+#define IOCFG_GPIO_CFG_RXFIFO_THR			0 // Asserted as long as length > THR
+#define IOCFG_GPIO_CFG_RXFIFO_THR_PKT		1 // Assert when THR is reached or EOP; de-assert on empty RxFIFO
+#define IOCFG_GPIO_CFG_PKT_SYNC_RXTX		6 // assert on SYNC recv/sent, de-assert on EOP
+#define IOCFG_GPIO_CFG_CS_VALID				16 // CS valid ? assert : de-assert
+#define IOCFG_GPIO_CFG_CS					17 // Carrier Sense ? assert : de-assert
+#define IOCFG_GPIO_CFG_RXIDLE_OR_TX			26 // assert when in TX, de-assert in Rx/IDLE/settling
+#define IOCFG_GPIO_CFG_RXTX_OR_IDLE			38 // assert if in rx or tx, de-assert if idle/settling (MARC_2PIN_STATUS[0])
+#define IOCFG_GPIO_CFG_HIGHZ				48 // high impedance
 
-// set pin as "Analog transfer" (==pin not used as GPIO)
-#define IOCFG_GPIO_CFG_ATRAN				BV(7)
+// PKT_CFG_0
+#define PKT_CFG0_LENGTH_CONFIG_FIXED		(0 << 5) // Fixed length packets
+#define PKT_CFG0_LENGTH_CONFIG_VARIABLE		(1 << 5) // Variable length packets
+#define PKT_CFG0_LENGTH_CONFIG_INFINITE		(2 << 5) // Infinite length packets
 
-// GPIO functionality
+// PKT_CFG_1
+#define PKT_CFG1_WHITE_DATA					(1 << 7) // Data whitening enabled
+#define PKT_CFG1_BYTE_SWAP					(1 << 1) // Swap all bytes
+#define PKT_CFG1_APPEND_STATUS				(1 << 0) // Append status bytes to end of RX FIFO with RSSI and CRC check info
+#define PKT_CFG1_ADDR_CHECK_OFF				(0 << 4) // No address check
+#define PKT_CFG1_ADDR_CHECK_ON				(1 << 4) // Address check on, no broadcast
+#define PKT_CFG1_ADDR_CHECK_ON_BR00			(2 << 4) // Address check on, 0x00 = broadcast
+#define PKT_CFG1_ADDR_CHECK_ON_BR00_BRFF	(3 << 4) // Address check on, 0x00 and 0xFF = broadcast
+#define PKT_CFG1_CRC_OFF					(0 << 2) // No CRC
+#define PKT_CFG1_CRC_ON_1					(1 << 2) // RX and TX CRC with CRC16(X16+X15+X2+1), Initialized to 0xFFFF
+#define PKT_CFG1_CRC_ON_2					(2 << 2) // RX and TX CRC with CRC16(X16+X12+X5+1), Initialized to 0x0000
 
-// Asserted as long as length > THR
-#define IOCFG_GPIO_CFG_RXFIFO_THR			0
+// RFEND_CFG0
+#define RFEND_CFG0_TXOFF_MODE_RETURN_TO_RX	(BV(4) | BV(5)) // Return to RX after TX
 
-// Assert when THR is reached or EOP; de-assert on empty RxFIFO
-#define IOCFG_GPIO_CFG_RXFIFO_THR_PKT		1
+// RFEND_CFG1
+#define RFEND_CFG1_RXOFF_MODE_RETURN_TO_RX	(BV(4) | BV(5)) // Return to RX after RX
 
-// assert on SYNC recv/sent, de-assert on EOP
-#define IOCFG_GPIO_CFG_PKT_SYNC_RXTX		6
+// SYNC_CFG0
+#define SYNC_CFG0_NOSYNC					0
+#define SYNC_CFG0_11_BITS					(1 << 2)
+#define SYNC_CFG0_16_BITS					(2 << 2)
+#define SYNC_CFG0_18_BITS					(3 << 2)
+#define SYNC_CFG0_24_BITS					(4 << 2)
+#define SYNC_CFG0_32_BITS					(5 << 2)
+#define SYNC_CFG0_NUM_ERROR_ENABLED			0
+#define SYNC_CFG0_NUM_ERROR_DISABLED		3
 
-// CS valid ? assert : de-assert
-#define IOCFG_GPIO_CFG_CS_VALID				16
+// PREAMBLE_CFG0
+#define PREAMBLE_CFG0_PQT_EN				(1 << 5) // Enable preamble detection
+#define PREAMBLE_CFG0_TIMEOUT_16			(0 << 4) // 16 symbols required to consider preamble valid
+#define PREAMBLE_CFG0_TIMEOUT_43			(1 << 4) // 43 symbols required to consider preamble valid
 
-// Carrier Sense ? assert : de-assert
-#define IOCFG_GPIO_CFG_CS					17
+// PREAMBLE_CFG1
+#define PREAMBLE_CFG1_WORD_AA				(0 << 0) // Use 0xAA (10101010) as preamble
+#define PREAMBLE_CFG1_WORD_55				(1 << 0) // Use 0x55 (01010101) as preamble
+#define PREAMBLE_CFG1_WORD_33				(2 << 0) // Use 0x33 (00110011) as preamble
+#define PREAMBLE_CFG1_WORD_CC				(3 << 0) // Use 0xCC (11001100) as preamble
+#define PREAMBLE_CFG1_NUM_0					(0 << 2) // No preamble transmitted
+#define PREAMBLE_CFG1_NUM_0_5				(1 << 2) // 0.5 preamble bytes transmitted
+#define PREAMBLE_CFG1_NUM_1					(2 << 2) // 1 preamble bytes transmitted
+#define PREAMBLE_CFG1_NUM_1_5				(3 << 2) // 1.5 preamble bytes transmitted
+#define PREAMBLE_CFG1_NUM_2					(4 << 2) // 2 preamble bytes transmitted
+#define PREAMBLE_CFG1_NUM_3					(5 << 2) // 3 preamble bytes transmitted
+#define PREAMBLE_CFG1_NUM_4					(6 << 2) // 4 preamble bytes transmitted
+#define PREAMBLE_CFG1_NUM_5					(7 << 2) // 5 preamble bytes transmitted
+#define PREAMBLE_CFG1_NUM_6					(8 << 2) // 6 preamble bytes transmitted
+#define PREAMBLE_CFG1_NUM_7					(9 << 2) // 7 preamble bytes transmitted
+#define PREAMBLE_CFG1_NUM_8					(10 << 2) // 8 preamble bytes transmitted
+#define PREAMBLE_CFG1_NUM_12				(11 << 2) // 12 preamble bytes transmitted
+#define PREAMBLE_CFG1_NUM_24				(12 << 2) // 24 preamble bytes transmitted
+#define PREAMBLE_CFG1_NUM_30				(13 << 2) // 30 preamble bytes transmitted
 
-// assert when in TX, de-assert in Rx/IDLE/settling
-#define IOCFG_GPIO_CFG_RXIDLE_OR_TX			26
-
-// assert if in rx or tx, de-assert if idle/settling (MARC_2PIN_STATUS[0])
-#define IOCFG_GPIO_CFG_RXTX_OR_IDLE			38
-
-// high impedance
-#define IOCFG_GPIO_CFG_HIGHZ				48
-
-// Settings
-
-// Variable length packets
-#define PKT_CFG0_LENGTH_CONFIG_VARIABLE		BV(5)
-#define PKT_CFG0_LENGTH_CONFIG_INFINITE		BV(6)
-
-// Return to RX after TX
-#define RFEND_CFG0_TXOFF_MODE_RETURN_TO_RX	(BV(4)|BV(5))
-
-// Return to RX after RX
-#define RFEND_CFG1_RXOFF_MODE_RETURN_TO_RX	(BV(4)|BV(5))
+// FIFO_CFG
+#define FIFO_CFG_CRC_AUTOFLUSH_ENABLED		(1 << 7)
+#define FIFO_CFG_CRC_AUTOFLUSH_DISABLED		0
 
 #endif /* CC1120_CC1120_H_ */

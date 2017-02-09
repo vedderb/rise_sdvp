@@ -38,7 +38,7 @@
 #define CC1120_PORT_GPIO3						GPIOA
 #define CC1120_PIN_GPIO3						1
 
-#define CC1120_MAX_PAYLOAD						125
+#define CC1120_MAX_PAYLOAD						1024
 
 // Macros
 #define CC1120_READ_BIT							0x80
@@ -111,10 +111,10 @@ void cc1120_init(void) {
 	// Modulation Format = 2-GFSK
 	// PA Ramping = true
 	// Packet Bit Length = 0
-	// Packet Length = 255
-	// Packet Length Mode = Variable
+	// Packet Length = 3
+	// Packet Length Mode = Fixed
 	// Performance Mode = High Performance
-	// RX Filter BW = 25.000000
+	// RX Filter BW = 50.000000
 	// Symbol rate = 9.6
 	// TX Power = 15
 	// Whitening = false
@@ -125,24 +125,11 @@ void cc1120_init(void) {
 	cc1120_single_write(CC1120_SYNC_CFG1, 0x08);      // Sync Word Detection Configuration Reg. 1
 	cc1120_single_write(CC1120_DEVIATION_M, 0x3A);    // Frequency Deviation Configuration
 	cc1120_single_write(CC1120_MODCFG_DEV_E, 0x0A);   // Modulation Format and Frequency Deviation Configur..
-	cc1120_single_write(CC1120_DCFILT_CFG, 0x04);     // Digital DC Removal Configuration
-	cc1120_single_write(CC1120_PREAMBLE_CFG1, 0x18);  // Preamble Length Configuration Reg. 1
-	cc1120_single_write(CC1120_FREQ_IF_CFG, 0x00);    // RX Mixer Frequency Configuration
-	cc1120_single_write(CC1120_IQIC, 0x00);           // Digital Image Channel Compensation Configuration
-	cc1120_single_write(CC1120_CHAN_BW, 0x08);        // Channel Filter Configuration
-	cc1120_single_write(CC1120_MDMCFG0, 0x05);        // General Modem Parameter Configuration Reg. 0
+	cc1120_single_write(CC1120_IQIC, 0x44);           // Digital Image Channel Compensation Configuration
+	cc1120_single_write(CC1120_CHAN_BW, 0x04);        // Channel Filter Configuration
 	cc1120_single_write(CC1120_SYMBOL_RATE2, 0x73);   // Symbol Rate Configuration Exponent and Mantissa [1..
-	cc1120_single_write(CC1120_AGC_REF, 0x3C);        // AGC Reference Level Configuration
-	cc1120_single_write(CC1120_AGC_CS_THR, 0xEC);     // Carrier Sense Threshold Configuration
-	cc1120_single_write(CC1120_AGC_CFG3, 0x83);       // Automatic Gain Control Configuration Reg. 3
-	cc1120_single_write(CC1120_AGC_CFG2, 0x60);       // Automatic Gain Control Configuration Reg. 2
-	cc1120_single_write(CC1120_AGC_CFG1, 0xA9);       // Automatic Gain Control Configuration Reg. 1
-	cc1120_single_write(CC1120_AGC_CFG0, 0xC0);       // Automatic Gain Control Configuration Reg. 0
-	cc1120_single_write(CC1120_FS_CFG, 0x14);         // Frequency Synthesizer Configuration
-	cc1120_single_write(CC1120_PA_CFG0, 0x05);        // Power Amplifier Configuration Reg. 0
-	cc1120_single_write(CC1120_PKT_LEN, 0xFF);        // Packet Length Configuration
-	cc1120_single_write(CC1120_IF_MIX_CFG, 0x00);     // IF Mix Configuration
-	cc1120_single_write(CC1120_TOC_CFG, 0x0A);        // Timing Offset Correction Configuration
+	cc1120_single_write(CC1120_FS_CFG, 0x04);         // Frequency Synthesizer Configuration
+	cc1120_single_write(CC1120_PA_CFG0, 0x7D);        // Power Amplifier Configuration Reg. 0
 	cc1120_single_write(CC1120_FREQ2, 0x71);          // Frequency Configuration [23:16]
 	cc1120_single_write(CC1120_FS_DIG1, 0x00);        // Frequency Synthesizer Digital Reg. 1
 	cc1120_single_write(CC1120_FS_DIG0, 0x5F);        // Frequency Synthesizer Digital Reg. 0
@@ -159,131 +146,42 @@ void cc1120_init(void) {
 	cc1120_single_write(CC1120_XOSC5, 0x0E);          // Crystal Oscillator Configuration Reg. 5
 	cc1120_single_write(CC1120_XOSC1, 0x03);          // Crystal Oscillator Configuration Reg. 1
 
-	// Address Config = No address check
-	// Bit Rate = 1.2
-	// Carrier Frequency = 434.000000
-	// Deviation = 20.019531
-	// Device Address = 0
-	// Manchester Enable = false
-	// Modulation Format = 2-FSK
-	// PA Ramping = true
-	// Packet Bit Length = 0
-	// Packet Length = 255
-	// Packet Length Mode = Variable
-	// Performance Mode = High Performance
-	// RX Filter BW = 50.000000
-	// Symbol rate = 1.2
-	// TX Power = 15
-	// Whitening = false
-
-	//
-	// From TI SmartRF studio 7
-	//
-//	cc1120_single_write(CC1120_SYNC_CFG1, 0x0B);      // Sync Word Detection Configuration Reg. 1
-//	cc1120_single_write(CC1120_DEVIATION_M, 0x48);    // Frequency Deviation Configuration
-//	cc1120_single_write(CC1120_MODCFG_DEV_E, 0x05);   // Modulation Format and Frequency Deviation Configur..
-//	cc1120_single_write(CC1120_DCFILT_CFG, 0x1C);     // Digital DC Removal Configuration
-//	cc1120_single_write(CC1120_IQIC, 0x00);           // Digital Image Channel Compensation Configuration
-//	cc1120_single_write(CC1120_CHAN_BW, 0x04);        // Channel Filter Configuration
-//	cc1120_single_write(CC1120_MDMCFG0, 0x05);        // General Modem Parameter Configuration Reg. 0
-//	cc1120_single_write(CC1120_AGC_CFG1, 0xA9);       // Automatic Gain Control Configuration Reg. 1
-//	cc1120_single_write(CC1120_AGC_CFG0, 0xCF);       // Automatic Gain Control Configuration Reg. 0
-//	cc1120_single_write(CC1120_FS_CFG, 0x14);         // Frequency Synthesizer Configuration
-//	cc1120_single_write(CC1120_PKT_LEN, 0xFF);        // Packet Length Configuration
-//	cc1120_single_write(CC1120_IF_MIX_CFG, 0x00);     // IF Mix Configuration
-//	cc1120_single_write(CC1120_FREQOFF_CFG, 0x22);    // Frequency Offset Correction Configuration
-//	cc1120_single_write(CC1120_FREQ2, 0x6C);          // Frequency Configuration [23:16]
-//	cc1120_single_write(CC1120_FREQ1, 0x80);          // Frequency Configuration [15:8]
-//	cc1120_single_write(CC1120_FS_DIG1, 0x00);        // Frequency Synthesizer Digital Reg. 1
-//	cc1120_single_write(CC1120_FS_DIG0, 0x5F);        // Frequency Synthesizer Digital Reg. 0
-//	cc1120_single_write(CC1120_FS_CAL1, 0x40);        // Frequency Synthesizer Calibration Reg. 1
-//	cc1120_single_write(CC1120_FS_CAL0, 0x0E);        // Frequency Synthesizer Calibration Reg. 0
-//	cc1120_single_write(CC1120_FS_DIVTWO, 0x03);      // Frequency Synthesizer Divide by 2
-//	cc1120_single_write(CC1120_FS_DSM0, 0x33);        // FS Digital Synthesizer Module Configuration Reg. 0
-//	cc1120_single_write(CC1120_FS_DVC0, 0x17);        // Frequency Synthesizer Divider Chain Configuration ..
-//	cc1120_single_write(CC1120_FS_PFD, 0x50);         // Frequency Synthesizer Phase Frequency Detector Con..
-//	cc1120_single_write(CC1120_FS_PRE, 0x6E);         // Frequency Synthesizer Prescaler Configuration
-//	cc1120_single_write(CC1120_FS_REG_DIV_CML, 0x14); // Frequency Synthesizer Divider Regulator Configurat..
-//	cc1120_single_write(CC1120_FS_SPARE, 0xAC);       // Frequency Synthesizer Spare
-//	cc1120_single_write(CC1120_FS_VCO0, 0xB4);        // FS Voltage Controlled Oscillator Configuration Reg..
-//	cc1120_single_write(CC1120_XOSC5, 0x0E);          // Crystal Oscillator Configuration Reg. 5
-//	cc1120_single_write(CC1120_XOSC1, 0x03);          // Crystal Oscillator Configuration Reg. 1
-
-	// Address Config = No address check
-	// Bit Rate = 50
-	// Carrier Frequency = 434.000000
-	// Deviation = 24.963379
-	// Device Address = 0
-	// Manchester Enable = false
-	// Modulation Format = 2-GFSK
-	// PA Ramping = true
-	// Packet Bit Length = 0
-	// Packet Length = 255
-	// Packet Length Mode = Variable
-	// Performance Mode = High Performance
-	// RX Filter BW = 100.000000
-	// Symbol rate = 50
-	// TX Power = 15
-	// Whitening = false
-
-	//
-	// From TI SmartRF studio 7
-	//
-//	cc1120_single_write(CC1120_SYNC_CFG1, 0x08);      // Sync Word Detection Configuration Reg. 1
-//	cc1120_single_write(CC1120_DEVIATION_M, 0x99);    // Frequency Deviation Configuration
-//	cc1120_single_write(CC1120_MODCFG_DEV_E, 0x0D);   // Modulation Format and Frequency Deviation Configur..
-//	cc1120_single_write(CC1120_DCFILT_CFG, 0x15);     // Digital DC Removal Configuration
-//	cc1120_single_write(CC1120_PREAMBLE_CFG1, 0x18);  // Preamble Length Configuration Reg. 1
-//	cc1120_single_write(CC1120_FREQ_IF_CFG, 0x3A);    // RX Mixer Frequency Configuration
-//	cc1120_single_write(CC1120_IQIC, 0x00);           // Digital Image Channel Compensation Configuration
-//	cc1120_single_write(CC1120_CHAN_BW, 0x02);        // Channel Filter Configuration
-//	cc1120_single_write(CC1120_MDMCFG0, 0x05);        // General Modem Parameter Configuration Reg. 0
-//	cc1120_single_write(CC1120_SYMBOL_RATE2, 0x99);   // Symbol Rate Configuration Exponent and Mantissa [1..
-//	cc1120_single_write(CC1120_SYMBOL_RATE1, 0x99);   // Symbol Rate Configuration Mantissa [15:8]
-//	cc1120_single_write(CC1120_SYMBOL_RATE0, 0x99);   // Symbol Rate Configuration Mantissa [7:0]
-//	cc1120_single_write(CC1120_AGC_REF, 0x3C);        // AGC Reference Level Configuration
-//	cc1120_single_write(CC1120_AGC_CS_THR, 0xEF);     // Carrier Sense Threshold Configuration
-//	cc1120_single_write(CC1120_AGC_CFG1, 0xA9);       // Automatic Gain Control Configuration Reg. 1
-//	cc1120_single_write(CC1120_AGC_CFG0, 0xC0);       // Automatic Gain Control Configuration Reg. 0
-//	cc1120_single_write(CC1120_FS_CFG, 0x14);         // Frequency Synthesizer Configuration
-//	cc1120_single_write(CC1120_PA_CFG0, 0x79);        // Power Amplifier Configuration Reg. 0
-//	cc1120_single_write(CC1120_PKT_LEN, 0xFF);        // Packet Length Configuration
-//	cc1120_single_write(CC1120_IF_MIX_CFG, 0x00);     // IF Mix Configuration
-//	cc1120_single_write(CC1120_TOC_CFG, 0x0A);        // Timing Offset Correction Configuration
-//	cc1120_single_write(CC1120_FREQ2, 0x6C);          // Frequency Configuration [23:16]
-//	cc1120_single_write(CC1120_FREQ1, 0x80);          // Frequency Configuration [15:8]
-//	cc1120_single_write(CC1120_FS_DIG1, 0x00);        // Frequency Synthesizer Digital Reg. 1
-//	cc1120_single_write(CC1120_FS_DIG0, 0x5F);        // Frequency Synthesizer Digital Reg. 0
-//	cc1120_single_write(CC1120_FS_CAL1, 0x40);        // Frequency Synthesizer Calibration Reg. 1
-//	cc1120_single_write(CC1120_FS_CAL0, 0x0E);        // Frequency Synthesizer Calibration Reg. 0
-//	cc1120_single_write(CC1120_FS_DIVTWO, 0x03);      // Frequency Synthesizer Divide by 2
-//	cc1120_single_write(CC1120_FS_DSM0, 0x33);        // FS Digital Synthesizer Module Configuration Reg. 0
-//	cc1120_single_write(CC1120_FS_DVC0, 0x17);        // Frequency Synthesizer Divider Chain Configuration ..
-//	cc1120_single_write(CC1120_FS_PFD, 0x50);         // Frequency Synthesizer Phase Frequency Detector Con..
-//	cc1120_single_write(CC1120_FS_PRE, 0x6E);         // Frequency Synthesizer Prescaler Configuration
-//	cc1120_single_write(CC1120_FS_REG_DIV_CML, 0x14); // Frequency Synthesizer Divider Regulator Configurat..
-//	cc1120_single_write(CC1120_FS_SPARE, 0xAC);       // Frequency Synthesizer Spare
-//	cc1120_single_write(CC1120_FS_VCO0, 0xB4);        // FS Voltage Controlled Oscillator Configuration Reg..
-//	cc1120_single_write(CC1120_XOSC5, 0x0E);          // Crystal Oscillator Configuration Reg. 5
-//	cc1120_single_write(CC1120_XOSC1, 0x03);          // Crystal Oscillator Configuration Reg. 1
-
+	// IO Configuration
 	cc1120_single_write(CC1120_IOCFG3, IOCFG_GPIO_CFG_CS);
-	cc1120_single_write(CC1120_IOCFG2, IOCFG_GPIO_CFG_RXTX_OR_IDLE);
-	cc1120_single_write(CC1120_IOCFG1, 0xB0); // GPIO1 is always used for SPI
-	cc1120_single_write(CC1120_IOCFG0, IOCFG_GPIO_CFG_PKT_SYNC_RXTX | IOCFG_GPIO_CFG_INVERT);
-	cc1120_single_write(CC1120_PKT_CFG0, PKT_CFG0_LENGTH_CONFIG_VARIABLE);
-	cc1120_single_write(CC1120_RFEND_CFG0, RFEND_CFG0_TXOFF_MODE_RETURN_TO_RX);
-	cc1120_single_write(CC1120_RFEND_CFG1, 0x0F | RFEND_CFG1_RXOFF_MODE_RETURN_TO_RX);
+	cc1120_single_write(CC1120_IOCFG2, IOCFG_GPIO_CFG_HIGHZ);
+	cc1120_single_write(CC1120_IOCFG1, IOCFG_GPIO_CFG_HIGHZ); // This pin is shared with SPI
+//	cc1120_single_write(CC1120_IOCFG0, IOCFG_GPIO_CFG_PKT_SYNC_RXTX | IOCFG_GPIO_CFG_INVERT);
+	cc1120_single_write(CC1120_IOCFG0, IOCFG_GPIO_CFG_RXFIFO_THR_PKT);
 
-	cc1120_single_write(CC1120_FIFO_CFG, 0x00); // Note: this will not discard packets when the CRC is bad.
+	// Packet configuration: Infinite length, use CRC1, no address, 32 sync bits (use default bits),
+	// 4 preamble bytes, preamble byte 0xAA, no data whitening, interrupt on 2 bytes in FIFO
+	cc1120_single_write(CC1120_PKT_CFG0, PKT_CFG0_LENGTH_CONFIG_INFINITE);
+	cc1120_single_write(CC1120_PKT_CFG1, PKT_CFG1_APPEND_STATUS | PKT_CFG1_ADDR_CHECK_OFF | PKT_CFG1_CRC_ON_1);
+	cc1120_single_write(CC1120_FIFO_CFG, 2);
+	cc1120_single_write(CC1120_PREAMBLE_CFG1, PREAMBLE_CFG1_NUM_4 | PREAMBLE_CFG1_WORD_AA);
+	cc1120_single_write(CC1120_SYNC_CFG0, SYNC_CFG0_32_BITS | SYNC_CFG0_NUM_ERROR_ENABLED);
+	cc1120_single_write(CC1120_SYNC3, 0x93);
+	cc1120_single_write(CC1120_SYNC2, 0x0B);
+	cc1120_single_write(CC1120_SYNC1, 0x51);
+	cc1120_single_write(CC1120_SYNC0, 0xDE);
+
+	// Other settings
+	cc1120_single_write(CC1120_RFEND_CFG0, RFEND_CFG0_TXOFF_MODE_RETURN_TO_RX); // Return to RX after TX
+	cc1120_single_write(CC1120_RFEND_CFG1, 0x0F | RFEND_CFG1_RXOFF_MODE_RETURN_TO_RX); // Stay in RX after RX
+	cc1120_single_write(CC1120_AGC_CS_THR, -10); // Carrier Sense Threshold (lower = more sensitive)
+	cc1120_single_write(CC1120_PA_CFG2, 0x3F); // Full output power
 
 	// Infinite length rx test
-	cc1120_single_write(CC1120_PKT_CFG0, PKT_CFG0_LENGTH_CONFIG_INFINITE);
-	cc1120_single_write(CC1120_IOCFG0, IOCFG_GPIO_CFG_RXFIFO_THR_PKT);
-	cc1120_single_write(CC1120_SYNC_CFG0, 0b00001011); // 16 sync bytes
-	cc1120_single_write(CC1120_SYNC0, 0xAA);
-	cc1120_single_write(CC1120_SYNC1, 0xAA);
-	cc1120_single_write(CC1120_FIFO_CFG, 10); // Interrupt when there are 10 bytes in fifo
+//	cc1120_single_write(CC1120_IOCFG0, IOCFG_GPIO_CFG_RXFIFO_THR_PKT); // FIFO threshold interrupt
+//	cc1120_single_write(CC1120_PKT_CFG0, PKT_CFG0_LENGTH_CONFIG_INFINITE);
+//	cc1120_single_write(CC1120_SYNC_CFG0, SYNC_CFG0_16_BITS | SYNC_CFG0_NUM_ERROR_DISABLED);
+//	cc1120_single_write(CC1120_SYNC1, 0xAA);
+//	cc1120_single_write(CC1120_SYNC0, 0xAA);
+//	cc1120_single_write(CC1120_SYNC1, 20);
+//	cc1120_single_write(CC1120_SYNC0, 12);
+//	cc1120_single_write(CC1120_SYNC1, 0xD3);
+//	cc1120_single_write(CC1120_SYNC0, 0x00);
+//	cc1120_single_write(CC1120_FIFO_CFG, 10); // Interrupt when there are 10 bytes in fifo
 
 	chThdCreateStatic(isr_thread_wa, sizeof(isr_thread_wa), NORMALPRIO + 2, isr_thread, NULL);
 	extChannelEnable(&EXTD1, 3);
@@ -427,16 +325,17 @@ void cc1120_burst_write(uint16_t addr, uint8_t *buffer, uint8_t count) {
 	spiReleaseBus(&CC1120_SPI);
 }
 
-void cc1120_write_txfifo(uint8_t *data, uint8_t len) {
+void cc1120_write_txfifo(uint8_t *data, int len) {
 	uint8_t status;
 	int i;
 
-	// The length is the first byte in variable length mode
-	cc1120_burst_write(CC1120_TXFIFO, &len, 1);
+	// The length is the first two bytes
+	uint8_t buf_len[2];
+	buf_len[0] = (len >> 8) & 0xFF;
+	buf_len[1] = len & 0xFF;
+	cc1120_burst_write(CC1120_TXFIFO, buf_len, 2);
 
-#define FIRST_TX 8
-
-	i = MIN(len, FIRST_TX);
+	i = MIN(len, 8);
 	cc1120_burst_write(CC1120_TXFIFO, data, i);
 	cc1120_strobe(CC1120_STX);
 
@@ -463,6 +362,10 @@ void cc1120_write_txfifo(uint8_t *data, uint8_t len) {
 				spiAcquireBus(&CC1120_SPI);
 				break;
 			} else if((status & 0x0f) < 2) {
+				// see: https://e2e.ti.com/support/wireless_connectivity/proprietary_sub_1_ghz_simpliciti/f/156/t/330634
+				// These bits should tell how much space there is left in the FIFO, but there is an issue
+				// so they are reserved in the datasheet.
+
 				spi_disable();
 				spiReleaseBus(&CC1120_SPI);
 
@@ -526,7 +429,7 @@ int cc1120_transmit(uint8_t *data, int len) {
 	}
 
 	if(len > CC1120_MAX_PAYLOAD) {
-		commands_printf("Too big tx %d", len);
+		commands_printf("CC1120: too many tx bytes %d", len);
 		return -1;
 	}
 
@@ -585,6 +488,12 @@ int cc1120_off(void) {
 	return 1;
 }
 
+bool cc1120_carrier_sense(void) {
+//	uint8_t reg = cc1120_single_read(CC1120_RSSI0);
+//	return ((reg & 0b010) && (reg & 0b100)) ? 1 : 0;
+	return palReadPad(CC1120_PORT_GPIO3, CC1120_PIN_GPIO3);
+}
+
 void cc1120_ext_cb(EXTDriver *extp, expchannel_t channel) {
 	(void)extp;
 	(void)channel;
@@ -602,6 +511,7 @@ static THD_FUNCTION(isr_thread, arg) {
 
 	for (;;) {
 		chEvtWaitAny((eventmask_t) 1);
+		commands_printf("CC1120_IRQ");
 		interrupt();
 	}
 }
@@ -636,33 +546,43 @@ static int interrupt(void) {
 			return 1;
 		}
 
-		if(rxbytes > CC1120_MAX_PAYLOAD) {
-			commands_printf("CC1120 ISR: rxbytes too large %d", rxbytes);
-			cc1120_flushrx();
-			return -1;
-		}
-
 		cc1120_burst_read(CC1120_RXFIFO, rx_buffer + rx_pos, rxbytes);
-
-		// Print bytes for now
-//		for (int i = 0;i < rxbytes;i++) {
-//			commands_printf("CC1120 RX Byte: %d", rx_buffer[i]);
-//		}
-
-		// Infinite length test
 		rx_pos += rxbytes;
-		if (RX_LEN - rx_pos < 255) {
-			cc1120_single_write(CC1120_PKT_LEN, RX_LEN % 256);
-			cc1120_single_write(CC1120_PKT_CFG0, 0);
+
+		int rx_len = 0;
+		if (rx_pos >= 2) {
+			rx_len = (uint16_t)rx_buffer[0] << 8 | (uint16_t)rx_buffer[1];
 		}
 
-		if (rx_pos >= RX_LEN) {
-			cc1120_single_write(CC1120_PKT_CFG0, PKT_CFG0_LENGTH_CONFIG_INFINITE);
-			// Print bytes for now
-			for (int i = 0;i < rx_pos;i++) {
-				commands_printf("CC1120 RX Byte: %d", rx_buffer[i]);
+		if (rx_len > 0) {
+			if(rx_len > CC1120_MAX_PAYLOAD) {
+				commands_printf("CC1120 ISR: rx_len too large %d", rx_len);
+				cc1120_flushrx();
+				cc1120_single_write(CC1120_PKT_CFG0, PKT_CFG0_LENGTH_CONFIG_INFINITE);
+				cc1120_single_write(CC1120_FIFO_CFG, 2);
+				return -1;
+			} else {
+				cc1120_single_write(CC1120_FIFO_CFG, 50);
 			}
-			rx_pos = 0;
+
+			// Switch to fixed length mode and set the remaining length if less than 255 bytes are left
+			if ((RX_LEN - rx_pos) < 255) {
+				cc1120_single_write(CC1120_PKT_LEN, RX_LEN % 256);
+				cc1120_single_write(CC1120_PKT_CFG0, PKT_CFG0_LENGTH_CONFIG_FIXED);
+			}
+
+			// The whole packet is received
+			if (rx_pos >= rx_len) {
+				cc1120_flushrx();
+				cc1120_single_write(CC1120_PKT_CFG0, PKT_CFG0_LENGTH_CONFIG_INFINITE);
+				cc1120_single_write(CC1120_FIFO_CFG, 2);
+				rx_pos = 0;
+
+				// Print the bytes for now
+				for (int i = 0;i < rx_len;i++) {
+					commands_printf("CC1120 RX Byte: %d", rx_buffer[i]);
+				}
+			}
 		}
 
 		if (rxbytes) {
