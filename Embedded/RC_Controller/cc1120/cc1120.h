@@ -39,7 +39,7 @@ int cc1120_on(void);
 int cc1120_off(void);
 bool cc1120_carrier_sense(void);
 void cc1120_ext_cb(EXTDriver *extp, expchannel_t channel);
-void cc1120_calibrate_manual(void);
+void cc1120_set_rx_callback(void(*cb)(uint8_t *data, int len, int rssi, int lqi, bool crc_ok));
 
 #ifndef BV
 #define BV(n)      (1 << (n))

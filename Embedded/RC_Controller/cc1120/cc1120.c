@@ -71,17 +71,22 @@ static const SPIConfig spicfg = {
 static THD_WORKING_AREA(isr_thread_wa, 2048);
 static THD_FUNCTION(isr_thread, arg);
 static thread_t *isr_tp;
+static THD_WORKING_AREA(check_thread_wa, 512);
+static THD_FUNCTION(check_thread, arg);
 
 // Private functions
 static int interrupt(void);
 static void spi_enable(void);
 static void spi_disable(void);
 static uint8_t spi_exchange(uint8_t x);
+static void calibrate_manual(void);
 
-// Private variables (infinite length test)
-static uint8_t rx_buffer[1100];
+// Private variables
+static uint8_t rx_buffer[CC1120_MAX_PAYLOAD + 10];
 static int rx_pos = 0;
-#define RX_LEN		50
+
+// Function pointers
+static void(*rx_callback)(uint8_t *data, int len, int rssi, int lqi, bool crc_ok) = 0;
 
 void cc1120_init(void) {
 	palSetPadMode(CC1120_PORT_CS, CC1120_PIN_CS, PAL_MODE_OUTPUT_PUSHPULL | PAL_STM32_OSPEED_HIGHEST);
@@ -150,11 +155,11 @@ void cc1120_init(void) {
 	cc1120_single_write(CC1120_IOCFG3, IOCFG_GPIO_CFG_CS);
 	cc1120_single_write(CC1120_IOCFG2, IOCFG_GPIO_CFG_HIGHZ);
 	cc1120_single_write(CC1120_IOCFG1, IOCFG_GPIO_CFG_HIGHZ); // This pin is shared with SPI
-//	cc1120_single_write(CC1120_IOCFG0, IOCFG_GPIO_CFG_PKT_SYNC_RXTX | IOCFG_GPIO_CFG_INVERT);
 	cc1120_single_write(CC1120_IOCFG0, IOCFG_GPIO_CFG_RXFIFO_THR_PKT);
 
 	// Packet configuration: Infinite length, use CRC1, no address, 32 sync bits (use default bits),
-	// 4 preamble bytes, preamble byte 0xAA, no data whitening, interrupt on 2 bytes in FIFO
+	// 4 preamble bytes, preamble byte 0xAA, no data whitening, interrupt on 2 bytes in FIFO,
+	// append status to RX fifo
 	cc1120_single_write(CC1120_PKT_CFG0, PKT_CFG0_LENGTH_CONFIG_INFINITE);
 	cc1120_single_write(CC1120_PKT_CFG1, PKT_CFG1_APPEND_STATUS | PKT_CFG1_ADDR_CHECK_OFF | PKT_CFG1_CRC_ON_1);
 	cc1120_single_write(CC1120_FIFO_CFG, 2);
@@ -184,13 +189,15 @@ void cc1120_init(void) {
 //	cc1120_single_write(CC1120_FIFO_CFG, 10); // Interrupt when there are 10 bytes in fifo
 
 	chThdCreateStatic(isr_thread_wa, sizeof(isr_thread_wa), NORMALPRIO + 2, isr_thread, NULL);
+	chThdCreateStatic(check_thread_wa, sizeof(check_thread_wa), NORMALPRIO, check_thread, NULL);
 	extChannelEnable(&EXTD1, 3);
 
 	// Manual calibration. Only needed for PARTVERSION 0x21
 //	cc1120_off();
 //	cc1120_strobe(CC1120_SIDLE);
-//	cc1120_calibrate_manual();
+//	calibrate_manual();
 
+	(void)calibrate_manual;
 	cc1120_on();
 }
 
@@ -329,15 +336,20 @@ void cc1120_write_txfifo(uint8_t *data, int len) {
 	uint8_t status;
 	int i;
 
+	cc1120_single_write(CC1120_PKT_LEN, (len + 2) % 256);
+
 	// The length is the first two bytes
 	uint8_t buf_len[2];
 	buf_len[0] = (len >> 8) & 0xFF;
 	buf_len[1] = len & 0xFF;
 	cc1120_burst_write(CC1120_TXFIFO, buf_len, 2);
 
+	// Write a few bytes and start transmitting before writing the rest to minimize delay.
 	i = MIN(len, 8);
 	cc1120_burst_write(CC1120_TXFIFO, data, i);
 	cc1120_strobe(CC1120_STX);
+
+	bool end_written = false;
 
 	if(len > i) {
 		spiAcquireBus(&CC1120_SPI);
@@ -363,27 +375,37 @@ void cc1120_write_txfifo(uint8_t *data, int len) {
 				break;
 			} else if((status & 0x0f) < 2) {
 				// see: https://e2e.ti.com/support/wireless_connectivity/proprietary_sub_1_ghz_simpliciti/f/156/t/330634
-				// These bits should tell how much space there is left in the FIFO, but there is an issue
-				// so they are reserved in the datasheet.
+				// These bits should tell how much space there is left in the FIFO, but there is a silicon issue that
+				// can corrupt them so they are reserved in the datasheet. We are using them anyway.
 
 				spi_disable();
 				spiReleaseBus(&CC1120_SPI);
 
-				int to = 100;
-				while (!(cc1120_single_read(CC1120_NUM_TXBYTES) < 60 ||
-						(cc1120_single_read(CC1120_NUM_TXBYTES) & 0x80) != 0) &&
-						to > 0) {
+				int to = 1000;
+				while ((cc1120_single_read(CC1120_NUM_TXBYTES) > 60) && to > 0) {
 					chThdSleepMilliseconds(1);
 					to--;
 				}
 
-				if(cc1120_single_read(CC1120_NUM_TXBYTES) & 0x80) {
+				if(cc1120_state() == CC1120_STATUS_STATE_TXFIFO_UNDERFLOW) {
 					// TX FIFO underflow.
 					cc1120_strobe(CC1120_SFTX);
 					cc1120_strobe(CC1120_SRX);
-					commands_printf("TX FIFO underflow");
+					commands_printf("TX FIFO underflow. %d %d", i, to);
 					break;
 				}
+
+				spiAcquireBus(&CC1120_SPI);
+				spi_enable();
+				spi_exchange(CC1120_TXFIFO | 0x40);
+			}
+
+			if (((len + 2) - i) < 100 && !end_written) {
+				spi_disable();
+				spiReleaseBus(&CC1120_SPI);
+
+				cc1120_single_write(CC1120_PKT_CFG0, PKT_CFG0_LENGTH_CONFIG_FIXED);
+				end_written = true;
 
 				spiAcquireBus(&CC1120_SPI);
 				spi_enable();
@@ -393,6 +415,8 @@ void cc1120_write_txfifo(uint8_t *data, int len) {
 
 		spi_disable();
 		spiReleaseBus(&CC1120_SPI);
+	} else {
+		cc1120_single_write(CC1120_PKT_CFG0, PKT_CFG0_LENGTH_CONFIG_FIXED);
 	}
 }
 
@@ -406,8 +430,6 @@ void cc1120_check_txfifo(void) {
 }
 
 void cc1120_flushrx(void) {
-	commands_printf("Flush RX");
-
 	if(cc1120_state() == CC1120_STATE_RXFIFO_OVERFLOW) {
 		cc1120_strobe(CC1120_SFRX);
 	}
@@ -416,6 +438,7 @@ void cc1120_flushrx(void) {
 
 	int to = 100;
 	while (!(cc1120_state() == CC1120_STATE_IDLE) && to > 0) {
+		chThdSleepMilliseconds(1);
 		to--;
 	}
 
@@ -446,6 +469,8 @@ int cc1120_transmit(uint8_t *data, int len) {
 		commands_printf("Didn't start tx (state %s)", cc1120_state_name());
 		cc1120_check_txfifo();
 		cc1120_flushrx();
+		cc1120_single_write(CC1120_PKT_CFG0, PKT_CFG0_LENGTH_CONFIG_INFINITE);
+		cc1120_single_write(CC1120_FIFO_CFG, 2);
 		return -2;
 	}
 
@@ -460,10 +485,14 @@ int cc1120_transmit(uint8_t *data, int len) {
 				cc1120_state_name(), cc1120_single_read(CC1120_NUM_TXBYTES), to);
 		cc1120_check_txfifo();
 		cc1120_flushrx();
+		cc1120_single_write(CC1120_PKT_CFG0, PKT_CFG0_LENGTH_CONFIG_INFINITE);
+		cc1120_single_write(CC1120_FIFO_CFG, 2);
 		return -3;
 	}
 
 	cc1120_check_txfifo();
+	cc1120_single_write(CC1120_PKT_CFG0, PKT_CFG0_LENGTH_CONFIG_INFINITE);
+	cc1120_single_write(CC1120_FIFO_CFG, 2);
 
 	return 1;
 }
@@ -503,6 +532,10 @@ void cc1120_ext_cb(EXTDriver *extp, expchannel_t channel) {
 	chSysUnlockFromISR();
 }
 
+void cc1120_set_rx_callback(void(*cb)(uint8_t *data, int len, int rssi, int lqi, bool crc_ok)) {
+	rx_callback = cb;
+}
+
 static THD_FUNCTION(isr_thread, arg) {
 	(void) arg;
 	chRegSetThreadName("CC1120 EXTI");
@@ -511,38 +544,40 @@ static THD_FUNCTION(isr_thread, arg) {
 
 	for (;;) {
 		chEvtWaitAny((eventmask_t) 1);
-		commands_printf("CC1120_IRQ");
-		interrupt();
+
+		while (palReadPad(CC1120_PORT_GPIO0, CC1120_PIN_GPIO0)) {
+			interrupt();
+		}
+	}
+}
+
+static THD_FUNCTION(check_thread, arg) {
+	(void) arg;
+	chRegSetThreadName("CC1120 Check");
+
+	for (;;) {
+		uint8_t s = cc1120_state();
+
+		if(s == CC1120_STATE_RXFIFO_OVERFLOW) {
+			cc1120_flushrx();
+			cc1120_single_write(CC1120_PKT_CFG0, PKT_CFG0_LENGTH_CONFIG_INFINITE);
+			cc1120_single_write(CC1120_FIFO_CFG, 2);
+			rx_pos = 0;
+		}
+
+		chThdSleepMilliseconds(1000);
 	}
 }
 
 // Private functions
 
 static int interrupt(void) {
-	uint8_t rxbytes, s;
-
-	s = cc1120_state();
-	if(s == CC1120_STATE_RXFIFO_OVERFLOW) {
-		cc1120_burst_read(CC1120_NUM_RXBYTES, &rxbytes, 1);
-		commands_printf("CC1120 ISR: RX overflow, flush");
-		commands_printf("CC1120 ISR: rxbytes 0x%02x", rxbytes);
-		cc1120_flushrx();
-		return 1;
-	}
-
-	if(s == CC1120_STATE_TXFIFO_UNDERFLOW) {
-		commands_printf("CC1120 ISR: TX underflow, flush");
-		cc1120_strobe(CC1120_SFTX);
-		cc1120_strobe(CC1120_SRX);
-		return 1;
-	}
+	uint8_t rxbytes;
 
 	do {
 		rxbytes = cc1120_single_read(CC1120_NUM_RXBYTES);
-		commands_printf("CC1120 ISR: rxbytes: %d", rxbytes);
 
 		if(rxbytes == 0) {
-			commands_printf("CC1120 ISR: FIFO empty");
 			return 1;
 		}
 
@@ -552,45 +587,46 @@ static int interrupt(void) {
 		int rx_len = 0;
 		if (rx_pos >= 2) {
 			rx_len = (uint16_t)rx_buffer[0] << 8 | (uint16_t)rx_buffer[1];
+			rx_len += 2;
 		}
 
 		if (rx_len > 0) {
-			if(rx_len > CC1120_MAX_PAYLOAD) {
-				commands_printf("CC1120 ISR: rx_len too large %d", rx_len);
+			if((rx_len - 2) > CC1120_MAX_PAYLOAD) {
 				cc1120_flushrx();
 				cc1120_single_write(CC1120_PKT_CFG0, PKT_CFG0_LENGTH_CONFIG_INFINITE);
 				cc1120_single_write(CC1120_FIFO_CFG, 2);
+				rx_pos = 0;
 				return -1;
 			} else {
-				cc1120_single_write(CC1120_FIFO_CFG, 50);
+				cc1120_single_write(CC1120_FIFO_CFG, 25);
 			}
 
 			// Switch to fixed length mode and set the remaining length if less than 255 bytes are left
-			if ((RX_LEN - rx_pos) < 255) {
-				cc1120_single_write(CC1120_PKT_LEN, RX_LEN % 256);
+			if ((rx_len - rx_pos) < 200) {
+				cc1120_single_write(CC1120_PKT_LEN, rx_len % 256);
 				cc1120_single_write(CC1120_PKT_CFG0, PKT_CFG0_LENGTH_CONFIG_FIXED);
 			}
 
 			// The whole packet is received
-			if (rx_pos >= rx_len) {
+			if (rx_pos >= (rx_len + 2)) { // +2 is for the status bytes
 				cc1120_flushrx();
 				cc1120_single_write(CC1120_PKT_CFG0, PKT_CFG0_LENGTH_CONFIG_INFINITE);
 				cc1120_single_write(CC1120_FIFO_CFG, 2);
 				rx_pos = 0;
 
-				// Print the bytes for now
-				for (int i = 0;i < rx_len;i++) {
-					commands_printf("CC1120 RX Byte: %d", rx_buffer[i]);
+				int rssi = (int8_t)rx_buffer[rx_len];
+				int lqi = rx_buffer[rx_len + 1] & 0x7F;
+				bool crc_ok = rx_buffer[rx_len + 1] & 0x80;
+				int len = rx_len - 2;
+
+				if (rx_callback) {
+					rx_callback(rx_buffer + 2, len, rssi, lqi, crc_ok);
 				}
 			}
 		}
 
-		if (rxbytes) {
-			commands_printf(" ");
-		}
-
 		rxbytes = cc1120_single_read(CC1120_NUM_RXBYTES);
-	} while(rxbytes > 1);
+	} while(rxbytes);
 
 	return 1;
 }
@@ -620,12 +656,12 @@ static uint8_t spi_exchange(uint8_t x) {
 }
 
 // See http://www.ti.com/lit/er/swrz039d/swrz039d.pdf
-#define VCDAC_START_OFFSET  2
-#define FS_VCO2_INDEX       0
-#define FS_VCO4_INDEX       1
-#define FS_CHP_INDEX        2
+#define VCDAC_START_OFFSET	2
+#define FS_VCO2_INDEX		0
+#define FS_VCO4_INDEX		1
+#define FS_CHP_INDEX		2
 
-void cc1120_calibrate_manual(void) {
+static void calibrate_manual(void) {
 	uint8_t original_fs_cal2;
 	uint8_t calResults_for_vcdac_start_high[3];
 	uint8_t calResults_for_vcdac_start_mid[3];
@@ -648,12 +684,9 @@ void cc1120_calibrate_manual(void) {
 	} while(marcstate != 0x41);
 
 	// 4) Read FS_VCO2, FS_VCO4 and FS_CHP register obtained with high VCDAC_START value
-	cc1120_burst_read(CC1120_FS_VCO2,
-			&calResults_for_vcdac_start_high[FS_VCO2_INDEX], 1);
-	cc1120_burst_read(CC1120_FS_VCO4,
-			&calResults_for_vcdac_start_high[FS_VCO4_INDEX], 1);
-	cc1120_burst_read(CC1120_FS_CHP, &calResults_for_vcdac_start_high[FS_CHP_INDEX],
-			1);
+	cc1120_burst_read(CC1120_FS_VCO2, &calResults_for_vcdac_start_high[FS_VCO2_INDEX], 1);
+	cc1120_burst_read(CC1120_FS_VCO4, &calResults_for_vcdac_start_high[FS_VCO4_INDEX], 1);
+	cc1120_burst_read(CC1120_FS_CHP, &calResults_for_vcdac_start_high[FS_CHP_INDEX], 1);
 
 	// 5) Set VCO cap-array to 0 (FS_VCO2 = 0x00)
 	writeByte = 0x00;
@@ -670,16 +703,12 @@ void cc1120_calibrate_manual(void) {
 	} while(marcstate != 0x41);
 
 	// 8) Read FS_VCO2, FS_VCO4 and FS_CHP register obtained with mid VCDAC_START value
-	cc1120_burst_read(CC1120_FS_VCO2, &calResults_for_vcdac_start_mid[FS_VCO2_INDEX],
-			1);
-	cc1120_burst_read(CC1120_FS_VCO4, &calResults_for_vcdac_start_mid[FS_VCO4_INDEX],
-			1);
-	cc1120_burst_read(CC1120_FS_CHP, &calResults_for_vcdac_start_mid[FS_CHP_INDEX],
-			1);
+	cc1120_burst_read(CC1120_FS_VCO2, &calResults_for_vcdac_start_mid[FS_VCO2_INDEX], 1);
+	cc1120_burst_read(CC1120_FS_VCO4, &calResults_for_vcdac_start_mid[FS_VCO4_INDEX], 1);
+	cc1120_burst_read(CC1120_FS_CHP, &calResults_for_vcdac_start_mid[FS_CHP_INDEX], 1);
 
 	// 9) Write back highest FS_VCO2 and corresponding FS_VCO and FS_CHP result
-	if(calResults_for_vcdac_start_high[FS_VCO2_INDEX]
-									   > calResults_for_vcdac_start_mid[FS_VCO2_INDEX]) {
+	if(calResults_for_vcdac_start_high[FS_VCO2_INDEX] > calResults_for_vcdac_start_mid[FS_VCO2_INDEX]) {
 		writeByte = calResults_for_vcdac_start_high[FS_VCO2_INDEX];
 		cc1120_burst_write(CC1120_FS_VCO2, &writeByte, 1);
 		writeByte = calResults_for_vcdac_start_high[FS_VCO4_INDEX];

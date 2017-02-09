@@ -22,6 +22,7 @@
 #include "utils.h"
 #include "bldc_interface.h"
 #include "radar.h"
+#include "cc1120.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -75,6 +76,8 @@ void terminal_process_string(char *str) {
 			ind += strlen(argv[i]) + 1;
 		}
 		bldc_interface_terminal_cmd(buffer);
+	} else if (strcmp(argv[0], "cc1120_state") == 0) {
+		commands_printf("%s\n", cc1120_state_name());
 	}
 
 #if RADAR_EN
@@ -115,6 +118,9 @@ void terminal_process_string(char *str) {
 
 		commands_printf("vesc");
 		commands_printf("  Forward command to VESC");
+
+		commands_printf("cc1120_state");
+		commands_printf("  Print the state of the CC1120");
 
 #if RADAR_EN
 		commands_printf("radar_sample");
