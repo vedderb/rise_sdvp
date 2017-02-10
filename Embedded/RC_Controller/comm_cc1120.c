@@ -25,14 +25,17 @@
 #include "packet.h"
 
 // Threads
-static THD_WORKING_AREA(tx_thread_wa, 512);
+static THD_WORKING_AREA(tx_thread_wa, 2048);
 static THD_FUNCTION(tx_thread, arg);
 
 // Private functions
 static void rx_func(uint8_t *data, int len, int rssi, int lqi, bool crc_ok);
 
 void comm_cc1120_init(void) {
-	cc1120_init();
+	if (!cc1120_init()) {
+		return;
+	}
+
 	cc1120_set_rx_callback(rx_func);
 
 	chThdCreateStatic(tx_thread_wa, sizeof(tx_thread_wa),
@@ -62,18 +65,20 @@ static THD_FUNCTION(tx_thread, arg) {
 	chRegSetThreadName("CC1120 TX");
 
 	for(;;) {
-//		const int to_tx = 1024;
-//		uint8_t d[to_tx];
-//		d[0] = 12;
-//		for (int i = 1;i < to_tx;i++) {
-//			d[i] = i;
-//		}
-//		commands_printf("Start TX");
-//		int res = cc1120_transmit(d, to_tx);
-//		commands_printf("Res: %d", res);
-//		commands_printf("State After: %s txfifo: %d\n", cc1120_state_name(),
-//				cc1120_single_read(CC1120_NUM_TXBYTES));
-//
+		if (main_id == 2) {
+			const int to_tx = 1024;
+			uint8_t d[to_tx];
+			d[0] = 12;
+			for (int i = 1;i < to_tx;i++) {
+				d[i] = i;
+			}
+			commands_printf("Start TX");
+			int res = cc1120_transmit(d, to_tx);
+			commands_printf("Res: %d", res);
+			commands_printf("State After: %s txfifo: %d\n", cc1120_state_name(),
+					cc1120_single_read(CC1120_NUM_TXBYTES));
+		}
+
 //		if (cc1120_carrier_sense()) {
 //			commands_printf("Carrier");
 //		}

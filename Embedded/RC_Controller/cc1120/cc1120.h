@@ -22,8 +22,57 @@
 #include "ch.h"
 #include "hal.h"
 
+/*
+ * Information
+ *
+ * https://e2e.ti.com/support/wireless_connectivity/low_power_rf_tools/f/155/t/180039
+ * https://e2e.ti.com/support/wireless_connectivity/proprietary_sub_1_ghz_simpliciti/f/156/t/470774
+ * https://e2e.ti.com/support/wireless_connectivity/low_power_rf_tools/f/155/t/305095
+ * http://community.silabs.com/t5/Proprietary-Knowledge-Base/Modulation-choice/ta-p/144373
+ * http://community.silabs.com/t5/Proprietary-Knowledge-Base/Calculation-of-the-occupied-bandwidth-for-digital-frequency/ta-p/139966
+ *
+ * Modulation index = (2 * f_dev) / symbol rate
+ * BWsignal = 2 * fm + 2 * fdev (= symbol rate + frequency separation)
+ *
+ * - fm is the highest modulating frequency. 2 * fm = symbol rate
+ * - fdev is the frequency deviation. 2 * fdev = frequency separation
+ * - this is most accurate for FSK, GFSK has slightly lower bandwidth
+ *
+ * Required RX filter bandwidth can be approximated as:
+ * BWchannel > BWsignal + 4* XTALppm* fRF
+ *
+ * * Halving RX filter BW increases sensitivity with 3dB
+ *   => Use as low RX filter BW as possible
+ *
+ * * GFSK has slightly lower BW than FSK and slightly lower sensitivity (-0.5dB)
+ *
+ * * For a fixed RX filter BW, sensitivity vs separation/datarate decreases with about 1.5-2.5 dB
+ *   per halving down to a certain limit where the loss increases very fast.
+ *
+ * * The lower RX filter BW limitation of the CC1120 is 8 kHz.
+ *
+ */
+
+// Settings
+// FORMAT: CC1120_SET_FREQ_BITRATE_MODULATION_RXBW_DEVIATION
+typedef enum {
+	CC1120_SET_434_0M_1_2K_2FSK_BW25K_4K = 0, // OK for 10 ppm crystal or better
+	CC1120_SET_434_0M_1_2K_2FSK_BW50K_20K, // Requires 10 ppm crystal or better. Should give best range for 10 PPM.
+	CC1120_SET_434_0M_1_2K_2FSK_BW10K_4K, // Requires 1 ppm frequency accuracy => TCXO. Twice the sensitivity of the best 1 PPM setting here.
+	CC1120_SET_434_0M_50K_2GFSK_BW100K_25K, // OK for 10 ppm
+	CC1120_SET_434_0M_100K_4FSK_BW100K_25K, // OK for 10 ppm
+	CC1120_SET_434_0M_4_8K_2FSK_BW40K_9K, // OK for 10 ppm (ok for 4.8)
+	CC1120_SET_434_0M_4_8K_2FSK_BW50K_14K, // OK for 10 ppm (best for 4.8)
+	CC1120_SET_434_0M_4_8K_2FSK_BW100K_39K, // OK for 10 ppm (not so good for 4.8)
+	CC1120_SET_434_0M_9_6K_2FSK_BW50K_12K, // OK for 10 ppm
+	CC1120_SET_452_0M_9_6K_2GFSK_BW33K_2_4K, // Trimtalk 450s ??
+	CC1120_SET_452_0M_9_6K_2GFSK_BW50K_2_4K // Trimtalk 450s ??
+} CC1120_SETTINGS;
+
 // Functions
-void cc1120_init(void);
+bool cc1120_init(void);
+bool cc1120_init_done(void);
+void cc1120_update_rf(CC1120_SETTINGS set);
 uint8_t cc1120_state(void);
 char *cc1120_state_name(void);
 unsigned char cc1120_strobe(uint8_t strobe);
@@ -37,13 +86,10 @@ void cc1120_flushrx(void);
 int cc1120_transmit(uint8_t *data, int len);
 int cc1120_on(void);
 int cc1120_off(void);
+int cc1120_set_idle(void);
 bool cc1120_carrier_sense(void);
 void cc1120_ext_cb(EXTDriver *extp, expchannel_t channel);
 void cc1120_set_rx_callback(void(*cb)(uint8_t *data, int len, int rssi, int lqi, bool crc_ok));
-
-#ifndef BV
-#define BV(n)      (1 << (n))
-#endif
 
 // Note: Many of the definitions below were taken from the contiki cc1120 driver.
 
@@ -314,8 +360,8 @@ void cc1120_set_rx_callback(void(*cb)(uint8_t *data, int len, int rssi, int lqi,
 // ================ Settings ================ //
 
 // IOCFG
-#define IOCFG_GPIO_CFG_INVERT				BV(6) // invert assert/de-assert
-#define IOCFG_GPIO_CFG_ATRAN				BV(7) // set pin as "Analog transfer" (==pin not used as GPIO)
+#define IOCFG_GPIO_CFG_INVERT				(1 << 6) // invert assert/de-assert
+#define IOCFG_GPIO_CFG_ATRAN				(1 << 7) // set pin as "Analog transfer" (==pin not used as GPIO)
 #define IOCFG_GPIO_CFG_RXFIFO_THR			0 // Asserted as long as length > THR
 #define IOCFG_GPIO_CFG_RXFIFO_THR_PKT		1 // Assert when THR is reached or EOP; de-assert on empty RxFIFO
 #define IOCFG_GPIO_CFG_PKT_SYNC_RXTX		6 // assert on SYNC recv/sent, de-assert on EOP
@@ -331,7 +377,7 @@ void cc1120_set_rx_callback(void(*cb)(uint8_t *data, int len, int rssi, int lqi,
 #define PKT_CFG0_LENGTH_CONFIG_INFINITE		(2 << 5) // Infinite length packets
 
 // PKT_CFG_1
-#define PKT_CFG1_WHITE_DATA					(1 << 7) // Data whitening enabled
+#define PKT_CFG1_WHITE_DATA					(1 << 6) // Data whitening enabled
 #define PKT_CFG1_BYTE_SWAP					(1 << 1) // Swap all bytes
 #define PKT_CFG1_APPEND_STATUS				(1 << 0) // Append status bytes to end of RX FIFO with RSSI and CRC check info
 #define PKT_CFG1_ADDR_CHECK_OFF				(0 << 4) // No address check
@@ -343,10 +389,10 @@ void cc1120_set_rx_callback(void(*cb)(uint8_t *data, int len, int rssi, int lqi,
 #define PKT_CFG1_CRC_ON_2					(2 << 2) // RX and TX CRC with CRC16(X16+X12+X5+1), Initialized to 0x0000
 
 // RFEND_CFG0
-#define RFEND_CFG0_TXOFF_MODE_RETURN_TO_RX	(BV(4) | BV(5)) // Return to RX after TX
+#define RFEND_CFG0_TXOFF_MODE_RETURN_TO_RX	(3 << 4) // Return to RX after TX
 
 // RFEND_CFG1
-#define RFEND_CFG1_RXOFF_MODE_RETURN_TO_RX	(BV(4) | BV(5)) // Return to RX after RX
+#define RFEND_CFG1_RXOFF_MODE_RETURN_TO_RX	(3 << 4) // Return to RX after RX
 
 // SYNC_CFG0
 #define SYNC_CFG0_NOSYNC					0

@@ -78,6 +78,20 @@ void terminal_process_string(char *str) {
 		bldc_interface_terminal_cmd(buffer);
 	} else if (strcmp(argv[0], "cc1120_state") == 0) {
 		commands_printf("%s\n", cc1120_state_name());
+	}  else if (strcmp(argv[0], "cc1120_update_rf") == 0) {
+		if (argc != 2) {
+			commands_printf("Invalid number of arguments\n");
+		} else {
+			int set = -1;
+			sscanf(argv[1], "%d", &set);
+
+			if (set < 0) {
+				commands_printf("Invalid argument\n");
+			} else {
+				cc1120_update_rf(set);
+				commands_printf("Done\n");
+			}
+		}
 	}
 
 #if RADAR_EN
@@ -122,6 +136,21 @@ void terminal_process_string(char *str) {
 		commands_printf("cc1120_state");
 		commands_printf("  Print the state of the CC1120");
 
+		commands_printf("cc1120_update_rf [rf_setting]");
+		commands_printf("  Set one of the cc1120 RF settings");
+		int ind = 0;
+		commands_printf("  %d: %s", ind++, "CC1120_SET_434_0M_1_2K_2FSK_BW25K_4K");
+		commands_printf("  %d: %s", ind++, "CC1120_SET_434_0M_1_2K_2FSK_BW50K_20K");
+		commands_printf("  %d: %s", ind++, "CC1120_SET_434_0M_1_2K_2FSK_BW10K_4K");
+		commands_printf("  %d: %s", ind++, "CC1120_SET_434_0M_50K_2GFSK_BW100K_25K");
+		commands_printf("  %d: %s", ind++, "CC1120_SET_434_0M_100K_4FSK_BW100K_25K");
+		commands_printf("  %d: %s", ind++, "CC1120_SET_434_0M_4_8K_2FSK_BW40K_9K");
+		commands_printf("  %d: %s", ind++, "CC1120_SET_434_0M_4_8K_2FSK_BW50K_14K");
+		commands_printf("  %d: %s", ind++, "CC1120_SET_434_0M_4_8K_2FSK_BW100K_39K");
+		commands_printf("  %d: %s", ind++, "CC1120_SET_434_0M_9_6K_2FSK_BW50K_12K");
+		commands_printf("  %d: %s", ind++, "CC1120_SET_452_0M_9_6K_2GFSK_BW33K_2_4K");
+		commands_printf("  %d: %s", ind++, "CC1120_SET_452_0M_9_6K_2GFSK_BW50K_2_4K");
+
 #if RADAR_EN
 		commands_printf("radar_sample");
 		commands_printf("  Start radar sampling");
@@ -130,7 +159,7 @@ void terminal_process_string(char *str) {
 		commands_printf("  Forward command to radar");
 #endif
 
-		commands_printf("");
+		commands_printf(" ");
 	} else {
 		commands_printf("Invalid command: %s\n"
 				"type help to list all available commands\n", argv[0]);
