@@ -38,7 +38,7 @@
 #define CC1120_PORT_GPIO3						GPIOA
 #define CC1120_PIN_GPIO3						1
 
-#define CC1120_MAX_PAYLOAD						1024
+#define CC1120_MAX_PAYLOAD						1100
 
 // Macros
 #define CC1120_READ_BIT							0x80
@@ -85,6 +85,8 @@ static void calibrate_manual(void);
 static uint8_t m_rx_buffer[CC1120_MAX_PAYLOAD + 10];
 static int m_rx_pos = 0;
 static bool m_init_done = false;
+static float m_last_freqoff_est;
+static mutex_t m_radio_mutex;
 
 // Function pointers
 static void(*rx_callback)(uint8_t *data, int len, int rssi, int lqi, bool crc_ok) = 0;
@@ -107,6 +109,8 @@ bool cc1120_init(void) {
 	chThdSleepMilliseconds(100);
 
 	spiStart(&CC1120_SPI, &spicfg);
+
+	chMtxObjectInit(&m_radio_mutex);
 
 	// Check the partnumber to confirm that the chip communicates.
 	if (cc1120_single_read(CC1120_PARTNUMBER) != 0x48) {
@@ -137,6 +141,7 @@ bool cc1120_init(void) {
 	cc1120_single_write(CC1120_RFEND_CFG1, 0x0F | RFEND_CFG1_RXOFF_MODE_RETURN_TO_RX); // Stay in RX after RX
 	cc1120_single_write(CC1120_AGC_CS_THR, -10); // Carrier Sense Threshold (lower = more sensitive)
 	cc1120_single_write(CC1120_PA_CFG2, 0x3F); // Full output power
+	cc1120_single_write(CC1120_FREQOFF_CFG, FREQOFF_CFG_FOC_EN | FREQOFF_CFG_FOC_CFG_10);
 
 	// Start threads
 	chThdCreateStatic(isr_thread_wa, sizeof(isr_thread_wa), NORMALPRIO + 2, isr_thread, NULL);
@@ -145,7 +150,7 @@ bool cc1120_init(void) {
 	// Enable interrupt
 	extChannelEnable(&EXTD1, 3);
 
-	cc1120_update_rf(CC1120_SET_434_0M_4_8K_2FSK_BW50K_14K);
+	cc1120_update_rf(CC1120_SET_434_0M_50K_2GFSK_BW100K_25K);
 
 	// Manual calibration. Only needed for PARTVERSION 0x21
 //	cc1120_set_idle();
@@ -179,8 +184,6 @@ void cc1120_update_rf(CC1120_SETTINGS set) {
 	cc1120_single_write(CC1120_SYMBOL_RATE0, 0x2A);   // Symbol Rate Configuration Mantissa [7:0]
 	cc1120_single_write(CC1120_FS_CFG, 0x02);         // Frequency Synthesizer Configuration
 	cc1120_single_write(CC1120_PA_CFG0, 0x7C);        // Power Amplifier Configuration Reg. 0
-	cc1120_single_write(CC1120_FREQOFF1, 0x00);       // Frequency Offset MSB
-	cc1120_single_write(CC1120_FREQOFF0, 0x00);       // Frequency Offset LSB
 	cc1120_single_write(CC1120_FREQ2, 0x00);          // Frequency Configuration [23:16]
 	cc1120_single_write(CC1120_FREQ1, 0x00);          // Frequency Configuration [15:8]
 	cc1120_single_write(CC1120_FREQ0, 0x00);          // Frequency Configuration [7:0]
@@ -718,7 +721,6 @@ void cc1120_write_txfifo(uint8_t *data, int len) {
 					// TX FIFO underflow.
 					cc1120_strobe(CC1120_SFTX);
 					cc1120_strobe(CC1120_SRX);
-					commands_printf("TX FIFO underflow. %d %d", i, to);
 					break;
 				}
 
@@ -752,7 +754,6 @@ void cc1120_check_txfifo(void) {
 		// Acknowledge TX FIFO underflow.
 		cc1120_strobe(CC1120_SFTX);
 		cc1120_strobe(CC1120_SRX);
-		commands_printf("TX FIFO underflow");
 	}
 }
 
@@ -778,30 +779,40 @@ int cc1120_transmit(uint8_t *data, int len) {
 		return -4;
 	}
 
+	// Wait for ongoing reception
+	int to = 2000;
+	while (m_rx_pos && to > 0) {
+		chThdSleepMilliseconds(1);
+		to--;
+	}
+
+	chMtxLock(&m_radio_mutex);
+
 	if(cc1120_state() == CC1120_STATE_RXFIFO_OVERFLOW) {
 		cc1120_flushrx();
 	}
 
 	if(len > CC1120_MAX_PAYLOAD) {
-		commands_printf("CC1120: too many tx bytes %d", len);
+		chMtxUnlock(&m_radio_mutex);
 		return -1;
 	}
 
 	cc1120_strobe(CC1120_SIDLE);
+	m_rx_pos = 0;
 	cc1120_write_txfifo(data, len);
 
-	int to = 1000;
+	to = 1000;
 	while (cc1120_state() != CC1120_STATE_TX && to > 0) {
 		chThdSleepMilliseconds(1);
 		to--;
 	}
 
 	if(cc1120_state() != CC1120_STATE_TX) {
-		commands_printf("Didn't start tx (state %s)", cc1120_state_name());
 		cc1120_check_txfifo();
 		cc1120_flushrx();
 		cc1120_single_write(CC1120_PKT_CFG0, PKT_CFG0_LENGTH_CONFIG_INFINITE);
 		cc1120_single_write(CC1120_FIFO_CFG, 2);
+		chMtxUnlock(&m_radio_mutex);
 		return -2;
 	}
 
@@ -812,12 +823,11 @@ int cc1120_transmit(uint8_t *data, int len) {
 	}
 
 	if(cc1120_state() == CC1120_STATE_TX) {
-		commands_printf("Didn't end tx (state %s, txbytes %d, to %d)",
-				cc1120_state_name(), cc1120_single_read(CC1120_NUM_TXBYTES), to);
 		cc1120_check_txfifo();
 		cc1120_flushrx();
 		cc1120_single_write(CC1120_PKT_CFG0, PKT_CFG0_LENGTH_CONFIG_INFINITE);
 		cc1120_single_write(CC1120_FIFO_CFG, 2);
+		chMtxUnlock(&m_radio_mutex);
 		return -3;
 	}
 
@@ -825,6 +835,7 @@ int cc1120_transmit(uint8_t *data, int len) {
 	cc1120_single_write(CC1120_PKT_CFG0, PKT_CFG0_LENGTH_CONFIG_INFINITE);
 	cc1120_single_write(CC1120_FIFO_CFG, 2);
 
+	chMtxUnlock(&m_radio_mutex);
 	return 1;
 }
 
@@ -869,6 +880,32 @@ bool cc1120_carrier_sense(void) {
 	return palReadPad(CC1120_PORT_GPIO3, CC1120_PIN_GPIO3);
 }
 
+float cc1120_read_freqoff_est(void) {
+	uint8_t fs_cfg = cc1120_single_read(CC1120_FS_CFG);
+	uint8_t fo_est_hi = cc1120_single_read(CC1120_FREQOFF_EST1);
+	uint8_t fo_est_lo = cc1120_single_read(CC1120_FREQOFF_EST0);
+
+	float fo_est = (float)((int16_t)((uint16_t)fo_est_hi << 8 | (uint16_t)fo_est_lo));
+	float lo_div = (float)((fs_cfg & 0x0F) * 2);
+
+	return fo_est * 32e6 / lo_div / 262144.0;
+}
+
+float cc1120_read_freqoff(void) {
+	uint8_t fs_cfg = cc1120_single_read(CC1120_FS_CFG);
+	uint8_t fo_est_hi = cc1120_single_read(CC1120_FREQOFF1);
+	uint8_t fo_est_lo = cc1120_single_read(CC1120_FREQOFF0);
+
+	float fo_est = (float)((int16_t)((uint16_t)fo_est_hi << 8 | (uint16_t)fo_est_lo));
+	float lo_div = (float)((fs_cfg & 0x0F) * 2);
+
+	return fo_est * 32e6 / lo_div / 262144.0;
+}
+
+float cc1120_get_last_freqoff_est(void) {
+	return m_last_freqoff_est;
+}
+
 void cc1120_ext_cb(EXTDriver *extp, expchannel_t channel) {
 	(void)extp;
 	(void)channel;
@@ -905,6 +942,8 @@ static THD_FUNCTION(check_thread, arg) {
 	// without increasing the stack.
 
 	for (;;) {
+		chMtxLock(&m_radio_mutex);
+
 		uint8_t s = cc1120_state();
 
 		if(s == CC1120_STATE_RXFIFO_OVERFLOW) {
@@ -913,6 +952,8 @@ static THD_FUNCTION(check_thread, arg) {
 			cc1120_single_write(CC1120_FIFO_CFG, 2);
 			m_rx_pos = 0;
 		}
+
+		chMtxUnlock(&m_radio_mutex);
 
 		chThdSleepMilliseconds(1000);
 	}
@@ -923,11 +964,22 @@ static THD_FUNCTION(check_thread, arg) {
 static int interrupt(void) {
 	uint8_t rxbytes;
 
+	chMtxLock(&m_radio_mutex);
+
 	do {
 		rxbytes = cc1120_single_read(CC1120_NUM_RXBYTES);
 
 		if(rxbytes == 0) {
+			chMtxUnlock(&m_radio_mutex);
 			return 1;
+		}
+
+		// Read frequency offset estimation
+		if (m_rx_pos == 0) {
+			m_last_freqoff_est = cc1120_read_freqoff_est();
+//			cc1120_strobe(CC1120_SAFC); // Apply frequency offset estimation
+			// TODO: find a good place to apply FOC. Doing it here seems to
+			// detune the filter so much on certain packets that reception stops working.
 		}
 
 		cc1120_burst_read(CC1120_RXFIFO, m_rx_buffer + m_rx_pos, rxbytes);
@@ -945,12 +997,13 @@ static int interrupt(void) {
 				cc1120_single_write(CC1120_PKT_CFG0, PKT_CFG0_LENGTH_CONFIG_INFINITE);
 				cc1120_single_write(CC1120_FIFO_CFG, 2);
 				m_rx_pos = 0;
+				chMtxUnlock(&m_radio_mutex);
 				return -1;
 			} else {
 				cc1120_single_write(CC1120_FIFO_CFG, 25);
 			}
 
-			// Switch to fixed length mode and set the remaining length if less than 255 bytes are left
+			// Switch to fixed length mode and set the remaining length if less than 200 bytes are left
 			if ((rx_len - m_rx_pos) < 200) {
 				cc1120_single_write(CC1120_PKT_LEN, rx_len % 256);
 				cc1120_single_write(CC1120_PKT_CFG0, PKT_CFG0_LENGTH_CONFIG_FIXED);
@@ -963,6 +1016,8 @@ static int interrupt(void) {
 				cc1120_single_write(CC1120_FIFO_CFG, 2);
 				m_rx_pos = 0;
 
+				chMtxUnlock(&m_radio_mutex);
+
 				int rssi = (int8_t)m_rx_buffer[rx_len];
 				int lqi = m_rx_buffer[rx_len + 1] & 0x7F;
 				bool crc_ok = m_rx_buffer[rx_len + 1] & 0x80;
@@ -971,12 +1026,15 @@ static int interrupt(void) {
 				if (rx_callback) {
 					rx_callback(m_rx_buffer + 2, len, rssi, lqi, crc_ok);
 				}
+
+				return 1;
 			}
 		}
 
 		rxbytes = cc1120_single_read(CC1120_NUM_RXBYTES);
 	} while(rxbytes);
 
+	chMtxUnlock(&m_radio_mutex);
 	return 1;
 }
 

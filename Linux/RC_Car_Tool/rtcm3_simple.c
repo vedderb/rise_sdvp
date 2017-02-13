@@ -13,7 +13,7 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-    */
+ */
 
 // This code is based on the implementation found in rtklib by T.TAKASU.
 // https://github.com/tomojitakasu/RTKLIB
@@ -24,39 +24,37 @@
 #include <stdio.h>
 
 // Defines
-#define ROUND(x)        ((int)floor((x)+0.5))
-#define ROUND_U(x)      ((unsigned int)floor((x)+0.5))
-#define CLIGHT          299792458.0         // speed of light (m/s)
-#define FREQ1           1.57542E9           // L1/E1  frequency (Hz)
-#define FREQ2           1.22760E9           // L2     frequency (Hz)
-#define FREQ5           1.17645E9           // L5/E5a frequency (Hz)
-#define FREQ6           1.27875E9           // E6/LEX frequency (Hz)
-#define FREQ7           1.20714E9           // E5b    frequency (Hz)
-#define FREQ8           1.191795E9          // E5a+b  frequency (Hz)
-#define FREQ1_GLO       1.60200E9           // GLONASS L1 base frequency (Hz)
-#define DFRQ1_GLO       0.56250E6           // GLONASS L1 bias frequency (Hz/n)
-#define FREQ2_GLO       1.24600E9           // GLONASS L2 base frequency (Hz)
-#define DFRQ2_GLO       0.43750E6           // GLONASS L2 bias frequency (Hz/n)
-#define SC2RAD          3.1415926535898     // semi-circle to radian (IS-GPS)
-#define PRUNIT_GPS      299792.458          // rtcm 3 unit of gps pseudorange (m)
-#define PRUNIT_GLO      599584.916          // rtcm ver.3 unit of glonass pseudorange (m)
-#define RTCM3PREAMB     0xD3                // rtcm ver.3 frame preamble
+#define ROUND(x)        ((int)floor((x)+D(0.5)))
+#define ROUND_U(x)      ((unsigned int)floor((x)+D(0.5)))
+#define CLIGHT          D(299792458.0)         // speed of light (m/s)
+#define FREQ1           D(1.57542E9)           // L1/E1  frequency (Hz)
+#define FREQ2           D(1.22760E9)           // L2     frequency (Hz)
+#define FREQ5           D(1.17645E9)           // L5/E5a frequency (Hz)
+#define FREQ6           D(1.27875E9)           // E6/LEX frequency (Hz)
+#define FREQ7           D(1.20714E9)           // E5b    frequency (Hz)
+#define FREQ8           D(1.191795E9)          // E5a+b  frequency (Hz)
+#define FREQ1_GLO       D(1.60200E9)           // GLONASS L1 base frequency (Hz)
+#define DFRQ1_GLO       D(0.56250E6)           // GLONASS L1 bias frequency (Hz/n)
+#define FREQ2_GLO       D(1.24600E9)           // GLONASS L2 base frequency (Hz)
+#define DFRQ2_GLO       D(0.43750E6)           // GLONASS L2 bias frequency (Hz/n)
+#define SC2RAD          D(3.1415926535898)     // semi-circle to radian (IS-GPS)
+#define PRUNIT_GPS      D(299792.458)          // rtcm 3 unit of gps pseudorange (m)
+#define PRUNIT_GLO      D(599584.916)          // rtcm ver.3 unit of glonass pseudorange (m)
 #define CODE_L1C        1                   // obs code: L1C/A,G1C/A,E1C (GPS,GLO,GAL,QZS,SBS)
 #define CODE_L1P        2                   // obs code: L1P,G1P    (GPS,GLO)
 #define CODE_L2C        14                  // obs code: L2C/A,G1C/A (GPS,GLO)
 #define CODE_L2P        19                  // obs code: L2P,G2P    (GPS,GLO)
 #define CODE_L2W        20                  // obs code: L2 Z-track (GPS)
-#define MAXOBS          64                  // max number of obs in an epoch
-#define FE_WGS84        (1.0/298.257223563) // earth flattening (WGS84)
-#define RE_WGS84        6378137.0           // earth semimajor axis (WGS84) (m)
+#define FE_WGS84        (D(1.0)/D(298.257223563)) // earth flattening (WGS84)
+#define RE_WGS84        D(6378137.0)           // earth semimajor axis (WGS84) (m)
 
-#define P2_5        0.03125                 // 2^-5
-#define P2_19       1.907348632812500E-06   // 2^-19
-#define P2_29       1.862645149230957E-09   // 2^-29
-#define P2_31       4.656612873077393E-10   // 2^-31
-#define P2_33       1.164153218269348E-10   // 2^-33
-#define P2_43       1.136868377216160E-13   // 2^-43
-#define P2_55       2.775557561562891E-17   // 2^-55
+#define P2_5        D(0.03125)                 // 2^-5
+#define P2_19       D(1.907348632812500E-06)   // 2^-19
+#define P2_29       D(1.862645149230957E-09)   // 2^-29
+#define P2_31       D(4.656612873077393E-10)   // 2^-31
+#define P2_33       D(1.164153218269348E-10)   // 2^-33
+#define P2_43       D(1.136868377216160E-13)   // 2^-43
+#define P2_55       D(2.775557561562891E-17)   // 2^-55
 
 #define SYS_NONE    0x00                    // navigation system: none
 #define SYS_GPS     0x01                    // navigation system: GPS
@@ -81,22 +79,18 @@ const double lam_carr[] = { // carrier wave length (m)
 // TODO: Fix this properly!!
 static int last_wn = 1874;
 
-static uint8_t last_buffer[2048];
-static int last_len = 0;
-static int last_type = 0;
-
 // Private functions
 static int encode_head(rtcm_obs_header_t *header, int nsat, int sys, uint8_t *buffer);
 static int decode_head1001(rtcm_obs_header_t *header, int *nsat, uint8_t *buffer);
 static int decode_head1009(rtcm_obs_header_t *header, int *nsat, uint8_t *buffer);
 static int encode_end(uint8_t *buffer, int nbit);
-static int decode_1002(uint8_t *buffer, int len);
-static int decode_1004(uint8_t *buffer, int len);
-static int decode_1005(uint8_t *buffer, int len);
-static int decode_1006(uint8_t *buffer, int len);
-static int decode_1010(uint8_t *buffer, int len);
-static int decode_1012(uint8_t *buffer, int len);
-static int decode_1019(uint8_t *buffer, int len);
+static int decode_1002(rtcm3_state *state);
+static int decode_1004(rtcm3_state *state);
+static int decode_1005(rtcm3_state *state);
+static int decode_1006(rtcm3_state *state);
+static int decode_1010(rtcm3_state *state);
+static int decode_1012(rtcm3_state *state);
+static int decode_1019(rtcm3_state *state);
 static double cp_pr(double cp, double pr_cyc);
 static void setbitu(uint8_t *buff, int pos, int len, unsigned int data);
 static void setbits(unsigned char *buff, int pos, int len, int data);
@@ -106,43 +100,46 @@ static int getbits(const unsigned char *buff, int pos, int len);
 static double getbits_38(const unsigned char *buff, int pos);
 static unsigned int crc24q(const unsigned char *buff, int len);
 
-// Callbacks
-static void(*rx_rtcm_obs)(rtcm_obs_header_t *header, rtcm_obs_t *obs, int obs_num) = 0;
-static void(*rx_rtcm_1005_1006)(rtcm_ref_sta_pos_t *pos) = 0;
-static void(*rx_rtcm_1019)(rtcm_ephemeris_t *eph) = 0;
-static void(*rx_rtcm)(uint8_t *data, int len, int type) = 0;
-
 /**
  * @brief rtcm3_set_rx_callback_obs_gps
  * Set a function to be called when a 1001 - 1004 packet is received.
  */
-void rtcm3_set_rx_callback_obs(void(*func)(rtcm_obs_header_t *header, rtcm_obs_t *obs, int obs_num)) {
-    rx_rtcm_obs = func;
+void rtcm3_set_rx_callback_obs(void(*func)(rtcm_obs_header_t *header, rtcm_obs_t *obs, int obs_num), rtcm3_state *state) {
+    state->rx_rtcm_obs = func;
 }
 
 /**
  * @brief rtcm3_set_rx_callback_1006
  * Set a function to be called when a 1006 packet is received.
  */
-void rtcm3_set_rx_callback_1005_1006(void(*func)(rtcm_ref_sta_pos_t *pos)) {
-    rx_rtcm_1005_1006 = func;
+void rtcm3_set_rx_callback_1005_1006(void(*func)(rtcm_ref_sta_pos_t *pos), rtcm3_state *state) {
+    state->rx_rtcm_1005_1006 = func;
 }
 
 /**
  * @brief rtcm3_set_rx_callback_1019
  * Set a function to be called when a 1019 packet is received.
  */
-void rtcm3_set_rx_callback_1019(void(*func)(rtcm_ephemeris_t *eph)) {
-    rx_rtcm_1019 = func;
+void rtcm3_set_rx_callback_1019(void(*func)(rtcm_ephemeris_t *eph), rtcm3_state *state) {
+    state->rx_rtcm_1019 = func;
 }
 
 /**
  * @brief rtcm3_set_rx_callback
  * Set a function to be called when any rtcm packet is received.
  */
-void rtcm3_set_rx_callback(void (*func)(uint8_t *, int, int))
-{
-    rx_rtcm = func;
+void rtcm3_set_rx_callback(void (*func)(uint8_t *, int, int), rtcm3_state *state) {
+    state->rx_rtcm = func;
+}
+
+/**
+ * Initialize the state of the rtcm3 decoder.
+ *
+ * @param state
+ * The state to initialize.
+ */
+void rtcm3_init_state(rtcm3_state *state) {
+    memset(state, 0, sizeof(rtcm3_state));
 }
 
 /**
@@ -152,85 +149,100 @@ void rtcm3_set_rx_callback(void (*func)(uint8_t *, int, int))
  * @param data
  * The byte to put into the state machine.
  *
+ * @param state
+ * Pointer to the state of the RTCM decoder.
+ *
  * @return
  * xxxx: Message xxxx decoded.
  * 0: Byte received.
  * -1: Wrong preamble
  * -2: Wrong crc
- * -3: Not supported
  */
-int rtcm3_input_data(uint8_t data) {
-    static uint8_t input_buffer[2048];
-    static int input_buffer_pointer = 0;
-    static int input_len;
-
+int rtcm3_input_data(uint8_t data, rtcm3_state *state) {
     // synchronize frame
-    if (input_buffer_pointer == 0) {
+    if (state->buffer_ptr == 0) {
         if (data != RTCM3PREAMB) {
             return -1;
         }
 
-        input_buffer[input_buffer_pointer++] = data;
+        state->buffer[state->buffer_ptr++] = data;
         return 0;
     }
 
-    input_buffer[input_buffer_pointer++]=data;
+    state->buffer[state->buffer_ptr++]=data;
 
-    if (input_buffer_pointer == 3) {
-        input_len = getbitu(input_buffer, 14, 10) + 3; // length without crc
+    if (state->buffer_ptr == 3) {
+        state->len = getbitu(state->buffer, 14, 10) + 3; // length without crc
     }
 
-    if (input_buffer_pointer < 3 || input_buffer_pointer < input_len + 3) {
+    if (state->buffer_ptr < 3 || state->buffer_ptr < state->len + 3) {
         return 0;
     }
 
-    input_buffer_pointer = 0;
+    state->buffer_ptr = 0;
 
     // check crc
-    if (crc24q(input_buffer, input_len) != getbitu(input_buffer, input_len * 8, 24)) {
+    if (crc24q(state->buffer, state->len) != getbitu(state->buffer, state->len * 8, 24)) {
         return -2;
     }
 
     // decode rtcm3 message
-    int type = getbitu(input_buffer, 24, 12);
+    int type = getbitu(state->buffer, 24, 12);
 
-    last_len = input_len + 3;
-    last_type = type;
-    memcpy(last_buffer, input_buffer, last_len);
-
-    if (rx_rtcm) {
+    if (state->rx_rtcm) {
         // Send buffer with CRC included
-        rx_rtcm(input_buffer, last_len, type);
+        state->rx_rtcm(state->buffer, state->len + 3, type);
     }
 
     switch (type) {
-    case 1002: return decode_1002(input_buffer, input_len);
-    case 1004: return decode_1004(input_buffer, input_len);
-    case 1005: return decode_1005(input_buffer, input_len);
-    case 1006: return decode_1006(input_buffer, input_len);
-    case 1010: return decode_1010(input_buffer, input_len);
-    case 1012: return decode_1012(input_buffer, input_len);
-    case 1019: return decode_1019(input_buffer, input_len);
-    default: return -3; // Not supported
-    }
-}
+    case 1002:
+        if (state->rx_rtcm_obs) {
+            decode_1002(state);
+        }
+        break;
 
-/**
- * @brief rtcm3_get_last_decoded_buffer
- * Get the RTCM buffer that was decoded the last time.
- *
- * @param data
- * A pointer that will be set to the buffer location. Does not
- * have to be pre-allocated.
- *
- * @param len
- * The length of the last buffer. 0 if nothing has been decoded yet.
- */
-void rtcm3_get_last_decoded_buffer(const uint8_t **data, int *len, int *type)
-{
-    *data = last_buffer;
-    *len = last_len;
-    *type = last_type;
+    case 1004:
+        if (state->rx_rtcm_obs) {
+            decode_1004(state);
+        }
+        break;
+
+    case 1005:
+        if (state->rx_rtcm_1005_1006) {
+            decode_1005(state);
+        }
+        break;
+
+    case 1006:
+        if (state->rx_rtcm_1005_1006) {
+            decode_1006(state);
+        }
+        break;
+
+    case 1010:
+        if (state->rx_rtcm_obs) {
+            decode_1010(state);
+        }
+        break;
+
+    case 1012:
+        if (state->rx_rtcm_obs) {
+            decode_1012(state);
+        }
+        break;
+
+    case 1019:
+        if (state->rx_rtcm_1019) {
+            decode_1019(state);
+        }
+        break;
+
+    default:
+        // Not supported
+        break;
+    }
+
+    return type;
 }
 
 /**
@@ -256,7 +268,7 @@ void rtcm3_get_last_decoded_buffer(const uint8_t **data, int *len, int *type)
  * 1 for success, <= 0 otherwise.
  */
 int rtcm3_encode_1002(rtcm_obs_header_t *header, rtcm_obs_t *obs,
-                       int obs_num, uint8_t *buffer, int *buffer_len) {
+                      int obs_num, uint8_t *buffer, int *buffer_len) {
     int i,j, prn;
     int code1,pr1,ppr1,lock1,amb,cnr1;
 
@@ -274,12 +286,12 @@ int rtcm3_encode_1002(rtcm_obs_header_t *header, rtcm_obs_t *obs,
 
         // L1 peudorange
         amb = (int)floor(obs[j].P[0] / PRUNIT_GPS);
-        pr1 = ROUND((obs[j].P[0] - amb * PRUNIT_GPS) / 0.02);
-        pr1c = pr1 * 0.02 + amb * PRUNIT_GPS;
+        pr1 = ROUND((obs[j].P[0] - amb * PRUNIT_GPS) / D(0.02));
+        pr1c = pr1 * D(0.02) + amb * PRUNIT_GPS;
 
         // L1 phaserange - L1 pseudorange
         ppr = cp_pr(obs[j].L[0], pr1c / lam1);
-        ppr1 = ROUND(ppr * lam1 / 0.0005);
+        ppr1 = ROUND(ppr * lam1 / D(0.0005));
 
         lock1 = obs[j].lock[0];
         cnr1 = obs[j].cn0[0] * 4;
@@ -347,12 +359,12 @@ int rtcm3_encode_1010(rtcm_obs_header_t *header, rtcm_obs_t *obs,
 
         // L1 peudorange
         amb = (int)floor(obs[j].P[0] / PRUNIT_GLO);
-        pr1 = ROUND((obs[j].P[0] - amb * PRUNIT_GLO) / 0.02);
-        pr1c = pr1 * 0.02 + amb * PRUNIT_GLO;
+        pr1 = ROUND((obs[j].P[0] - amb * PRUNIT_GLO) / D(0.02));
+        pr1c = pr1 * D(0.02) + amb * PRUNIT_GLO;
 
         // L1 phaserange - L1 pseudorange
         ppr = cp_pr(obs[j].L[0], pr1c / lam1);
-        ppr1 = ROUND(ppr * lam1 / 0.0005);
+        ppr1 = ROUND(ppr * lam1 / D(0.0005));
 
         lock1 = obs[j].lock[0];
         cnr1 = obs[j].cn0[0] * 4;
@@ -399,19 +411,19 @@ int rtcm3_encode_1010(rtcm_obs_header_t *header, rtcm_obs_t *obs,
  */
 int rtcm3_encode_1006(rtcm_ref_sta_pos_t pos, uint8_t *buffer, int *buffer_len) {
     int i=0;
-    int hgt = ROUND(pos.ant_height / 0.0001);
+    int hgt = ROUND(pos.ant_height / D(0.0001));
 
     // Convert llh to ecef
-    double sinp = sin(pos.lat * M_PI / 180.0);
-    double cosp = cos(pos.lat * M_PI / 180.0);
-    double sinl = sin(pos.lon * M_PI / 180.0);
-    double cosl = cos(pos.lon * M_PI / 180.0);
-    double e2 = FE_WGS84 * (2.0 - FE_WGS84);
-    double v = RE_WGS84 / sqrt(1.0 - e2 * sinp * sinp);
+    double sinp = sin(pos.lat * D_PI / D(180.0));
+    double cosp = cos(pos.lat * D_PI / D(180.0));
+    double sinl = sin(pos.lon * D_PI / D(180.0));
+    double cosl = cos(pos.lon * D_PI / D(180.0));
+    double e2 = FE_WGS84 * (D(2.0) - FE_WGS84);
+    double v = RE_WGS84 / sqrt(D(1.0) - e2 * sinp * sinp);
 
     double p0 = (v + pos.height) * cosp * cosl;
     double p1 = (v + pos.height) * cosp * sinl;
-    double p2 = (v * (1.0 - e2) + pos.height) * sinp;
+    double p2 = (v * (D(1.0) - e2) + pos.height) * sinp;
 
     // set preamble and reserved
     setbitu(buffer,i, 8, RTCM3PREAMB); i+= 8;
@@ -425,12 +437,12 @@ int rtcm3_encode_1006(rtcm_ref_sta_pos_t pos, uint8_t *buffer, int *buffer_len) 
     setbitu(buffer,i, 1,1          ); i+= 1; // glonass indicator
     setbitu(buffer,i, 1,0          ); i+= 1; // galileo indicator
     setbitu(buffer,i, 1,0          ); i+= 1; // ref station indicator
-    set38bits(buffer,i,p0 / 0.0001 ); i+=38; // antenna ref point ecef-x
+    set38bits(buffer,i,p0 / D(0.0001)); i+=38; // antenna ref point ecef-x
     setbitu(buffer,i, 1,1          ); i+= 1; // oscillator indicator
     setbitu(buffer,i, 1,0          ); i+= 1; // reserved
-    set38bits(buffer,i,p1 / 0.0001 ); i+=38; // antenna ref point ecef-y
+    set38bits(buffer,i,p1 / D(0.0001)); i+=38; // antenna ref point ecef-y
     setbitu(buffer,i, 2,0          ); i+= 2; // quarter cycle indicator
-    set38bits(buffer,i,p2 / 0.0001 ); i+=38; // antenna ref point ecef-z
+    set38bits(buffer,i,p2 / D(0.0001)); i+=38; // antenna ref point ecef-z
     setbitu(buffer,i,16,hgt        ); i+=16; // antenna height
 
     *buffer_len = encode_end(buffer, i);
@@ -466,8 +478,8 @@ int rtcm3_encode_1019(rtcm_ephemeris_t *eph, uint8_t *buffer, int *buffer_len) {
     setbitu(buffer, i, 10, 0); i+=10;
 
     week  = eph->toe_wn % 1024;
-    toe   = ROUND(eph->toe_tow / 16.0);
-    toc   = ROUND(eph->toc_tow / 16.0);
+    toe   = ROUND(eph->toe_tow / D(16.0));
+    toc   = ROUND(eph->toc_tow / D(16.0));
     sqrtA = ROUND_U(eph->sqrta / P2_19);
     e     = ROUND_U(eph->ecc / P2_33);
     i0    = ROUND(eph->inc  / P2_31 / SC2RAD);
@@ -518,7 +530,7 @@ int rtcm3_encode_1019(rtcm_ephemeris_t *eph, uint8_t *buffer, int *buffer_len) {
     setbits(buffer,i, 8,tgd      ); i+= 8;
     setbitu(buffer,i, 6,eph->svh ); i+= 6;
     setbitu(buffer,i, 1,eph->flag); i+= 1;
-    setbitu(buffer,i, 1,eph->fit>0.0?0:1); i+=1;
+    setbitu(buffer,i, 1,eph->fit>D(0.0)?D(0):D(1)); i+=1;
 
     *buffer_len = encode_end(buffer, i);
 
@@ -537,10 +549,10 @@ static int encode_head(rtcm_obs_header_t *header, int nsat, int sys, uint8_t *bu
     setbitu(buffer,i,12,header->staid); i+=12; // ref station id
 
     if (sys == SYS_GLO) {
-        epoch = ROUND(header->t_tod / 0.001);
+        epoch = ROUND(header->t_tod / D(0.001));
         setbitu(buffer,i,27,epoch); i += 27; // glonass epoch time
     } else {
-        epoch = ROUND(header->t_tow / 0.001);
+        epoch = ROUND(header->t_tow / D(0.001));
         setbitu(buffer, i, 30, epoch); i += 30; // gps epoch time
     }
 
@@ -606,110 +618,102 @@ static int encode_end(uint8_t *buffer, int nbit) {
     return len + 3;
 }
 
-static int decode_1002(uint8_t *buffer, int len) {
-    static rtcm_obs_header_t header;
-    static rtcm_obs_t obs[MAXOBS];
-
+static int decode_1002(rtcm3_state *state) {
     double pr1,cnr1,cp1;
     int i=24+64,j,nsat,prn,code,ppr1,lock1,amb;
 
-    decode_head1001(&header, &nsat, buffer);
+    decode_head1001(&state->header, &nsat, state->buffer);
 
-    for (j=0;j < nsat && i + 74 <= len * 8;j++) {
-        prn  =getbitu(buffer,i, 6); i+= 6;
-        code =getbitu(buffer,i, 1); i+= 1;
-        pr1  =getbitu(buffer,i,24); i+=24;
-        ppr1 =getbits(buffer,i,20); i+=20;
-        lock1=getbitu(buffer,i, 7); i+= 7;
-        amb  =getbitu(buffer,i, 8); i+= 8;
-        cnr1 =getbitu(buffer,i, 8); i+= 8;
+    for (j=0;j < nsat && i + 74 <= state->len * 8;j++) {
+        prn  =getbitu(state->buffer,i, 6); i+= 6;
+        code =getbitu(state->buffer,i, 1); i+= 1;
+        pr1  =getbitu(state->buffer,i,24); i+=24;
+        ppr1 =getbits(state->buffer,i,20); i+=20;
+        lock1=getbitu(state->buffer,i, 7); i+= 7;
+        amb  =getbitu(state->buffer,i, 8); i+= 8;
+        cnr1 =getbitu(state->buffer,i, 8); i+= 8;
 
-        pr1 = pr1 * 0.02 + amb * PRUNIT_GPS;
+        pr1 = pr1 * D(0.02) + amb * PRUNIT_GPS;
 
         if (ppr1 != (int)0xFFF80000) {
-            obs[j].P[0] = pr1;
-            cp1 = ppr1 * 0.0005 / lam_carr[0];
-            obs[j].L[0]=pr1/lam_carr[0] + cp1;
+            state->obs[j].P[0] = pr1;
+            cp1 = ppr1 * D(0.0005) / lam_carr[0];
+            state->obs[j].L[0]=pr1/lam_carr[0] + cp1;
         }
 
-        obs[j].prn = prn;
-        obs[j].lock[0] = lock1;
-        obs[j].cn0[0] = cnr1 * 0.25;
-        obs[j].code[0] = code ? CODE_L1P : CODE_L1C;
+        state->obs[j].prn = prn;
+        state->obs[j].lock[0] = lock1;
+        state->obs[j].cn0[0] = cnr1 * D(0.25);
+        state->obs[j].code[0] = code ? CODE_L1P : CODE_L1C;
     }
 
     // Call callback if it is set
-    if (rx_rtcm_obs) {
-        rx_rtcm_obs(&header, obs, nsat);
+    if (state->rx_rtcm_obs) {
+        state->rx_rtcm_obs(&state->header, state->obs, nsat);
     }
 
     return 1004;
 }
 
-static int decode_1004(uint8_t *buffer, int len) {
-    static rtcm_obs_header_t header;
-    static rtcm_obs_t obs[MAXOBS];
-
+static int decode_1004(rtcm3_state *state) {
     const int L2codes[]={CODE_L2C,CODE_L2P,CODE_L2W,CODE_L2W};
 
     double pr1, cnr1, cnr2, cp1, cp2;
     int i=24+64, j, nsat, prn, code1, code2, pr21, ppr1, ppr2;
     int lock1, lock2, amb;
 
-    decode_head1001(&header, &nsat, buffer);
+    decode_head1001(&state->header, &nsat, state->buffer);
 
-    for (j = 0;j < nsat && i + 125 <= len * 8;j++) {
-        prn   = getbitu(buffer,i, 6); i+= 6;
-        code1 = getbitu(buffer,i, 1); i+= 1;
-        pr1   = getbitu(buffer,i,24); i+=24;
-        ppr1  = getbits(buffer,i,20); i+=20;
-        lock1 = getbitu(buffer,i, 7); i+= 7;
-        amb   = getbitu(buffer,i, 8); i+= 8;
-        cnr1  = getbitu(buffer,i, 8); i+= 8;
-        code2 = getbitu(buffer,i, 2); i+= 2;
-        pr21  = getbits(buffer,i,14); i+=14;
-        ppr2  = getbits(buffer,i,20); i+=20;
-        lock2 = getbitu(buffer,i, 7); i+= 7;
-        cnr2  = getbitu(buffer,i, 8); i+= 8;
+    for (j = 0;j < nsat && i + 125 <= state->len * 8;j++) {
+        prn   = getbitu(state->buffer,i, 6); i+= 6;
+        code1 = getbitu(state->buffer,i, 1); i+= 1;
+        pr1   = getbitu(state->buffer,i,24); i+=24;
+        ppr1  = getbits(state->buffer,i,20); i+=20;
+        lock1 = getbitu(state->buffer,i, 7); i+= 7;
+        amb   = getbitu(state->buffer,i, 8); i+= 8;
+        cnr1  = getbitu(state->buffer,i, 8); i+= 8;
+        code2 = getbitu(state->buffer,i, 2); i+= 2;
+        pr21  = getbits(state->buffer,i,14); i+=14;
+        ppr2  = getbits(state->buffer,i,20); i+=20;
+        lock2 = getbitu(state->buffer,i, 7); i+= 7;
+        cnr2  = getbitu(state->buffer,i, 8); i+= 8;
 
-        pr1 = pr1 * 0.02 + amb * PRUNIT_GPS;
+        pr1 = pr1 * D(0.02) + amb * PRUNIT_GPS;
 
         if (ppr1!=(int)0xFFF80000) {
-            obs[j].P[0] = pr1;
-            cp1 = ppr1 * 0.0005 / lam_carr[0];
-            obs[j].L[0] = pr1 / lam_carr[0] + cp1;
+            state->obs[j].P[0] = pr1;
+            cp1 = ppr1 * D(0.0005) / lam_carr[0];
+            state->obs[j].L[0] = pr1 / lam_carr[0] + cp1;
         }
 
-        obs[j].prn = prn;
-        obs[j].lock[0] = lock1;
-        obs[j].cn0[0] = cnr1 * 0.25;
-        obs[j].code[0] = code1 ? CODE_L1P : CODE_L1C;
+        state->obs[j].prn = prn;
+        state->obs[j].lock[0] = lock1;
+        state->obs[j].cn0[0] = cnr1 * D(0.25);
+        state->obs[j].code[0] = code1 ? CODE_L1P : CODE_L1C;
 
         if (pr21 != (int)0xFFFFE000) {
-            obs[j].P[1] = pr1 + pr21 * 0.02;
+            state->obs[j].P[1] = pr1 + pr21 * D(0.02);
         }
 
         if (ppr2!=(int)0xFFF80000) {
-            cp2 = ppr2 * 0.0005 / lam_carr[1];
-            obs[j].L[1] = pr1 / lam_carr[1] + cp2;
+            cp2 = ppr2 * D(0.0005) / lam_carr[1];
+            state->obs[j].L[1] = pr1 / lam_carr[1] + cp2;
         }
 
-        obs[j].lock[1] = lock2;
-        obs[j].cn0[1] = cnr2 * 0.25;
-        obs[j].code[1] = L2codes[code2];
+        state->obs[j].lock[1] = lock2;
+        state->obs[j].cn0[1] = cnr2 * D(0.25);
+        state->obs[j].code[1] = L2codes[code2];
     }
 
     // Call callback if it is set
-    if (rx_rtcm_obs) {
-        rx_rtcm_obs(&header, obs, nsat);
+    if (state->rx_rtcm_obs) {
+        state->rx_rtcm_obs(&state->header, state->obs, nsat);
     }
 
     return 1004;
 }
 
-static int decode_1005(uint8_t *buffer, int len) {
-    static rtcm_ref_sta_pos_t pos;
-
+static int decode_1005(rtcm3_state *state) {
     double p0 = 0.0;
     double p1 = 0.0;
     double p2 = 0.0;
@@ -717,51 +721,49 @@ static int decode_1005(uint8_t *buffer, int len) {
     int staid;
     int itrf;
 
-    if (i + 140 <= len * 8) {
-        staid = getbitu(buffer, i, 12); i+=12;
-        itrf  = getbitu(buffer, i, 6);  i+= 6+4;
-        p0    = getbits_38(buffer, i);  i+=38+2;
-        p1    = getbits_38(buffer, i);  i+=38+2;
-        p2    = getbits_38(buffer, i);
+    if (i + 140 <= state->len * 8) {
+        staid = getbitu(state->buffer, i, 12); i+=12;
+        itrf  = getbitu(state->buffer, i, 6);  i+= 6+4;
+        p0    = getbits_38(state->buffer, i);  i+=38+2;
+        p1    = getbits_38(state->buffer, i);  i+=38+2;
+        p2    = getbits_38(state->buffer, i);
 
-        p0 *= 0.0001;
-        p1 *= 0.0001;
-        p2 *= 0.0001;
+        p0 *= D(0.0001);
+        p1 *= D(0.0001);
+        p2 *= D(0.0001);
 
         (void)itrf;
-        pos.ant_height = 0.0;
-        pos.staid = staid;
+        state->pos.ant_height = 0.0;
+        state->pos.staid = staid;
 
         // Convert ecef to llh
-        double e2 = FE_WGS84 * (2.0 - FE_WGS84);
+        double e2 = FE_WGS84 * (D(2.0) - FE_WGS84);
         double r2 = p0 * p0 + p1 * p1;
         double z = p2;
         double zk = 0.0;
         double sinp = 0.0;
         double v = RE_WGS84;
 
-        while (fabs(z - zk) >= 1E-4) {
+        while (fabs(z - zk) >= D(1E-4)) {
             zk = z;
             sinp = z / sqrt(r2 + z * z);
-            v = RE_WGS84 / sqrt(1.0 - e2 * sinp * sinp);
+            v = RE_WGS84 / sqrt(D(1.0) - e2 * sinp * sinp);
             z = p2 + v * e2 * sinp;
         }
 
-        pos.lat = (r2 > 1E-12 ? atan(z / sqrt(r2)) : (p2 > 0.0 ? M_PI / 2.0 : -M_PI / 2.0)) * 180.0 / M_PI;
-        pos.lon = (r2 > 1E-12 ? atan2(p1, p0) : 0.0) * 180.0 / M_PI;
-        pos.height = sqrt(r2 + z * z) - v;
+        state->pos.lat = (r2 > D(1E-12) ? atan(z / sqrt(r2)) : (p2 > D(0.0) ? D_PI / D(2.0) : -D_PI / D(2.0))) * D(180.0) / D_PI;
+        state->pos.lon = (r2 > D(1E-12) ? atan2(p1, p0) : D(0.0)) * D(180.0) / D_PI;
+        state->pos.height = sqrt(r2 + z * z) - v;
 
-        if (rx_rtcm_1005_1006) {
-            rx_rtcm_1005_1006(&pos);
+        if (state->rx_rtcm_1005_1006) {
+            state->rx_rtcm_1005_1006(&state->pos);
         }
     }
 
     return 1005;
 }
 
-static int decode_1006(uint8_t *buffer, int len) {
-    static rtcm_ref_sta_pos_t pos;
-
+static int decode_1006(rtcm3_state *state) {
     double p0 = 0.0;
     double p1 = 0.0;
     double p2 = 0.0;
@@ -770,201 +772,193 @@ static int decode_1006(uint8_t *buffer, int len) {
     int staid;
     int itrf;
 
-    if (i + 156 <= len * 8) {
-        staid = getbitu(buffer, i, 12); i+=12;
-        itrf  = getbitu(buffer, i, 6);  i+= 6+4;
-        p0    = getbits_38(buffer, i);  i+=38+2;
-        p1    = getbits_38(buffer, i);  i+=38+2;
-        p2    = getbits_38(buffer, i);  i+=38;
-        anth  = getbitu(buffer, i, 16);
+    if (i + 156 <= state->len * 8) {
+        staid = getbitu(state->buffer, i, 12); i+=12;
+        itrf  = getbitu(state->buffer, i, 6);  i+= 6+4;
+        p0    = getbits_38(state->buffer, i);  i+=38+2;
+        p1    = getbits_38(state->buffer, i);  i+=38+2;
+        p2    = getbits_38(state->buffer, i);  i+=38;
+        anth  = getbitu(state->buffer, i, 16);
 
-        p0 *= 0.0001;
-        p1 *= 0.0001;
-        p2 *= 0.0001;
+        p0 *= D(0.0001);
+        p1 *= D(0.0001);
+        p2 *= D(0.0001);
 
         (void)itrf;
-        pos.ant_height = anth * 0.0001;
-        pos.staid = staid;
+        state->pos.ant_height = anth * D(0.0001);
+        state->pos.staid = staid;
 
         // Convert ecef to llh
-        double e2 = FE_WGS84 * (2.0 - FE_WGS84);
+        double e2 = FE_WGS84 * (D(2.0) - FE_WGS84);
         double r2 = p0 * p0 + p1 * p1;
         double z = p2;
         double zk = 0.0;
         double sinp = 0.0;
         double v = RE_WGS84;
 
-        while (fabs(z - zk) >= 1E-4) {
+        while (fabs(z - zk) >= D(1E-4)) {
             zk = z;
             sinp = z / sqrt(r2 + z * z);
-            v = RE_WGS84 / sqrt(1.0 - e2 * sinp * sinp);
+            v = RE_WGS84 / sqrt(D(1.0) - e2 * sinp * sinp);
             z = p2 + v * e2 * sinp;
         }
 
-        pos.lat = (r2 > 1E-12 ? atan(z / sqrt(r2)) : (p2 > 0.0 ? M_PI / 2.0 : -M_PI / 2.0)) * 180.0 / M_PI;
-        pos.lon = (r2 > 1E-12 ? atan2(p1, p0) : 0.0) * 180.0 / M_PI;
-        pos.height = sqrt(r2 + z * z) - v;
+        state->pos.lat = (r2 > D(1E-12) ? atan(z / sqrt(r2)) : (p2 > D(0.0) ? D_PI / D(2.0) : -D_PI / D(2.0))) * D(180.0) / D_PI;
+        state->pos.lon = (r2 > D(1E-12) ? atan2(p1, p0) : D(0.0)) * D(180.0) / D_PI;
+        state->pos.height = sqrt(r2 + z * z) - v;
 
-        if (rx_rtcm_1005_1006) {
-            rx_rtcm_1005_1006(&pos);
+        if (state->rx_rtcm_1005_1006) {
+            state->rx_rtcm_1005_1006(&state->pos);
         }
     }
 
     return 1006;
 }
 
-static int decode_1010(uint8_t *buffer, int len) {
-    static rtcm_obs_header_t header;
-    static rtcm_obs_t obs[MAXOBS];
-
+static int decode_1010(rtcm3_state *state) {
     double pr1,cnr1,cp1,lam1;
     int i=24+64,j,nsat,prn,code,freq,ppr1,lock1,amb;
 
-    decode_head1009(&header, &nsat, buffer);
+    decode_head1009(&state->header, &nsat, state->buffer);
 
-    for (j=0;j < nsat && i + 79 <= len * 8;j++) {
-        prn  =getbitu(buffer,i, 6); i+= 6;
-        code =getbitu(buffer,i, 1); i+= 1;
-        freq =getbitu(buffer,i, 5); i+= 5;
-        pr1  =getbitu(buffer,i,25); i+=25;
-        ppr1 =getbits(buffer,i,20); i+=20;
-        lock1=getbitu(buffer,i, 7); i+= 7;
-        amb  =getbitu(buffer,i, 7); i+= 7;
-        cnr1 =getbitu(buffer,i, 8); i+= 8;
+    for (j=0;j < nsat && i + 79 <= state->len * 8;j++) {
+        prn  =getbitu(state->buffer,i, 6); i+= 6;
+        code =getbitu(state->buffer,i, 1); i+= 1;
+        freq =getbitu(state->buffer,i, 5); i+= 5;
+        pr1  =getbitu(state->buffer,i,25); i+=25;
+        ppr1 =getbits(state->buffer,i,20); i+=20;
+        lock1=getbitu(state->buffer,i, 7); i+= 7;
+        amb  =getbitu(state->buffer,i, 7); i+= 7;
+        cnr1 =getbitu(state->buffer,i, 8); i+= 8;
 
-        pr1 = pr1 * 0.02 + amb * PRUNIT_GLO;
+        pr1 = pr1 * D(0.02) + amb * PRUNIT_GLO;
 
         if (ppr1 != (int)0xFFF80000) {
-            obs[j].P[0] = pr1;
+            state->obs[j].P[0] = pr1;
             lam1 = CLIGHT / (FREQ1_GLO + DFRQ1_GLO * (freq - 7));
-            cp1 = ppr1 * 0.0005 / lam1;
-            obs[j].L[0] = pr1 / lam1 + cp1;
+            cp1 = ppr1 * D(0.0005) / lam1;
+            state->obs[j].L[0] = pr1 / lam1 + cp1;
         }
 
-        obs[j].prn = prn;
-        obs[j].lock[0] = lock1;
-        obs[j].cn0[0] = cnr1 * 0.25;
-        obs[j].code[0] = code ? CODE_L1P : CODE_L1C;
-        obs[j].freq = freq;
+        state->obs[j].prn = prn;
+        state->obs[j].lock[0] = lock1;
+        state->obs[j].cn0[0] = cnr1 * D(0.25);
+        state->obs[j].code[0] = code ? CODE_L1P : CODE_L1C;
+        state->obs[j].freq = freq;
     }
 
     // Call callback if it is set
-    if (rx_rtcm_obs) {
-        rx_rtcm_obs(&header, obs, nsat);
+    if (state->rx_rtcm_obs) {
+        state->rx_rtcm_obs(&state->header, state->obs, nsat);
     }
 
     return 1010;
 }
 
-static int decode_1012(uint8_t *buffer, int len) {
-    static rtcm_obs_header_t header;
-    static rtcm_obs_t obs[MAXOBS];
-
+static int decode_1012(rtcm3_state *state) {
     double pr1, cnr1, cnr2, cp1, cp2, lam1, lam2;
     int i=24+64, j, nsat, prn, freq, code1, code2, pr21, ppr1, ppr2;
     int lock1, lock2, amb;
 
-    decode_head1009(&header, &nsat, buffer);
+    decode_head1009(&state->header, &nsat, state->buffer);
 
-    for (j = 0;j < nsat && i + 130 <= len * 8;j++) {
-        prn   = getbitu(buffer,i, 6); i+= 6;
-        code1 = getbitu(buffer,i, 1); i+= 1;
-        freq  = getbitu(buffer,i, 5); i+= 5;
-        pr1   = getbitu(buffer,i,25); i+=25;
-        ppr1  = getbits(buffer,i,20); i+=20;
-        lock1 = getbitu(buffer,i, 7); i+= 7;
-        amb   = getbitu(buffer,i, 7); i+= 7;
-        cnr1  = getbitu(buffer,i, 8); i+= 8;
-        code2 = getbitu(buffer,i, 2); i+= 2;
-        pr21  = getbits(buffer,i,14); i+=14;
-        ppr2  = getbits(buffer,i,20); i+=20;
-        lock2 = getbitu(buffer,i, 7); i+= 7;
-        cnr2  = getbitu(buffer,i, 8); i+= 8;
+    for (j = 0;j < nsat && i + 130 <= state->len * 8;j++) {
+        prn   = getbitu(state->buffer,i, 6); i+= 6;
+        code1 = getbitu(state->buffer,i, 1); i+= 1;
+        freq  = getbitu(state->buffer,i, 5); i+= 5;
+        pr1   = getbitu(state->buffer,i,25); i+=25;
+        ppr1  = getbits(state->buffer,i,20); i+=20;
+        lock1 = getbitu(state->buffer,i, 7); i+= 7;
+        amb   = getbitu(state->buffer,i, 7); i+= 7;
+        cnr1  = getbitu(state->buffer,i, 8); i+= 8;
+        code2 = getbitu(state->buffer,i, 2); i+= 2;
+        pr21  = getbits(state->buffer,i,14); i+=14;
+        ppr2  = getbits(state->buffer,i,20); i+=20;
+        lock2 = getbitu(state->buffer,i, 7); i+= 7;
+        cnr2  = getbitu(state->buffer,i, 8); i+= 8;
 
-        pr1 = pr1 * 0.02 + amb * PRUNIT_GPS;
+        pr1 = pr1 * D(0.02) + amb * PRUNIT_GPS;
 
         if (ppr1 != (int)0xFFF80000) {
-            obs[j].P[0] = pr1;
+            state->obs[j].P[0] = pr1;
             lam1 = CLIGHT / (FREQ1_GLO + DFRQ1_GLO * (freq - 7));
-            cp1 = ppr1 * 0.0005 / lam1;
-            obs[j].L[0] = pr1 / lam1 + cp1;
+            cp1 = ppr1 * D(0.0005) / lam1;
+            state->obs[j].L[0] = pr1 / lam1 + cp1;
         }
 
-        obs[j].prn = prn;
-        obs[j].lock[0] = lock1;
-        obs[j].cn0[0] = cnr1 * 0.25;
-        obs[j].code[0] = code1 ? CODE_L1P : CODE_L1C;
+        state->obs[j].prn = prn;
+        state->obs[j].lock[0] = lock1;
+        state->obs[j].cn0[0] = cnr1 * D(0.25);
+        state->obs[j].code[0] = code1 ? CODE_L1P : CODE_L1C;
 
         if (pr21 != (int)0xFFFFE000) {
-            obs[j].P[1] = pr1 + pr21 * 0.02;
+            state->obs[j].P[1] = pr1 + pr21 * D(0.02);
         }
 
         if (ppr2 != (int)0xFFF80000) {
             lam2 = CLIGHT / (FREQ2_GLO + DFRQ2_GLO * (freq - 7));
-            cp2 = ppr2 * 0.0005 / lam2;
-            obs[j].L[1] = pr1 / lam2 + cp2;
+            cp2 = ppr2 * D(0.0005) / lam2;
+            state->obs[j].L[1] = pr1 / lam2 + cp2;
         }
 
-        obs[j].lock[1] = lock2;
-        obs[j].cn0[1] = cnr2 * 0.25;
-        obs[j].code[1] = code2 ? CODE_L2P : CODE_L2C;
-        obs[j].freq = freq;
+        state->obs[j].lock[1] = lock2;
+        state->obs[j].cn0[1] = cnr2 * D(0.25);
+        state->obs[j].code[1] = code2 ? CODE_L2P : CODE_L2C;
+        state->obs[j].freq = freq;
     }
 
     // Call callback if it is set
-    if (rx_rtcm_obs) {
-        rx_rtcm_obs(&header, obs, nsat);
+    if (state->rx_rtcm_obs) {
+        state->rx_rtcm_obs(&state->header, state->obs, nsat);
     }
 
     return 1012;
 }
 
-static int decode_1019(uint8_t *buffer, int len) {
-    static rtcm_ephemeris_t eph;
-
+static int decode_1019(rtcm3_state *state) {
     int i = 24 + 12;
     int week;
 
-    if (i + 476 <= len * 8) {
-        eph.prn   =getbitu(buffer, i, 6);              i+= 6;
-        week      =getbitu(buffer, i,10);              i+=10;
-        eph.sva   =getbitu(buffer, i, 4);              i+= 4;
-        eph.code  =getbitu(buffer, i, 2);              i+= 2;
-        eph.inc_dot=getbits(buffer, i,14)*P2_43*SC2RAD;i+=14;
-        eph.iode  =getbitu(buffer, i, 8);              i+= 8;
-        eph.toc_tow=getbitu(buffer, i,16)*16.0;        i+=16;
-        eph.af2   =getbits(buffer, i, 8)*P2_55;        i+= 8;
-        eph.af1   =getbits(buffer, i,16)*P2_43;        i+=16;
-        eph.af0   =getbits(buffer, i,22)*P2_31;        i+=22;
-        eph.iodc  =getbitu(buffer, i,10);              i+=10;
-        eph.c_rs  =getbits(buffer, i,16)*P2_5;         i+=16;
-        eph.dn    =getbits(buffer, i,16)*P2_43*SC2RAD; i+=16;
-        eph.m0    =getbits(buffer, i,32)*P2_31*SC2RAD; i+=32;
-        eph.c_uc  =getbits(buffer, i,16)*P2_29;        i+=16;
-        eph.ecc   =getbitu(buffer, i,32)*P2_33;        i+=32;
-        eph.c_us  =getbits(buffer, i,16)*P2_29;        i+=16;
-        eph.sqrta =getbitu(buffer, i,32)*P2_19;        i+=32;
-        eph.toe_tow=getbitu(buffer, i,16)*16.0;        i+=16;
-        eph.c_ic  =getbits(buffer, i,16)*P2_29;        i+=16;
-        eph.omega0=getbits(buffer, i,32)*P2_31*SC2RAD; i+=32;
-        eph.c_is  =getbits(buffer, i,16)*P2_29;        i+=16;
-        eph.inc   =getbits(buffer, i,32)*P2_31*SC2RAD; i+=32;
-        eph.c_rc  =getbits(buffer, i,16)*P2_5;         i+=16;
-        eph.w     =getbits(buffer, i,32)*P2_31*SC2RAD; i+=32;
-        eph.omegadot=getbits(buffer, i,24)*P2_43*SC2RAD;i+=24;
-        eph.tgd   =getbits(buffer, i, 8)*P2_31;        i+= 8;
-        eph.svh   =getbitu(buffer, i, 6);              i+= 6;
-        eph.flag  =getbitu(buffer, i, 1);              i+= 1;
-        eph.fit   =getbitu(buffer, i, 1) ? 0.0 : 4.0; // 0:4hr,1:>4hr
+    if (i + 476 <= state->len * 8) {
+        state->eph.prn   =getbitu(state->buffer, i, 6);              i+= 6;
+        week      =getbitu(state->buffer, i,10);              i+=10;
+        state->eph.sva   =getbitu(state->buffer, i, 4);              i+= 4;
+        state->eph.code  =getbitu(state->buffer, i, 2);              i+= 2;
+        state->eph.inc_dot=getbits(state->buffer, i,14)*P2_43*SC2RAD;i+=14;
+        state->eph.iode  =getbitu(state->buffer, i, 8);              i+= 8;
+        state->eph.toc_tow=getbitu(state->buffer, i,16)*16.0;        i+=16;
+        state->eph.af2   =getbits(state->buffer, i, 8)*P2_55;        i+= 8;
+        state->eph.af1   =getbits(state->buffer, i,16)*P2_43;        i+=16;
+        state->eph.af0   =getbits(state->buffer, i,22)*P2_31;        i+=22;
+        state->eph.iodc  =getbitu(state->buffer, i,10);              i+=10;
+        state->eph.c_rs  =getbits(state->buffer, i,16)*P2_5;         i+=16;
+        state->eph.dn    =getbits(state->buffer, i,16)*P2_43*SC2RAD; i+=16;
+        state->eph.m0    =getbits(state->buffer, i,32)*P2_31*SC2RAD; i+=32;
+        state->eph.c_uc  =getbits(state->buffer, i,16)*P2_29;        i+=16;
+        state->eph.ecc   =getbitu(state->buffer, i,32)*P2_33;        i+=32;
+        state->eph.c_us  =getbits(state->buffer, i,16)*P2_29;        i+=16;
+        state->eph.sqrta =getbitu(state->buffer, i,32)*P2_19;        i+=32;
+        state->eph.toe_tow=getbitu(state->buffer, i,16)*16.0;        i+=16;
+        state->eph.c_ic  =getbits(state->buffer, i,16)*P2_29;        i+=16;
+        state->eph.omega0=getbits(state->buffer, i,32)*P2_31*SC2RAD; i+=32;
+        state->eph.c_is  =getbits(state->buffer, i,16)*P2_29;        i+=16;
+        state->eph.inc   =getbits(state->buffer, i,32)*P2_31*SC2RAD; i+=32;
+        state->eph.c_rc  =getbits(state->buffer, i,16)*P2_5;         i+=16;
+        state->eph.w     =getbits(state->buffer, i,32)*P2_31*SC2RAD; i+=32;
+        state->eph.omegadot=getbits(state->buffer, i,24)*P2_43*SC2RAD;i+=24;
+        state->eph.tgd   =getbits(state->buffer, i, 8)*P2_31;        i+= 8;
+        state->eph.svh   =getbitu(state->buffer, i, 6);              i+= 6;
+        state->eph.flag  =getbitu(state->buffer, i, 1);              i+= 1;
+        state->eph.fit   =getbitu(state->buffer, i, 1) ? 0.0 : 4.0; // 0:4hr,1:>4hr
 
         // TODO: Is this correct??
         week += (1760 - week + 512) / 1024 * 1024;
-        eph.toe_wn = week;
+        state->eph.toe_wn = week;
 
         last_wn = week;
 
-        if (rx_rtcm_1019) {
-            rx_rtcm_1019(&eph);
+        if (state->rx_rtcm_1019) {
+            state->rx_rtcm_1019(&state->eph);
         }
     }
 
@@ -973,7 +967,7 @@ static int decode_1019(uint8_t *buffer, int len) {
 
 // carrier-phase - pseudorange in cycle
 static double cp_pr(double cp, double pr_cyc) {
-    return fmod(cp - pr_cyc + 1500.0, 3000.0) - 1500.0;
+    return fmod(cp - pr_cyc + D(1500.0), D(3000.0)) - D(1500.0);
 }
 
 static void setbitu(uint8_t *buff, int pos, int len, unsigned int data) {
@@ -1005,8 +999,8 @@ static void setbits(unsigned char *buff, int pos, int len, int data) {
 
 // set signed 38 bit field
 static void set38bits(unsigned char *buff, int pos, double value) {
-    int word_h = (int)floor(value / 64.0);
-    unsigned int word_l = (unsigned int)(value - word_h * 64.0);
+    int word_h = (int)floor(value / D(64.0));
+    unsigned int word_l = (unsigned int)(value - word_h * D(64.0));
     setbits(buff, pos  , 32, word_h);
     setbitu(buff, pos + 32, 6, word_l);
 }
@@ -1034,7 +1028,7 @@ static int getbits(const unsigned char *buff, int pos, int len) {
 
 // get signed 38bit field
 static double getbits_38(const unsigned char *buff, int pos) {
-    return (double)getbits(buff, pos, 32) * 64.0 + getbitu(buff, pos + 32, 6);
+    return (double)getbits(buff, pos, 32) * D(64.0) + getbitu(buff, pos + 32, 6);
 }
 
 static const unsigned int tbl_CRC24Q[]={

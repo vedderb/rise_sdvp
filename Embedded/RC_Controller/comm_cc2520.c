@@ -23,6 +23,7 @@
 #include "packet.h"
 #include "crc.h"
 #include "commands.h"
+#include "comm_usb.h"
 
 // CC2520
 #include "hal_cc2520.h"
@@ -228,14 +229,21 @@ static THD_FUNCTION(rx_thread, arg) {
 				if (crc16(rx_buffer, rxbuf_len)
 						== ((unsigned short) crc_high << 8
 								| (unsigned short) crc_low)) {
-
+#if MODE_MOTE == 1
+					comm_usb_send_packet(rx_buffer, rxbuf_len);
+#else
 					commands_process_packet(rx_buffer, rxbuf_len, comm_cc2520_send_buffer);
+#endif
 				}
 			}
 			break;
 
 			case MOTE_PACKET_PROCESS_SHORT_BUFFER:
+#if MODE_MOTE == 1
+				comm_usb_send_packet(buf + 1, len - 1);
+#else
 				commands_process_packet(buf + 1, len - 1, comm_cc2520_send_buffer);
+#endif
 				break;
 
 			default:

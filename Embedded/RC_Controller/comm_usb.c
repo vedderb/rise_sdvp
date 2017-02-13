@@ -21,6 +21,8 @@
 #include "comm_usb.h"
 #include "packet.h"
 #include "comm_usb_serial.h"
+#include "comm_cc2520.h"
+#include "comm_cc1120.h"
 
 // Settings
 #define PACKET_HANDLER				0
@@ -109,7 +111,13 @@ static THD_FUNCTION(serial_process_thread, arg) {
 }
 
 static void process_packet(unsigned char *data, unsigned int len) {
+#if MODE_MOTE == 1
+	comm_cc2520_send_buffer(data, len);
+#elif MODE_MOTE == 2
+	comm_cc1120_send_buffer(data, len);
+#else
 	commands_process_packet(data, len, comm_usb_send_packet);
+#endif
 }
 
 static void send_packet(unsigned char *buffer, unsigned int len) {

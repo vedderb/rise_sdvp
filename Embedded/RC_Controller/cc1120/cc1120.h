@@ -88,6 +88,9 @@ int cc1120_on(void);
 int cc1120_off(void);
 int cc1120_set_idle(void);
 bool cc1120_carrier_sense(void);
+float cc1120_read_freqoff_est(void);
+float cc1120_read_freqoff(void);
+float cc1120_get_last_freqoff_est(void);
 void cc1120_ext_cb(EXTDriver *extp, expchannel_t channel);
 void cc1120_set_rx_callback(void(*cb)(uint8_t *data, int len, int rssi, int lqi, bool crc_ok));
 
@@ -432,5 +435,14 @@ void cc1120_set_rx_callback(void(*cb)(uint8_t *data, int len, int rssi, int lqi,
 // FIFO_CFG
 #define FIFO_CFG_CRC_AUTOFLUSH_ENABLED		(1 << 7)
 #define FIFO_CFG_CRC_AUTOFLUSH_DISABLED		0
+
+// FREQOFF_CFG
+#define FREQOFF_CFG_FOC_EN					(1 << 5)
+#define FREQOFF_CFG_FOC_CFG_00				(0 << 3)
+#define FREQOFF_CFG_FOC_CFG_01				(1 << 3)
+#define FREQOFF_CFG_FOC_CFG_10				(2 << 3)
+#define FREQOFF_CFG_FOC_CFG_11				(3 << 3)
+#define FREQOFF_CFG_FOC_LIMIT_BW_4			(0 << 2)
+#define FREQOFF_CFG_FOC_LIMIT_BW_8			(1 << 2)
 
 #endif /* CC1120_CC1120_H_ */

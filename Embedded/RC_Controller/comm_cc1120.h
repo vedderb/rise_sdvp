@@ -18,7 +18,10 @@
 #ifndef COMM_CC1120_H_
 #define COMM_CC1120_H_
 
+#include "conf_general.h"
+
 // Functions
 void comm_cc1120_init(void);
+void comm_cc1120_send_buffer(uint8_t *data, unsigned int len);
 
 #endif /* COMM_CC1120_H_ */

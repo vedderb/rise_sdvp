@@ -65,11 +65,17 @@ int main(void) {
 	halInit();
 	chSysInit();
 
-	conf_general_init();
 	led_init();
-	adconv_init();
 	comm_usb_init();
 	ext_cb_init();
+
+#if MODE_MOTE == 1
+	comm_cc2520_init();
+#elif MODE_MOTE == 2
+	comm_cc1120_init();
+#else
+	conf_general_init();
+	adconv_init();
 	servo_simple_init();
 	pos_init();
 	comm_cc2520_init();
@@ -80,6 +86,7 @@ int main(void) {
 	timeout_init();
 	log_init();
 	comm_cc1120_init();
+#endif
 
 #if UBLOX_EN
 	ublox_init();

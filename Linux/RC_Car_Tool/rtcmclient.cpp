@@ -80,6 +80,7 @@ void rtcm_rx_obs(rtcm_obs_header_t *header, rtcm_obs_t *obs, int obs_num) {
 // Static member initialization
 RtcmClient *RtcmClient::currentMsgHandler = 0;
 bool RtcmClient::gpsOnly = true;
+rtcm3_state RtcmClient::rtcmState;
 
 RtcmClient::RtcmClient(QObject *parent) : QObject(parent)
 {
@@ -90,9 +91,10 @@ RtcmClient::RtcmClient(QObject *parent) : QObject(parent)
     qRegisterMetaType<rtcm_obs_t>("rtcm_obs_gps_t");
 
     currentMsgHandler = this;
-    rtcm3_set_rx_callback(rtcm_rx);
-    rtcm3_set_rx_callback_1005_1006(rtcm_rx_1006);
-    rtcm3_set_rx_callback_obs(rtcm_rx_obs);
+    rtcm3_init_state(&rtcmState);
+    rtcm3_set_rx_callback(rtcm_rx, &rtcmState);
+    rtcm3_set_rx_callback_1005_1006(rtcm_rx_1006, &rtcmState);
+    rtcm3_set_rx_callback_obs(rtcm_rx_obs, &rtcmState);
 
     connect(mTcpSocket, SIGNAL(readyRead()), this, SLOT(tcpInputDataAvailable()));
     connect(mTcpSocket, SIGNAL(connected()), this, SLOT(tcpInputConnected()));
@@ -241,7 +243,7 @@ void RtcmClient::tcpInputDataAvailable()
     QByteArray data =  mTcpSocket->readAll();
 
     for (int i = 0;i < data.size();i++) {
-        int ret = rtcm3_input_data(data.at(i));
+        int ret = rtcm3_input_data(data.at(i), &rtcmState);
         if (ret == -1 || ret == -2) {
             //qWarning() << "RTCM decode error:" <<  ret;
         }
@@ -265,7 +267,7 @@ void RtcmClient::serialDataAvailable()
         QByteArray data = mSerialPort->readAll();
 
         for (int i = 0;i < data.size();i++) {
-            int ret = rtcm3_input_data(data.at(i));
+            int ret = rtcm3_input_data(data.at(i), &rtcmState);
             if (ret == -1 || ret == -2) {
                 //qWarning() << "RTCM decode error:" <<  ret;
             }

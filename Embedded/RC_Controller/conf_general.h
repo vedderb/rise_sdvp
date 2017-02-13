@@ -20,6 +20,10 @@
 
 #include "datatypes.h"
 
+// Mote mode
+// 0 = no mote, 1 = CC2520 mote, 2 = CC1120 mote
+#define MODE_MOTE					0
+
 // Firmware version
 #define FW_VERSION_MAJOR			7
 #define FW_VERSION_MINOR			3

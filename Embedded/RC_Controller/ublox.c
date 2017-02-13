@@ -19,6 +19,8 @@
 #include "commands.h"
 #include "utils.h"
 #include "pos.h"
+#include "rtcm3_simple.h"
+#include <string.h>
 
 // Settings
 #define HW_UART_DEV					UARTD6
@@ -41,6 +43,7 @@ static thread_t *process_tp = 0;
 static uint8_t serial_rx_buffer[SERIAL_RX_BUFFER_SIZE];
 static int serial_rx_read_pos = 0;
 static int serial_rx_write_pos = 0;
+static rtcm3_state rtcm_state;
 
 // Private functions
 static void ubx_decode(uint8_t class, uint8_t id, uint8_t *msg, int len);
@@ -131,6 +134,8 @@ void ublox_init(void) {
 	palSetPadMode(HW_UART_TX_PORT, HW_UART_TX_PIN, PAL_MODE_ALTERNATE(8));
 	palSetPadMode(HW_UART_RX_PORT, HW_UART_RX_PIN, PAL_MODE_ALTERNATE(8));
 
+	rtcm3_init_state(&rtcm_state);
+
 	chThdCreateStatic(process_thread_wa, sizeof(process_thread_wa), NORMALPRIO, process_thread, NULL);
 
 	// Prevent unused warnings
@@ -180,18 +185,18 @@ static THD_FUNCTION(process_thread, arg) {
 
 	process_tp = chThdGetSelfX();
 
+	static uint8_t line[LINE_BUFFER_SIZE];
+	static uint8_t ubx[UBX_BUFFER_SIZE];
+	static int line_pos = 0;
+	static int ubx_pos = 0;
+	static uint8_t ubx_class;
+	static uint8_t ubx_id;
+	static uint8_t ubx_ck_a;
+	static uint8_t ubx_ck_b;
+	static int ubx_len;
+
 	for(;;) {
 		chEvtWaitAny((eventmask_t) 1);
-
-		static uint8_t line[LINE_BUFFER_SIZE];
-		static uint8_t ubx[UBX_BUFFER_SIZE];
-		static int line_pos = 0;
-		static int ubx_pos = 0;
-		static uint8_t ubx_class;
-		static uint8_t ubx_id;
-		static uint8_t ubx_ck_a;
-		static uint8_t ubx_ck_b;
-		static int ubx_len;
 
 		while (serial_rx_read_pos != serial_rx_write_pos) {
 			uint8_t ch = serial_rx_buffer[serial_rx_read_pos++];
@@ -199,6 +204,11 @@ static THD_FUNCTION(process_thread, arg) {
 
 			if (serial_rx_read_pos == SERIAL_RX_BUFFER_SIZE) {
 				serial_rx_read_pos = 0;
+			}
+
+			// RTCM
+			if (!ch_used && line_pos == 0 && ubx_pos == 0) {
+				ch_used = rtcm3_input_data(ch, &rtcm_state) >= 0;
 			}
 
 			// Ubx
@@ -261,8 +271,6 @@ static THD_FUNCTION(process_thread, arg) {
 					ubx_pos = 0;
 				}
 			}
-
-			// TODO: rtcm
 
 			// NMEA
 			if (!ch_used) {

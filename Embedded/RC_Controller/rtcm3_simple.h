@@ -45,9 +45,9 @@ void rtcm3_set_rx_callback(void(*func)(uint8_t *data, int len, int type), rtcm3_
 void rtcm3_init_state(rtcm3_state *state);
 int rtcm3_input_data(uint8_t data, rtcm3_state *state);
 int rtcm3_encode_1002(rtcm_obs_header_t *header, rtcm_obs_t *obs,
-                      int obs_num, uint8_t *buffer, int *buffer_len);
+		int obs_num, uint8_t *buffer, int *buffer_len);
 int rtcm3_encode_1010(rtcm_obs_header_t *header, rtcm_obs_t *obs,
-                      int obs_num, uint8_t *buffer, int *buffer_len);
+		int obs_num, uint8_t *buffer, int *buffer_len);
 int rtcm3_encode_1006(rtcm_ref_sta_pos_t pos, uint8_t *buffer, int *buffer_len);
 int rtcm3_encode_1019(rtcm_ephemeris_t *eph, uint8_t *buffer, int *buffer_len);
 

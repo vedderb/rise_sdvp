@@ -21,6 +21,7 @@
 #include <QObject>
 #include <QTcpSocket>
 #include <QSerialPort>
+#include "datatypes.h"
 
 class RtcmClient : public QObject
 {
@@ -28,6 +29,7 @@ class RtcmClient : public QObject
 public:
     static RtcmClient* currentMsgHandler;
     static bool gpsOnly;
+    static rtcm3_state rtcmState;
 
     explicit RtcmClient(QObject *parent = 0);
     bool connectNtrip(QString server, QString stream, QString user = "", QString pass = "", int port = 80);

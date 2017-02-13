@@ -51,6 +51,7 @@
 // Private variables
 static uint8_t m_send_buffer[PACKET_MAX_PL_LEN];
 static void(*m_send_func)(unsigned char *data, unsigned int len) = 0;
+static void(*m_send_func_last_radio)(unsigned char *data, unsigned int len) = 0;
 static virtual_timer_t vt;
 static mutex_t m_print_gps;
 
@@ -71,6 +72,10 @@ void commands_init(void) {
  */
 void commands_set_send_func(void(*func)(unsigned char *data, unsigned int len)) {
 	m_send_func = func;
+
+	if (func != comm_usb_send_packet) {
+		m_send_func_last_radio = func;
+	}
 }
 
 /**
@@ -130,7 +135,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			float mag[3];
 			ROUTE_POINT rp_goal;
 
-			m_send_func = func;
+			commands_set_send_func(func);
 
 			pos_get_imu(accel, gyro, mag);
 			pos_get_pos(&pos);
@@ -171,16 +176,16 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 		case CMD_TERMINAL_CMD:
 			timeout_reset();
+			commands_set_send_func(func);
 
-			m_send_func = func;
 			data[len] = '\0';
 			terminal_process_string((char*)data);
 			break;
 
 		case CMD_VESC_FWD:
 			timeout_reset();
+			commands_set_send_func(func);
 
-			m_send_func = func;
 			bldc_interface_set_forward_func(commands_forward_vesc_packet);
 			bldc_interface_send_packet(data, len);
 			chVTSet(&vt, MS2ST(FWD_TIME), stop_forward, NULL);
@@ -238,6 +243,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			pos_set_xya(x, y, angle);
 
 			if (packet_id == CMD_SET_POS_ACK) {
+				commands_set_send_func(func);
 				// Send ack
 				int32_t send_index = 0;
 				m_send_buffer[send_index++] = main_id;
@@ -248,6 +254,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 		case CMD_SET_ENU_REF: {
 			timeout_reset();
+			commands_set_send_func(func);
 
 			int32_t ind = 0;
 			double lat, lon, height;
@@ -265,6 +272,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 		case CMD_GET_ENU_REF: {
 			timeout_reset();
+			commands_set_send_func(func);
 
 			double llh[3];
 			pos_get_enu_ref(llh);
@@ -280,8 +288,8 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 		case CMD_AP_ADD_POINTS: {
 			timeout_reset();
+			commands_set_send_func(func);
 
-			m_send_func = func;
 			int32_t ind = 0;
 
 			while (ind < (int32_t)len) {
@@ -302,6 +310,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 		case CMD_AP_REMOVE_LAST_POINT: {
 			timeout_reset();
+			commands_set_send_func(func);
 
 			autopilot_remove_last_point();
 
@@ -314,6 +323,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 		case CMD_AP_CLEAR_POINTS: {
 			timeout_reset();
+			commands_set_send_func(func);
 
 			autopilot_clear_route();
 
@@ -326,6 +336,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 		case CMD_AP_SET_ACTIVE: {
 			timeout_reset();
+			commands_set_send_func(func);
 
 			autopilot_set_active(data[0]);
 
@@ -383,13 +394,18 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 				m_send_buffer[send_index++] = packet_id;
 				memcpy(m_send_buffer + send_index, data, len);
 				send_index += len;
-				comm_cc2520_send_buffer(m_send_buffer, send_index);
+				if (m_send_func_last_radio) {
+					m_send_func_last_radio(m_send_buffer, send_index);
+				} else {
+					comm_cc2520_send_buffer(m_send_buffer, send_index);
+				}
 			}
 #endif
 		} break;
 
 		case CMD_SET_MAIN_CONFIG: {
 			timeout_reset();
+			commands_set_send_func(func);
 
 			int32_t ind = 0;
 			main_config.mag_use = data[ind++];
@@ -451,6 +467,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 		case CMD_GET_MAIN_CONFIG:
 		case CMD_GET_MAIN_CONFIG_DEFAULT: {
 			timeout_reset();
+			commands_set_send_func(func);
 
 			if (packet_id == CMD_GET_MAIN_CONFIG) {
 				main_cfg_tmp = main_config;
@@ -519,6 +536,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			pos_set_yaw_offset(angle);
 
 			if (packet_id == CMD_SET_YAW_OFFSET_ACK) {
+				commands_set_send_func(func);
 				// Send ack
 				int32_t send_index = 0;
 				m_send_buffer[send_index++] = main_id;
@@ -530,6 +548,8 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 		case CMD_RADAR_SETUP_SET: {
 #if RADAR_EN
 			timeout_reset();
+			commands_set_send_func(func);
+
 			radar_settings_t s;
 			int32_t ind = 0;
 
@@ -558,6 +578,8 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 		case CMD_RADAR_SETUP_GET: {
 #if RADAR_EN
 			timeout_reset();
+			commands_set_send_func(func);
+
 			const radar_settings_t *s = radar_get_settings();
 			int32_t send_index = 0;
 
@@ -587,6 +609,8 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 		} break;
 
 		case CMD_SET_SYSTEM_TIME: {
+			commands_set_send_func(func);
+
 			int32_t send_index = 0;
 			m_send_buffer[send_index++] = main_id;
 			m_send_buffer[send_index++] = packet_id;
@@ -602,6 +626,8 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 		} break;
 
 		case CMD_REBOOT_SYSTEM: {
+			commands_set_send_func(func);
+
 			int32_t send_index = 0;
 			m_send_buffer[send_index++] = main_id;
 			m_send_buffer[send_index++] = packet_id;
