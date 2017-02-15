@@ -21,6 +21,7 @@
 #include "pos.h"
 #include "rtcm3_simple.h"
 #include <string.h>
+#include "terminal.h"
 
 // Settings
 #define HW_UART_DEV					UARTD6
@@ -46,9 +47,14 @@ static int serial_rx_write_pos = 0;
 static rtcm3_state rtcm_state;
 
 // Private functions
+static void ubx_terminal_cmd_poll(int argc, const char **argv);
+
 static void ubx_decode(uint8_t class, uint8_t id, uint8_t *msg, int len);
 static void ubx_decode_relposned(uint8_t *msg, int len);
+static void ubx_decode_svin(uint8_t *msg, int len);
 static void ubx_decode_rawx(uint8_t *msg, int len);
+
+static void ubx_encode_send(uint8_t class, uint8_t id, uint8_t *msg, int len);
 
 static uint8_t ubx_get_U1(uint8_t *msg, int *ind);
 static int8_t ubx_get_I1(uint8_t *msg, int *ind);
@@ -65,6 +71,7 @@ static double ubx_get_R8(uint8_t *msg, int *ind);
 // Callbacks
 static void(*rx_relposned)(ubx_nav_relposned *pos) = 0;
 static void(*rx_rawx)(ubx_rxm_rawx *pos) = 0;
+static void(*rx_svin)(ubx_nav_svin *svin) = 0;
 
 /*
  * This callback is invoked when a transmission buffer has been completely
@@ -138,6 +145,15 @@ void ublox_init(void) {
 
 	chThdCreateStatic(process_thread_wa, sizeof(process_thread_wa), NORMALPRIO, process_thread, NULL);
 
+	terminal_register_command_callback(
+			"ubx_poll",
+			"Poll one of the ubx protocol messages. Supported messages:\n"
+			"  UBX_NAV_RELPOSNED - Relative position to base in NED frame\n"
+			"  UBX_NAV_SVIN - survey-in data\n"
+			"  UBX_RXM_RAWX - raw data",
+			"[msg]",
+			ubx_terminal_cmd_poll);
+
 	// Prevent unused warnings
 	(void)ubx_get_U1;
 	(void)ubx_get_I1;
@@ -178,6 +194,14 @@ void ublox_set_rx_callback_rawx(void(*func)(ubx_rxm_rawx *pos)) {
 	rx_rawx = func;
 }
 
+void ublox_set_rx_callback_svin(void(*func)(ubx_nav_svin *pos)) {
+	rx_svin = func;
+}
+
+void ublox_poll(uint8_t msg_class, uint8_t id) {
+	ubx_encode_send(msg_class, id, 0, 0);
+}
+
 static THD_FUNCTION(process_thread, arg) {
 	(void)arg;
 
@@ -187,13 +211,13 @@ static THD_FUNCTION(process_thread, arg) {
 
 	static uint8_t line[LINE_BUFFER_SIZE];
 	static uint8_t ubx[UBX_BUFFER_SIZE];
-	static int line_pos = 0;
-	static int ubx_pos = 0;
-	static uint8_t ubx_class;
-	static uint8_t ubx_id;
-	static uint8_t ubx_ck_a;
-	static uint8_t ubx_ck_b;
-	static int ubx_len;
+	int line_pos = 0;
+	int ubx_pos = 0;
+	uint8_t ubx_class = 0;
+	uint8_t ubx_id = 0;
+	uint8_t ubx_ck_a = 0;
+	uint8_t ubx_ck_b = 0;
+	int ubx_len = 0;
 
 	for(;;) {
 		chEvtWaitAny((eventmask_t) 1);
@@ -290,12 +314,34 @@ static THD_FUNCTION(process_thread, arg) {
 	}
 }
 
+static void ubx_terminal_cmd_poll(int argc, const char **argv) {
+	if (argc == 2) {
+		if (strcmp(argv[1], "UBX_NAV_RELPOSNED") == 0) {
+			ublox_poll(UBX_CLASS_NAV, UBX_NAV_RELPOSNED);
+			commands_printf("OK\n");
+		} else if (strcmp(argv[1], "UBX_NAV_SVIN") == 0) {
+			ublox_poll(UBX_CLASS_NAV, UBX_NAV_SVIN);
+			commands_printf("OK\n");
+		} else if (strcmp(argv[1], "UBX_RXM_RAWX") == 0) {
+			ublox_poll(UBX_CLASS_RXM, UBX_RXM_RAWX);
+			commands_printf("OK\n");
+		} else {
+			commands_printf("Wrong argument %s\n", argv[1]);
+		}
+	} else {
+		commands_printf("Wrong number of arguments\n");
+	}
+}
+
 static void ubx_decode(uint8_t class, uint8_t id, uint8_t *msg, int len) {
 	switch (class) {
 	case UBX_CLASS_NAV: {
 		switch (id) {
 		case UBX_NAV_RELPOSNED:
 			ubx_decode_relposned(msg, len);
+			break;
+		case UBX_NAV_SVIN:
+			ubx_decode_svin(msg, len);
 			break;
 		default:
 			break;
@@ -367,6 +413,47 @@ static void ubx_decode_relposned(uint8_t *msg, int len) {
 #endif
 }
 
+static void ubx_decode_svin(uint8_t *msg, int len) {
+	(void)len;
+
+	static ubx_nav_svin svin;
+	int ind = 4;
+
+	svin.i_tow = ubx_get_U4(msg, &ind);
+	svin.dur = ubx_get_U4(msg, &ind);
+	svin.meanX = (double)ubx_get_I4(msg, &ind) / D(100.0);
+	svin.meanY = (double)ubx_get_I4(msg, &ind) / D(100.0);
+	svin.meanZ = (double)ubx_get_I4(msg, &ind) / D(100.0);
+	svin.meanX += (double)ubx_get_I1(msg, &ind) / D(10000.0);
+	svin.meanY += (double)ubx_get_I1(msg, &ind) / D(10000.0);
+	svin.meanZ += (double)ubx_get_I1(msg, &ind) / D(10000.0);
+	ind += 1;
+	svin.meanAcc = (float)ubx_get_U4(msg, &ind) / 10000.0;
+	svin.obs = ubx_get_U4(msg, &ind);
+	svin.valid = ubx_get_U1(msg, &ind);
+	svin.active = ubx_get_U1(msg, &ind);
+
+	if (rx_svin) {
+		rx_svin(&svin);
+	}
+
+#if PRINT_UBX_MSGS
+	commands_printf(
+			"SVIN RX\n"
+			"i_tow: %d ms\n"
+			"dur: %d ms\n"
+			"Mean X: %.3f m\n"
+			"Mean Y: %.3f m\n"
+			"Mean Z: %.3f m\n"
+			"Mean ACC: %.3f m\n"
+			"Valid: %d\n"
+			"Active: %d\n",
+			svin.i_tow, svin.dur,
+			svin.meanX, svin.meanY, svin.meanZ, (double)svin.meanAcc,
+			svin.valid, svin.active);
+#endif
+}
+
 // Note: Message version 0x01
 static void ubx_decode_rawx(uint8_t *msg, int len) {
 	(void)len;
@@ -418,7 +505,7 @@ static void ubx_decode_rawx(uint8_t *msg, int len) {
 #if PRINT_UBX_MSGS
 	// TODO: Print table of observations?
 	commands_printf(
-			"RAWX_RX\n"
+			"RAWX RX\n"
 			"tow: %.3f\n"
 			"week: %d\n"
 			"leap_sec: %d\n"
@@ -428,6 +515,48 @@ static void ubx_decode_rawx(uint8_t *msg, int len) {
 			raw.rcv_tow, raw.week, raw.leap_sec, raw.num_meas,
 			raw.obs[0].pr_mes, raw.obs[1].pr_mes);
 #endif
+}
+
+static void ubx_encode_send(uint8_t class, uint8_t id, uint8_t *msg, int len) {
+	static uint8_t ubx[UBX_BUFFER_SIZE];
+	int ind = 0;
+	uint8_t ck_a = 0;
+	uint8_t ck_b = 0;
+
+	ubx[ind++] = 0xB5;
+	ubx[ind++] = 0x62;
+
+	ubx[ind] = class;
+	ck_a += ubx[ind];
+	ck_b += ck_a;
+	ind++;
+
+	ubx[ind] = id;
+	ck_a += ubx[ind];
+	ck_b += ck_a;
+	ind++;
+
+	ubx[ind] = len & 0xFF;
+	ck_a += ubx[ind];
+	ck_b += ck_a;
+	ind++;
+
+	ubx[ind] = (len >> 8) & 0xFF;
+	ck_a += ubx[ind];
+	ck_b += ck_a;
+	ind++;
+
+	for (int i = 0;i < len;i++) {
+		ubx[ind] = msg[i];
+		ck_a += ubx[ind];
+		ck_b += ck_a;
+		ind++;
+	}
+
+	ubx[ind++] = ck_a;
+	ubx[ind++] = ck_b;
+
+	ublox_send(ubx, ind);
 }
 
 static uint8_t ubx_get_U1(uint8_t *msg, int *ind) {

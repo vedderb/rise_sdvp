@@ -26,6 +26,8 @@ void ublox_init(void);
 void ublox_send(unsigned char *data, unsigned int len);
 void ublox_set_rx_callback_relposned(void(*func)(ubx_nav_relposned *pos));
 void ublox_set_rx_callback_rawx(void(*func)(ubx_rxm_rawx *pos));
+void ublox_set_rx_callback_svin(void(*func)(ubx_nav_svin *pos));
+void ublox_poll(uint8_t msg_class, uint8_t id);
 
 // Message classes
 #define UBX_CLASS_NAV					0x01
@@ -45,6 +47,7 @@ void ublox_set_rx_callback_rawx(void(*func)(ubx_rxm_rawx *pos));
 
 // Navigation (NAV) messages
 #define UBX_NAV_RELPOSNED				0x3C
+#define UBX_NAV_SVIN					0x3B
 
 // Receiver Manager (RXM) messages
 #define UBX_RXM_RAWX					0x15

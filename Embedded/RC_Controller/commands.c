@@ -648,7 +648,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 	}
 }
 
-void commands_printf(char* format, ...) {
+void commands_printf(const char* format, ...) {
 	chMtxLock(&m_print_gps);
 	va_list arg;
 	va_start (arg, format);

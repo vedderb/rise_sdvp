@@ -13,7 +13,7 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-    */
+ */
 
 #include "ch.h"
 #include "hal.h"
@@ -27,6 +27,21 @@
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
+
+// Settings
+#define CALLBACK_LEN						25
+
+// Private types
+typedef struct _terminal_callback_struct {
+	const char *command;
+	const char *help;
+	const char *arg_names;
+	void(*cbf)(int argc, const char **argv);
+} terminal_callback_struct;
+
+// Private variables
+static terminal_callback_struct callbacks[CALLBACK_LEN];
+static int callback_write = 0;
 
 void terminal_process_string(char *str) {
 	enum { kMaxArgs = 64 };
@@ -159,9 +174,86 @@ void terminal_process_string(char *str) {
 		commands_printf("  Forward command to radar");
 #endif
 
+		for (int i = 0;i < callback_write;i++) {
+			if (callbacks[i].arg_names) {
+				commands_printf("%s %s", callbacks[i].command, callbacks[i].arg_names);
+			} else {
+				commands_printf(callbacks[i].command);
+			}
+
+			if (callbacks[i].help) {
+				commands_printf("  %s", callbacks[i].help);
+			} else {
+				commands_printf("  There is no help available for this command.");
+			}
+		}
+
 		commands_printf(" ");
 	} else {
-		commands_printf("Invalid command: %s\n"
-				"type help to list all available commands\n", argv[0]);
+		bool found = false;
+		for (int i = 0;i < callback_write;i++) {
+			if (strcmp(argv[0], callbacks[i].command) == 0) {
+				callbacks[i].cbf(argc, (const char**)argv);
+				found = true;
+				break;
+			}
+		}
+
+		if (!found) {
+			commands_printf("Invalid command: %s\n"
+					"type help to list all available commands\n", argv[0]);
+		}
+	}
+}
+
+/**
+ * Register a custom command  callback to the terminal. If the command
+ * is already registered the old command callback will be replaced.
+ *
+ * @param command
+ * The command name.
+ *
+ * @param help
+ * A help text for the command. Can be NULL.
+ *
+ * @param arg_names
+ * The argument names for the command, e.g. [arg_a] [arg_b]
+ * Can be NULL.
+ *
+ * @param cbf
+ * The callback function for the command.
+ */
+void terminal_register_command_callback(
+		const char* command,
+		const char *help,
+		const char *arg_names,
+		void(*cbf)(int argc, const char **argv)) {
+
+	int callback_num = callback_write;
+
+	for (int i = 0;i < callback_write;i++) {
+		// First check the address in case the same callback is registered more than once.
+		if (callbacks[i].command == command) {
+			callback_num = i;
+			break;
+		}
+
+		// Check by string comparison.
+		if (strcmp(callbacks[i].command, command) == 0) {
+			callback_num = i;
+			break;
+		}
+	}
+
+	callbacks[callback_num].command = command;
+	callbacks[callback_num].help = help;
+	callbacks[callback_num].arg_names = arg_names;
+	callbacks[callback_num].cbf = cbf;
+
+	if (callback_num == callback_write) {
+		callback_write++;
+		if (callback_write >= CALLBACK_LEN) {
+			callback_write = 0;
+		}
 	}
 }

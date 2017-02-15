@@ -224,7 +224,7 @@ typedef struct {
 
 typedef struct {
 	uint16_t ref_station_id;
-	uint32_t i_tow;
+	uint32_t i_tow; // GPS time of week of the navigation epoch
 	float pos_n; // Position north in meters
 	float pos_e; // Position east in meters
 	float pos_d; // Position down in meters
@@ -236,6 +236,18 @@ typedef struct {
 	bool rel_pos_valid; // Relative position components and accuracies valid
 	int carr_soln; // fix_type 0: no fix, 1: float, 2: fix
 } ubx_nav_relposned;
+
+typedef struct {
+	uint32_t i_tow; // GPS time of week of the navigation epoch
+	uint32_t dur; // Passed survey-in observation time (s)
+	double meanX; // Current survey-in mean position ECEF X coordinate
+	double meanY; // Current survey-in mean position ECEF Y coordinate
+	double meanZ; // Current survey-in mean position ECEF Z coordinate
+	float meanAcc; // Current survey-in mean position accuracy
+	uint32_t obs; // Number of position observations used during survey-in
+	bool valid; // Survey-in position validity flag, 1 = valid, otherwise 0
+	bool active; // Survey-in in progress flag, 1 = in-progress, otherwise 0
+} ubx_nav_svin;
 
 typedef struct {
 	double pr_mes;
