@@ -24,6 +24,11 @@
 // Sizes
 #define LOG_NAME_MAX_LEN			20
 
+// Packet IDs
+#define ID_ALL						255
+#define ID_MOTE						254
+#define ID_RTCM						211 // Same as RTCM3PREAMB
+
 // Orientation data
 typedef struct {
 	float q0;
@@ -130,9 +135,12 @@ typedef struct {
 } MAIN_CONFIG;
 
 typedef enum {
+    // General commands
     CMD_PRINTF = 0,
-    CMD_GET_STATE,
     CMD_TERMINAL_CMD,
+
+    // Car commands
+    CMD_GET_STATE = 50,
     CMD_VESC_FWD,
     CMD_RC_CONTROL,
     CMD_SET_POS,
@@ -161,7 +169,11 @@ typedef enum {
     CMD_REBOOT_SYSTEM_ACK,
     CMD_RADAR_SETUP_SET,
     CMD_RADAR_SETUP_GET,
-    CMD_RADAR_SAMPLES
+    CMD_RADAR_SAMPLES,
+
+    // Mote commands
+    CMD_MOTE_UBX_START_BASE = 200,
+    CMD_MOTE_UBX_BASE_STATUS
 } CMD_PACKET;
 
 // RC control modes

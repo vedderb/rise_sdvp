@@ -111,10 +111,19 @@ static THD_FUNCTION(serial_process_thread, arg) {
 }
 
 static void process_packet(unsigned char *data, unsigned int len) {
-#if MODE_MOTE == 1
+#if MAIN_MODE == MAIN_MODE_MOTE_2400 || MAIN_MODE == MAIN_MODE_MOTE_400
+	uint8_t id = data[0];
+	CMD_PACKET packet_id = data[1];
+
+	if (id == ID_MOTE && (packet_id < 50 || packet_id >= 200)) {
+		commands_process_packet(data, len, comm_usb_send_packet);
+	} else {
+#if MAIN_MODE == MAIN_MODE_MOTE_2400
 	comm_cc2520_send_buffer(data, len);
-#elif MODE_MOTE == 2
+#elif MAIN_MODE == MAIN_MODE_MOTE_400
 	comm_cc1120_send_buffer(data, len);
+#endif
+	}
 #else
 	commands_process_packet(data, len, comm_usb_send_packet);
 #endif

@@ -20,13 +20,17 @@
 
 #include "datatypes.h"
 
-// Mote mode
-// 0 = no mote, 1 = CC2520 mote, 2 = CC1120 mote
-#define MODE_MOTE					0
+#define MAIN_MODE_CAR 				0
+#define MAIN_MODE_MOTE_2400			1
+#define MAIN_MODE_MOTE_400			2
+#define MAIN_MODE_QUADCOPTER		3
+
+// Main mode
+#define MAIN_MODE					MAIN_MODE_MOTE_400
 
 // Firmware version
-#define FW_VERSION_MAJOR			7
-#define FW_VERSION_MINOR			3
+#define FW_VERSION_MAJOR			8
+#define FW_VERSION_MINOR			0
 
 // Default car settings
 //#define CAR_TERO // Benjamins tero car
@@ -50,6 +54,7 @@
 // General settings
 #define ID_ALL						255
 #define VESC_ID						ID_ALL // id, or ID_ALL for any VESC
+#define ID_MOTE						254 // If the packet is for the mote and not to be forwarded
 
 // Car parameters
 #ifndef IMU_ROT_180

@@ -22,6 +22,7 @@
 #include "rtcm3_simple.h"
 #include <string.h>
 #include "terminal.h"
+#include "comm_cc1120.h"
 
 // Settings
 #define HW_UART_DEV					UARTD6
@@ -67,6 +68,20 @@ static int32_t ubx_get_I4(uint8_t *msg, int *ind);
 static uint32_t ubx_get_X4(uint8_t *msg, int *ind);
 static float ubx_get_R4(uint8_t *msg, int *ind);
 static double ubx_get_R8(uint8_t *msg, int *ind);
+
+static void ubx_put_U1(uint8_t *msg, int *ind, uint8_t data);
+static void ubx_put_I1(uint8_t *msg, int *ind, int8_t data);
+static void ubx_put_X1(uint8_t *msg, int *ind, uint8_t data);
+static void ubx_put_U2(uint8_t *msg, int *ind, uint16_t data);
+static void ubx_put_I2(uint8_t *msg, int *ind, int16_t data);
+static void ubx_put_X2(uint8_t *msg, int *ind, uint16_t data);
+static void ubx_put_U4(uint8_t *msg, int *ind, uint32_t data);
+static void ubx_put_I4(uint8_t *msg, int *ind, int32_t data);
+static void ubx_put_X4(uint8_t *msg, int *ind, uint32_t data);
+static void ubx_put_R4(uint8_t *msg, int *ind, float data);
+static void ubx_put_R8(uint8_t *msg, int *ind, double data);
+
+static void rtcm_rx(uint8_t *data, int len, int type);
 
 // Callbacks
 static void(*rx_relposned)(ubx_nav_relposned *pos) = 0;
@@ -142,6 +157,7 @@ void ublox_init(void) {
 	palSetPadMode(HW_UART_RX_PORT, HW_UART_RX_PIN, PAL_MODE_ALTERNATE(8));
 
 	rtcm3_init_state(&rtcm_state);
+	rtcm3_set_rx_callback(rtcm_rx, &rtcm_state);
 
 	chThdCreateStatic(process_thread_wa, sizeof(process_thread_wa), NORMALPRIO, process_thread, NULL);
 
@@ -166,6 +182,18 @@ void ublox_init(void) {
 	(void)ubx_get_X4;
 	(void)ubx_get_R4;
 	(void)ubx_get_R8;
+
+	(void)ubx_put_U1;
+	(void)ubx_put_I1;
+	(void)ubx_put_X1;
+	(void)ubx_put_U2;
+	(void)ubx_put_I2;
+	(void)ubx_put_X2;
+	(void)ubx_put_U4;
+	(void)ubx_put_I4;
+	(void)ubx_put_X4;
+	(void)ubx_put_R4;
+	(void)ubx_put_R8;
 }
 
 void ublox_send(unsigned char *data, unsigned int len) {
@@ -200,6 +228,59 @@ void ublox_set_rx_callback_svin(void(*func)(ubx_nav_svin *pos)) {
 
 void ublox_poll(uint8_t msg_class, uint8_t id) {
 	ubx_encode_send(msg_class, id, 0, 0);
+}
+
+void ublox_cfg_tmode3(ubx_cfg_tmode3 *cfg) {
+	uint8_t buffer[40];
+	int ind = 0;
+
+	ubx_put_U1(buffer, &ind, 0);
+	ubx_put_U1(buffer, &ind, 0);
+	uint16_t flags = ((cfg->lla ? 1 : 0) << 8) || cfg->mode;
+	ubx_put_X2(buffer, &ind, flags);
+
+	int32_t x_lat = 0;
+	int32_t y_lon = 0;
+	int32_t z_alt = 0;
+	int8_t x_lat_hp = 0;
+	int8_t y_lon_hp = 0;
+	int8_t z_alt_hp = 0;
+	if (cfg->lla) {
+		x_lat = cfg->ecefx_lat - D(1e7);
+		y_lon = cfg->ecefy_lon * D(1e7);
+		z_alt = cfg->ecefz_alt * D(1e2);
+		x_lat_hp = (cfg->ecefx_lat - ((double)x_lat * D(1e-7))) * D(1e9);
+		y_lon_hp = (cfg->ecefx_lat - ((double)x_lat * D(1e-7))) * D(1e9);
+		z_alt_hp = (cfg->ecefx_lat - ((double)x_lat * D(1e-2))) * D(1e4);
+	} else {
+		x_lat = cfg->ecefx_lat - D(1e2);
+		y_lon = cfg->ecefy_lon * D(1e2);
+		z_alt = cfg->ecefz_alt * D(1e2);
+		x_lat_hp = (cfg->ecefx_lat - ((double)x_lat * D(1e-2))) * D(1e4);
+		y_lon_hp = (cfg->ecefx_lat - ((double)x_lat * D(1e-2))) * D(1e4);
+		z_alt_hp = (cfg->ecefx_lat - ((double)x_lat * D(1e-2))) * D(1e4);
+	}
+
+	ubx_put_I4(buffer, &ind, x_lat);
+	ubx_put_I4(buffer, &ind, y_lon);
+	ubx_put_I4(buffer, &ind, z_alt);
+	ubx_put_I1(buffer, &ind, x_lat_hp);
+	ubx_put_I1(buffer, &ind, y_lon_hp);
+	ubx_put_I1(buffer, &ind, z_alt_hp);
+	ubx_put_U1(buffer, &ind, 0);
+	ubx_put_U4(buffer, &ind, cfg->fixed_pos_acc * 1e4);
+	ubx_put_U4(buffer, &ind, cfg->svin_min_dur);
+	ubx_put_U4(buffer, &ind, cfg->svin_acc_limit * 1e4);
+	ubx_put_U1(buffer, &ind, 0);
+	ubx_put_U1(buffer, &ind, 0);
+	ubx_put_U1(buffer, &ind, 0);
+	ubx_put_U1(buffer, &ind, 0);
+	ubx_put_U1(buffer, &ind, 0);
+	ubx_put_U1(buffer, &ind, 0);
+	ubx_put_U1(buffer, &ind, 0);
+	ubx_put_U1(buffer, &ind, 0);
+
+	ubx_encode_send(UBX_CLASS_CFG, UBX_CFG_TMODE3, buffer, ind);
 }
 
 static THD_FUNCTION(process_thread, arg) {
@@ -390,27 +471,27 @@ static void ubx_decode_relposned(uint8_t *msg, int len) {
 
 	if (rx_relposned) {
 		rx_relposned(&pos);
-	}
-
+	} else {
 #if PRINT_UBX_MSGS
-	commands_printf(
-			"NED RX\n"
-			"i_tow: %d ms\n"
-			"N: %.3f m\n"
-			"E: %.3f m\n"
-			"D: %.3f m\n"
-			"N_ACC: %.3f m\n"
-			"E_ACC: %.3f m\n"
-			"D_ACC: %.3f m\n"
-			"Fix OK: %d\n"
-			"Diff Soln: %d\n"
-			"Rel Pos Valid: %d\n"
-			"Carr Soln: %d\n",
-			pos.i_tow,
-			(double)pos.pos_n, (double)pos.pos_e, (double)pos.pos_d,
-			(double)pos.acc_n, (double)pos.acc_e, (double)pos.acc_d,
-			pos.fix_ok, pos.diff_soln, pos.rel_pos_valid, pos.carr_soln);
+		commands_printf(
+				"NED RX\n"
+				"i_tow: %d ms\n"
+				"N: %.3f m\n"
+				"E: %.3f m\n"
+				"D: %.3f m\n"
+				"N_ACC: %.3f m\n"
+				"E_ACC: %.3f m\n"
+				"D_ACC: %.3f m\n"
+				"Fix OK: %d\n"
+				"Diff Soln: %d\n"
+				"Rel Pos Valid: %d\n"
+				"Carr Soln: %d\n",
+				pos.i_tow,
+				(double)pos.pos_n, (double)pos.pos_e, (double)pos.pos_d,
+				(double)pos.acc_n, (double)pos.acc_e, (double)pos.acc_d,
+				pos.fix_ok, pos.diff_soln, pos.rel_pos_valid, pos.carr_soln);
 #endif
+	}
 }
 
 static void ubx_decode_svin(uint8_t *msg, int len) {
@@ -435,23 +516,23 @@ static void ubx_decode_svin(uint8_t *msg, int len) {
 
 	if (rx_svin) {
 		rx_svin(&svin);
-	}
-
+	} else {
 #if PRINT_UBX_MSGS
-	commands_printf(
-			"SVIN RX\n"
-			"i_tow: %d ms\n"
-			"dur: %d ms\n"
-			"Mean X: %.3f m\n"
-			"Mean Y: %.3f m\n"
-			"Mean Z: %.3f m\n"
-			"Mean ACC: %.3f m\n"
-			"Valid: %d\n"
-			"Active: %d\n",
-			svin.i_tow, svin.dur,
-			svin.meanX, svin.meanY, svin.meanZ, (double)svin.meanAcc,
-			svin.valid, svin.active);
+		commands_printf(
+				"SVIN RX\n"
+				"i_tow: %d ms\n"
+				"dur: %d ms\n"
+				"Mean X: %.3f m\n"
+				"Mean Y: %.3f m\n"
+				"Mean Z: %.3f m\n"
+				"Mean ACC: %.3f m\n"
+				"Valid: %d\n"
+				"Active: %d\n",
+				svin.i_tow, svin.dur,
+				svin.meanX, svin.meanY, svin.meanZ, (double)svin.meanAcc,
+				svin.valid, svin.active);
 #endif
+	}
 }
 
 // Note: Message version 0x01
@@ -500,21 +581,21 @@ static void ubx_decode_rawx(uint8_t *msg, int len) {
 
 	if (rx_rawx) {
 		rx_rawx(&raw);
-	}
-
+	} else {
 #if PRINT_UBX_MSGS
-	// TODO: Print table of observations?
-	commands_printf(
-			"RAWX RX\n"
-			"tow: %.3f\n"
-			"week: %d\n"
-			"leap_sec: %d\n"
-			"num_meas: %d\n"
-			"pr_0: %.3f\n"
-			"pr_1: %.3f\n",
-			raw.rcv_tow, raw.week, raw.leap_sec, raw.num_meas,
-			raw.obs[0].pr_mes, raw.obs[1].pr_mes);
+		// TODO: Print table of observations?
+		commands_printf(
+				"RAWX RX\n"
+				"tow: %.3f\n"
+				"week: %d\n"
+				"leap_sec: %d\n"
+				"num_meas: %d\n"
+				"pr_0: %.3f\n"
+				"pr_1: %.3f\n",
+				raw.rcv_tow, raw.week, raw.leap_sec, raw.num_meas,
+				raw.obs[0].pr_mes, raw.obs[1].pr_mes);
 #endif
+	}
 }
 
 static void ubx_encode_send(uint8_t class, uint8_t id, uint8_t *msg, int len) {
@@ -655,4 +736,93 @@ static double ubx_get_R8(uint8_t *msg, int *ind) {
 	x.i = res;
 
 	return x.f;
+}
+
+static void ubx_put_U1(uint8_t *msg, int *ind, uint8_t data) {
+	msg[(*ind)++] = data;
+}
+
+static void ubx_put_I1(uint8_t *msg, int *ind, int8_t data) {
+	msg[(*ind)++] = data;
+}
+
+static void ubx_put_X1(uint8_t *msg, int *ind, uint8_t data) {
+	msg[(*ind)++] = data;
+}
+
+static void ubx_put_U2(uint8_t *msg, int *ind, uint16_t data) {
+	msg[(*ind)++] = data;
+	msg[(*ind)++] = data >> 8;
+}
+
+static void ubx_put_I2(uint8_t *msg, int *ind, int16_t data) {
+	msg[(*ind)++] = data;
+	msg[(*ind)++] = data >> 8;
+}
+
+static void ubx_put_X2(uint8_t *msg, int *ind, uint16_t data) {
+	msg[(*ind)++] = data;
+	msg[(*ind)++] = data >> 8;
+}
+
+static void ubx_put_U4(uint8_t *msg, int *ind, uint32_t data) {
+	msg[(*ind)++] = data;
+	msg[(*ind)++] = data >> 8;
+	msg[(*ind)++] = data >> 16;
+	msg[(*ind)++] = data >> 24;
+}
+
+static void ubx_put_I4(uint8_t *msg, int *ind, int32_t data) {
+	msg[(*ind)++] = data;
+	msg[(*ind)++] = data >> 8;
+	msg[(*ind)++] = data >> 16;
+	msg[(*ind)++] = data >> 24;
+}
+
+static void ubx_put_X4(uint8_t *msg, int *ind, uint32_t data) {
+	msg[(*ind)++] = data;
+	msg[(*ind)++] = data >> 8;
+	msg[(*ind)++] = data >> 16;
+	msg[(*ind)++] = data >> 24;
+}
+
+static void ubx_put_R4(uint8_t *msg, int *ind, float data) {
+	union asd {
+		float f;
+		uint64_t i;
+	} x;
+
+	x.f = data;
+
+	msg[(*ind)++] = x.i;
+	msg[(*ind)++] = x.i >> 8;
+	msg[(*ind)++] = x.i >> 16;
+	msg[(*ind)++] = x.i >> 24;
+}
+
+static void ubx_put_R8(uint8_t *msg, int *ind, double data) {
+	union asd {
+		double f;
+		uint64_t i;
+	} x;
+
+	x.f = data;
+
+	msg[(*ind)++] = x.i;
+	msg[(*ind)++] = x.i >> 8;
+	msg[(*ind)++] = x.i >> 16;
+	msg[(*ind)++] = x.i >> 24;
+	msg[(*ind)++] = x.i >> 32;
+	msg[(*ind)++] = x.i >> 40;
+	msg[(*ind)++] = x.i >> 48;
+	msg[(*ind)++] = x.i >> 56;
+}
+
+static void rtcm_rx(uint8_t *data, int len, int type) {
+	(void)type;
+#if MAIN_MODE == MAIN_MODE_MOTE_2400
+	comm_cc2520_send_buffer(data, len);
+#else
+	comm_cc1120_send_buffer(data, len);
+#endif
 }

@@ -39,6 +39,7 @@
 #include "log.h"
 #include "radar.h"
 #include "ublox.h"
+#include "rtcm3_simple.h"
 
 #include <math.h>
 #include <string.h>
@@ -57,11 +58,18 @@ static mutex_t m_print_gps;
 
 // Private functions
 static void stop_forward(void *p);
+static void rtcm_rx(uint8_t *data, int len, int type);
+
+// Private variables
+static rtcm3_state rtcm_state;
 
 void commands_init(void) {
 	m_send_func = 0;
 	chMtxObjectInit(&m_print_gps);
 	chVTObjectInit(&vt);
+
+	rtcm3_init_state(&rtcm_state);
+	rtcm3_set_rx_callback(rtcm_rx, &rtcm_state);
 }
 
 /**
@@ -111,6 +119,13 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 		return;
 	}
 
+	if (data[0] == RTCM3PREAMB) {
+		for (unsigned int i = 0;i < len;i++) {
+			rtcm3_input_data(data[i], &rtcm_state);
+		}
+		return;
+	}
+
 	CMD_PACKET packet_id;
 	uint8_t id = 0;
 	MAIN_CONFIG main_cfg_tmp;
@@ -125,6 +140,16 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 	if (id == main_id || id == ID_ALL) {
 		switch (packet_id) {
+		// ==================== General commands ==================== //
+		case CMD_TERMINAL_CMD: {
+			timeout_reset();
+			commands_set_send_func(func);
+
+			data[len] = '\0';
+			terminal_process_string((char*)data);
+		} break;
+
+		// ==================== Car commands ==================== //
 		case CMD_GET_STATE: {
 			timeout_reset();
 
@@ -173,14 +198,6 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			buffer_append_int32(m_send_buffer, pos_get_ms_today(), &send_index); // 97
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
-
-		case CMD_TERMINAL_CMD:
-			timeout_reset();
-			commands_set_send_func(func);
-
-			data[len] = '\0';
-			terminal_process_string((char*)data);
-			break;
 
 		case CMD_VESC_FWD:
 			timeout_reset();
@@ -642,6 +659,31 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
 
+		// ==================== Mote commands ==================== //
+
+		case CMD_MOTE_UBX_START_BASE: {
+			ubx_cfg_tmode3 cfg;
+			memset(&cfg, 0, sizeof(ubx_cfg_tmode3));
+			int32_t ind = 0;
+
+			cfg.mode = data[ind++];
+			cfg.lla = true;
+			cfg.ecefx_lat = buffer_get_double64(data, 1e16, &ind);
+			cfg.ecefy_lon = buffer_get_double64(data, 1e16, &ind);
+			cfg.ecefz_alt = buffer_get_float32(data, 1e3, &ind);
+			cfg.fixed_pos_acc = buffer_get_float32_auto(data, &ind);
+			cfg.svin_min_dur = buffer_get_uint32(data, &ind);
+			cfg.svin_acc_limit = buffer_get_float32_auto(data, &ind);
+
+			ublox_cfg_tmode3(&cfg);
+
+			// Send ack
+			int32_t send_index = 0;
+			m_send_buffer[send_index++] = main_id;
+			m_send_buffer[send_index++] = packet_id;
+			commands_send_packet(m_send_buffer, send_index);
+		} break;
+
 		default:
 			break;
 		}
@@ -739,4 +781,20 @@ void commands_send_radar_samples(float *dists, int num) {
 static void stop_forward(void *p) {
 	(void)p;
 	bldc_interface_set_forward_func(0);
+}
+
+static void rtcm_rx(uint8_t *data, int len, int type) {
+	(void)type;
+
+#if UBLOX_EN
+	ublox_send(data, len);
+	(void)m_send_buffer;
+#else
+	int32_t send_index = 0;
+	m_send_buffer[send_index++] = main_id;
+	m_send_buffer[send_index++] = CMD_SEND_RTCM_USB;
+	memcpy(m_send_buffer + send_index, data, len);
+	send_index += len;
+	comm_usb_send_packet(m_send_buffer, send_index);
+#endif
 }

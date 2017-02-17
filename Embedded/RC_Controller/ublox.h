@@ -28,6 +28,7 @@ void ublox_set_rx_callback_relposned(void(*func)(ubx_nav_relposned *pos));
 void ublox_set_rx_callback_rawx(void(*func)(ubx_rxm_rawx *pos));
 void ublox_set_rx_callback_svin(void(*func)(ubx_nav_svin *pos));
 void ublox_poll(uint8_t msg_class, uint8_t id);
+void ublox_cfg_tmode3(ubx_cfg_tmode3 *cfg);
 
 // Message classes
 #define UBX_CLASS_NAV					0x01
@@ -51,5 +52,8 @@ void ublox_poll(uint8_t msg_class, uint8_t id);
 
 // Receiver Manager (RXM) messages
 #define UBX_RXM_RAWX					0x15
+
+// Configuration messages
+#define UBX_CFG_TMODE3					0x71
 
 #endif /* UBLOX_H_ */

@@ -68,10 +68,11 @@ int main(void) {
 	led_init();
 	comm_usb_init();
 	ext_cb_init();
+	commands_init();
 
-#if MODE_MOTE == 1
+#if MAIN_MODE == MAIN_MODE_MOTE_2400
 	comm_cc2520_init();
-#elif MODE_MOTE == 2
+#elif MAIN_MODE == MAIN_MODE_MOTE_400
 	comm_cc1120_init();
 #else
 	conf_general_init();
@@ -79,22 +80,21 @@ int main(void) {
 	servo_simple_init();
 	pos_init();
 	comm_cc2520_init();
-	commands_init();
 	commands_set_send_func(comm_cc2520_send_buffer);
 	comm_can_init();
 	autopilot_init();
 	timeout_init();
 	log_init();
 	comm_cc1120_init();
-#endif
-
-#if UBLOX_EN
-	ublox_init();
-#endif
 
 #if RADAR_EN
 	radar_init();
 	radar_setup_measurement_default();
+#endif
+#endif
+
+#if UBLOX_EN
+	ublox_init();
 #endif
 
 	timeout_configure(2000, 20.0);

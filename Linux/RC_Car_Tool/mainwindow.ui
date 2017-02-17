@@ -1041,8 +1041,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>215</width>
-                   <height>521</height>
+                   <width>180</width>
+                   <height>393</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_17">
@@ -1451,8 +1451,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>215</width>
-                   <height>521</height>
+                   <width>178</width>
+                   <height>422</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_12">
@@ -1724,8 +1724,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>215</width>
-                   <height>521</height>
+                   <width>194</width>
+                   <height>487</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_15">
@@ -2141,8 +2141,6 @@
          </layout>
         </item>
        </layout>
-       <zorder>mapWidget</zorder>
-       <zorder>scrollArea_2</zorder>
       </widget>
       <widget class="QWidget" name="tab_3">
        <attribute name="icon">
@@ -2212,6 +2210,23 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="tab_11">
+       <attribute name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/models/Icons/Radio Tower-96.png</normaloff>:/models/Icons/Radio Tower-96.png</iconset>
+       </attribute>
+       <attribute name="title">
+        <string/>
+       </attribute>
+       <attribute name="toolTip">
+        <string>Mote</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_19">
+        <item>
+         <widget class="MoteConfig" name="moteWidget" native="true"/>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
    </layout>
@@ -2258,6 +2273,12 @@
    <class>NetworkInterface</class>
    <extends>QWidget</extends>
    <header>networkinterface.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>MoteConfig</class>
+   <extends>QWidget</extends>
+   <header>moteconfig.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

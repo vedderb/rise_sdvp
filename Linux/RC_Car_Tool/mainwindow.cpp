@@ -93,6 +93,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->networkLoggerWidget->setMap(ui->mapWidget);
     ui->networkInterface->setMap(ui->mapWidget);
     ui->networkInterface->setPacketInterface(mPacketInterface);
+    ui->moteWidget->setPacketInterface(mPacketInterface);
 
     connect(mTimer, SIGNAL(timeout()), this, SLOT(timerSlot()));
     connect(mSerialPort, SIGNAL(readyRead()),

@@ -71,7 +71,8 @@ SOURCES += main.cpp\
     osmtile.cpp \
     tcpserversimple.cpp \
     packet.cpp \
-    networkinterface.cpp
+    networkinterface.cpp \
+    moteconfig.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
@@ -95,14 +96,16 @@ HEADERS  += mainwindow.h \
     osmtile.h \
     tcpserversimple.h \
     packet.h \
-    networkinterface.h
+    networkinterface.h \
+    moteconfig.h
 
 FORMS    += mainwindow.ui \
     carinterface.ui \
     rtcmwidget.ui \
     basestation.ui \
     networklogger.ui \
-    networkinterface.ui
+    networkinterface.ui \
+    moteconfig.ui
 
 contains(DEFINES, HAS_JOYSTICK) {
     SOURCES += joystick.cpp

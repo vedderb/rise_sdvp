@@ -738,6 +738,28 @@ bool PacketInterface::sendReboot(quint8 id, bool powerOff, int retries)
     return sendPacketAck(mSendBuffer, send_index, retries);
 }
 
+bool PacketInterface::sendMoteUbxBase(int mode,
+                                      double pos_acc,
+                                      int svin_min_dur,
+                                      double svin_acc_limit,
+                                      double lat,
+                                      double lon,
+                                      double height,
+                                      int retries)
+{
+    qint32 send_index = 0;
+    mSendBuffer[send_index++] = ID_MOTE;
+    mSendBuffer[send_index++] = CMD_MOTE_UBX_START_BASE;
+    mSendBuffer[send_index++] = mode;
+    utility::buffer_append_double64(mSendBuffer, lat, 1e16, &send_index);
+    utility::buffer_append_double64(mSendBuffer, lon, 1e16, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, height, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, pos_acc, &send_index);
+    utility::buffer_append_uint32(mSendBuffer, svin_min_dur, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, svin_acc_limit, &send_index);
+    return sendPacketAck(mSendBuffer, send_index, retries);
+}
+
 void PacketInterface::getState(quint8 id)
 {
     QByteArray packet;

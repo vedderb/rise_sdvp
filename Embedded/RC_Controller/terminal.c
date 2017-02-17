@@ -54,8 +54,6 @@ void terminal_process_string(char *str) {
 		p2 = strtok(0, " ");
 	}
 
-	static char buffer[256];
-
 	if (argc == 0) {
 		commands_printf("No command received\n");
 		return;
@@ -83,7 +81,11 @@ void terminal_process_string(char *str) {
 			tp = chRegNextThread(tp);
 		} while (tp != NULL);
 		commands_printf(" ");
-	} else if (strcmp(argv[0], "vesc") == 0) {
+	}
+
+#if MAIN_MODE == MAIN_MODE_CAR
+	else if (strcmp(argv[0], "vesc") == 0) {
+		static char buffer[256];
 		buffer[0] = '\0';
 		int ind = 0;
 		for (int i = 1;i < argc;i++) {
@@ -91,22 +93,6 @@ void terminal_process_string(char *str) {
 			ind += strlen(argv[i]) + 1;
 		}
 		bldc_interface_terminal_cmd(buffer);
-	} else if (strcmp(argv[0], "cc1120_state") == 0) {
-		commands_printf("%s\n", cc1120_state_name());
-	}  else if (strcmp(argv[0], "cc1120_update_rf") == 0) {
-		if (argc != 2) {
-			commands_printf("Invalid number of arguments\n");
-		} else {
-			int set = -1;
-			sscanf(argv[1], "%d", &set);
-
-			if (set < 0) {
-				commands_printf("Invalid argument\n");
-			} else {
-				cc1120_update_rf(set);
-				commands_printf("Done\n");
-			}
-		}
 	}
 
 #if RADAR_EN
@@ -129,6 +115,25 @@ void terminal_process_string(char *str) {
 		radar_cmd(buffer);
 	}
 #endif
+#endif
+
+	else if (strcmp(argv[0], "cc1120_state") == 0) {
+		commands_printf("%s\n", cc1120_state_name());
+	}  else if (strcmp(argv[0], "cc1120_update_rf") == 0) {
+		if (argc != 2) {
+			commands_printf("Invalid number of arguments\n");
+		} else {
+			int set = -1;
+			sscanf(argv[1], "%d", &set);
+
+			if (set < 0) {
+				commands_printf("Invalid argument\n");
+			} else {
+				cc1120_update_rf(set);
+				commands_printf("Done\n");
+			}
+		}
+	}
 
 	// The help command
 	else if (strcmp(argv[0], "help") == 0) {
@@ -145,8 +150,18 @@ void terminal_process_string(char *str) {
 		commands_printf("threads");
 		commands_printf("  List all threads");
 
+#if MAIN_MODE == MAIN_MODE_CAR
 		commands_printf("vesc");
 		commands_printf("  Forward command to VESC");
+
+#if RADAR_EN
+		commands_printf("radar_sample");
+		commands_printf("  Start radar sampling");
+
+		commands_printf("radar_cmd");
+		commands_printf("  Forward command to radar");
+#endif
+#endif
 
 		commands_printf("cc1120_state");
 		commands_printf("  Print the state of the CC1120");
@@ -165,14 +180,6 @@ void terminal_process_string(char *str) {
 		commands_printf("  %d: %s", ind++, "CC1120_SET_434_0M_9_6K_2FSK_BW50K_12K");
 		commands_printf("  %d: %s", ind++, "CC1120_SET_452_0M_9_6K_2GFSK_BW33K_2_4K");
 		commands_printf("  %d: %s", ind++, "CC1120_SET_452_0M_9_6K_2GFSK_BW50K_2_4K");
-
-#if RADAR_EN
-		commands_printf("radar_sample");
-		commands_printf("  Start radar sampling");
-
-		commands_printf("radar_cmd");
-		commands_printf("  Forward command to radar");
-#endif
 
 		for (int i = 0;i < callback_write;i++) {
 			if (callbacks[i].arg_names) {

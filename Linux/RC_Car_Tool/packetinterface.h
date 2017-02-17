@@ -53,6 +53,15 @@ public:
     bool setSystemTime(quint8 id, qint32 sec, qint32 usec, int retries = 10);
     bool sendReboot(quint8 id, bool powerOff, int retries = 10);
 
+    bool sendMoteUbxBase(int mode,
+                         double pos_acc = 10.0,
+                         int svin_min_dur = 120,
+                         double svin_acc_limit = 10.0,
+                         double lat = 0,
+                         double lon = 0,
+                         double height = 0,
+                         int retries = 10);
+
 signals:
     void dataToSend(QByteArray &data);
     void packetReceived(quint8 id, CMD_PACKET cmd, const QByteArray &data);

@@ -95,9 +95,12 @@ typedef enum {
 
 // Commands
 typedef enum {
+	// General commands
 	CMD_PRINTF = 0,
-	CMD_GET_STATE,
 	CMD_TERMINAL_CMD,
+
+	// Car commands
+	CMD_GET_STATE = 50,
 	CMD_VESC_FWD,
 	CMD_RC_CONTROL,
 	CMD_SET_POS,
@@ -126,7 +129,11 @@ typedef enum {
 	CMD_REBOOT_SYSTEM_ACK,
 	CMD_RADAR_SETUP_SET,
 	CMD_RADAR_SETUP_GET,
-	CMD_RADAR_SAMPLES
+	CMD_RADAR_SAMPLES,
+
+	// Mote commands
+	CMD_MOTE_UBX_START_BASE = 200,
+	CMD_MOTE_UBX_BASE_STATUS
 } CMD_PACKET;
 
 // RC control modes
@@ -276,6 +283,17 @@ typedef struct {
 	bool clk_reset;
 	ubx_rxm_rawx_obs obs[32];
 } ubx_rxm_rawx;
+
+typedef struct {
+	bool lla; // Use lla instead of ecef
+	int mode; // Mode. 0 = Disabled, 1 = Survey in, 2 = Fixed
+	double ecefx_lat;
+	double ecefy_lon;
+	double ecefz_alt;
+	float fixed_pos_acc; // Fixed position accuracy
+	uint32_t svin_min_dur; // SVIN minimum duration (s)
+	float svin_acc_limit; // SVIN accuracy limit
+} ubx_cfg_tmode3;
 
 // ============== RTCM Datatypes ================== //
 

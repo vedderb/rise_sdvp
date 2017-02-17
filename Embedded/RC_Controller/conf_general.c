@@ -35,7 +35,11 @@
 
 // Global variables
 MAIN_CONFIG main_config;
-int main_id;
+#if MAIN_MODE == MAIN_MODE_MOTE_2400 || MAIN_MODE == MAIN_MODE_MOTE_400
+int main_id = ID_MOTE;
+#else
+int main_id = 0;
+#endif
 uint16_t VirtAddVarTab[NB_OF_VAR];
 
 void conf_general_init(void) {
