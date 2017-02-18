@@ -120,6 +120,7 @@ private slots:
     void on_mapTraceMinSpaceGpsBox_valueChanged(double arg1);
     void on_mapInfoTraceBox_valueChanged(int arg1);
     void on_removeInfoTraceExtraButton_clicked();
+    void on_pollIntervalBox_valueChanged(int arg1);
 
 private:
     Ui::MainWindow *ui;

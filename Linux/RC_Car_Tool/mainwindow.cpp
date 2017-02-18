@@ -68,7 +68,7 @@ MainWindow::MainWindow(QWidget *parent) :
     qRegisterMetaType<LocPoint>("LocPoint");
 
     mTimer = new QTimer(this);
-    mTimer->start(40);
+    mTimer->start(ui->pollIntervalBox->value());
     mStatusLabel = new QLabel(this);
     ui->statusBar->addPermanentWidget(mStatusLabel);
     mStatusInfoTime = 0;
@@ -1240,4 +1240,9 @@ void MainWindow::on_mapInfoTraceBox_valueChanged(int arg1)
 void MainWindow::on_removeInfoTraceExtraButton_clicked()
 {
     ui->mapWidget->clearInfoTrace();
+}
+
+void MainWindow::on_pollIntervalBox_valueChanged(int arg1)
+{
+    mTimer->setInterval(arg1);
 }

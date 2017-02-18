@@ -34,6 +34,6 @@ void pos_get_enu_ref(double *llh);
 void pos_get_mc_val(mc_values *v);
 int32_t pos_get_ms_today(void);
 void pos_set_ms_today(int32_t ms);
-void pos_input_nmea(const char *data);
+bool pos_input_nmea(const char *data);
 
 #endif /* POS_H_ */

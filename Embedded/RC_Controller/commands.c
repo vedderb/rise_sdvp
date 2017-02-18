@@ -396,26 +396,29 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 					*nextLine = '\0';
 				}
 
-				pos_input_nmea((const char*)curLine);
+				bool found = pos_input_nmea((const char*)curLine);
+
+				// Only send the lines that pos decoded
+				if (found && main_config.gps_send_nmea) {
+					int32_t send_index = 0;
+					m_send_buffer[send_index++] = main_id;
+					m_send_buffer[send_index++] = packet_id;
+					int len_line = strlen(curLine);
+					memcpy(m_send_buffer + send_index, curLine, len_line);
+					send_index += len_line;
+
+					if (m_send_func_last_radio) {
+						m_send_func_last_radio(m_send_buffer, send_index);
+					} else {
+						comm_cc2520_send_buffer(m_send_buffer, send_index);
+					}
+				}
 
 				if (nextLine) {
 					*nextLine = '\n';
 				}
 
 				curLine = nextLine ? (nextLine + 1) : NULL;
-			}
-
-			if (main_config.gps_send_nmea) {
-				int32_t send_index = 0;
-				m_send_buffer[send_index++] = main_id;
-				m_send_buffer[send_index++] = packet_id;
-				memcpy(m_send_buffer + send_index, data, len);
-				send_index += len;
-				if (m_send_func_last_radio) {
-					m_send_func_last_radio(m_send_buffer, send_index);
-				} else {
-					comm_cc2520_send_buffer(m_send_buffer, send_index);
-				}
 			}
 #endif
 		} break;

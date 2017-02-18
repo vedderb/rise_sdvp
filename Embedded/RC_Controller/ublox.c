@@ -446,10 +446,14 @@ static THD_FUNCTION(process_thread, arg) {
 				}
 
 				if (line_pos > 0 && line[line_pos - 1] == '\n') {
-					commands_send_nmea(line, line_pos);
 					line[line_pos] = '\0';
-					pos_input_nmea((const char*)line);
+					bool found = pos_input_nmea((const char*)line);
 					line_pos = 0;
+
+					// Only send the lines that pos decoded
+					if (found) {
+						commands_send_nmea(line, strlen((char*)line));
+					}
 				}
 			}
 		}

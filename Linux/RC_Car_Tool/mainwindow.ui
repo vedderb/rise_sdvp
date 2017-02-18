@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1085</width>
-    <height>808</height>
+    <width>1103</width>
+    <height>745</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -486,6 +486,28 @@
           </widget>
          </item>
         </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QSpinBox" name="pollIntervalBox">
+        <property name="toolTip">
+         <string>Interval at which the car status is polled.</string>
+        </property>
+        <property name="suffix">
+         <string> ms</string>
+        </property>
+        <property name="prefix">
+         <string>Poll Interval: </string>
+        </property>
+        <property name="minimum">
+         <number>20</number>
+        </property>
+        <property name="maximum">
+         <number>1000</number>
+        </property>
+        <property name="value">
+         <number>40</number>
+        </property>
        </widget>
       </item>
       <item>
@@ -1042,7 +1064,7 @@
                    <x>0</x>
                    <y>0</y>
                    <width>180</width>
-                   <height>393</height>
+                   <height>384</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_17">
@@ -1452,7 +1474,7 @@
                    <x>0</x>
                    <y>0</y>
                    <width>178</width>
-                   <height>422</height>
+                   <height>410</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_12">
@@ -1725,7 +1747,7 @@
                    <x>0</x>
                    <y>0</y>
                    <width>194</width>
-                   <height>487</height>
+                   <height>471</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_15">
@@ -2236,8 +2258,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1085</width>
-     <height>20</height>
+     <width>1103</width>
+     <height>19</height>
     </rect>
    </property>
   </widget>

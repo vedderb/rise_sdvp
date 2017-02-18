@@ -219,7 +219,7 @@ void pos_set_ms_today(int32_t ms) {
 	m_ms_today = ms;
 }
 
-void pos_input_nmea(const char *data) {
+bool pos_input_nmea(const char *data) {
 	static char nmea_str[1024];
 	int32_t ms = -1;
 	double lat = 0.0;
@@ -421,6 +421,8 @@ void pos_input_nmea(const char *data) {
 
 		chMtxUnlock(&m_mutex_gps);
 	}
+
+	return found;
 }
 
 static void mpu9150_read(void) {
