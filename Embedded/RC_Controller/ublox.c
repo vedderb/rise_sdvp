@@ -20,9 +20,11 @@
 #include "utils.h"
 #include "pos.h"
 #include "rtcm3_simple.h"
-#include <string.h>
 #include "terminal.h"
 #include "comm_cc1120.h"
+
+#include <string.h>
+#include <math.h>
 
 // Settings
 #define HW_UART_DEV					UARTD6
@@ -194,6 +196,17 @@ void ublox_init(void) {
 	(void)ubx_put_X4;
 	(void)ubx_put_R4;
 	(void)ubx_put_R8;
+
+	// Disable survey in
+	ubx_cfg_tmode3 cfg;
+	memset(&cfg, 0, sizeof(ubx_cfg_tmode3));
+	ublox_cfg_tmode3(&cfg);
+
+	// Switch off RTCM messages, set rate to 5 Hz and time reference to UTC
+	ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_1005, 0);
+	ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_1077, 0);
+	ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_1087, 0);
+	ublox_cfg_rate(200, 1, 0);
 }
 
 void ublox_send(unsigned char *data, unsigned int len) {
@@ -236,7 +249,7 @@ void ublox_cfg_tmode3(ubx_cfg_tmode3 *cfg) {
 
 	ubx_put_U1(buffer, &ind, 0);
 	ubx_put_U1(buffer, &ind, 0);
-	uint16_t flags = ((cfg->lla ? 1 : 0) << 8) || cfg->mode;
+	uint16_t flags = ((cfg->lla ? 1 : 0) << 8) | cfg->mode;
 	ubx_put_X2(buffer, &ind, flags);
 
 	int32_t x_lat = 0;
@@ -246,19 +259,19 @@ void ublox_cfg_tmode3(ubx_cfg_tmode3 *cfg) {
 	int8_t y_lon_hp = 0;
 	int8_t z_alt_hp = 0;
 	if (cfg->lla) {
-		x_lat = cfg->ecefx_lat - D(1e7);
-		y_lon = cfg->ecefy_lon * D(1e7);
-		z_alt = cfg->ecefz_alt * D(1e2);
-		x_lat_hp = (cfg->ecefx_lat - ((double)x_lat * D(1e-7))) * D(1e9);
-		y_lon_hp = (cfg->ecefx_lat - ((double)x_lat * D(1e-7))) * D(1e9);
-		z_alt_hp = (cfg->ecefx_lat - ((double)x_lat * D(1e-2))) * D(1e4);
+		x_lat = round(cfg->ecefx_lat * D(1e7));
+		y_lon = round(cfg->ecefy_lon * D(1e7));
+		z_alt = round(cfg->ecefz_alt * D(1e2));
+		x_lat_hp = ((cfg->ecefx_lat - ((double)x_lat * D(1e-7))) * D(1e9));
+		y_lon_hp = ((cfg->ecefy_lon - ((double)y_lon * D(1e-7))) * D(1e9));
+		z_alt_hp = ((cfg->ecefz_alt - ((double)z_alt * D(1e-2))) * D(1e4));
 	} else {
-		x_lat = cfg->ecefx_lat - D(1e2);
+		x_lat = cfg->ecefx_lat * D(1e2);
 		y_lon = cfg->ecefy_lon * D(1e2);
 		z_alt = cfg->ecefz_alt * D(1e2);
-		x_lat_hp = (cfg->ecefx_lat - ((double)x_lat * D(1e-2))) * D(1e4);
-		y_lon_hp = (cfg->ecefx_lat - ((double)x_lat * D(1e-2))) * D(1e4);
-		z_alt_hp = (cfg->ecefx_lat - ((double)x_lat * D(1e-2))) * D(1e4);
+		x_lat_hp = ((cfg->ecefx_lat - ((double)x_lat * D(1e-2))) * D(1e4));
+		y_lon_hp = ((cfg->ecefy_lon - ((double)y_lon * D(1e-2))) * D(1e4));
+		z_alt_hp = ((cfg->ecefz_alt - ((double)z_alt * D(1e-2))) * D(1e4));
 	}
 
 	ubx_put_I4(buffer, &ind, x_lat);
@@ -281,6 +294,54 @@ void ublox_cfg_tmode3(ubx_cfg_tmode3 *cfg) {
 	ubx_put_U1(buffer, &ind, 0);
 
 	ubx_encode_send(UBX_CLASS_CFG, UBX_CFG_TMODE3, buffer, ind);
+}
+
+void ublox_cfg_msg(uint8_t msg_class, uint8_t id, uint8_t rate) {
+	uint8_t buffer[8];
+	int ind = 0;
+
+	ubx_put_U1(buffer, &ind, msg_class);
+	ubx_put_U1(buffer, &ind, id);
+	ubx_put_U1(buffer, &ind, rate);
+	ubx_put_U1(buffer, &ind, rate);
+	ubx_put_U1(buffer, &ind, rate);
+	ubx_put_U1(buffer, &ind, rate);
+	ubx_put_U1(buffer, &ind, rate);
+	ubx_put_U1(buffer, &ind, rate);
+
+	ubx_encode_send(UBX_CLASS_CFG, UBX_CFG_MSG, buffer, ind);
+}
+
+/**
+ * Set the measurement rate, navigation rate and time reference.
+ *
+ * @param meas_rate_ms
+ * The elapsed time between GNSS measurements, which defines the rate,
+ * e.g. 100ms => 10Hz, 1000ms => 1Hz, 10000ms => 0.1Hz
+ *
+ * @param nav_rate_ms
+ * The ratio between the number of measurements and the number of navigation
+ * solutions, e.g. 5 means five measurements for every navigation solution.
+ * Max. value is 127. (This parameter is ignored and the navRate is fixed to 1
+ * in protocol versions less than 18)
+ *
+ * @param time_ref
+ * The time system to which measurements are aligned:
+ * 0: UTC time
+ * 1: GPS time
+ * 2: GLONASS time (not supported in protocol versions less than 18)
+ * 3: BeiDou time (not supported in protocol versions less than 18)
+ * 4: Galileo time (not supported in protocol versions less than 18)
+ */
+void ublox_cfg_rate(uint16_t meas_rate_ms, uint16_t nav_rate_ms, uint16_t time_ref) {
+	uint8_t buffer[6];
+	int ind = 0;
+
+	ubx_put_U2(buffer, &ind, meas_rate_ms);
+	ubx_put_U2(buffer, &ind, nav_rate_ms);
+	ubx_put_U2(buffer, &ind, time_ref);
+
+	ubx_encode_send(UBX_CLASS_CFG, UBX_CFG_RATE, buffer, ind);
 }
 
 static THD_FUNCTION(process_thread, arg) {
@@ -521,7 +582,7 @@ static void ubx_decode_svin(uint8_t *msg, int len) {
 		commands_printf(
 				"SVIN RX\n"
 				"i_tow: %d ms\n"
-				"dur: %d ms\n"
+				"dur: %d s\n"
 				"Mean X: %.3f m\n"
 				"Mean Y: %.3f m\n"
 				"Mean Z: %.3f m\n"

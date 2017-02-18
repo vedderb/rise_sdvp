@@ -23,6 +23,7 @@ private slots:
 
     void on_setConfigButton_clicked();
     void on_terminalSendButton_clicked();
+    void on_ubxPollNavSvinButton_clicked();
 
 private:
     Ui::MoteConfig *ui;

@@ -275,8 +275,8 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 			int32_t ind = 0;
 			double lat, lon, height;
-			lat = buffer_get_double64(data, 1e16, &ind);
-			lon = buffer_get_double64(data, 1e16, &ind);
+			lat = buffer_get_double64(data, D(1e16), &ind);
+			lon = buffer_get_double64(data, D(1e16), &ind);
 			height = buffer_get_float32(data, 1e3, &ind);
 			pos_set_enu_ref(lat, lon, height);
 
@@ -662,25 +662,41 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 		// ==================== Mote commands ==================== //
 
 		case CMD_MOTE_UBX_START_BASE: {
+			commands_set_send_func(func);
+
 			ubx_cfg_tmode3 cfg;
 			memset(&cfg, 0, sizeof(ubx_cfg_tmode3));
 			int32_t ind = 0;
 
 			cfg.mode = data[ind++];
 			cfg.lla = true;
-			cfg.ecefx_lat = buffer_get_double64(data, 1e16, &ind);
-			cfg.ecefy_lon = buffer_get_double64(data, 1e16, &ind);
-			cfg.ecefz_alt = buffer_get_float32(data, 1e3, &ind);
+			cfg.ecefx_lat = buffer_get_double64(data, D(1e16), &ind);
+			cfg.ecefy_lon = buffer_get_double64(data, D(1e16), &ind);
+			cfg.ecefz_alt = buffer_get_float32_auto(data, &ind);
 			cfg.fixed_pos_acc = buffer_get_float32_auto(data, &ind);
 			cfg.svin_min_dur = buffer_get_uint32(data, &ind);
 			cfg.svin_acc_limit = buffer_get_float32_auto(data, &ind);
 
 			ublox_cfg_tmode3(&cfg);
 
+			if (cfg.mode) {
+				// Switch on RTCM messages, set rate to 1 Hz and time reference to UTC
+				ublox_cfg_rate(1000, 1, 0);
+				ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_1005, 10); // Every 10s
+				ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_1077, 1); // Every second
+				ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_1087, 1); // Every second
+			} else {
+				// Switch off RTCM messages, set rate to 5 Hz and time reference to UTC
+				ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_1005, 0);
+				ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_1077, 0);
+				ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_1087, 0);
+				ublox_cfg_rate(200, 1, 0);
+			}
+
 			// Send ack
 			int32_t send_index = 0;
 			m_send_buffer[send_index++] = main_id;
-			m_send_buffer[send_index++] = packet_id;
+			m_send_buffer[send_index++] = CMD_MOTE_UBX_START_BASE_ACK;
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
 

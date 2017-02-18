@@ -537,6 +537,9 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
     case CMD_REBOOT_SYSTEM_ACK:
         emit ackReceived(id, cmd, "CMD_REBOOT_SYSTEM_ACK");
         break;
+    case CMD_MOTE_UBX_START_BASE_ACK:
+        emit ackReceived(id, cmd, "CMD_MOTE_UBX_START_BASE_ACK");
+        break;
 
     default:
         break;

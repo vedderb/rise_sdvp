@@ -173,6 +173,7 @@ typedef enum {
 
     // Mote commands
     CMD_MOTE_UBX_START_BASE = 200,
+    CMD_MOTE_UBX_START_BASE_ACK,
     CMD_MOTE_UBX_BASE_STATUS
 } CMD_PACKET;
 

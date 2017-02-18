@@ -29,6 +29,8 @@ void ublox_set_rx_callback_rawx(void(*func)(ubx_rxm_rawx *pos));
 void ublox_set_rx_callback_svin(void(*func)(ubx_nav_svin *pos));
 void ublox_poll(uint8_t msg_class, uint8_t id);
 void ublox_cfg_tmode3(ubx_cfg_tmode3 *cfg);
+void ublox_cfg_msg(uint8_t msg_class, uint8_t id, uint8_t rate);
+void ublox_cfg_rate(uint16_t meas_rate_ms, uint16_t nav_rate_ms, uint16_t time_ref);
 
 // Message classes
 #define UBX_CLASS_NAV					0x01
@@ -45,6 +47,7 @@ void ublox_cfg_tmode3(ubx_cfg_tmode3 *cfg);
 #define UBX_CLASS_LOG					0x21
 #define UBX_CLASS_SEC					0x27
 #define UBX_CLASS_HNR					0x28
+#define UBX_CLASS_RTCM3					0xF5
 
 // Navigation (NAV) messages
 #define UBX_NAV_RELPOSNED				0x3C
@@ -54,6 +57,14 @@ void ublox_cfg_tmode3(ubx_cfg_tmode3 *cfg);
 #define UBX_RXM_RAWX					0x15
 
 // Configuration messages
+#define UBX_CFG_MSG						0x01
+#define UBX_CFG_RATE					0x08
 #define UBX_CFG_TMODE3					0x71
+
+// RTCM3 messages
+#define UBX_RTCM3_1005					0x05
+#define UBX_RTCM3_1077					0x4D
+#define UBX_RTCM3_1087					0x57
+#define UBX_RTCM3_1127					0x7F
 
 #endif /* UBLOX_H_ */

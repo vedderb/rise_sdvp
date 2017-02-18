@@ -26,7 +26,7 @@
 #define MAIN_MODE_QUADCOPTER		3
 
 // Main mode
-#define MAIN_MODE					MAIN_MODE_MOTE_400
+#define MAIN_MODE					MAIN_MODE_CAR
 
 // Firmware version
 #define FW_VERSION_MAJOR			8

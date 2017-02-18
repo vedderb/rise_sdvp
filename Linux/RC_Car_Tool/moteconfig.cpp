@@ -1,6 +1,7 @@
 #include "moteconfig.h"
 #include "ui_moteconfig.h"
 #include <QMessageBox>
+#include <cstdio>
 
 MoteConfig::MoteConfig(QWidget *parent) :
     QWidget(parent),
@@ -9,6 +10,10 @@ MoteConfig::MoteConfig(QWidget *parent) :
     ui->setupUi(this);
 
     mPacketInterface = 0;
+
+    ui->fixedLatBox->setValue(57.71495867);
+    ui->fixedLonBox->setValue(12.89134921);
+    ui->fixedHBox->setValue(219.0);
 }
 
 MoteConfig::~MoteConfig()
@@ -65,4 +70,11 @@ void MoteConfig::on_terminalSendButton_clicked()
     }
 
     ui->terminalEdit->clear();
+}
+
+void MoteConfig::on_ubxPollNavSvinButton_clicked()
+{
+    if (mPacketInterface) {
+        mPacketInterface->sendTerminalCmd(ID_MOTE, "ubx_poll UBX_NAV_SVIN");
+    }
 }
