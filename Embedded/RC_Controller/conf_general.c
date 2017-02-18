@@ -166,7 +166,7 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 	}
 
 #ifdef CAR_TERO
-	conf->gear_ratio = 0.15;
+	conf->gear_ratio = 0.1;
 	conf->wheel_diam = 0.155;
 	conf->motor_poles = 4.0;
 	conf->steering_max_angle_rad = 0.39952;
