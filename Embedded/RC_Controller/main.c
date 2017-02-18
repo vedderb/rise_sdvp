@@ -69,24 +69,19 @@ int main(void) {
 	comm_usb_init();
 	ext_cb_init();
 	commands_init();
-
-#if MAIN_MODE == MAIN_MODE_MOTE_2400
-	comm_cc2520_init();
-#elif MAIN_MODE == MAIN_MODE_MOTE_400
 	comm_cc1120_init();
-#else
+	comm_cc2520_init();
+
+#if MAIN_MODE == MAIN_MODE_CAR
 	conf_general_init();
 	adconv_init();
 	servo_simple_init();
 	pos_init();
-	comm_cc2520_init();
 	commands_set_send_func(comm_cc2520_send_buffer);
 	comm_can_init();
 	autopilot_init();
 	timeout_init();
 	log_init();
-	comm_cc1120_init();
-
 #if RADAR_EN
 	radar_init();
 	radar_setup_measurement_default();

@@ -885,9 +885,9 @@ static void ubx_put_R8(uint8_t *msg, int *ind, double data) {
 
 static void rtcm_rx(uint8_t *data, int len, int type) {
 	(void)type;
-#if MAIN_MODE == MAIN_MODE_MOTE_2400
-	comm_cc2520_send_buffer(data, len);
-#else
+//#if MAIN_MODE == MAIN_MODE_MOTE_2400
+//	comm_cc2520_send_buffer(data, len);
+//#else
 	comm_cc1120_send_buffer(data, len);
-#endif
+//#endif
 }
