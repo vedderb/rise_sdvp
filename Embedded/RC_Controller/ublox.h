@@ -28,10 +28,10 @@ void ublox_set_rx_callback_relposned(void(*func)(ubx_nav_relposned *pos));
 void ublox_set_rx_callback_rawx(void(*func)(ubx_rxm_rawx *pos));
 void ublox_set_rx_callback_svin(void(*func)(ubx_nav_svin *pos));
 void ublox_poll(uint8_t msg_class, uint8_t id);
-void ublox_cfg_tmode3(ubx_cfg_tmode3 *cfg);
-void ublox_cfg_msg(uint8_t msg_class, uint8_t id, uint8_t rate);
-void ublox_cfg_rate(uint16_t meas_rate_ms, uint16_t nav_rate_ms, uint16_t time_ref);
-void ublox_cfg_nav5(ubx_cfg_nav5 *cfg);
+int ublox_cfg_tmode3(ubx_cfg_tmode3 *cfg);
+int ublox_cfg_msg(uint8_t msg_class, uint8_t id, uint8_t rate);
+int ublox_cfg_rate(uint16_t meas_rate_ms, uint16_t nav_rate_ms, uint16_t time_ref);
+int ublox_cfg_nav5(ubx_cfg_nav5 *cfg);
 
 // Message classes
 #define UBX_CLASS_NAV					0x01
@@ -56,6 +56,10 @@ void ublox_cfg_nav5(ubx_cfg_nav5 *cfg);
 
 // Receiver Manager (RXM) messages
 #define UBX_RXM_RAWX					0x15
+
+// Ack messages
+#define UBX_ACK_ACK						0x01
+#define UBX_ACK_NAK						0x00
 
 // Configuration messages
 #define UBX_CFG_MSG						0x01

@@ -78,3 +78,17 @@ void MoteConfig::on_ubxPollNavSvinButton_clicked()
         mPacketInterface->sendTerminalCmd(ID_MOTE, "ubx_poll UBX_NAV_SVIN");
     }
 }
+
+void MoteConfig::on_ubxPollNavRelPosNedButton_clicked()
+{
+    if (mPacketInterface) {
+        mPacketInterface->sendTerminalCmd(ID_MOTE, "ubx_poll UBX_NAV_RELPOSNED");
+    }
+}
+
+void MoteConfig::on_ubxPollRxmRawxButton_clicked()
+{
+    if (mPacketInterface) {
+        mPacketInterface->sendTerminalCmd(ID_MOTE, "ubx_poll UBX_RXM_RAWX");
+    }
+}

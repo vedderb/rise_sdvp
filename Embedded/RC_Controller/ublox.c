@@ -22,6 +22,7 @@
 #include "rtcm3_simple.h"
 #include "terminal.h"
 #include "comm_cc1120.h"
+#include "comm_cc2520.h"
 
 #include <string.h>
 #include <math.h>
@@ -37,11 +38,13 @@
 #define LINE_BUFFER_SIZE			256
 #define UBX_BUFFER_SIZE				2048
 #define PRINT_UBX_MSGS				1
+#define CFG_ACK_WAIT_MS				100
 
 // Threads
 static THD_FUNCTION(process_thread, arg);
 static THD_WORKING_AREA(process_thread_wa, 4096);
 static thread_t *process_tp = 0;
+static thread_t *ack_wait_tp = 0;
 
 // Variables
 static uint8_t serial_rx_buffer[SERIAL_RX_BUFFER_SIZE];
@@ -55,9 +58,12 @@ static void ubx_terminal_cmd_poll(int argc, const char **argv);
 static void ubx_decode(uint8_t class, uint8_t id, uint8_t *msg, int len);
 static void ubx_decode_relposned(uint8_t *msg, int len);
 static void ubx_decode_svin(uint8_t *msg, int len);
+static void ubx_decode_ack(uint8_t *msg, int len);
+static void ubx_decode_nak(uint8_t *msg, int len);
 static void ubx_decode_rawx(uint8_t *msg, int len);
 
 static void ubx_encode_send(uint8_t class, uint8_t id, uint8_t *msg, int len);
+static int wait_ack_nak(int timeout_ms);
 
 static uint8_t ubx_get_U1(uint8_t *msg, int *ind);
 static int8_t ubx_get_I1(uint8_t *msg, int *ind);
@@ -197,6 +203,8 @@ void ublox_init(void) {
 	(void)ubx_put_R4;
 	(void)ubx_put_R8;
 
+	chThdSleepMilliseconds(100);
+
 	// Disable survey in
 	ubx_cfg_tmode3 tmode3;
 	memset(&tmode3, 0, sizeof(ubx_cfg_tmode3));
@@ -252,7 +260,18 @@ void ublox_poll(uint8_t msg_class, uint8_t id) {
 	ubx_encode_send(msg_class, id, 0, 0);
 }
 
-void ublox_cfg_tmode3(ubx_cfg_tmode3 *cfg) {
+/**
+ * Set the tmode3 configuration.
+ *
+ * @param cfg
+ * The configuration.
+ *
+ * @return
+ * 0: Ack received
+ * 1: Nak received (rejected)
+ * -1: Timeout when waiting for ack/nak
+ */
+int ublox_cfg_tmode3(ubx_cfg_tmode3 *cfg) {
 	uint8_t buffer[40];
 	int ind = 0;
 
@@ -303,9 +322,27 @@ void ublox_cfg_tmode3(ubx_cfg_tmode3 *cfg) {
 	ubx_put_U1(buffer, &ind, 0);
 
 	ubx_encode_send(UBX_CLASS_CFG, UBX_CFG_TMODE3, buffer, ind);
+	return wait_ack_nak(CFG_ACK_WAIT_MS);
 }
 
-void ublox_cfg_msg(uint8_t msg_class, uint8_t id, uint8_t rate) {
+/**
+ * Set the msg output configuration.
+ *
+ * @param msg_class
+ * The the message class.
+ *
+ * @param id
+ * The message id
+ *
+ * @param
+ * The message rate. 0 = disbaled
+ *
+ * @return
+ * 0: Ack received
+ * 1: Nak received (rejected)
+ * -1: Timeout when waiting for ack/nak
+ */
+int ublox_cfg_msg(uint8_t msg_class, uint8_t id, uint8_t rate) {
 	uint8_t buffer[8];
 	int ind = 0;
 
@@ -319,6 +356,7 @@ void ublox_cfg_msg(uint8_t msg_class, uint8_t id, uint8_t rate) {
 	ubx_put_U1(buffer, &ind, rate);
 
 	ubx_encode_send(UBX_CLASS_CFG, UBX_CFG_MSG, buffer, ind);
+	return wait_ack_nak(CFG_ACK_WAIT_MS);
 }
 
 /**
@@ -341,8 +379,13 @@ void ublox_cfg_msg(uint8_t msg_class, uint8_t id, uint8_t rate) {
  * 2: GLONASS time (not supported in protocol versions less than 18)
  * 3: BeiDou time (not supported in protocol versions less than 18)
  * 4: Galileo time (not supported in protocol versions less than 18)
+ *
+ * @return
+ * 0: Ack received
+ * 1: Nak received (rejected)
+ * -1: Timeout when waiting for ack/nak
  */
-void ublox_cfg_rate(uint16_t meas_rate_ms, uint16_t nav_rate_ms, uint16_t time_ref) {
+int ublox_cfg_rate(uint16_t meas_rate_ms, uint16_t nav_rate_ms, uint16_t time_ref) {
 	uint8_t buffer[6];
 	int ind = 0;
 
@@ -351,9 +394,21 @@ void ublox_cfg_rate(uint16_t meas_rate_ms, uint16_t nav_rate_ms, uint16_t time_r
 	ubx_put_U2(buffer, &ind, time_ref);
 
 	ubx_encode_send(UBX_CLASS_CFG, UBX_CFG_RATE, buffer, ind);
+	return wait_ack_nak(CFG_ACK_WAIT_MS);
 }
 
-void ublox_cfg_nav5(ubx_cfg_nav5 *cfg) {
+/**
+ * Set the nav5 configuration.
+ *
+ * @param cfg
+ * The configuration.
+ *
+ * @return
+ * 0: Ack received
+ * 1: Nak received (rejected)
+ * -1: Timeout when waiting for ack/nak
+ */
+int ublox_cfg_nav5(ubx_cfg_nav5 *cfg) {
 	uint8_t buffer[36];
 	int ind = 0;
 
@@ -394,6 +449,7 @@ void ublox_cfg_nav5(ubx_cfg_nav5 *cfg) {
 	ubx_put_U1(buffer, &ind, 0);
 
 	ubx_encode_send(UBX_CLASS_CFG, UBX_CFG_NAV5, buffer, ind);
+	return wait_ack_nak(CFG_ACK_WAIT_MS);
 }
 
 static THD_FUNCTION(process_thread, arg) {
@@ -499,13 +555,16 @@ static THD_FUNCTION(process_thread, arg) {
 
 				if (line_pos > 0 && line[line_pos - 1] == '\n') {
 					line[line_pos] = '\0';
-					bool found = pos_input_nmea((const char*)line);
 					line_pos = 0;
+
+#if MAIN_MODE == MAIN_MODE_CAR
+					bool found = pos_input_nmea((const char*)line);
 
 					// Only send the lines that pos decoded
 					if (found) {
 						commands_send_nmea(line, strlen((char*)line));
 					}
+#endif
 				}
 			}
 		}
@@ -541,6 +600,21 @@ static void ubx_decode(uint8_t class, uint8_t id, uint8_t *msg, int len) {
 		case UBX_NAV_SVIN:
 			ubx_decode_svin(msg, len);
 			break;
+		default:
+			break;
+		}
+	} break;
+
+	case UBX_CLASS_ACK: {
+		switch (id) {
+		case UBX_ACK_ACK:
+			ubx_decode_ack(msg, len);
+			break;
+
+		case UBX_ACK_NAK:
+			ubx_decode_nak(msg, len);
+			break;
+
 		default:
 			break;
 		}
@@ -652,6 +726,40 @@ static void ubx_decode_svin(uint8_t *msg, int len) {
 	}
 }
 
+static void ubx_decode_ack(uint8_t *msg, int len) {
+	(void)len;
+
+	int ind = 0;
+
+	uint8_t cls_id = ubx_get_I1(msg, &ind);
+	uint8_t msg_id = ubx_get_I1(msg, &ind);
+
+	// TODO: Use these
+	(void)cls_id;
+	(void)msg_id;
+
+	if (ack_wait_tp) {
+		chEvtSignalI(ack_wait_tp, (eventmask_t)1);
+	}
+}
+
+static void ubx_decode_nak(uint8_t *msg, int len) {
+	(void)len;
+
+	int ind = 0;
+
+	uint8_t cls_id = ubx_get_I1(msg, &ind);
+	uint8_t msg_id = ubx_get_I1(msg, &ind);
+
+	// TODO: Use these
+	(void)cls_id;
+	(void)msg_id;
+
+	if (ack_wait_tp) {
+		chEvtSignalI(ack_wait_tp, (eventmask_t)2);
+	}
+}
+
 // Note: Message version 0x01
 static void ubx_decode_rawx(uint8_t *msg, int len) {
 	(void)len;
@@ -755,6 +863,39 @@ static void ubx_encode_send(uint8_t class, uint8_t id, uint8_t *msg, int len) {
 	ubx[ind++] = ck_b;
 
 	ublox_send(ubx, ind);
+}
+
+/**
+ * Wait for ack or nak.
+ *
+ * @param timeout_ms
+ * The timeout for the wait, -1 = infinite.
+ *
+ * @return
+ * 0: ack
+ * 1: nak
+ * -1: timeout
+ *
+ */
+static int wait_ack_nak(int timeout_ms) {
+	systime_t to;
+	if (timeout_ms >= 0) {
+		to = MS2ST(timeout_ms);
+	} else {
+		to = TIME_INFINITE;
+	}
+
+	ack_wait_tp = chThdGetSelfX();
+	int res = chEvtWaitAnyTimeout((eventmask_t)3, to);
+	ack_wait_tp = 0;
+
+	if (res == 1) {
+		return 0;
+	} else if (res == 2) {
+		return 1;
+	} else {
+		return -1;
+	}
 }
 
 static uint8_t ubx_get_U1(uint8_t *msg, int *ind) {

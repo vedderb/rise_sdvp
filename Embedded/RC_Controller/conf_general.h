@@ -26,17 +26,17 @@
 #define MAIN_MODE_QUADCOPTER		3
 
 // Main mode
-#define MAIN_MODE					MAIN_MODE_MOTE_2400
+#define MAIN_MODE					MAIN_MODE_CAR
 
 // Mode options
-#define MAIN_MODE_MOTE_RTCM_400		1 // Send all RTCM data over the CC1120
+#define MAIN_MODE_MOTE_RTCM_400		1 // Send all RTCM data over the CC1120 in mote mode
 
 // Firmware version
 #define FW_VERSION_MAJOR			8
 #define FW_VERSION_MINOR			0
 
 // Default car settings
-//#define CAR_TERO // Benjamins tero car
+#define CAR_TERO // Benjamins tero car
 
 // Defaults for different cars
 #ifdef CAR_TERO

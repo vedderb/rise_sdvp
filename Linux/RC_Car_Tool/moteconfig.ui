@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>681</width>
-    <height>465</height>
+    <height>431</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -143,15 +143,6 @@
             </property>
            </widget>
           </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
-        <widget class="QGroupBox" name="groupBox_3">
-         <property name="title">
-          <string>Ublox Base</string>
-         </property>
-         <layout class="QHBoxLayout" name="horizontalLayout_3">
           <item>
            <widget class="QDoubleSpinBox" name="ubxFixedPosAccBox">
             <property name="prefix">
@@ -168,6 +159,15 @@
             </property>
            </widget>
           </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_3">
+         <property name="title">
+          <string>Ublox Base</string>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_3">
           <item>
            <widget class="QDoubleSpinBox" name="ubxSvinAccLimBox">
             <property name="prefix">
@@ -293,6 +293,20 @@
                <widget class="QPushButton" name="ubxPollNavSvinButton">
                 <property name="text">
                  <string>NAV_SVIN</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="ubxPollNavRelPosNedButton">
+                <property name="text">
+                 <string>NAV_RELPOSNED</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="ubxPollRxmRawxButton">
+                <property name="text">
+                 <string>RXM_RAWX</string>
                 </property>
                </widget>
               </item>
