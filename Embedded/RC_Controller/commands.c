@@ -685,15 +685,29 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			if (cfg.mode) {
 				// Switch on RTCM messages, set rate to 1 Hz and time reference to UTC
 				ublox_cfg_rate(1000, 1, 0);
-				ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_1005, 10); // Every 10s
+				ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_1005, 1); // Every second
 				ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_1077, 1); // Every second
 				ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_1087, 1); // Every second
+
+				// Stationary dynamic model
+				ubx_cfg_nav5 nav5;
+				memset(&nav5, 0, sizeof(ubx_cfg_nav5));
+				nav5.apply_dyn = true;
+				nav5.dyn_model = 2;
+				ublox_cfg_nav5(&nav5);
 			} else {
 				// Switch off RTCM messages, set rate to 5 Hz and time reference to UTC
 				ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_1005, 0);
 				ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_1077, 0);
 				ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_1087, 0);
 				ublox_cfg_rate(200, 1, 0);
+
+				// Automotive dynamic model
+				ubx_cfg_nav5 nav5;
+				memset(&nav5, 0, sizeof(ubx_cfg_nav5));
+				nav5.apply_dyn = true;
+				nav5.dyn_model = 4;
+				ublox_cfg_nav5(&nav5);
 			}
 
 			// Send ack

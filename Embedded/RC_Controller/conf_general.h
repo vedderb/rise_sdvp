@@ -28,6 +28,9 @@
 // Main mode
 #define MAIN_MODE					MAIN_MODE_MOTE_2400
 
+// Mode options
+#define MAIN_MODE_MOTE_RTCM_400		1 // Send all RTCM data over the CC1120
+
 // Firmware version
 #define FW_VERSION_MAJOR			8
 #define FW_VERSION_MINOR			0

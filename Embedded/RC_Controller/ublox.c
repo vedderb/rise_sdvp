@@ -198,15 +198,24 @@ void ublox_init(void) {
 	(void)ubx_put_R8;
 
 	// Disable survey in
-	ubx_cfg_tmode3 cfg;
-	memset(&cfg, 0, sizeof(ubx_cfg_tmode3));
-	ublox_cfg_tmode3(&cfg);
+	ubx_cfg_tmode3 tmode3;
+	memset(&tmode3, 0, sizeof(ubx_cfg_tmode3));
+	ublox_cfg_tmode3(&tmode3);
 
-	// Switch off RTCM messages, set rate to 5 Hz and time reference to UTC
+	// Switch off RTCM message output
 	ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_1005, 0);
 	ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_1077, 0);
 	ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_1087, 0);
+
+	// Set rate to 5 Hz and time reference to UTC
 	ublox_cfg_rate(200, 1, 0);
+
+	// Dynamic model
+	ubx_cfg_nav5 nav5;
+	memset(&nav5, 0, sizeof(ubx_cfg_nav5));
+	nav5.apply_dyn = true;
+	nav5.dyn_model = 4;
+	ublox_cfg_nav5(&nav5);
 }
 
 void ublox_send(unsigned char *data, unsigned int len) {
@@ -342,6 +351,49 @@ void ublox_cfg_rate(uint16_t meas_rate_ms, uint16_t nav_rate_ms, uint16_t time_r
 	ubx_put_U2(buffer, &ind, time_ref);
 
 	ubx_encode_send(UBX_CLASS_CFG, UBX_CFG_RATE, buffer, ind);
+}
+
+void ublox_cfg_nav5(ubx_cfg_nav5 *cfg) {
+	uint8_t buffer[36];
+	int ind = 0;
+
+	uint16_t mask = 0;
+	mask |= (cfg->apply_dyn ? 1 : 0) << 0;
+	mask |= (cfg->apply_min_el ? 1 : 0) << 1;
+	mask |= (cfg->apply_pos_fix_mode ? 1 : 0) << 2;
+	mask |= (cfg->apply_pos_mask ? 1 : 0) << 4;
+	mask |= (cfg->apply_time_mask ? 1 : 0) << 5;
+	mask |= (cfg->apply_static_hold_mask ? 1 : 0) << 6;
+	mask |= (cfg->apply_dgps ? 1 : 0) << 7;
+	mask |= (cfg->apply_cno ? 1 : 0) << 8;
+	mask |= (cfg->apply_utc ? 1 : 0) << 10;
+
+	ubx_put_X2(buffer, &ind, mask);
+	ubx_put_U1(buffer, &ind, cfg->dyn_model);
+	ubx_put_U1(buffer, &ind, cfg->fix_mode);
+	ubx_put_I4(buffer, &ind, cfg->fixed_alt * D(100.0));
+	ubx_put_U4(buffer, &ind, cfg->fixed_alt_var * D(10000.0));
+	ubx_put_I1(buffer, &ind, cfg->min_elev);
+	ubx_put_U1(buffer, &ind, 0);
+	ubx_put_U2(buffer, &ind, cfg->p_dop * 10.0);
+	ubx_put_U2(buffer, &ind, cfg->t_dop * 10.0);
+	ubx_put_U2(buffer, &ind, cfg->p_acc);
+	ubx_put_U2(buffer, &ind, cfg->t_acc);
+	ubx_put_U1(buffer, &ind, cfg->static_hold_thres);
+	ubx_put_U1(buffer, &ind, cfg->dgnss_timeout);
+	ubx_put_U1(buffer, &ind, cfg->cno_tres_num_sat);
+	ubx_put_U1(buffer, &ind, cfg->cno_tres);
+	ubx_put_U1(buffer, &ind, 0);
+	ubx_put_U1(buffer, &ind, 0);
+	ubx_put_U2(buffer, &ind, cfg->static_hold_max_dist);
+	ubx_put_U1(buffer, &ind, cfg->utc_standard);
+	ubx_put_U1(buffer, &ind, 0);
+	ubx_put_U1(buffer, &ind, 0);
+	ubx_put_U1(buffer, &ind, 0);
+	ubx_put_U1(buffer, &ind, 0);
+	ubx_put_U1(buffer, &ind, 0);
+
+	ubx_encode_send(UBX_CLASS_CFG, UBX_CFG_NAV5, buffer, ind);
 }
 
 static THD_FUNCTION(process_thread, arg) {
@@ -885,9 +937,13 @@ static void ubx_put_R8(uint8_t *msg, int *ind, double data) {
 
 static void rtcm_rx(uint8_t *data, int len, int type) {
 	(void)type;
-//#if MAIN_MODE == MAIN_MODE_MOTE_2400
-//	comm_cc2520_send_buffer(data, len);
-//#else
+#if MAIN_MODE == MAIN_MODE_MOTE_2400
+#if MAIN_MODE_MOTE_RTCM_400 == 1
 	comm_cc1120_send_buffer(data, len);
-//#endif
+#else
+	comm_cc2520_send_buffer(data, len);
+#endif
+#else
+	comm_cc1120_send_buffer(data, len);
+#endif
 }

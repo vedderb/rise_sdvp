@@ -23,6 +23,7 @@
 #include "comm_usb_serial.h"
 #include "comm_cc2520.h"
 #include "comm_cc1120.h"
+#include "ublox.h"
 
 // Settings
 #define PACKET_HANDLER				0
@@ -119,11 +120,25 @@ static void process_packet(unsigned char *data, unsigned int len) {
 		commands_process_packet(data, len, comm_usb_send_packet);
 	} else {
 #if MAIN_MODE == MAIN_MODE_MOTE_2400
-	comm_cc2520_send_buffer(data, len);
+#if MAIN_MODE_MOTE_RTCM_400 == 1
+		if (packet_id == CMD_SEND_RTCM_USB) {
+			comm_cc1120_send_buffer(data, len);
+		} else {
+			comm_cc2520_send_buffer(data, len);
+		}
+#else
+		comm_cc2520_send_buffer(data, len);
+#endif
 #elif MAIN_MODE == MAIN_MODE_MOTE_400
 	comm_cc1120_send_buffer(data, len);
 #endif
 	}
+
+#if UBLOX_EN
+	if (packet_id == CMD_SEND_RTCM_USB) {
+		ublox_send(data + 2, len - 2);
+	}
+#endif
 #else
 	commands_process_packet(data, len, comm_usb_send_packet);
 #endif
