@@ -58,6 +58,10 @@
  * 1, 7			I2C2		MPU9150
  * 1, 3			SPI2		CC2520
  * 1, 4			SPI2		CC2520
+ * 2, 0			SPI2		CC1120
+ * 2, 3			SPI2		CC1120
+ * 2, 2			UART6		UBLOX
+ * 2, 7			UART6		UBLOX
  *
  */
 
@@ -66,18 +70,13 @@ int main(void) {
 	chSysInit();
 
 	led_init();
-	comm_usb_init();
 	ext_cb_init();
-	commands_init();
-	comm_cc1120_init();
-	comm_cc2520_init();
 
 #if MAIN_MODE == MAIN_MODE_CAR
 	conf_general_init();
 	adconv_init();
 	servo_simple_init();
 	pos_init();
-	commands_set_send_func(comm_cc2520_send_buffer);
 	comm_can_init();
 	autopilot_init();
 	timeout_init();
@@ -86,6 +85,15 @@ int main(void) {
 	radar_init();
 	radar_setup_measurement_default();
 #endif
+#endif
+
+	comm_usb_init();
+	comm_cc2520_init();
+	comm_cc1120_init();
+	commands_init();
+
+#if MAIN_MODE == MAIN_MODE_CAR
+	commands_set_send_func(comm_cc2520_send_buffer);
 #endif
 
 #if UBLOX_EN

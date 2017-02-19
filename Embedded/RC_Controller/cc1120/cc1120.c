@@ -926,7 +926,7 @@ static THD_FUNCTION(isr_thread, arg) {
 	isr_tp = chThdGetSelfX();
 
 	for (;;) {
-		chEvtWaitAny((eventmask_t) 1);
+		chEvtWaitAnyTimeout((eventmask_t) 1, MS2ST(100));
 
 		while (palReadPad(CC1120_PORT_GPIO0, CC1120_PIN_GPIO0)) {
 			interrupt();

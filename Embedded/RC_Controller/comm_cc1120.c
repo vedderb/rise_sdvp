@@ -110,7 +110,7 @@ static void rx_func(uint8_t *data, int len, int rssi, int lqi, bool crc_ok) {
 
 	if (crc_ok) {
 		led_toggle(LED_RED);
-#if MAIN_MODE == MAIN_MODE_MOTE_400
+#if MAIN_MODE == MAIN_MODE_MOTE_400 || MAIN_MODE == MAIN_MODE_MOTE_2400
 		comm_usb_send_packet(data, len);
 #else
 		commands_process_packet(data, len, comm_cc1120_send_buffer);

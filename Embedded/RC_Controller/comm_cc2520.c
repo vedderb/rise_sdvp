@@ -167,6 +167,13 @@ void comm_cc2520_send_buffer(uint8_t *data, unsigned int len) {
  * before blocking the RF channel by sending the response.
  */
 void comm_cc2520_send_packet(uint8_t *data, uint8_t len) {
+	// Wait while fifo is full
+	int to = 1000;
+	while (((tx_slot_write + 1) % TX_BUFFER_SLOTS) == tx_slot_read && to) {
+		chThdSleepMilliseconds(1);
+		to--;
+	}
+
 	memcpy(tx_buffer[tx_slot_write], data, len);
 	tx_slot_len[tx_slot_write] = len;
 
@@ -229,7 +236,7 @@ static THD_FUNCTION(rx_thread, arg) {
 				if (crc16(rx_buffer, rxbuf_len)
 						== ((unsigned short) crc_high << 8
 								| (unsigned short) crc_low)) {
-#if MAIN_MODE == MAIN_MODE_MOTE_2400
+#if MAIN_MODE == MAIN_MODE_MOTE_2400 || MAIN_MODE == MAIN_MODE_MOTE_400
 					comm_usb_send_packet(rx_buffer, rxbuf_len);
 #else
 					commands_process_packet(rx_buffer, rxbuf_len, comm_cc2520_send_buffer);
@@ -239,7 +246,7 @@ static THD_FUNCTION(rx_thread, arg) {
 			break;
 
 			case MOTE_PACKET_PROCESS_SHORT_BUFFER:
-#if MAIN_MODE == MAIN_MODE_MOTE_2400
+#if MAIN_MODE == MAIN_MODE_MOTE_2400 || MAIN_MODE == MAIN_MODE_MOTE_400
 				comm_usb_send_packet(buf + 1, len - 1);
 #else
 				commands_process_packet(buf + 1, len - 1, comm_cc2520_send_buffer);

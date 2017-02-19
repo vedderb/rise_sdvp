@@ -29,10 +29,12 @@
 
 // Settings
 #define HW_UART_DEV					UARTD6
-#define HW_UART_TX_PORT				GPIOC
-#define HW_UART_TX_PIN				6
-#define HW_UART_RX_PORT				GPIOC
-#define HW_UART_RX_PIN				7
+#define HW_UBX_TX_PORT				GPIOC
+#define HW_UBX_TX_PIN				6
+#define HW_UBX_RX_PORT				GPIOC
+#define HW_UBX_RX_PIN				7
+#define HW_UBX_RESET_PORT			GPIOC
+#define HW_UBX_RESET_PIN			9
 #define BAUDRATE					115200
 #define SERIAL_RX_BUFFER_SIZE		1024
 #define LINE_BUFFER_SIZE			256
@@ -160,9 +162,16 @@ static UARTConfig uart_cfg = {
 };
 
 void ublox_init(void) {
+	palSetPadMode(HW_UBX_TX_PORT, HW_UBX_TX_PIN, PAL_MODE_ALTERNATE(8));
+	palSetPadMode(HW_UBX_RX_PORT, HW_UBX_RX_PIN, PAL_MODE_ALTERNATE(8));
+	palSetPadMode(HW_UBX_RESET_PORT, HW_UBX_RESET_PIN, PAL_MODE_OUTPUT_PUSHPULL);
+	
+	palClearPad(HW_UBX_RESET_PORT, HW_UBX_RESET_PIN);
+	chThdSleepMilliseconds(10);
+	palSetPad(HW_UBX_RESET_PORT, HW_UBX_RESET_PIN);
+	chThdSleepMilliseconds(1000);
+
 	uartStart(&HW_UART_DEV, &uart_cfg);
-	palSetPadMode(HW_UART_TX_PORT, HW_UART_TX_PIN, PAL_MODE_ALTERNATE(8));
-	palSetPadMode(HW_UART_RX_PORT, HW_UART_RX_PIN, PAL_MODE_ALTERNATE(8));
 
 	rtcm3_init_state(&rtcm_state);
 	rtcm3_set_rx_callback(rtcm_rx, &rtcm_state);
