@@ -15,6 +15,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <ahrs.h>
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
@@ -23,7 +24,6 @@
 #include "stm32f4xx_conf.h"
 #include "led.h"
 #include "mpu9150.h"
-#include "MahonyAHRS.h"
 #include "bldc_interface.h"
 #include "utils.h"
 #include "servo_simple.h"
@@ -34,6 +34,7 @@
 
 // Private variables
 static ATTITUDE_INFO m_att;
+static ATTITUDE_INFO m_att_mag;
 static POS_STATE m_pos;
 static GPS_STATE m_gps;
 static bool m_attitude_init_done;
@@ -55,7 +56,8 @@ static void init_gps_local(GPS_STATE *gps);
 static double nmea_parse_val(char *str);
 
 void pos_init(void) {
-	MahonyAHRSInitAttitudeInfo(&m_att);
+	ahrs_init_attitude_info(&m_att);
+	ahrs_init_attitude_info(&m_att_mag);
 	m_attitude_init_done = false;
 	memset(&m_pos, 0, sizeof(m_pos));
 	memset(&m_gps, 0, sizeof(m_gps));
@@ -425,6 +427,10 @@ bool pos_input_nmea(const char *data) {
 	return found;
 }
 
+void pos_reset_attitude(void) {
+	m_attitude_init_done = false;
+}
+
 static void mpu9150_read(void) {
 	float accel[3], gyro[3], mag[3];
 	mpu9150_get_accel_gyro_mag(accel, gyro, mag);
@@ -485,31 +491,36 @@ static void update_orientation_angles(float *accel, float *gyro, float *mag, flo
 	mag_tmp[2] = mag[2];
 
 	if (!m_attitude_init_done) {
-		MahonyAHRSupdateInitialOrientation(accel, mag_tmp, (ATTITUDE_INFO*)&m_att);
+		ahrs_update_initial_orientation(accel, mag_tmp, (ATTITUDE_INFO*)&m_att);
+		ahrs_update_initial_orientation(accel, mag_tmp, (ATTITUDE_INFO*)&m_att_mag);
 		m_attitude_init_done = true;
 	} else {
-		if (mpu9150_mag_updated() && main_config.mag_use) {
-			MahonyAHRSupdate(gyro, accel, mag_tmp, dt, (ATTITUDE_INFO*)&m_att);
+//			ahrs_update_mahony_imu(gyro, accel, dt, (ATTITUDE_INFO*)&m_att);
+			ahrs_update_madgwick_imu(gyro, accel, dt, (ATTITUDE_INFO*)&m_att);
+		if (main_config.mag_use) {
+//			ahrs_update_mahony(gyro, accel, mag_tmp, dt, (ATTITUDE_INFO*)&m_att_mag);
+			ahrs_update_madgwick(gyro, accel, mag_tmp, dt, (ATTITUDE_INFO*)&m_att_mag);
 		} else {
-			MahonyAHRSupdateIMU(gyro, accel, dt, (ATTITUDE_INFO*)&m_att);
+//			ahrs_update_mahony_imu(gyro, accel, dt, (ATTITUDE_INFO*)&m_att_mag);
+			ahrs_update_madgwick_imu(gyro, accel, dt, (ATTITUDE_INFO*)&m_att_mag);
 		}
 	}
 
 	chMtxLock(&m_mutex_pos);
 
 #if IMU_ROT_180
-	m_pos.roll = -MahonyAHRSGetRoll((ATTITUDE_INFO*)&m_att) * 180.0 / M_PI;
-	m_pos.pitch = -MahonyAHRSGetPitch((ATTITUDE_INFO*)&m_att) * 180.0 / M_PI;
+	m_pos.roll = -ahrs_get_roll((ATTITUDE_INFO*)&m_att) * 180.0 / M_PI;
+	m_pos.pitch = -ahrs_get_pitch((ATTITUDE_INFO*)&m_att) * 180.0 / M_PI;
 	m_pos.roll_rate = gyro[0] * 180.0 / M_PI;
 	m_pos.pitch_rate = -gyro[1] * 180.0 / M_PI;
 #else
-	m_pos.roll = MahonyAHRSGetRoll((ATTITUDE_INFO*)&m_att) * 180.0 / M_PI;
-	m_pos.pitch = MahonyAHRSGetPitch((ATTITUDE_INFO*)&m_att) * 180.0 / M_PI;
+	m_pos.roll = ahrs_get_roll((ATTITUDE_INFO*)&m_att) * 180.0 / M_PI;
+	m_pos.pitch = ahrs_get_pitch((ATTITUDE_INFO*)&m_att) * 180.0 / M_PI;
 	m_pos.roll_rate = -gyro[0] * 180.0 / M_PI;
 	m_pos.pitch_rate = gyro[1] * 180.0 / M_PI;
 #endif
 
-	m_imu_yaw = MahonyAHRSGetYaw((ATTITUDE_INFO*)&m_att) * 180.0 / M_PI;
+	m_imu_yaw = ahrs_get_yaw((ATTITUDE_INFO*)&m_att_mag) * 180.0 / M_PI;
 	utils_norm_angle(&m_imu_yaw);
 	m_pos.yaw_rate = -gyro[2] * 180.0 / M_PI;
 

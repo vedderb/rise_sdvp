@@ -35,5 +35,6 @@ void pos_get_mc_val(mc_values *v);
 int32_t pos_get_ms_today(void);
 void pos_set_ms_today(int32_t ms);
 bool pos_input_nmea(const char *data);
+void pos_reset_attitude(void);
 
 #endif /* POS_H_ */

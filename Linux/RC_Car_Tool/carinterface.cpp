@@ -59,6 +59,9 @@ CarInterface::CarInterface(QWidget *parent) :
     ui->gyroPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
     ui->magPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
     ui->experimentPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
+    ui->magSampXyPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
+    ui->magSampXzPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
+    ui->magSampYzPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
 
     // The raw IMU plots
     maxSampleSize = 1000;
@@ -157,6 +160,24 @@ CarInterface::CarInterface(QWidget *parent) :
     ui->magPlot->yAxis->setLabel("uT");
     ui->magPlot->legend->setVisible(true);
     ui->magPlot->replot();
+
+    ui->magSampXyPlot->xAxis->setLabel("Mag X");
+    ui->magSampXyPlot->yAxis->setLabel("Mag Y");
+    ui->magSampXyPlot->addGraph();
+    ui->magSampXyPlot->graph()->setLineStyle(QCPGraph::lsNone);
+    ui->magSampXyPlot->graph()->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCross, 4));
+
+    ui->magSampXzPlot->xAxis->setLabel("Mag X");
+    ui->magSampXzPlot->yAxis->setLabel("Mag Z");
+    ui->magSampXzPlot->addGraph();
+    ui->magSampXzPlot->graph()->setLineStyle(QCPGraph::lsNone);
+    ui->magSampXzPlot->graph()->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCross, 4));
+
+    ui->magSampYzPlot->xAxis->setLabel("Mag Y");
+    ui->magSampYzPlot->yAxis->setLabel("Mag Z");
+    ui->magSampYzPlot->addGraph();
+    ui->magSampYzPlot->graph()->setLineStyle(QCPGraph::lsNone);
+    ui->magSampYzPlot->graph()->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCross, 4));
 }
 
 CarInterface::~CarInterface()
@@ -317,6 +338,47 @@ void CarInterface::setStateData(CAR_STATE data)
 
     if (ui->magSampleStoreBox->isChecked()) {
         mMagSamples.append(magXYZ);
+
+        QVector<double> magX, magY, magZ;
+
+        for (int i = 0;i < mMagSamples.size();i++) {
+            magX.append(mMagSamples.at(i).at(0));
+            magY.append(mMagSamples.at(i).at(1));
+            magZ.append(mMagSamples.at(i).at(2));
+        }
+
+        ui->magSampXyPlot->graph()->setData(magX, magY);
+        ui->magSampXyPlot->rescaleAxes();
+        double xs = ui->magSampXyPlot->xAxis->range().size() / ui->magSampXyPlot->width();
+        double ys = ui->magSampXyPlot->yAxis->range().size() / ui->magSampXyPlot->height();
+        if (ys > xs) {
+            ui->magSampXyPlot->xAxis->setScaleRatio(ui->magSampXyPlot->yAxis);
+        } else {
+            ui->magSampXyPlot->yAxis->setScaleRatio(ui->magSampXyPlot->xAxis);
+        }
+        ui->magSampXyPlot->replot();
+
+        ui->magSampXzPlot->graph()->setData(magX, magZ);
+        ui->magSampXzPlot->rescaleAxes();
+        xs = ui->magSampXzPlot->xAxis->range().size() / ui->magSampXzPlot->width();
+        ys = ui->magSampXzPlot->yAxis->range().size() / ui->magSampXzPlot->height();
+        if (ys > xs) {
+            ui->magSampXzPlot->xAxis->setScaleRatio(ui->magSampXzPlot->yAxis);
+        } else {
+            ui->magSampXzPlot->yAxis->setScaleRatio(ui->magSampXzPlot->xAxis);
+        }
+        ui->magSampXzPlot->replot();
+
+        ui->magSampYzPlot->graph()->setData(magY, magZ);
+        ui->magSampYzPlot->rescaleAxes();
+        xs = ui->magSampYzPlot->xAxis->range().size() / ui->magSampYzPlot->width();
+        ys = ui->magSampYzPlot->yAxis->range().size() / ui->magSampYzPlot->height();
+        if (ys > xs) {
+            ui->magSampYzPlot->xAxis->setScaleRatio(ui->magSampYzPlot->yAxis);
+        } else {
+            ui->magSampYzPlot->yAxis->setScaleRatio(ui->magSampYzPlot->xAxis);
+        }
+        ui->magSampYzPlot->replot();
     }
 
     // Clock

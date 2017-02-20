@@ -131,7 +131,7 @@ CSRC = $(STARTUPSRC) \
        mpu9150.c \
        led.c \
        buffer.c \
-       MahonyAHRS.c \
+       ahrs.c \
        ext_cb.c \
        crc.c \
        adconv.c \
