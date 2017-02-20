@@ -42,6 +42,7 @@ public:
     void stopUdpConnection();
     bool isUdpConnected();
     bool setRoutePoints(quint8 id, QList<LocPoint> points, int retries = 10);
+    bool replaceRoute(quint8 id, QList<LocPoint> points, int retries = 10);
     bool removeLastRoutePoint(quint8 id, int retries = 10);
     bool clearRoute(quint8 id, int retries = 10);
     bool setApActive(quint8 id, bool active, int retries = 10);
@@ -52,6 +53,15 @@ public:
     bool radarSetupSet(quint8 id, radar_settings_t *s, int retries = 10);
     bool setSystemTime(quint8 id, qint32 sec, qint32 usec, int retries = 10);
     bool sendReboot(quint8 id, bool powerOff, int retries = 10);
+
+    bool sendMoteUbxBase(int mode,
+                         double pos_acc = 10.0,
+                         int svin_min_dur = 120,
+                         double svin_acc_limit = 10.0,
+                         double lat = 0,
+                         double lon = 0,
+                         double height = 0,
+                         int retries = 10);
 
 signals:
     void dataToSend(QByteArray &data);

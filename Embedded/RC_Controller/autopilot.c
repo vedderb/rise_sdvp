@@ -41,6 +41,7 @@ static ROUTE_POINT m_rp_now; // The point in space we are following now
 static float m_rad_now;
 static ROUTE_POINT m_point_rx_prev;
 static bool m_point_rx_prev_set;
+static mutex_t m_ap_lock;
 
 // Private functions
 static THD_FUNCTION(ap_thread, arg);
@@ -52,6 +53,7 @@ static void steering_angle_to_point(
 		float goal_y,
 		float *steering_angle,
 		float *distance);
+static void add_point(ROUTE_POINT *p);
 
 void autopilot_init(void) {
 	memset(m_route, 0, sizeof(m_route));
@@ -65,63 +67,72 @@ void autopilot_init(void) {
 	m_rad_now = -1.0;
 	memset(&m_point_rx_prev, 0, sizeof(ROUTE_POINT));
 	m_point_rx_prev_set = false;
+	chMtxObjectInit(&m_ap_lock);
 
 	chThdCreateStatic(ap_thread_wa, sizeof(ap_thread_wa),
 			NORMALPRIO, ap_thread, NULL);
 }
 
 void autopilot_add_point(ROUTE_POINT *p) {
-	// Check if the same point is sent again.
-	if (m_point_rx_prev_set && utils_point_distance(m_point_rx_prev.px, m_point_rx_prev.py, p->px, p->py) < 1e-4) {
-		return;
-	}
+	chMtxLock(&m_ap_lock);
 
-	m_point_rx_prev = *p;
-	m_point_rx_prev_set = true;
+	add_point(p);
 
-	m_route[m_point_last++] = *p;
-
-	if (m_point_last >= AP_ROUTE_SIZE) {
-		m_point_last = 0;
-	}
-
-	// Make sure that there always is a valid point when looking backwards in the route
-	if (!m_has_prev_point) {
-		int p_last = m_point_now - 1;
-		if (p_last < 0) {
-			p_last += AP_ROUTE_SIZE;
-		}
-
-		m_route[p_last] = *p;
-		m_has_prev_point = true;
-	}
-
-	// When repeating routes, the previous point for the first
-	// point is the end point of the current route.
-	if (main_config.ap_repeat_routes) {
-		m_route[AP_ROUTE_SIZE - 1] = *p;
-	}
+	chMtxUnlock(&m_ap_lock);
 }
 
 void autopilot_remove_last_point(void) {
+	chMtxLock(&m_ap_lock);
+
 	if (m_point_last != m_point_now) {
 		m_point_last--;
 		if (m_point_last < 0) {
 			m_point_last = AP_ROUTE_SIZE - 1;
 		}
 	}
+
+	chMtxUnlock(&m_ap_lock);
 }
 
 void autopilot_clear_route(void) {
+	chMtxLock(&m_ap_lock);
+
 	m_is_active = false;
 	m_has_prev_point = false;
 	m_point_now = 0;
 	m_point_last = 0;
 	m_point_rx_prev_set = false;
+
+	chMtxUnlock(&m_ap_lock);
+}
+
+void autopilot_replace_route(ROUTE_POINT *p) {
+	chMtxLock(&m_ap_lock);
+
+	if (!m_is_active) {
+		autopilot_clear_route();
+		autopilot_add_point(p);
+	} else {
+		while (m_point_last != m_point_now) {
+			m_point_last--;
+			if (m_point_last < 0) {
+				m_point_last = AP_ROUTE_SIZE - 1;
+			}
+		}
+
+		m_has_prev_point = false;
+		add_point(p);
+	}
+
+	chMtxUnlock(&m_ap_lock);
 }
 
 void autopilot_set_active(bool active) {
+	chMtxLock(&m_ap_lock);
+
 	m_is_active = active;
+
+	chMtxUnlock(&m_ap_lock);
 }
 
 bool autopilot_is_active(void) {
@@ -197,8 +208,11 @@ static THD_FUNCTION(ap_thread, arg) {
 
 		bool route_end = false;
 
+		chMtxLock(&m_ap_lock);
+
 		if (!m_is_active) {
 			m_rad_now = -1.0;
+			chMtxUnlock(&m_ap_lock);
 			continue;
 		}
 
@@ -378,7 +392,7 @@ static THD_FUNCTION(ap_thread, arg) {
 						closest1_ind = ind;
 					}
 
-					// Do not look pas the last point if we aren't repeating routes.
+					// Do not look past the last point if we aren't repeating routes.
 					if (!main_config.ap_repeat_routes) {
 						if (indn == last_point_ind) {
 							break;
@@ -487,6 +501,8 @@ static THD_FUNCTION(ap_thread, arg) {
 			bldc_interface_set_current_brake(10.0);
 			m_rad_now = -1.0;
 		}
+
+		chMtxUnlock(&m_ap_lock);
 	}
 }
 
@@ -522,4 +538,36 @@ static void steering_angle_to_point(
 	}
 
 	*steering_angle = atanf(main_config.axis_distance / circle_radius) * angle_correction;
+}
+
+static void add_point(ROUTE_POINT *p) {
+	if (m_point_rx_prev_set && utils_point_distance(m_point_rx_prev.px, m_point_rx_prev.py, p->px, p->py) < 1e-4) {
+		return;
+	}
+
+	m_point_rx_prev = *p;
+	m_point_rx_prev_set = true;
+
+	m_route[m_point_last++] = *p;
+
+	if (m_point_last >= AP_ROUTE_SIZE) {
+		m_point_last = 0;
+	}
+
+	// Make sure that there always is a valid point when looking backwards in the route
+	if (!m_has_prev_point) {
+		int p_last = m_point_now - 1;
+		if (p_last < 0) {
+			p_last += AP_ROUTE_SIZE;
+		}
+
+		m_route[p_last] = *p;
+		m_has_prev_point = true;
+	}
+
+	// When repeating routes, the previous point for the first
+	// point is the end point of the current route.
+	if (main_config.ap_repeat_routes) {
+		m_route[AP_ROUTE_SIZE - 1] = *p;
+	}
 }

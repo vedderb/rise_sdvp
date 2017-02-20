@@ -119,18 +119,16 @@ static void process_packet(unsigned char *data, unsigned int len) {
 	if (id == ID_MOTE && (packet_id < 50 || packet_id >= 200)) {
 		commands_process_packet(data, len, comm_usb_send_packet);
 	} else {
-#if MAIN_MODE == MAIN_MODE_MOTE_2400
-#if MAIN_MODE_MOTE_RTCM_400 == 1
+#if MAIN_MODE == MAIN_MODE_MOTE_HYBRID
 		if (packet_id == CMD_SEND_RTCM_USB) {
 			comm_cc1120_send_buffer(data, len);
 		} else {
 			comm_cc2520_send_buffer(data, len);
 		}
+#elif MAIN_MODE == MAIN_MODE_MOTE_400
+		comm_cc1120_send_buffer(data, len);
 #else
 		comm_cc2520_send_buffer(data, len);
-#endif
-#elif MAIN_MODE == MAIN_MODE_MOTE_400
-	comm_cc1120_send_buffer(data, len);
 #endif
 	}
 

@@ -516,6 +516,9 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
     case CMD_AP_SET_ACTIVE:
         emit ackReceived(id, cmd, "CMD_AP_SET_ACTIVE");
         break;
+    case CMD_AP_REPLACE_ROUTE:
+        emit ackReceived(id, cmd, "CMD_AP_REPLACE_ROUTE");
+        break;
     case CMD_SET_MAIN_CONFIG:
         emit ackReceived(id, cmd, "CMD_SET_MAIN_CONFIG");
         break;
@@ -581,6 +584,23 @@ bool PacketInterface::setRoutePoints(quint8 id, QList<LocPoint> points, int retr
     qint32 send_index = 0;
     mSendBuffer[send_index++] = id;
     mSendBuffer[send_index++] = CMD_AP_ADD_POINTS;
+
+    for (int i = 0;i < points.size();i++) {
+        LocPoint *p = &points[i];
+        utility::buffer_append_double32(mSendBuffer, p->getX(), 1e4, &send_index);
+        utility::buffer_append_double32(mSendBuffer, p->getY(), 1e4, &send_index);
+        utility::buffer_append_double32(mSendBuffer, p->getSpeed(), 1e6, &send_index);
+        utility::buffer_append_int32(mSendBuffer, p->getTime(), &send_index);
+    }
+
+    return sendPacketAck(mSendBuffer, send_index, retries);
+}
+
+bool PacketInterface::replaceRoute(quint8 id, QList<LocPoint> points, int retries)
+{
+    qint32 send_index = 0;
+    mSendBuffer[send_index++] = id;
+    mSendBuffer[send_index++] = CMD_AP_REPLACE_ROUTE;
 
     for (int i = 0;i < points.size();i++) {
         LocPoint *p = &points[i];

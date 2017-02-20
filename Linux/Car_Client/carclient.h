@@ -33,6 +33,7 @@ class CarClient : public QObject
     Q_OBJECT
 public:
     static CarClient* currentMsgHandler;
+    static rtcm3_state rtcmState;
 
     typedef struct {
         bool serialConnect;

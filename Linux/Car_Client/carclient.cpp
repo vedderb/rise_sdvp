@@ -35,6 +35,7 @@ void rtcm_rx(uint8_t *data, int len, int type) {
 
 // Static member initialization
 CarClient *CarClient::currentMsgHandler = 0;
+rtcm3_state CarClient::rtcmState;
 
 CarClient::CarClient(QObject *parent) : QObject(parent)
 {
@@ -59,7 +60,8 @@ CarClient::CarClient(QObject *parent) : QObject(parent)
     mUdpSocket = new QUdpSocket(this);
 
     currentMsgHandler = this;
-    rtcm3_set_rx_callback(rtcm_rx);
+    rtcm3_init_state(&rtcmState);
+    rtcm3_set_rx_callback(rtcm_rx, &rtcmState);
 
     connect(mSerialPort, SIGNAL(serial_data_available()),
             this, SLOT(serialDataAvailable()));
@@ -231,7 +233,7 @@ void CarClient::serialRtcmDataAvailable()
     while (mSerialPortRtcm->bytesAvailable() > 0) {
         QByteArray data = mSerialPortRtcm->readAll();
         for (int i = 0;i < data.size();i++) {
-            rtcm3_input_data((uint8_t)data.at(i));
+            rtcm3_input_data((uint8_t)data.at(i), &rtcmState);
         }
     }
 }

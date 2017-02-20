@@ -23,20 +23,18 @@
 #define MAIN_MODE_CAR 				0
 #define MAIN_MODE_MOTE_2400			1
 #define MAIN_MODE_MOTE_400			2
-#define MAIN_MODE_QUADCOPTER		3
+#define MAIN_MODE_MOTE_HYBRID		3 // Use 400 for slow and critical communication and 2400 for the rest.
+#define MAIN_MODE_QUADCOPTER		4
 
 // Main mode
 #define MAIN_MODE					MAIN_MODE_CAR
 
-// Mode options
-#define MAIN_MODE_MOTE_RTCM_400		1 // Send all RTCM data over the CC1120 in mote mode
-
 // Mode macros
-#define MAIN_MODE_IS_MOTE			(MAIN_MODE == MAIN_MODE_MOTE_2400 || MAIN_MODE == MAIN_MODE_MOTE_400)
+#define MAIN_MODE_IS_MOTE			(MAIN_MODE == MAIN_MODE_MOTE_2400 || MAIN_MODE == MAIN_MODE_MOTE_400 || MAIN_MODE == MAIN_MODE_MOTE_HYBRID)
 
 // Firmware version
 #define FW_VERSION_MAJOR			8
-#define FW_VERSION_MINOR			0
+#define FW_VERSION_MINOR			1
 
 // Default car settings
 //#define CAR_TERO // Benjamins tero car
@@ -75,7 +73,7 @@
 #define RADAR_SWEEP_TIME			0.075
 
 // Ublox settings
-#define UBLOX_EN					1
+#define UBLOX_EN					0
 
 // Servo settings
 #define SERVO_OUT_RATE_HZ			50

@@ -54,6 +54,8 @@ private slots:
     void on_getEnuRefGenerateButton_clicked();
     void on_setEnuRefGenerateButton_clicked();
     void on_rcControlGenerateButton_clicked();
+    void on_replaceRouteGenerateButton_clicked();
+    void on_setStatusPollGenerateButton_clicked();
 
 private:
     Ui::MainWindow *ui;

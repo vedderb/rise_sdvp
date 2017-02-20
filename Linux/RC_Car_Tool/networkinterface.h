@@ -49,6 +49,7 @@ private slots:
     void tcpDataRx(const QByteArray &data);
     void tcpConnectionChanged(bool connected);
     void udpReadReady();
+    void pollTimerSlot();
 
     void stateReceived(quint8 id, CAR_STATE state);
     void enuRefReceived(quint8 id, double lat, double lon, double height);
@@ -64,6 +65,8 @@ private:
     QByteArray mRxBuffer;
     MapWidget *mMap;
     PacketInterface *mPacketInterface;
+    QTimer *mPollTimer;
+    int mPollTimerCarId;
 
     void processData(const QByteArray &data);
     void processXml(const QByteArray &xml);

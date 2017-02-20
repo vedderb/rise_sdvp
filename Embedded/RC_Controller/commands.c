@@ -370,6 +370,36 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
 
+		case CMD_AP_REPLACE_ROUTE: {
+			timeout_reset();
+			commands_set_send_func(func);
+
+			int32_t ind = 0;
+			int first = true;
+
+			while (ind < (int32_t)len) {
+				ROUTE_POINT p;
+				p.px = buffer_get_float32(data, 1e4, &ind);
+				p.py = buffer_get_float32(data, 1e4, &ind);
+				p.speed = buffer_get_float32(data, 1e6, &ind);
+				p.time = buffer_get_int32(data, &ind);
+
+				if (first) {
+					autopilot_replace_route(&p);
+				} else {
+					autopilot_add_point(&p);
+				}
+
+				first = false;
+			}
+
+			// Send ack
+			int32_t send_index = 0;
+			m_send_buffer[send_index++] = main_id;
+			m_send_buffer[send_index++] = packet_id;
+			commands_send_packet(m_send_buffer, send_index);
+		} break;
+
 		case CMD_SET_SERVO_DIRECT: {
 			timeout_reset();
 
@@ -402,7 +432,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 					*nextLine = '\0';
 				}
 
-				bool found = pos_input_nmea((const char*)curLine);
+				bool found = pos_input_nmea(curLine);
 
 				// Only send the lines that pos decoded
 				if (found && main_config.gps_send_nmea) {

@@ -30,6 +30,9 @@ NetworkInterface::NetworkInterface(QWidget *parent) :
     mLastHostAddress.clear();
     mMap = 0;
     mPacketInterface = 0;
+    mPollTimer = new QTimer(this);
+    mPollTimerCarId = -1;
+    mPollTimer->setSingleShot(false);
 
     connect(mTcpServer, SIGNAL(dataRx(QByteArray)),
             this, SLOT(tcpDataRx(QByteArray)));
@@ -37,6 +40,8 @@ NetworkInterface::NetworkInterface(QWidget *parent) :
             this, SLOT(tcpConnectionChanged(bool)));
     connect(mUdpSocket, SIGNAL(readyRead()),
             this, SLOT(udpReadReady()));
+    connect(mPollTimer, SIGNAL(timeout()),
+            this, SLOT(pollTimerSlot()));
 
     tcpConnectionChanged(false);
 }
@@ -189,6 +194,13 @@ void NetworkInterface::udpReadReady()
     }
 }
 
+void NetworkInterface::pollTimerSlot()
+{
+    if (mPacketInterface && mPollTimerCarId >= 0) {
+        mPacketInterface->getState(mPollTimerCarId);
+    }
+}
+
 void NetworkInterface::stateReceived(quint8 id, CAR_STATE state)
 {
     sendState(id, state);
@@ -208,7 +220,7 @@ void NetworkInterface::on_tcpActivateBox_toggled(bool checked)
             qWarning() << "Starting TCP server failed:" << mTcpServer->errorString();
             QMessageBox::warning(this, "TCP Server Error",
                                  tr("Starting TCP server failed. Make sure that the port is not "
-                                 "already in use. Error: %1").arg(mTcpServer->errorString()));
+                                    "already in use. Error: %1").arg(mTcpServer->errorString()));
             ui->tcpActivateBox->setChecked(false);
         }
     } else {
@@ -283,7 +295,7 @@ void NetworkInterface::processXml(const QByteArray &xml)
                 QString name2 = stream.name().toString();
 
                 if (name2 == "id") {
-                    id = stream.readElementText().toDouble();
+                    id = stream.readElementText().toInt();
                 } else {
                     QString str;
                     str += "argument not found: " + name2;
@@ -304,7 +316,7 @@ void NetworkInterface::processXml(const QByteArray &xml)
             if (!ui->disableSendCarBox->isChecked() && mPacketInterface) {
                 mPacketInterface->getState(id);
             }
-        } else if (name == "addRoutePoint") {
+        } else if (name == "addRoutePoint" || name == "replaceRoute") {
             quint8 id = 0;
             double px = 0.0;
             double py = 0.0;
@@ -316,7 +328,7 @@ void NetworkInterface::processXml(const QByteArray &xml)
                 QString name2 = stream.name().toString();
 
                 if (name2 == "id") {
-                    id = stream.readElementText().toDouble();
+                    id = stream.readElementText().toInt();
                 } else if (name2 == "px") {
                     px = stream.readElementText().toDouble();
                 } else if (name2 == "py") {
@@ -350,13 +362,24 @@ void NetworkInterface::processXml(const QByteArray &xml)
                 QList<LocPoint> route;
                 route.append(p);
 
-                if (!mPacketInterface->setRoutePoints(id, route)) {
-                    sendError("No ACK received from car. Make sure that the car connection "
-                              "works.", name);
+                if (name == "addRoutePoint") {
+                    if (!mPacketInterface->setRoutePoints(id, route)) {
+                        sendError("No ACK received from car. Make sure that the car connection "
+                                  "works.", name);
+                    }
+                } else {
+                    if (!mPacketInterface->replaceRoute(id, route)) {
+                        sendError("No ACK received from car. Make sure that the car connection "
+                                  "works.", name);
+                    }
                 }
             }
 
             if (mMap && ui->plotRouteMapBox->isChecked()) {
+                if (name == "replaceRoute") {
+                    mMap->clearRoute();
+                }
+
                 mMap->addRoutePoint(px, py, speed, time);
             }
         } else if (name == "removeLastPoint") {
@@ -367,7 +390,7 @@ void NetworkInterface::processXml(const QByteArray &xml)
                 QString name2 = stream.name().toString();
 
                 if (name2 == "id") {
-                    id = stream.readElementText().toDouble();
+                    id = stream.readElementText().toInt();
                 } else {
                     QString str;
                     str += "argument not found: " + name2;
@@ -399,7 +422,7 @@ void NetworkInterface::processXml(const QByteArray &xml)
                 QString name2 = stream.name().toString();
 
                 if (name2 == "id") {
-                    id = stream.readElementText().toDouble();
+                    id = stream.readElementText().toInt();
                 } else {
                     QString str;
                     str += "argument not found: " + name2;
@@ -432,7 +455,7 @@ void NetworkInterface::processXml(const QByteArray &xml)
                 QString name2 = stream.name().toString();
 
                 if (name2 == "id") {
-                    id = stream.readElementText().toDouble();
+                    id = stream.readElementText().toInt();
                 } else if (name2 == "enabled") {
                     enabled = stream.readElementText().toInt();
                 } else {
@@ -467,7 +490,7 @@ void NetworkInterface::processXml(const QByteArray &xml)
                 QString name2 = stream.name().toString();
 
                 if (name2 == "id") {
-                    id = stream.readElementText().toDouble();
+                    id = stream.readElementText().toInt();
                 } else if (name2 == "fromMap") {
                     fromMap = stream.readElementText().toInt();
                 } else {
@@ -508,7 +531,7 @@ void NetworkInterface::processXml(const QByteArray &xml)
                 QString name2 = stream.name().toString();
 
                 if (name2 == "id") {
-                    id = stream.readElementText().toDouble();
+                    id = stream.readElementText().toInt();
                 } else if (name2 == "lat") {
                     lat = stream.readElementText().toDouble();
                 } else if (name2 == "lon") {
@@ -558,7 +581,7 @@ void NetworkInterface::processXml(const QByteArray &xml)
                 QString name2 = stream.name().toString();
 
                 if (name2 == "id") {
-                    id = stream.readElementText().toDouble();
+                    id = stream.readElementText().toInt();
                 } else if (name2 == "mode") {
                     mode = stream.readElementText().toInt();
                 } else if (name2 == "value") {
@@ -604,6 +627,42 @@ void NetworkInterface::processXml(const QByteArray &xml)
                     sendError("Invaild mode", name);
                     break;
                 }
+            }
+        } else if (name == "setStatusPoll") {
+            int id = -1;
+            bool ok = true;
+            int time = false;
+
+            while (stream.readNextStartElement()) {
+                QString name2 = stream.name().toString();
+
+                if (name2 == "id") {
+                    id = stream.readElementText().toInt();
+                } else if (name2 == "interval") {
+                    time = stream.readElementText().toInt();
+                } else {
+                    QString str;
+                    str += "argument not found: " + name2;
+                    sendError(str, name);
+                    stream.skipCurrentElement();
+                    ok = false;
+                }
+            }
+
+            if (stream.hasError()) {
+                break;
+            }
+
+            if (!ok) {
+                continue;
+            }
+
+            if (time > 10 && id >= 0) {
+                mPollTimerCarId = id;
+                mPollTimer->start(time);
+            } else {
+                mPollTimerCarId = -1;
+                mPollTimer->stop();
             }
         } else {
             QString str;

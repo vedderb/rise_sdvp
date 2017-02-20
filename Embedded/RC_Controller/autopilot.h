@@ -25,6 +25,7 @@ void autopilot_init(void);
 void autopilot_add_point(ROUTE_POINT *p);
 void autopilot_remove_last_point(void);
 void autopilot_clear_route(void);
+void autopilot_replace_route(ROUTE_POINT *p);
 void autopilot_set_active(bool active);
 bool autopilot_is_active(void);
 void autopilot_set_speed_override(bool is_override, float speed);

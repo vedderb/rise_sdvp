@@ -1,3 +1,11 @@
+=== FW 8.1 ===
+* CMD_AP_REPLACE_ROUTE implementation.
+* Added hybrid mote mode.
+
+=== FW 8.0 ===
+* Mode mode implementation.
+* Only send NMEA messages that are used to save bandwidth.
+
 === FW 7.3 ===
 * Added reboot command.
 * Only forwarn NMEA if the ublox is not enabled.

@@ -516,6 +516,9 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
     case CMD_AP_SET_ACTIVE:
         emit ackReceived(id, cmd, "CMD_AP_SET_ACTIVE");
         break;
+    case CMD_AP_REPLACE_ROUTE:
+        emit ackReceived(id, cmd, "CMD_AP_REPLACE_ROUTE");
+        break;
     case CMD_SET_MAIN_CONFIG:
         emit ackReceived(id, cmd, "CMD_SET_MAIN_CONFIG");
         break;
@@ -536,6 +539,9 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         break;
     case CMD_REBOOT_SYSTEM_ACK:
         emit ackReceived(id, cmd, "CMD_REBOOT_SYSTEM_ACK");
+        break;
+    case CMD_MOTE_UBX_START_BASE_ACK:
+        emit ackReceived(id, cmd, "CMD_MOTE_UBX_START_BASE_ACK");
         break;
 
     default:
@@ -578,6 +584,23 @@ bool PacketInterface::setRoutePoints(quint8 id, QList<LocPoint> points, int retr
     qint32 send_index = 0;
     mSendBuffer[send_index++] = id;
     mSendBuffer[send_index++] = CMD_AP_ADD_POINTS;
+
+    for (int i = 0;i < points.size();i++) {
+        LocPoint *p = &points[i];
+        utility::buffer_append_double32(mSendBuffer, p->getX(), 1e4, &send_index);
+        utility::buffer_append_double32(mSendBuffer, p->getY(), 1e4, &send_index);
+        utility::buffer_append_double32(mSendBuffer, p->getSpeed(), 1e6, &send_index);
+        utility::buffer_append_int32(mSendBuffer, p->getTime(), &send_index);
+    }
+
+    return sendPacketAck(mSendBuffer, send_index, retries);
+}
+
+bool PacketInterface::replaceRoute(quint8 id, QList<LocPoint> points, int retries)
+{
+    qint32 send_index = 0;
+    mSendBuffer[send_index++] = id;
+    mSendBuffer[send_index++] = CMD_AP_REPLACE_ROUTE;
 
     for (int i = 0;i < points.size();i++) {
         LocPoint *p = &points[i];
@@ -735,6 +758,28 @@ bool PacketInterface::sendReboot(quint8 id, bool powerOff, int retries)
     mSendBuffer[send_index++] = id;
     mSendBuffer[send_index++] = CMD_REBOOT_SYSTEM;
     mSendBuffer[send_index++] = powerOff;
+    return sendPacketAck(mSendBuffer, send_index, retries);
+}
+
+bool PacketInterface::sendMoteUbxBase(int mode,
+                                      double pos_acc,
+                                      int svin_min_dur,
+                                      double svin_acc_limit,
+                                      double lat,
+                                      double lon,
+                                      double height,
+                                      int retries)
+{
+    qint32 send_index = 0;
+    mSendBuffer[send_index++] = ID_MOTE;
+    mSendBuffer[send_index++] = CMD_MOTE_UBX_START_BASE;
+    mSendBuffer[send_index++] = mode;
+    utility::buffer_append_double64(mSendBuffer, lat, 1e16, &send_index);
+    utility::buffer_append_double64(mSendBuffer, lon, 1e16, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, height, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, pos_acc, &send_index);
+    utility::buffer_append_uint32(mSendBuffer, svin_min_dur, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, svin_acc_limit, &send_index);
     return sendPacketAck(mSendBuffer, send_index, retries);
 }
 

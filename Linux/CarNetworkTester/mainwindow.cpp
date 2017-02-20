@@ -314,3 +314,40 @@ void MainWindow::on_rcControlGenerateButton_clicked()
     ui->outgoingEdit->clear();
     ui->outgoingEdit->appendPlainText(str);
 }
+
+void MainWindow::on_replaceRouteGenerateButton_clicked()
+{
+    QString str;
+    QXmlStreamWriter stream(&str);
+    stream.setAutoFormatting(true);
+
+    stream.writeStartDocument();
+    stream.writeStartElement("message");
+    stream.writeStartElement("replaceRoute");
+    stream.writeTextElement("id", QString::number(ui->replaceRouteCarBox->value()));
+    stream.writeTextElement("px", QString::number(ui->replaceRoutePxBox->value()));
+    stream.writeTextElement("py", QString::number(ui->replaceRoutePyBox->value()));
+    stream.writeTextElement("speed", QString::number(ui->replaceRouteSpeedBox->value()));
+    stream.writeTextElement("time", QString::number(ui->replaceRouteTimeEdit->time().msecsSinceStartOfDay()));
+    stream.writeEndDocument();
+
+    ui->outgoingEdit->clear();
+    ui->outgoingEdit->appendPlainText(str);
+}
+
+void MainWindow::on_setStatusPollGenerateButton_clicked()
+{
+    QString str;
+    QXmlStreamWriter stream(&str);
+    stream.setAutoFormatting(true);
+
+    stream.writeStartDocument();
+    stream.writeStartElement("message");
+    stream.writeStartElement("setStatusPoll");
+    stream.writeTextElement("id", QString::number(ui->setStatusPollCarBox->value()));
+    stream.writeTextElement("interval", QString::number(ui->setStatusPollIntervalBox->value()));
+    stream.writeEndDocument();
+
+    ui->outgoingEdit->clear();
+    ui->outgoingEdit->appendPlainText(str);
+}
