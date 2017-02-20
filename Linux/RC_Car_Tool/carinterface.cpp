@@ -394,7 +394,14 @@ void CarInterface::setControlValues(double throttle, double steering, double max
 
 void CarInterface::emergencyStop()
 {
-    ui->autopilotBox->setChecked(false);
+    if (ui->autopilotBox->isChecked()) {
+        ui->autopilotBox->setChecked(false);
+    } else {
+        // Send the AP stop command even if the autopilot was not active in the UI.
+        if (mPacketInterface) {
+            mPacketInterface->setApActive(mId, false);
+        }
+    }
     ui->keyboardControlBox->setChecked(false);
 }
 

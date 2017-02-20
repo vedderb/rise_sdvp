@@ -222,6 +222,8 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			throttle = buffer_get_float32(data, 1e4, &ind);
 			steering = buffer_get_float32(data, 1e6, &ind);
 
+			autopilot_set_active(false);
+
 			switch (mode) {
 			case RC_MODE_CURRENT:
 				bldc_interface_set_current(throttle);
