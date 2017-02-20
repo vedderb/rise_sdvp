@@ -31,6 +31,9 @@
 // Mode options
 #define MAIN_MODE_MOTE_RTCM_400		1 // Send all RTCM data over the CC1120 in mote mode
 
+// Mode macros
+#define MAIN_MODE_IS_MOTE			(MAIN_MODE == MAIN_MODE_MOTE_2400 || MAIN_MODE == MAIN_MODE_MOTE_400)
+
 // Firmware version
 #define FW_VERSION_MAJOR			8
 #define FW_VERSION_MINOR			0

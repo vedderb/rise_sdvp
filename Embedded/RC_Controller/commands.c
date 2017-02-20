@@ -70,6 +70,10 @@ void commands_init(void) {
 
 	rtcm3_init_state(&rtcm_state);
 	rtcm3_set_rx_callback(rtcm_rx, &rtcm_state);
+
+#if MAIN_MODE != MAIN_MODE_CAR
+	(void)stop_forward;
+#endif
 }
 
 /**
@@ -128,7 +132,6 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 	CMD_PACKET packet_id;
 	uint8_t id = 0;
-	MAIN_CONFIG main_cfg_tmp;
 
 	id = data[0];
 	data++;
@@ -150,6 +153,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 		} break;
 
 		// ==================== Car commands ==================== //
+#if MAIN_MODE == MAIN_MODE_CAR
 		case CMD_GET_STATE: {
 			timeout_reset();
 
@@ -489,6 +493,8 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			timeout_reset();
 			commands_set_send_func(func);
 
+			MAIN_CONFIG main_cfg_tmp;
+
 			if (packet_id == CMD_GET_MAIN_CONFIG) {
 				main_cfg_tmp = main_config;
 			} else {
@@ -661,9 +667,10 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			m_send_buffer[send_index++] = CMD_REBOOT_SYSTEM_ACK;
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
+#endif
 
 		// ==================== Mote commands ==================== //
-
+#if MAIN_MODE_IS_MOTE
 		case CMD_MOTE_UBX_START_BASE: {
 			commands_set_send_func(func);
 
@@ -716,6 +723,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			m_send_buffer[send_index++] = CMD_MOTE_UBX_START_BASE_ACK;
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
+#endif
 
 		default:
 			break;

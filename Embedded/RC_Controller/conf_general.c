@@ -35,7 +35,7 @@
 
 // Global variables
 MAIN_CONFIG main_config;
-#if MAIN_MODE == MAIN_MODE_MOTE_2400 || MAIN_MODE == MAIN_MODE_MOTE_400
+#if MAIN_MODE == MAIN_MODE_IS_MOTE
 int main_id = ID_MOTE;
 #else
 int main_id = 0;

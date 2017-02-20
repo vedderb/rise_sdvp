@@ -56,7 +56,11 @@ static rtcm3_state rtcm_state;
 
 // Private functions
 static void ubx_terminal_cmd_poll(int argc, const char **argv);
+static void ubx_encode_send(uint8_t class, uint8_t id, uint8_t *msg, int len);
+static int wait_ack_nak(int timeout_ms);
+static void rtcm_rx(uint8_t *data, int len, int type);
 
+// Decode functions
 static void ubx_decode(uint8_t class, uint8_t id, uint8_t *msg, int len);
 static void ubx_decode_relposned(uint8_t *msg, int len);
 static void ubx_decode_svin(uint8_t *msg, int len);
@@ -64,9 +68,7 @@ static void ubx_decode_ack(uint8_t *msg, int len);
 static void ubx_decode_nak(uint8_t *msg, int len);
 static void ubx_decode_rawx(uint8_t *msg, int len);
 
-static void ubx_encode_send(uint8_t class, uint8_t id, uint8_t *msg, int len);
-static int wait_ack_nak(int timeout_ms);
-
+// Ublox type getters
 static uint8_t ubx_get_U1(uint8_t *msg, int *ind);
 static int8_t ubx_get_I1(uint8_t *msg, int *ind);
 static uint8_t ubx_get_X1(uint8_t *msg, int *ind);
@@ -79,6 +81,7 @@ static uint32_t ubx_get_X4(uint8_t *msg, int *ind);
 static float ubx_get_R4(uint8_t *msg, int *ind);
 static double ubx_get_R8(uint8_t *msg, int *ind);
 
+// Ublox type setters
 static void ubx_put_U1(uint8_t *msg, int *ind, uint8_t data);
 static void ubx_put_I1(uint8_t *msg, int *ind, int8_t data);
 static void ubx_put_X1(uint8_t *msg, int *ind, uint8_t data);
@@ -90,8 +93,6 @@ static void ubx_put_I4(uint8_t *msg, int *ind, int32_t data);
 static void ubx_put_X4(uint8_t *msg, int *ind, uint32_t data);
 static void ubx_put_R4(uint8_t *msg, int *ind, float data);
 static void ubx_put_R8(uint8_t *msg, int *ind, double data);
-
-static void rtcm_rx(uint8_t *data, int len, int type);
 
 // Callbacks
 static void(*rx_relposned)(ubx_nav_relposned *pos) = 0;
@@ -599,6 +600,94 @@ static void ubx_terminal_cmd_poll(int argc, const char **argv) {
 	}
 }
 
+static void ubx_encode_send(uint8_t class, uint8_t id, uint8_t *msg, int len) {
+	static uint8_t ubx[UBX_BUFFER_SIZE];
+	int ind = 0;
+	uint8_t ck_a = 0;
+	uint8_t ck_b = 0;
+
+	ubx[ind++] = 0xB5;
+	ubx[ind++] = 0x62;
+
+	ubx[ind] = class;
+	ck_a += ubx[ind];
+	ck_b += ck_a;
+	ind++;
+
+	ubx[ind] = id;
+	ck_a += ubx[ind];
+	ck_b += ck_a;
+	ind++;
+
+	ubx[ind] = len & 0xFF;
+	ck_a += ubx[ind];
+	ck_b += ck_a;
+	ind++;
+
+	ubx[ind] = (len >> 8) & 0xFF;
+	ck_a += ubx[ind];
+	ck_b += ck_a;
+	ind++;
+
+	for (int i = 0;i < len;i++) {
+		ubx[ind] = msg[i];
+		ck_a += ubx[ind];
+		ck_b += ck_a;
+		ind++;
+	}
+
+	ubx[ind++] = ck_a;
+	ubx[ind++] = ck_b;
+
+	ublox_send(ubx, ind);
+}
+
+/**
+ * Wait for ack or nak.
+ *
+ * @param timeout_ms
+ * The timeout for the wait, -1 = infinite.
+ *
+ * @return
+ * 0: ack
+ * 1: nak
+ * -1: timeout
+ *
+ */
+static int wait_ack_nak(int timeout_ms) {
+	systime_t to;
+	if (timeout_ms >= 0) {
+		to = MS2ST(timeout_ms);
+	} else {
+		to = TIME_INFINITE;
+	}
+
+	ack_wait_tp = chThdGetSelfX();
+	int res = chEvtWaitAnyTimeout((eventmask_t)3, to);
+	ack_wait_tp = 0;
+
+	if (res == 1) {
+		return 0;
+	} else if (res == 2) {
+		return 1;
+	} else {
+		return -1;
+	}
+}
+
+static void rtcm_rx(uint8_t *data, int len, int type) {
+	(void)type;
+#if MAIN_MODE == MAIN_MODE_MOTE_2400
+#if MAIN_MODE_MOTE_RTCM_400 == 1
+	comm_cc1120_send_buffer(data, len);
+#else
+	comm_cc2520_send_buffer(data, len);
+#endif
+#else
+	comm_cc1120_send_buffer(data, len);
+#endif
+}
+
 static void ubx_decode(uint8_t class, uint8_t id, uint8_t *msg, int len) {
 	switch (class) {
 	case UBX_CLASS_NAV: {
@@ -832,81 +921,6 @@ static void ubx_decode_rawx(uint8_t *msg, int len) {
 	}
 }
 
-static void ubx_encode_send(uint8_t class, uint8_t id, uint8_t *msg, int len) {
-	static uint8_t ubx[UBX_BUFFER_SIZE];
-	int ind = 0;
-	uint8_t ck_a = 0;
-	uint8_t ck_b = 0;
-
-	ubx[ind++] = 0xB5;
-	ubx[ind++] = 0x62;
-
-	ubx[ind] = class;
-	ck_a += ubx[ind];
-	ck_b += ck_a;
-	ind++;
-
-	ubx[ind] = id;
-	ck_a += ubx[ind];
-	ck_b += ck_a;
-	ind++;
-
-	ubx[ind] = len & 0xFF;
-	ck_a += ubx[ind];
-	ck_b += ck_a;
-	ind++;
-
-	ubx[ind] = (len >> 8) & 0xFF;
-	ck_a += ubx[ind];
-	ck_b += ck_a;
-	ind++;
-
-	for (int i = 0;i < len;i++) {
-		ubx[ind] = msg[i];
-		ck_a += ubx[ind];
-		ck_b += ck_a;
-		ind++;
-	}
-
-	ubx[ind++] = ck_a;
-	ubx[ind++] = ck_b;
-
-	ublox_send(ubx, ind);
-}
-
-/**
- * Wait for ack or nak.
- *
- * @param timeout_ms
- * The timeout for the wait, -1 = infinite.
- *
- * @return
- * 0: ack
- * 1: nak
- * -1: timeout
- *
- */
-static int wait_ack_nak(int timeout_ms) {
-	systime_t to;
-	if (timeout_ms >= 0) {
-		to = MS2ST(timeout_ms);
-	} else {
-		to = TIME_INFINITE;
-	}
-
-	ack_wait_tp = chThdGetSelfX();
-	int res = chEvtWaitAnyTimeout((eventmask_t)3, to);
-	ack_wait_tp = 0;
-
-	if (res == 1) {
-		return 0;
-	} else if (res == 2) {
-		return 1;
-	} else {
-		return -1;
-	}
-}
-
 static uint8_t ubx_get_U1(uint8_t *msg, int *ind) {
 	return msg[(*ind)++];
 }
@@ -1083,17 +1097,4 @@ static void ubx_put_R8(uint8_t *msg, int *ind, double data) {
 	msg[(*ind)++] = x.i >> 40;
 	msg[(*ind)++] = x.i >> 48;
 	msg[(*ind)++] = x.i >> 56;
-}
-
-static void rtcm_rx(uint8_t *data, int len, int type) {
-	(void)type;
-#if MAIN_MODE == MAIN_MODE_MOTE_2400
-#if MAIN_MODE_MOTE_RTCM_400 == 1
-	comm_cc1120_send_buffer(data, len);
-#else
-	comm_cc2520_send_buffer(data, len);
-#endif
-#else
-	comm_cc1120_send_buffer(data, len);
-#endif
 }

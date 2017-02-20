@@ -36,6 +36,7 @@ static THD_WORKING_AREA(tx_thread_wa, 1024);
 static THD_FUNCTION(tx_thread, arg);
 
 // Private variables
+static bool init_done = false;
 static uint8_t tx_buffer[TX_BUFFER_SLOTS][TX_BUFFER_LENGTH];
 static volatile int tx_slot_len[TX_BUFFER_SLOTS];
 static volatile int tx_slot_read;
@@ -52,6 +53,7 @@ void comm_cc1120_init(void) {
 		return;
 	}
 
+	init_done = true;
 	tx_slot_read = 0;
 	tx_slot_write = 0;
 
@@ -64,6 +66,10 @@ void comm_cc1120_init(void) {
 }
 
 void comm_cc1120_send_buffer(uint8_t *data, unsigned int len) {
+	if (!init_done) {
+		return;
+	}
+
 	// Wait while fifo is full
 	int to = 1000;
 	while (((tx_slot_write + 1) % TX_BUFFER_SLOTS) == tx_slot_read && to) {
@@ -110,7 +116,7 @@ static void rx_func(uint8_t *data, int len, int rssi, int lqi, bool crc_ok) {
 
 	if (crc_ok) {
 		led_toggle(LED_RED);
-#if MAIN_MODE == MAIN_MODE_MOTE_400 || MAIN_MODE == MAIN_MODE_MOTE_2400
+#if MAIN_MODE_IS_MOTE
 		comm_usb_send_packet(data, len);
 #else
 		commands_process_packet(data, len, comm_cc1120_send_buffer);

@@ -112,7 +112,7 @@ static THD_FUNCTION(serial_process_thread, arg) {
 }
 
 static void process_packet(unsigned char *data, unsigned int len) {
-#if MAIN_MODE == MAIN_MODE_MOTE_2400 || MAIN_MODE == MAIN_MODE_MOTE_400
+#if MAIN_MODE_IS_MOTE
 	uint8_t id = data[0];
 	CMD_PACKET packet_id = data[1];
 
