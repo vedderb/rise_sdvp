@@ -34,7 +34,7 @@
 
 // Firmware version
 #define FW_VERSION_MAJOR			8
-#define FW_VERSION_MINOR			1
+#define FW_VERSION_MINOR			2
 
 // Default car settings
 //#define CAR_TERO // Benjamins tero car

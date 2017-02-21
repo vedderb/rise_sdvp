@@ -1,5 +1,5 @@
 /*
-	Copyright 2016 Benjamin Vedder	benjamin@vedder.se
+	Copyright 2016 - 2017 Benjamin Vedder	benjamin@vedder.se
 
 	This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,7 +34,6 @@
 
 // Private variables
 static ATTITUDE_INFO m_att;
-static ATTITUDE_INFO m_att_mag;
 static POS_STATE m_pos;
 static GPS_STATE m_gps;
 static bool m_attitude_init_done;
@@ -57,7 +56,6 @@ static double nmea_parse_val(char *str);
 
 void pos_init(void) {
 	ahrs_init_attitude_info(&m_att);
-	ahrs_init_attitude_info(&m_att_mag);
 	m_attitude_init_done = false;
 	memset(&m_pos, 0, sizeof(m_pos));
 	memset(&m_gps, 0, sizeof(m_gps));
@@ -492,35 +490,61 @@ static void update_orientation_angles(float *accel, float *gyro, float *mag, flo
 
 	if (!m_attitude_init_done) {
 		ahrs_update_initial_orientation(accel, mag_tmp, (ATTITUDE_INFO*)&m_att);
-		ahrs_update_initial_orientation(accel, mag_tmp, (ATTITUDE_INFO*)&m_att_mag);
 		m_attitude_init_done = true;
 	} else {
-//			ahrs_update_mahony_imu(gyro, accel, dt, (ATTITUDE_INFO*)&m_att);
-			ahrs_update_madgwick_imu(gyro, accel, dt, (ATTITUDE_INFO*)&m_att);
-		if (main_config.mag_use) {
-//			ahrs_update_mahony(gyro, accel, mag_tmp, dt, (ATTITUDE_INFO*)&m_att_mag);
-			ahrs_update_madgwick(gyro, accel, mag_tmp, dt, (ATTITUDE_INFO*)&m_att_mag);
-		} else {
-//			ahrs_update_mahony_imu(gyro, accel, dt, (ATTITUDE_INFO*)&m_att_mag);
-			ahrs_update_madgwick_imu(gyro, accel, dt, (ATTITUDE_INFO*)&m_att_mag);
-		}
+//		ahrs_update_mahony_imu(gyro, accel, dt, (ATTITUDE_INFO*)&m_att);
+		ahrs_update_madgwick_imu(gyro, accel, dt, (ATTITUDE_INFO*)&m_att);
 	}
+
+	float roll = ahrs_get_roll((ATTITUDE_INFO*)&m_att);
+	float pitch = ahrs_get_pitch((ATTITUDE_INFO*)&m_att);
+	float yaw = ahrs_get_yaw((ATTITUDE_INFO*)&m_att);
+
+	// Apply tilt compensation for magnetometer values and calculate magnetic
+	// field angle. See:
+	// https://cache.freescale.com/files/sensors/doc/app_note/AN4248.pdf
+	// Notice that hard and soft iron compensation is applied in mpu9150.c
+	float mx = -mag_tmp[0];
+	float my = mag_tmp[1];
+	float mz = mag_tmp[2];
+
+	float sr = sinf(roll);
+	float cr = cosf(roll);
+	float sp = sinf(pitch);
+	float cp = cosf(pitch);
+
+	float c_mx = mx * cp + my * sr * sp + mz * sp * cr;
+	float c_my = my * cr - mz * sr;
+
+	float yaw_mag = atan2f(-c_my, c_mx);
 
 	chMtxLock(&m_mutex_pos);
 
 #if IMU_ROT_180
-	m_pos.roll = -ahrs_get_roll((ATTITUDE_INFO*)&m_att) * 180.0 / M_PI;
-	m_pos.pitch = -ahrs_get_pitch((ATTITUDE_INFO*)&m_att) * 180.0 / M_PI;
+	m_pos.roll = -roll * 180.0 / M_PI;
+	m_pos.pitch = -pitch * 180.0 / M_PI;
 	m_pos.roll_rate = gyro[0] * 180.0 / M_PI;
 	m_pos.pitch_rate = -gyro[1] * 180.0 / M_PI;
 #else
-	m_pos.roll = ahrs_get_roll((ATTITUDE_INFO*)&m_att) * 180.0 / M_PI;
-	m_pos.pitch = ahrs_get_pitch((ATTITUDE_INFO*)&m_att) * 180.0 / M_PI;
+	m_pos.roll = roll * 180.0 / M_PI;
+	m_pos.pitch = pitch * 180.0 / M_PI;
 	m_pos.roll_rate = -gyro[0] * 180.0 / M_PI;
 	m_pos.pitch_rate = gyro[1] * 180.0 / M_PI;
 #endif
 
-	m_imu_yaw = ahrs_get_yaw((ATTITUDE_INFO*)&m_att_mag) * 180.0 / M_PI;
+	if (main_config.mag_use) {
+		static float yaw_ofs = 0.0;
+		float yaw_imu = yaw + yaw_ofs * M_PI / 180.0;
+		float yaw_diff = utils_angle_difference_rad(yaw_mag, yaw_imu) * 180.0 / M_PI;
+
+		utils_step_towards(&yaw_ofs, yaw_ofs + yaw_diff, main_config.yaw_mag_gain);
+		utils_norm_angle(&yaw_ofs);
+
+		m_imu_yaw = (yaw * 180.0 / M_PI) + yaw_ofs;
+	} else {
+		m_imu_yaw = yaw * 180.0 / M_PI;
+	}
+
 	utils_norm_angle(&m_imu_yaw);
 	m_pos.yaw_rate = -gyro[2] * 180.0 / M_PI;
 

@@ -151,7 +151,8 @@ typedef struct {
 	// Settings
 	bool mag_use; // Use the magnetometer
 	bool mag_comp; // Should be 0 when capturing samples for the calibration
-	float yaw_imu_gain;
+	float yaw_mag_gain; // Gain for yaw angle from magnetomer (vs gyro)
+	float yaw_imu_gain; // Gain for yaw angle from IMU (vs odometry)
 
 	// Magnetometer calibration
 	float mag_cal_cx;
