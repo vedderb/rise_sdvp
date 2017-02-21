@@ -185,7 +185,7 @@ CarInterface::CarInterface(QWidget *parent) :
     ui->magSampXyPlot->graph()->setLineStyle(QCPGraph::lsNone);
     ui->magSampXyPlot->graph()->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCross, 4));
 
-    ui->magSampXzPlot->yAxis->setLabel("Mag XZ");
+    ui->magSampXzPlot->yAxis->setLabel("XZ");
 //    ui->magSampXzPlot->legend->setVisible(true);
     ui->magSampXzPlot->addGraph();
     ui->magSampXzPlot->graph()->setPen(QPen(Qt::red));
@@ -198,7 +198,7 @@ CarInterface::CarInterface(QWidget *parent) :
     ui->magSampXzPlot->graph()->setLineStyle(QCPGraph::lsNone);
     ui->magSampXzPlot->graph()->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCross, 4));
 
-    ui->magSampYzPlot->yAxis->setLabel("Mag YZ");
+    ui->magSampYzPlot->yAxis->setLabel("YZ");
 //    ui->magSampYzPlot->legend->setVisible(true);
     ui->magSampYzPlot->addGraph();
     ui->magSampYzPlot->graph()->setPen(QPen(Qt::red));
@@ -1277,11 +1277,15 @@ void CarInterface::on_nmeaLogActiveBox_toggled(bool checked)
 void CarInterface::on_magCalLoadButton_clicked()
 {
     if (mMagComp.isEmpty() || mMagCompCenter.isEmpty()) {
-        QMessageBox::warning(this, "Load Magnetometer Calibration",
-                             "Magnetometer calibration is not done. Please go to "
-                             "the calibration tab and collect "
-                             "samples, or load a file.");
-        return;
+        if (mMagSamples.size() >= 9) {
+            calcMagComp();
+        } else {
+            QMessageBox::warning(this, "Load Magnetometer Calibration",
+                                 "Magnetometer calibration is not done. Please go to "
+                                 "the calibration tab and collect "
+                                 "samples, or load a file.");
+            return;
+        }
     }
 
     ui->confMagCxBox->setValue(mMagCompCenter.at(0));

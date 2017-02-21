@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>928</width>
+    <width>803</width>
     <height>586</height>
    </rect>
   </property>
@@ -354,116 +354,90 @@
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_17">
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_4">
-              <item>
-               <widget class="QLabel" name="magSampleLabel">
-                <property name="text">
-                 <string>0 Samples</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <spacer name="horizontalSpacer">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-              <item>
-               <widget class="QCheckBox" name="magSampleStoreBox">
-                <property name="text">
-                 <string>Store Samples</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="magSampleClearButton">
-                <property name="toolTip">
-                 <string>Clear</string>
-                </property>
-                <property name="text">
-                 <string/>
-                </property>
-                <property name="icon">
-                 <iconset resource="resources.qrc">
-                  <normaloff>:/models/Icons/Delete2-96.png</normaloff>:/models/Icons/Delete2-96.png</iconset>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="magSampleSaveButton">
-                <property name="toolTip">
-                 <string>Save samples to file</string>
-                </property>
-                <property name="text">
-                 <string/>
-                </property>
-                <property name="icon">
-                 <iconset resource="resources.qrc">
-                  <normaloff>:/models/Icons/Save as-96.png</normaloff>:/models/Icons/Save as-96.png</iconset>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item>
              <layout class="QGridLayout" name="gridLayout_4">
               <item row="0" column="0">
-               <widget class="QCustomPlot" name="magSampXyPlot" native="true">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="1">
-               <widget class="QCustomPlot" name="magSampXzPlot" native="true">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="0">
-               <widget class="QCustomPlot" name="magSampYzPlot" native="true">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="1">
                <layout class="QVBoxLayout" name="verticalLayout_6">
                 <item>
-                 <widget class="QPushButton" name="magOpenFileButton">
-                  <property name="text">
-                   <string>Open file...</string>
+                 <layout class="QHBoxLayout" name="horizontalLayout_4">
+                  <property name="spacing">
+                   <number>2</number>
                   </property>
-                 </widget>
+                  <item>
+                   <widget class="QPushButton" name="magSampleClearButton">
+                    <property name="toolTip">
+                     <string>Clear</string>
+                    </property>
+                    <property name="text">
+                     <string/>
+                    </property>
+                    <property name="icon">
+                     <iconset resource="resources.qrc">
+                      <normaloff>:/models/Icons/Delete2-96.png</normaloff>:/models/Icons/Delete2-96.png</iconset>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="magReplotButton">
+                    <property name="toolTip">
+                     <string>Rescale plots</string>
+                    </property>
+                    <property name="text">
+                     <string/>
+                    </property>
+                    <property name="icon">
+                     <iconset resource="resources.qrc">
+                      <normaloff>:/models/Icons/Restart-96.png</normaloff>:/models/Icons/Restart-96.png</iconset>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="magCalcCompButton">
+                    <property name="toolTip">
+                     <string>Calculate compensation</string>
+                    </property>
+                    <property name="text">
+                     <string/>
+                    </property>
+                    <property name="icon">
+                     <iconset resource="resources.qrc">
+                      <normaloff>:/models/Icons/Process-96.png</normaloff>:/models/Icons/Process-96.png</iconset>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="magOpenFileButton">
+                    <property name="toolTip">
+                     <string>Open file with samples</string>
+                    </property>
+                    <property name="text">
+                     <string/>
+                    </property>
+                    <property name="icon">
+                     <iconset resource="resources.qrc">
+                      <normaloff>:/models/Icons/Open Folder-96.png</normaloff>:/models/Icons/Open Folder-96.png</iconset>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="magSampleSaveButton">
+                    <property name="toolTip">
+                     <string>Save samples to file</string>
+                    </property>
+                    <property name="text">
+                     <string/>
+                    </property>
+                    <property name="icon">
+                     <iconset resource="resources.qrc">
+                      <normaloff>:/models/Icons/Save as-96.png</normaloff>:/models/Icons/Save as-96.png</iconset>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="magCalcCompButton">
+                 <widget class="QCheckBox" name="magSampleStoreBox">
                   <property name="text">
-                   <string>Calculate Compensation</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QPushButton" name="magReplotButton">
-                  <property name="text">
-                   <string>Rescale plots</string>
+                   <string>Store Samples</string>
                   </property>
                  </widget>
                 </item>
@@ -480,7 +454,47 @@
                   </property>
                  </spacer>
                 </item>
+                <item>
+                 <widget class="QLabel" name="magSampleLabel">
+                  <property name="text">
+                   <string>0 Samples</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
                </layout>
+              </item>
+              <item row="0" column="1">
+               <widget class="QCustomPlot" name="magSampXyPlot" native="true">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QCustomPlot" name="magSampYzPlot" native="true">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QCustomPlot" name="magSampXzPlot" native="true">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+               </widget>
               </item>
              </layout>
             </item>
