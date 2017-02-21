@@ -1065,6 +1065,9 @@ void CarInterface::calcMagComp()
      *
      * Ellipsoid fit from:
      * http://www.mathworks.com/matlabcentral/fileexchange/24693-ellipsoid-fit
+     *
+     * Notice that libLAML is full of memory leaks, this function should not be used too ofter.
+     * TODO: Replace libLAML
      */
 
     if (mMagSamples.size() < 9) {
@@ -1200,6 +1203,14 @@ void CarInterface::calcMagComp()
 //    disp(center);
 //    disp(comp);
 
+    delete &v;
+    delete &tmp1;
+    delete &center;
+    delete &T;
+    delete &R;
+    delete &tmps;
+    delete &scale;
+    delete &comp;
     delete ev;
 }
 
