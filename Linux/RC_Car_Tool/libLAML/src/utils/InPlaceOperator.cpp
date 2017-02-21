@@ -2282,7 +2282,8 @@ void uminus(double* res, double* V, int len) {
  * @param v
  */
 void divide(Matrix& res, double v) {
-
+    (void)res;
+    (void)v;
 }
 
 /**
