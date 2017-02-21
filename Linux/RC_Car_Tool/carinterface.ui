@@ -352,7 +352,7 @@
            <property name="title">
             <string>Magnetometer</string>
            </property>
-           <layout class="QVBoxLayout" name="verticalLayout_6">
+           <layout class="QVBoxLayout" name="verticalLayout_17">
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_4">
               <item>
@@ -443,6 +443,44 @@
                  </sizepolicy>
                 </property>
                </widget>
+              </item>
+              <item row="1" column="1">
+               <layout class="QVBoxLayout" name="verticalLayout_6">
+                <item>
+                 <widget class="QPushButton" name="magOpenFileButton">
+                  <property name="text">
+                   <string>Open file...</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="magCalcCompButton">
+                  <property name="text">
+                   <string>Calculate Compensation</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="magReplotButton">
+                  <property name="text">
+                   <string>Rescale plots</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="verticalSpacer_2">
+                  <property name="orientation">
+                   <enum>Qt::Vertical</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>20</width>
+                    <height>40</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+               </layout>
               </item>
              </layout>
             </item>
@@ -843,16 +881,6 @@
                  </property>
                 </widget>
                </item>
-               <item row="5" column="1" colspan="2">
-                <widget class="QLineEdit" name="magCalFileEdit">
-                 <property name="toolTip">
-                  <string>Magnetometer calibration file</string>
-                 </property>
-                 <property name="text">
-                  <string>../magnetometer_calibration/res_raw.txt</string>
-                 </property>
-                </widget>
-               </item>
                <item row="4" column="0">
                 <widget class="QDoubleSpinBox" name="confMagCzBox">
                  <property name="prefix">
@@ -913,7 +941,7 @@
                <item row="5" column="3">
                 <widget class="QPushButton" name="magCalLoadButton">
                  <property name="toolTip">
-                  <string>Load magnetometer calibration from file</string>
+                  <string>Load from compensation tab</string>
                  </property>
                  <property name="text">
                   <string/>
@@ -997,20 +1025,6 @@
                  </property>
                  <property name="singleStep">
                   <double>0.100000000000000</double>
-                 </property>
-                </widget>
-               </item>
-               <item row="5" column="0">
-                <widget class="QPushButton" name="magCalChooseButton">
-                 <property name="toolTip">
-                  <string>Choose magnetometer calibration file...</string>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                 <property name="icon">
-                  <iconset resource="resources.qrc">
-                   <normaloff>:/models/Icons/Open Folder-96.png</normaloff>:/models/Icons/Open Folder-96.png</iconset>
                  </property>
                 </widget>
                </item>

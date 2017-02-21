@@ -99,7 +99,6 @@ private slots:
     void on_confWriteButton_clicked();
     void on_nmeaLogChooseButton_clicked();
     void on_nmeaLogActiveBox_toggled(bool checked);
-    void on_magCalChooseButton_clicked();
     void on_magCalLoadButton_clicked();
     void on_radarReadButton_clicked();
     void on_radarWriteButton_clicked();
@@ -108,6 +107,9 @@ private slots:
     void on_setClockPiButton_clicked();
     void on_rebootPiButton_clicked();
     void on_shutdownPiButton_clicked();
+    void on_magOpenFileButton_clicked();
+    void on_magCalcCompButton_clicked();
+    void on_magReplotButton_clicked();
 
 private:
     Ui::CarInterface *ui;
@@ -133,6 +135,8 @@ private:
 
     int mId;
     QVector<QVector<double> > mMagSamples;
+    QVector<double> mMagComp;
+    QVector<double> mMagCompCenter;
     QTimer *mTimer;
     QUdpSocket *mUdpSocket;
     QHostAddress mLastHostAddress;
@@ -140,9 +144,15 @@ private:
     TcpBroadcast *mNmeaForwardServer;
     TcpServerSimple *mTcpServer;
     bool mExperimentReplot;
+    bool mMagReplot;
 
     void getConfGui(MAIN_CONFIG &conf);
     void setConfGui(MAIN_CONFIG &conf);
+    void loadMagPoints(QString path);
+    void plotMagPoints();
+    void calcMagComp();
+    void updateMagPlots();
+    void clearMagPlots();
 
 };
 

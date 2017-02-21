@@ -26,6 +26,16 @@
 #include <QTime>
 #include <QDateTime>
 
+#include "Matrix.h"
+#include "DenseMatrix.h"
+#include "SparseMatrix.h"
+#include "Printer.h"
+#include "Matlab.h"
+#include "LU.h"
+#include "SparseVector.h"
+#include "DenseVector.h"
+#include "EVD.h"
+
 namespace {
 void faultToStr(mc_fault_code fault, QString &str, bool &isOk)
 {
@@ -83,6 +93,7 @@ CarInterface::CarInterface(QWidget *parent) :
     mPacketInterface = 0;
     mId = 0;
     mExperimentReplot = false;
+    mMagReplot = false;
 
     mTimer = new QTimer(this);
     mTimer->start(20);
@@ -161,21 +172,42 @@ CarInterface::CarInterface(QWidget *parent) :
     ui->magPlot->legend->setVisible(true);
     ui->magPlot->replot();
 
-    ui->magSampXyPlot->xAxis->setLabel("Mag X");
-    ui->magSampXyPlot->yAxis->setLabel("Mag Y");
+    ui->magSampXyPlot->yAxis->setLabel("XY");
+//    ui->magSampXyPlot->legend->setVisible(true);
     ui->magSampXyPlot->addGraph();
+    ui->magSampXyPlot->graph()->setPen(QPen(Qt::red));
+    ui->magSampXyPlot->graph()->setName("Uncompensated");
+    ui->magSampXyPlot->graph()->setLineStyle(QCPGraph::lsNone);
+    ui->magSampXyPlot->graph()->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCross, 4));
+    ui->magSampXyPlot->addGraph();
+    ui->magSampXyPlot->graph()->setPen(QPen(Qt::blue));
+    ui->magSampXyPlot->graph()->setName("Compensated");
     ui->magSampXyPlot->graph()->setLineStyle(QCPGraph::lsNone);
     ui->magSampXyPlot->graph()->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCross, 4));
 
-    ui->magSampXzPlot->xAxis->setLabel("Mag X");
-    ui->magSampXzPlot->yAxis->setLabel("Mag Z");
+    ui->magSampXzPlot->yAxis->setLabel("Mag XZ");
+//    ui->magSampXzPlot->legend->setVisible(true);
     ui->magSampXzPlot->addGraph();
+    ui->magSampXzPlot->graph()->setPen(QPen(Qt::red));
+    ui->magSampXzPlot->graph()->setName("Uncompensated");
+    ui->magSampXzPlot->graph()->setLineStyle(QCPGraph::lsNone);
+    ui->magSampXzPlot->graph()->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCross, 4));
+    ui->magSampXzPlot->addGraph();
+    ui->magSampXzPlot->graph()->setPen(QPen(Qt::blue));
+    ui->magSampXzPlot->graph()->setName("Compensated");
     ui->magSampXzPlot->graph()->setLineStyle(QCPGraph::lsNone);
     ui->magSampXzPlot->graph()->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCross, 4));
 
-    ui->magSampYzPlot->xAxis->setLabel("Mag Y");
-    ui->magSampYzPlot->yAxis->setLabel("Mag Z");
+    ui->magSampYzPlot->yAxis->setLabel("Mag YZ");
+//    ui->magSampYzPlot->legend->setVisible(true);
     ui->magSampYzPlot->addGraph();
+    ui->magSampYzPlot->graph()->setPen(QPen(Qt::red));
+    ui->magSampYzPlot->graph()->setName("Uncompensated");
+    ui->magSampYzPlot->graph()->setLineStyle(QCPGraph::lsNone);
+    ui->magSampYzPlot->graph()->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCross, 4));
+    ui->magSampYzPlot->addGraph();
+    ui->magSampYzPlot->graph()->setPen(QPen(Qt::blue));
+    ui->magSampYzPlot->graph()->setName("Compensated");
     ui->magSampYzPlot->graph()->setLineStyle(QCPGraph::lsNone);
     ui->magSampYzPlot->graph()->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCross, 4));
 }
@@ -339,46 +371,7 @@ void CarInterface::setStateData(CAR_STATE data)
     if (ui->magSampleStoreBox->isChecked()) {
         mMagSamples.append(magXYZ);
 
-        QVector<double> magX, magY, magZ;
-
-        for (int i = 0;i < mMagSamples.size();i++) {
-            magX.append(mMagSamples.at(i).at(0));
-            magY.append(mMagSamples.at(i).at(1));
-            magZ.append(mMagSamples.at(i).at(2));
-        }
-
-        ui->magSampXyPlot->graph()->setData(magX, magY);
-        ui->magSampXyPlot->rescaleAxes();
-        double xs = ui->magSampXyPlot->xAxis->range().size() / ui->magSampXyPlot->width();
-        double ys = ui->magSampXyPlot->yAxis->range().size() / ui->magSampXyPlot->height();
-        if (ys > xs) {
-            ui->magSampXyPlot->xAxis->setScaleRatio(ui->magSampXyPlot->yAxis);
-        } else {
-            ui->magSampXyPlot->yAxis->setScaleRatio(ui->magSampXyPlot->xAxis);
-        }
-        ui->magSampXyPlot->replot();
-
-        ui->magSampXzPlot->graph()->setData(magX, magZ);
-        ui->magSampXzPlot->rescaleAxes();
-        xs = ui->magSampXzPlot->xAxis->range().size() / ui->magSampXzPlot->width();
-        ys = ui->magSampXzPlot->yAxis->range().size() / ui->magSampXzPlot->height();
-        if (ys > xs) {
-            ui->magSampXzPlot->xAxis->setScaleRatio(ui->magSampXzPlot->yAxis);
-        } else {
-            ui->magSampXzPlot->yAxis->setScaleRatio(ui->magSampXzPlot->xAxis);
-        }
-        ui->magSampXzPlot->replot();
-
-        ui->magSampYzPlot->graph()->setData(magY, magZ);
-        ui->magSampYzPlot->rescaleAxes();
-        xs = ui->magSampYzPlot->xAxis->range().size() / ui->magSampYzPlot->width();
-        ys = ui->magSampYzPlot->yAxis->range().size() / ui->magSampYzPlot->height();
-        if (ys > xs) {
-            ui->magSampYzPlot->xAxis->setScaleRatio(ui->magSampYzPlot->yAxis);
-        } else {
-            ui->magSampYzPlot->yAxis->setScaleRatio(ui->magSampYzPlot->xAxis);
-        }
-        ui->magSampYzPlot->replot();
+        plotMagPoints();
     }
 
     // Clock
@@ -508,6 +501,11 @@ void CarInterface::timerSlot()
         ui->experimentPlot->rescaleAxes();
         ui->experimentPlot->replot();
         mExperimentReplot = false;
+    }
+
+    if (mMagReplot) {
+        updateMagPlots();
+        mMagReplot = false;
     }
 }
 
@@ -740,7 +738,10 @@ void CarInterface::on_idBox_valueChanged(int arg1)
 
 void CarInterface::on_magSampleClearButton_clicked()
 {
+    mMagCompCenter.clear();
+    mMagComp.clear();
     mMagSamples.clear();
+    clearMagPlots();
 }
 
 void CarInterface::on_magSampleSaveButton_clicked()
@@ -980,6 +981,273 @@ void CarInterface::setConfGui(MAIN_CONFIG &conf)
     ui->confLogNameEdit->setText(QString::fromLocal8Bit(conf.log_name));
 }
 
+void CarInterface::loadMagPoints(QString path)
+{
+    bool ok = true;
+    QFile file(path);
+    if (file.exists()) {
+        mMagSamples.clear();
+
+        if (file.open(QIODevice::ReadOnly)) {
+            QTextStream in(&file);
+
+            while (!in.atEnd()) {
+                QString line = in.readLine();
+                QStringList vals = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+
+                if (vals.size() != 3) {
+                    ok = false;
+                    break;
+                }
+
+                bool readOk = false;
+                QVector<double> magXYZ;
+
+                magXYZ.append(vals.at(0).toDouble(&readOk));
+                if (!readOk) {
+                    ok = false;
+                    break;
+                }
+
+                magXYZ.append(vals.at(1).toDouble(&readOk));
+                if (!readOk) {
+                    ok = false;
+                    break;
+                }
+
+                magXYZ.append(vals.at(2).toDouble(&readOk));
+                if (!readOk) {
+                    ok = false;
+                    break;
+                }
+
+                mMagSamples.append(magXYZ);
+            }
+        } else {
+            ok = false;
+        }
+    } else {
+        ok = false;
+    }
+
+    if (!ok) {
+        QMessageBox::warning(this, "Mag Cal",
+                             "Could not load calibration file.");
+    } else {
+        plotMagPoints();
+    }
+}
+
+void CarInterface::plotMagPoints()
+{
+    QVector<double> magX, magY, magZ;
+
+    for (int i = 0;i < mMagSamples.size();i++) {
+        magX.append(mMagSamples.at(i).at(0));
+        magY.append(mMagSamples.at(i).at(1));
+        magZ.append(mMagSamples.at(i).at(2));
+    }
+
+    ui->magSampXyPlot->graph(0)->setData(magX, magY);
+    ui->magSampXzPlot->graph(0)->setData(magX, magZ);
+    ui->magSampYzPlot->graph(0)->setData(magY, magZ);
+
+    mMagReplot = true;
+}
+
+void CarInterface::calcMagComp()
+{
+    /*
+     * Inspired by
+     * http://davidegironi.blogspot.it/2013/01/magnetometer-calibration-helper-01-for.html#.UriTqkMjulM
+     *
+     * Ellipsoid fit from:
+     * http://www.mathworks.com/matlabcentral/fileexchange/24693-ellipsoid-fit
+     */
+
+    if (mMagSamples.size() < 9) {
+        QMessageBox::warning(this, "Magnetometer compensation",
+                             "Too few points.");
+        return;
+    }
+
+    int samples = mMagSamples.size();
+    DenseVector x(samples);
+    DenseVector y(samples);
+    DenseVector z(samples);
+
+    for (int i = 0;i < samples;i++) {
+        x.set(i, mMagSamples.at(i).at(0));
+        y.set(i, mMagSamples.at(i).at(1));
+        z.set(i, mMagSamples.at(i).at(2));
+    }
+
+    DenseMatrix D(samples, 9);
+
+    for (int i = 0;i < samples;i++) {
+        D.setEntry(i, 0, x.get(i) * x.get(i));
+        D.setEntry(i, 1, y.get(i) * y.get(i));
+        D.setEntry(i, 2, z.get(i) * z.get(i));
+        D.setEntry(i, 3, 2.0 * x.get(i) * y.get(i));
+        D.setEntry(i, 4, 2.0 * x.get(i) * z.get(i));
+        D.setEntry(i, 5, 2.0 * y.get(i) * z.get(i));
+        D.setEntry(i, 6, 2.0 * x.get(i));
+        D.setEntry(i, 7, 2.0 * y.get(i));
+        D.setEntry(i, 8, 2.0 * z.get(i));
+    }
+
+    Matrix &v = mldivide(D.transpose().mtimes(D), D.transpose().mtimes(ones(samples, 1)));
+
+    DenseMatrix A(4, 4);
+    A.setEntry(0, 0, v.getEntry(0, 0));
+    A.setEntry(0, 1, v.getEntry(3, 0));
+    A.setEntry(0, 2, v.getEntry(4, 0));
+    A.setEntry(0, 3, v.getEntry(6, 0));
+
+    A.setEntry(1, 0, v.getEntry(3, 0));
+    A.setEntry(1, 1, v.getEntry(1, 0));
+    A.setEntry(1, 2, v.getEntry(5, 0));
+    A.setEntry(1, 3, v.getEntry(7, 0));
+
+    A.setEntry(2, 0, v.getEntry(4, 0));
+    A.setEntry(2, 1, v.getEntry(5, 0));
+    A.setEntry(2, 2, v.getEntry(2, 0));
+    A.setEntry(2, 3, v.getEntry(8, 0));
+
+    A.setEntry(3, 0, v.getEntry(6, 0));
+    A.setEntry(3, 1, v.getEntry(7, 0));
+    A.setEntry(3, 2, v.getEntry(8, 0));
+    A.setEntry(3, 3, -1.0);
+
+    Matrix &tmp1 = A.getColumns(0, 2).getRows(0, 2);
+    DenseMatrix tmp2(3, 1);
+    tmp2.setEntry(0, 0, v.getEntry(6, 0));
+    tmp2.setEntry(1, 0, v.getEntry(7, 0));
+    tmp2.setEntry(2, 0, v.getEntry(8, 0));
+
+    Matrix &center = mldivide(tmp1.times(-1.0), tmp2);
+    Matrix &T = eye(4, 4);
+    T.setEntry(3, 0, center.getEntry(0, 0));
+    T.setEntry(3, 1, center.getEntry(1, 0));
+    T.setEntry(3, 2, center.getEntry(2, 0));
+
+    Matrix &R = T.mtimes(A).mtimes(T.transpose());
+
+    Matrix **ev = eigs(R.getColumns(0, 2).getRows(0, 2).times( -1.0 / R.getEntry(3, 3)), 3, "sm");
+
+    DenseMatrix radii(3, 1);
+    radii.setEntry(0, 0, sqrt(1.0 / ev[1]->getEntry(0, 0)));
+    radii.setEntry(1, 0, sqrt(1.0 / ev[1]->getEntry(1, 1)));
+    radii.setEntry(2, 0, sqrt(1.0 / ev[1]->getEntry(2, 2)));
+
+    double minRadii = radii.getEntry(0, 0);
+    for (int i = 0;i < 3;i++) {
+        if (radii.getEntry(i, 0) < minRadii) {
+            minRadii = radii.getEntry(i, 0);
+        }
+    }
+
+    Matrix &tmps = zeros(3);
+    tmps.setEntry(0, 0, radii.getEntry(0, 0));
+    tmps.setEntry(1, 1, radii.getEntry(1, 0));
+    tmps.setEntry(2, 2, radii.getEntry(2, 0));
+    Matrix &scale = inv(tmps).times(minRadii);
+
+    Matrix &comp = ev[0]->mtimes(scale).mtimes(ev[0]->transpose());
+
+    mMagComp.resize(9);
+    mMagComp[0] = comp.getEntry(0, 0);
+    mMagComp[1] = comp.getEntry(0, 1);
+    mMagComp[2] = comp.getEntry(0, 2);
+
+    mMagComp[3] = comp.getEntry(1, 0);
+    mMagComp[4] = comp.getEntry(1, 1);
+    mMagComp[5] = comp.getEntry(1, 2);
+
+    mMagComp[6] = comp.getEntry(2, 0);
+    mMagComp[7] = comp.getEntry(2, 1);
+    mMagComp[8] = comp.getEntry(2, 2);
+
+    mMagCompCenter.resize(3);
+    mMagCompCenter[0] = center.getEntry(0, 0);
+    mMagCompCenter[1] = center.getEntry(1, 0);
+    mMagCompCenter[2] = center.getEntry(2, 0);
+
+    QVector<double> magX, magY, magZ;
+
+    for (int i = 0;i < mMagSamples.size();i++) {
+        double mx = mMagSamples.at(i).at(0);
+        double my = mMagSamples.at(i).at(1);
+        double mz = mMagSamples.at(i).at(2);
+
+        mx -= mMagCompCenter.at(0);
+        my -= mMagCompCenter.at(1);
+        mz -= mMagCompCenter.at(2);
+
+        magX.append(mx * mMagComp.at(0) + my * mMagComp.at(1) + mz * mMagComp.at(2));
+        magY.append(mx * mMagComp.at(3) + my * mMagComp.at(4) + mz * mMagComp.at(5));
+        magZ.append(mx * mMagComp.at(6) + my * mMagComp.at(7) + mz * mMagComp.at(8));
+    }
+
+    ui->magSampXyPlot->graph(1)->setData(magX, magY);
+    ui->magSampXzPlot->graph(1)->setData(magX, magZ);
+    ui->magSampYzPlot->graph(1)->setData(magY, magZ);
+
+    updateMagPlots();
+
+//    disp(center);
+//    disp(comp);
+
+    delete ev;
+}
+
+void CarInterface::updateMagPlots()
+{
+    ui->magSampXyPlot->rescaleAxes();
+    double xs = ui->magSampXyPlot->xAxis->range().size() / ui->magSampXyPlot->width();
+    double ys = ui->magSampXyPlot->yAxis->range().size() / ui->magSampXyPlot->height();
+    if (ys > xs) {
+        ui->magSampXyPlot->xAxis->setScaleRatio(ui->magSampXyPlot->yAxis);
+    } else {
+        ui->magSampXyPlot->yAxis->setScaleRatio(ui->magSampXyPlot->xAxis);
+    }
+    ui->magSampXyPlot->replot();
+
+    ui->magSampXzPlot->rescaleAxes();
+    xs = ui->magSampXzPlot->xAxis->range().size() / ui->magSampXzPlot->width();
+    ys = ui->magSampXzPlot->yAxis->range().size() / ui->magSampXzPlot->height();
+    if (ys > xs) {
+        ui->magSampXzPlot->xAxis->setScaleRatio(ui->magSampXzPlot->yAxis);
+    } else {
+        ui->magSampXzPlot->yAxis->setScaleRatio(ui->magSampXzPlot->xAxis);
+    }
+    ui->magSampXzPlot->replot();
+
+    ui->magSampYzPlot->rescaleAxes();
+    xs = ui->magSampYzPlot->xAxis->range().size() / ui->magSampYzPlot->width();
+    ys = ui->magSampYzPlot->yAxis->range().size() / ui->magSampYzPlot->height();
+    if (ys > xs) {
+        ui->magSampYzPlot->xAxis->setScaleRatio(ui->magSampYzPlot->yAxis);
+    } else {
+        ui->magSampYzPlot->yAxis->setScaleRatio(ui->magSampYzPlot->xAxis);
+    }
+    ui->magSampYzPlot->replot();
+}
+
+void CarInterface::clearMagPlots()
+{
+    ui->magSampXyPlot->graph(0)->clearData();
+    ui->magSampXzPlot->graph(0)->clearData();
+    ui->magSampYzPlot->graph(0)->clearData();
+    ui->magSampXyPlot->graph(1)->clearData();
+    ui->magSampXzPlot->graph(1)->clearData();
+    ui->magSampYzPlot->graph(1)->clearData();
+
+    ui->magSampXyPlot->replot();
+    ui->magSampXzPlot->replot();
+    ui->magSampYzPlot->replot();
+}
+
 void CarInterface::on_nmeaLogChooseButton_clicked()
 {
     QString path;
@@ -1006,49 +1274,31 @@ void CarInterface::on_nmeaLogActiveBox_toggled(bool checked)
     }
 }
 
-void CarInterface::on_magCalChooseButton_clicked()
+void CarInterface::on_magCalLoadButton_clicked()
 {
-    QString path;
-    path = QFileDialog::getOpenFileName(this, tr("Choose magnetometer calibration file."));
-    if (path.isNull()) {
+    if (mMagComp.isEmpty() || mMagCompCenter.isEmpty()) {
+        QMessageBox::warning(this, "Load Magnetometer Calibration",
+                             "Magnetometer calibration is not done. Please go to "
+                             "the calibration tab and collect "
+                             "samples, or load a file.");
         return;
     }
 
-    ui->magCalFileEdit->setText(path);
-}
+    ui->confMagCxBox->setValue(mMagCompCenter.at(0));
+    ui->confMagCyBox->setValue(mMagCompCenter.at(1));
+    ui->confMagCzBox->setValue(mMagCompCenter.at(2));
 
-void CarInterface::on_magCalLoadButton_clicked()
-{
-    bool ok = false;
-    QFile file(ui->magCalFileEdit->text());
-    if (file.exists()) {
-        if (file.open(QIODevice::ReadOnly)) {
-            QTextStream in(&file);
+    ui->confMagXxBox->setValue(mMagComp.at(0));
+    ui->confMagXyBox->setValue(mMagComp.at(1));
+    ui->confMagXzBox->setValue(mMagComp.at(2));
 
-            ui->confMagCxBox->setValue(in.readLine().toDouble());
-            ui->confMagCyBox->setValue(in.readLine().toDouble());
-            ui->confMagCzBox->setValue(in.readLine().toDouble());
+    ui->confMagYxBox->setValue(mMagComp.at(3));
+    ui->confMagYyBox->setValue(mMagComp.at(4));
+    ui->confMagYzBox->setValue(mMagComp.at(5));
 
-            ui->confMagXxBox->setValue(in.readLine().toDouble());
-            ui->confMagXyBox->setValue(in.readLine().toDouble());
-            ui->confMagXzBox->setValue(in.readLine().toDouble());
-
-            ui->confMagYxBox->setValue(in.readLine().toDouble());
-            ui->confMagYyBox->setValue(in.readLine().toDouble());
-            ui->confMagYzBox->setValue(in.readLine().toDouble());
-
-            ui->confMagZxBox->setValue(in.readLine().toDouble());
-            ui->confMagZyBox->setValue(in.readLine().toDouble());
-            ui->confMagZzBox->setValue(in.readLine().toDouble());
-
-            ok = true;
-        }
-    }
-
-    if (!ok) {
-        QMessageBox::warning(this, "Mag Cal",
-                             "Could not load calibration file.");
-    }
+    ui->confMagZxBox->setValue(mMagComp.at(6));
+    ui->confMagZyBox->setValue(mMagComp.at(7));
+    ui->confMagZzBox->setValue(mMagComp.at(8));
 }
 
 void CarInterface::on_radarReadButton_clicked()
@@ -1136,4 +1386,25 @@ void CarInterface::on_shutdownPiButton_clicked()
                                  "connection works.");
         }
     }
+}
+
+void CarInterface::on_magOpenFileButton_clicked()
+{
+    QString path;
+    path = QFileDialog::getOpenFileName(this, tr("Choose magnetometer sample file."));
+    if (path.isNull()) {
+        return;
+    }
+
+    loadMagPoints(path);
+}
+
+void CarInterface::on_magCalcCompButton_clicked()
+{
+    calcMagComp();
+}
+
+void CarInterface::on_magReplotButton_clicked()
+{
+    updateMagPlots();
 }
