@@ -141,6 +141,8 @@ Matrix& DenseMatrix::mtimes(Matrix& B) {
 				resPr[i][j] = s;
 			}
 		}
+
+        delete[] columnB;
 		return *res;
 	} else if (typeid(B) == typeid(SparseMatrix)) {
 		Matrix* res = new DenseMatrix(M, NB);

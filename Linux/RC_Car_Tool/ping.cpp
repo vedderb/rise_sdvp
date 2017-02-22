@@ -52,8 +52,8 @@ Ping::~Ping()
         close(mSocket);
     }
 
-    delete mPacket;
-    delete mOutpack;
+    delete[] mPacket;
+    delete[] mOutpack;
 #endif
 }
 

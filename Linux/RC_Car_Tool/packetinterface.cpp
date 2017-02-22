@@ -84,7 +84,7 @@ PacketInterface::PacketInterface(QObject *parent) :
 
 PacketInterface::~PacketInterface()
 {
-    delete mSendBuffer;
+    delete[] mSendBuffer;
 }
 
 void PacketInterface::processData(QByteArray &data)

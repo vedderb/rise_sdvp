@@ -19,6 +19,7 @@ LU::LU(Matrix& A) {
 	L = LUP[0];
 	U = LUP[1];
 	P = LUP[2];
+    delete[] LUP;
 }
 
 LU::~LU() {
@@ -41,10 +42,31 @@ Matrix** LU::run(Matrix& A) {
 	 * LU = PA
 	 */
 
-	if (typeid(A) == typeid(DenseMatrix)) {
-		double** L = (new DenseMatrix(n, n, 0))->getData();
-		double** AData = ((DenseMatrix&) A.copy()).getData();
-		double** P = (new DenseMatrix(n, n, 0))->getData();
+	if (typeid(A) == typeid(DenseMatrix)) {        
+        double **data1 = new double*[n];
+        for (int i = 0; i < n; i++) {
+            data1[i] = new double[n];
+            for (int j = 0; j < n; j++)
+                data1[i][j] = 0;
+        }
+
+        double **data2 = new double*[n];
+        for (int i = 0; i < n; i++) {
+            data2[i] = new double[n];
+            for (int j = 0; j < n; j++)
+                data2[i][j] = 0;
+        }
+
+        double **data3 = new double*[n];
+        for (int i = 0; i < n; i++) {
+            data3[i] = new double[n];
+            for (int j = 0; j < n; j++)
+                data3[i][j] = A.getEntry(i, j);
+        }
+
+        double** L = data1;
+        double** AData = data3;
+        double** P = data2;
 		// Initialize P = eye(n)
 		for (int i = 0; i < n; i++) {
 			P[i][i] = 1;
@@ -64,6 +86,7 @@ Matrix** LU::run(Matrix& A) {
 				LUP[0] = null;
 				LUP[1] = null;
 				LUP[2] = null;
+                delete AData;
 				return LUP;
 			}
 			if (j != i) {
@@ -207,6 +230,7 @@ Matrix** LU::run(Matrix& A) {
 		delete[] AVs;
 		delete[] PVs;
 	}
+
 	return LUP;
 }
 
@@ -652,14 +676,22 @@ Matrix& LU::inverse() {
 		eye[i] = allocateVector(n, 0);
 		eye[i][i] = 1;
 	}
+
 	for (int i = 0; i < n; i++) {
-		AInverseTransposeData[i] = full(solve(*new DenseVector(eye[i], n))).getPr();
+        Vector *tmp0 = new DenseVector(eye[i], n);
+        Vector *tmp = &solve(*tmp0);
+        double *tmp2 = new double[n];
+        memcpy(tmp2, full(*tmp).getPr(), sizeof(double) * n);
+        AInverseTransposeData[i] = tmp2;
+        delete tmp0;
+        delete tmp;
 	}
-	Matrix* temp = null;
-	temp = new DenseMatrix(AInverseTransposeData, n, n);
-	Matrix* res = null;
-	res = &temp->transpose();
+
+    Matrix* temp = new DenseMatrix(AInverseTransposeData, n, n);
+    Matrix* res = &temp->transpose();
 	delete temp;
+    delete[] eye;
+
 	return *res;
 }
 

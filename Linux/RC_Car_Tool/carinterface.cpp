@@ -1101,7 +1101,16 @@ void CarInterface::calcMagComp()
         D.setEntry(i, 8, 2.0 * z.get(i));
     }
 
-    Matrix &v = mldivide(D.transpose().mtimes(D), D.transpose().mtimes(ones(samples, 1)));
+    Matrix *tmp1, *tmp2, *tmp3, *tmp4;
+    tmp1 = &D.transpose();
+    tmp2 = &tmp1->mtimes(D);
+    tmp3 = &ones(samples, 1);
+    tmp4 = &tmp1->mtimes(*tmp3);
+    Matrix &v = mldivide(*tmp2, *tmp4);
+    delete tmp1;
+    delete tmp2;
+    delete tmp3;
+    delete tmp4;
 
     DenseMatrix A(4, 4);
     A.setEntry(0, 0, v.getEntry(0, 0));
@@ -1124,21 +1133,32 @@ void CarInterface::calcMagComp()
     A.setEntry(3, 2, v.getEntry(8, 0));
     A.setEntry(3, 3, -1.0);
 
-    Matrix &tmp1 = A.getColumns(0, 2).getRows(0, 2);
-    DenseMatrix tmp2(3, 1);
-    tmp2.setEntry(0, 0, v.getEntry(6, 0));
-    tmp2.setEntry(1, 0, v.getEntry(7, 0));
-    tmp2.setEntry(2, 0, v.getEntry(8, 0));
+    tmp1 = &A.getSubMatrix(0, 2, 0, 2);
+    tmp2 = &tmp1->times(-1.0);
+    DenseMatrix atmp2(3, 1);
+    atmp2.setEntry(0, 0, v.getEntry(6, 0));
+    atmp2.setEntry(1, 0, v.getEntry(7, 0));
+    atmp2.setEntry(2, 0, v.getEntry(8, 0));
 
-    Matrix &center = mldivide(tmp1.times(-1.0), tmp2);
+    Matrix &center = mldivide(*tmp2, atmp2);
     Matrix &T = eye(4, 4);
     T.setEntry(3, 0, center.getEntry(0, 0));
     T.setEntry(3, 1, center.getEntry(1, 0));
     T.setEntry(3, 2, center.getEntry(2, 0));
+    delete tmp1;
+    delete tmp2;
 
-    Matrix &R = T.mtimes(A).mtimes(T.transpose());
+    tmp1 = &T.mtimes(A);
+    tmp2 = &T.transpose();
+    Matrix &R = tmp1->mtimes(*tmp2);
+    delete tmp1;
+    delete tmp2;
 
-    Matrix **ev = eigs(R.getColumns(0, 2).getRows(0, 2).times( -1.0 / R.getEntry(3, 3)), 3, "sm");
+    tmp1 = &R.getSubMatrix(0, 2, 0, 2);
+    tmp2 = &tmp1->times( -1.0 / R.getEntry(3, 3));
+    Matrix **ev = eigs(*tmp2, 3, "sm");
+    delete tmp1;
+    delete tmp2;
 
     DenseMatrix radii(3, 1);
     radii.setEntry(0, 0, sqrt(1.0 / ev[1]->getEntry(0, 0)));
@@ -1156,9 +1176,16 @@ void CarInterface::calcMagComp()
     tmps.setEntry(0, 0, radii.getEntry(0, 0));
     tmps.setEntry(1, 1, radii.getEntry(1, 0));
     tmps.setEntry(2, 2, radii.getEntry(2, 0));
-    Matrix &scale = inv(tmps).times(minRadii);
 
-    Matrix &comp = ev[0]->mtimes(scale).mtimes(ev[0]->transpose());
+    tmp1 = &inv(tmps);
+    Matrix &scale = tmp1->times(minRadii);
+    delete tmp1;
+
+    tmp1 = &ev[0]->mtimes(scale);
+    tmp2 = &ev[0]->transpose();
+    Matrix &comp = tmp1->mtimes(*tmp2);
+    delete tmp1;
+    delete tmp2;
 
     mMagComp.resize(9);
     mMagComp[0] = comp.getEntry(0, 0);
@@ -1204,14 +1231,15 @@ void CarInterface::calcMagComp()
 //    disp(comp);
 
     delete &v;
-    delete &tmp1;
     delete &center;
     delete &T;
     delete &R;
     delete &tmps;
     delete &scale;
     delete &comp;
-    delete ev;
+    delete ev[0];
+    delete ev[1];
+    delete[] ev;
 }
 
 void CarInterface::updateMagPlots()

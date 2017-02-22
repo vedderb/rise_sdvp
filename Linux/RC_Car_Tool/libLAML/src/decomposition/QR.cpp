@@ -16,6 +16,7 @@ QR::QR(Matrix& A) {
 	Q = QRP[0];
 	R = QRP[1];
 	P = QRP[2];
+    delete[] QRP;
 }
 
 QR::~QR() {
@@ -35,7 +36,8 @@ Matrix** QR::decompose(Matrix& M) {
 	int n = A->getColumnDimension();
 	Matrix** QRP = new Matrix*[3];
 	double* d = allocateVector(n, 0);
-	Vector** PVs = sparseMatrix2SparseColumnVectors(*new SparseMatrix(n, n));
+    SparseMatrix *tmp = new SparseMatrix(n, n);
+    Vector** PVs = sparseMatrix2SparseColumnVectors(*tmp);
 	// Initialize P = eye(n)
 	for (int i = 0; i < n; i++) {
 		PVs[i]->set(i, 1);
@@ -247,6 +249,8 @@ Matrix** QR::decompose(Matrix& M) {
 		delete PVs[j];
 	}
 	delete[] PVs;
+    delete tmp;
+    delete[] d;
 
 	return QRP;
 
@@ -381,8 +385,10 @@ Matrix& QR::solve(Matrix& B) {
 	// QRP'X = B
 	// RY = Q'B = D
 	Matrix& QT = Q->transpose();
-	double** D = full(QT.mtimes(B)).getData();
+    DenseMatrix *tmp2 = &full(QT.mtimes(B));
+    double** D = tmp2->getData();
 	delete &QT;
+
 	double* DRow_i = null;
 
 	// Y = R \ D
@@ -447,6 +453,9 @@ Matrix& QR::solve(Matrix& B) {
 	}
 
 	// X = PY
-	Matrix& X = P->mtimes(*new DenseMatrix(Y, n, B.getColumnDimension()));
+    Matrix *tmp = new DenseMatrix(Y, n, B.getColumnDimension());
+    Matrix& X = P->mtimes(*tmp);
+    delete tmp;
+    delete tmp2;
 	return X;
 }

@@ -74,6 +74,8 @@ MainWindow::MainWindow(QWidget *parent) :
     mStatusInfoTime = 0;
     mPacketInterface = new PacketInterface(this);
     mSerialPort = new QSerialPort(this);
+    mThrottle = 0.0;
+    mSteering = 0.0;
 
 #ifdef HAS_JOYSTICK
     mJoystick = new Joystick(this);

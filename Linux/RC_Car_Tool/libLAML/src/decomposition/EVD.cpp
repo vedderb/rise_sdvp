@@ -85,6 +85,8 @@ Matrix** EVD::decompose(Matrix& A, bool computeV) {
 		delete V;
 	}
 	delete T;
+    delete[] VD;
+    delete[] QT;
 
 	return res;
 }
@@ -110,7 +112,7 @@ Matrix** EVD::tridiagonalize(Matrix& M, bool computeV) {
 	Matrix& A = typeid(M) == typeid(DenseMatrix) ? M.copy() : full(M);
 	int m = A.getRowDimension();
 	int n = A.getColumnDimension();
-	Matrix** QT = new Matrix*[2];
+    Matrix** QT;
 	double* a = allocateVector(n, 0);
 	double* b = allocateVector(n, 0);
 	double** AData = ((DenseMatrix&) A).getData();
