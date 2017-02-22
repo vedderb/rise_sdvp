@@ -107,8 +107,6 @@ FORMS    += mainwindow.ui \
     networkinterface.ui \
     moteconfig.ui
 
-include(libLAML/libLAML.pri)
-
 contains(DEFINES, HAS_JOYSTICK) {
     SOURCES += joystick.cpp
     HEADERS += joystick.h

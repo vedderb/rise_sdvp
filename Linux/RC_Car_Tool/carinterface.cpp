@@ -26,15 +26,8 @@
 #include <QTime>
 #include <QDateTime>
 
-#include "Matrix.h"
-#include "DenseMatrix.h"
-#include "SparseMatrix.h"
-#include "Printer.h"
-#include "Matlab.h"
-#include "LU.h"
-#include "SparseVector.h"
-#include "DenseVector.h"
-#include "EVD.h"
+#include "Eigen/Dense"
+#include "Eigen/LU"
 
 namespace {
 void faultToStr(mc_fault_code fault, QString &str, bool &isOk)
@@ -1066,8 +1059,7 @@ void CarInterface::calcMagComp()
      * Ellipsoid fit from:
      * http://www.mathworks.com/matlabcentral/fileexchange/24693-ellipsoid-fit
      *
-     * Notice that libLAML is full of memory leaks, this function should not be used too ofter.
-     * TODO: Replace libLAML
+     * To use Eigen to convert matlab code, have a look at AsciiQuickReference.txt
      */
 
     if (mMagSamples.size() < 9) {
@@ -1077,133 +1069,93 @@ void CarInterface::calcMagComp()
     }
 
     int samples = mMagSamples.size();
-    DenseVector x(samples);
-    DenseVector y(samples);
-    DenseVector z(samples);
+    Eigen::VectorXd ex(samples);
+    Eigen::VectorXd ey(samples);
+    Eigen::VectorXd ez(samples);
 
     for (int i = 0;i < samples;i++) {
-        x.set(i, mMagSamples.at(i).at(0));
-        y.set(i, mMagSamples.at(i).at(1));
-        z.set(i, mMagSamples.at(i).at(2));
+        ex(i) = mMagSamples.at(i).at(0);
+        ey(i) = mMagSamples.at(i).at(1);
+        ez(i) = mMagSamples.at(i).at(2);
     }
 
-    DenseMatrix D(samples, 9);
+    Eigen::MatrixXd eD(samples, 9);
 
     for (int i = 0;i < samples;i++) {
-        D.setEntry(i, 0, x.get(i) * x.get(i));
-        D.setEntry(i, 1, y.get(i) * y.get(i));
-        D.setEntry(i, 2, z.get(i) * z.get(i));
-        D.setEntry(i, 3, 2.0 * x.get(i) * y.get(i));
-        D.setEntry(i, 4, 2.0 * x.get(i) * z.get(i));
-        D.setEntry(i, 5, 2.0 * y.get(i) * z.get(i));
-        D.setEntry(i, 6, 2.0 * x.get(i));
-        D.setEntry(i, 7, 2.0 * y.get(i));
-        D.setEntry(i, 8, 2.0 * z.get(i));
+        eD(i, 0) = ex(i) * ex(i);
+        eD(i, 1) = ey(i) * ey(i);
+        eD(i, 2) = ez(i) * ez(i);
+        eD(i, 3) = 2.0 * ex(i) * ey(i);
+        eD(i, 4) = 2.0 * ex(i) * ez(i);
+        eD(i, 5) = 2.0 * ey(i) * ez(i);
+        eD(i, 6) = 2.0 * ex(i);
+        eD(i, 7) = 2.0 * ey(i);
+        eD(i, 8) = 2.0 * ez(i);
     }
 
-    Matrix *tmp1, *tmp2, *tmp3, *tmp4;
-    tmp1 = &D.transpose();
-    tmp2 = &tmp1->mtimes(D);
-    tmp3 = &ones(samples, 1);
-    tmp4 = &tmp1->mtimes(*tmp3);
-    Matrix &v = mldivide(*tmp2, *tmp4);
-    delete tmp1;
-    delete tmp2;
-    delete tmp3;
-    delete tmp4;
+    eD.transpose();
+    Eigen::MatrixXd etmp1 = eD.transpose() * eD;
+    Eigen::MatrixXd etmp2 = eD.transpose() * Eigen::MatrixXd::Ones(samples, 1);
+    Eigen::VectorXd eV = etmp1.lu().solve(etmp2);
 
-    DenseMatrix A(4, 4);
-    A.setEntry(0, 0, v.getEntry(0, 0));
-    A.setEntry(0, 1, v.getEntry(3, 0));
-    A.setEntry(0, 2, v.getEntry(4, 0));
-    A.setEntry(0, 3, v.getEntry(6, 0));
+    Eigen::MatrixXd eA(4, 4);
+    eA(0, 0) = eV(0);
+    eA(0, 1) = eV(3);
+    eA(0, 2) = eV(4);
+    eA(0, 3) = eV(6);
 
-    A.setEntry(1, 0, v.getEntry(3, 0));
-    A.setEntry(1, 1, v.getEntry(1, 0));
-    A.setEntry(1, 2, v.getEntry(5, 0));
-    A.setEntry(1, 3, v.getEntry(7, 0));
+    eA(1, 0) = eV(3);
+    eA(1, 1) = eV(1);
+    eA(1, 2) = eV(5);
+    eA(1, 3) = eV(7);
 
-    A.setEntry(2, 0, v.getEntry(4, 0));
-    A.setEntry(2, 1, v.getEntry(5, 0));
-    A.setEntry(2, 2, v.getEntry(2, 0));
-    A.setEntry(2, 3, v.getEntry(8, 0));
+    eA(2, 0) = eV(4);
+    eA(2, 1) = eV(5);
+    eA(2, 2) = eV(2);
+    eA(2, 3) = eV(8);
 
-    A.setEntry(3, 0, v.getEntry(6, 0));
-    A.setEntry(3, 1, v.getEntry(7, 0));
-    A.setEntry(3, 2, v.getEntry(8, 0));
-    A.setEntry(3, 3, -1.0);
+    eA(3, 0) = eV(6);
+    eA(3, 1) = eV(7);
+    eA(3, 2) = eV(8);
+    eA(3, 3) = -1.0;
 
-    tmp1 = &A.getSubMatrix(0, 2, 0, 2);
-    tmp2 = &tmp1->times(-1.0);
-    DenseMatrix atmp2(3, 1);
-    atmp2.setEntry(0, 0, v.getEntry(6, 0));
-    atmp2.setEntry(1, 0, v.getEntry(7, 0));
-    atmp2.setEntry(2, 0, v.getEntry(8, 0));
+    Eigen::MatrixXd eCenter = -eA.topLeftCorner(3, 3).lu().solve(eV.segment(6, 3));
+    Eigen::MatrixXd eT = Eigen::MatrixXd::Identity(4, 4);
+    eT(3, 0) = eCenter(0);
+    eT(3, 1) = eCenter(1);
+    eT(3, 2) = eCenter(2);
 
-    Matrix &center = mldivide(*tmp2, atmp2);
-    Matrix &T = eye(4, 4);
-    T.setEntry(3, 0, center.getEntry(0, 0));
-    T.setEntry(3, 1, center.getEntry(1, 0));
-    T.setEntry(3, 2, center.getEntry(2, 0));
-    delete tmp1;
-    delete tmp2;
+    Eigen::MatrixXd eR = eT * eA * eT.transpose();
 
-    tmp1 = &T.mtimes(A);
-    tmp2 = &T.transpose();
-    Matrix &R = tmp1->mtimes(*tmp2);
-    delete tmp1;
-    delete tmp2;
+    Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> eEv(eR.topLeftCorner(3, 3) * (-1.0 / eR(3, 3)));
+    Eigen::MatrixXd eVecs = eEv.eigenvectors();
+    Eigen::MatrixXd eVals = eEv.eigenvalues();
 
-    tmp1 = &R.getSubMatrix(0, 2, 0, 2);
-    tmp2 = &tmp1->times( -1.0 / R.getEntry(3, 3));
-    Matrix **ev = eigs(*tmp2, 3, "sm");
-    delete tmp1;
-    delete tmp2;
+    Eigen::MatrixXd eRadii(3, 1);
+    eRadii(0) = sqrt(1.0 / eVals(0));
+    eRadii(1) = sqrt(1.0 / eVals(1));
+    eRadii(2) = sqrt(1.0 / eVals(2));
 
-    DenseMatrix radii(3, 1);
-    radii.setEntry(0, 0, sqrt(1.0 / ev[1]->getEntry(0, 0)));
-    radii.setEntry(1, 0, sqrt(1.0 / ev[1]->getEntry(1, 1)));
-    radii.setEntry(2, 0, sqrt(1.0 / ev[1]->getEntry(2, 2)));
-
-    double minRadii = radii.getEntry(0, 0);
-    for (int i = 0;i < 3;i++) {
-        if (radii.getEntry(i, 0) < minRadii) {
-            minRadii = radii.getEntry(i, 0);
-        }
-    }
-
-    Matrix &tmps = zeros(3);
-    tmps.setEntry(0, 0, radii.getEntry(0, 0));
-    tmps.setEntry(1, 1, radii.getEntry(1, 0));
-    tmps.setEntry(2, 2, radii.getEntry(2, 0));
-
-    tmp1 = &inv(tmps);
-    Matrix &scale = tmp1->times(minRadii);
-    delete tmp1;
-
-    tmp1 = &ev[0]->mtimes(scale);
-    tmp2 = &ev[0]->transpose();
-    Matrix &comp = tmp1->mtimes(*tmp2);
-    delete tmp1;
-    delete tmp2;
+    Eigen::MatrixXd eScale = eRadii.asDiagonal().inverse() * eRadii.minCoeff();
+    Eigen::MatrixXd eComp = eVecs * eScale * eVecs.transpose();
 
     mMagComp.resize(9);
-    mMagComp[0] = comp.getEntry(0, 0);
-    mMagComp[1] = comp.getEntry(0, 1);
-    mMagComp[2] = comp.getEntry(0, 2);
+    mMagComp[0] = eComp(0, 0);
+    mMagComp[1] = eComp(0, 1);
+    mMagComp[2] = eComp(0, 2);
 
-    mMagComp[3] = comp.getEntry(1, 0);
-    mMagComp[4] = comp.getEntry(1, 1);
-    mMagComp[5] = comp.getEntry(1, 2);
+    mMagComp[3] = eComp(1, 0);
+    mMagComp[4] = eComp(1, 1);
+    mMagComp[5] = eComp(1, 2);
 
-    mMagComp[6] = comp.getEntry(2, 0);
-    mMagComp[7] = comp.getEntry(2, 1);
-    mMagComp[8] = comp.getEntry(2, 2);
+    mMagComp[6] = eComp(2, 0);
+    mMagComp[7] = eComp(2, 1);
+    mMagComp[8] = eComp(2, 2);
 
     mMagCompCenter.resize(3);
-    mMagCompCenter[0] = center.getEntry(0, 0);
-    mMagCompCenter[1] = center.getEntry(1, 0);
-    mMagCompCenter[2] = center.getEntry(2, 0);
+    mMagCompCenter[0] = eCenter(0, 0);
+    mMagCompCenter[1] = eCenter(1, 0);
+    mMagCompCenter[2] = eCenter(2, 0);
 
     QVector<double> magX, magY, magZ;
 
@@ -1226,20 +1178,6 @@ void CarInterface::calcMagComp()
     ui->magSampYzPlot->graph(1)->setData(magY, magZ);
 
     updateMagPlots();
-
-//    disp(center);
-//    disp(comp);
-
-    delete &v;
-    delete &center;
-    delete &T;
-    delete &R;
-    delete &tmps;
-    delete &scale;
-    delete &comp;
-    delete ev[0];
-    delete ev[1];
-    delete[] ev;
 }
 
 void CarInterface::updateMagPlots()
