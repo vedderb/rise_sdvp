@@ -52,16 +52,20 @@
  *
  * DMA/Stream	Device		Usage
  * 2, 4			ADC1		adconv
- * 1, 0			I2C1		I2C Port
- * 1, 6			I2C1		I2C Port
+ * 1, 0			I2C1		I2C EXT (Overlap with SPI EXT)
+ * 1, 6			I2C1		I2C EXT
  * 1, 2			I2C2		MPU9150
  * 1, 7			I2C2		MPU9150
  * 1, 3			SPI2		CC2520
  * 1, 4			SPI2		CC2520
- * 2, 0			SPI2		CC1120
- * 2, 3			SPI2		CC1120
- * 2, 2			UART6		UBLOX
- * 2, 7			UART6		UBLOX
+ * 2, 0			SPI1		CC1120
+ * 2, 3			SPI1		CC1120
+ * 2, 1			UART6		UBLOX
+ * 2, 6			UART6		UBLOX
+ * 2, 5			UART1		UART EXT
+ * 2, 7			UART1		UART EXT
+ * 1, 0			SPI3		SPI EXT (Overlap with I2C EXT)
+ * 1, 5			SPI3		SPI EXT
  *
  */
 

@@ -31,6 +31,10 @@
 // Constants
 #define MS_PER_DAY					(24 * 60 * 60 * 1000)
 
+// CAN ID mask for DecaWave module
+#define CAN_MASK_DW					(5 << 8)
+#define CAN_DW_ID_ANY				255
+
 // Orientation data
 typedef struct {
 	float q0;
@@ -862,5 +866,11 @@ typedef enum {
 	COMM_CUSTOM_APP_DATA,
 	COMM_NRF_START_PAIRING
 } COMM_PACKET_ID;
+
+// ============== Decawave Datatypes ================== //
+
+typedef enum {
+	CMD_DW_RANGE = 0
+} CMD_DW;
 
 #endif /* DATATYPES_H_ */

@@ -22,7 +22,10 @@
 
 // Functions
 void comm_can_init(void);
-void comm_can_transmit(uint32_t id, uint8_t *data, uint8_t len);
+void comm_can_transmit_eid(uint32_t id, uint8_t *data, uint8_t len);
+void comm_can_transmit_sid(uint32_t id, uint8_t *data, uint8_t len);
 void comm_can_send_buffer(uint8_t controller_id, uint8_t *data, unsigned int len, bool send);
+void comm_can_dw_range(uint8_t id, uint8_t dest, int samples);
+void comm_can_set_range_func(void(*func)(uint8_t id, uint8_t dest, float range));
 
 #endif /* COMM_CAN_H_ */

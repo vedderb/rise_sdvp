@@ -24,6 +24,7 @@
 #include "radar.h"
 #include "cc1120.h"
 #include "pos.h"
+#include "comm_can.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -43,6 +44,9 @@ typedef struct _terminal_callback_struct {
 // Private variables
 static terminal_callback_struct callbacks[CALLBACK_LEN];
 static int callback_write = 0;
+
+// Private functions
+static void range_callback(uint8_t id, uint8_t dest, float range);
 
 void terminal_process_string(char *str) {
 	enum { kMaxArgs = 64 };
@@ -122,7 +126,7 @@ void terminal_process_string(char *str) {
 		pos_reset_attitude();
 	} else if (strcmp(argv[0], "cc1120_state") == 0) {
 		commands_printf("%s\n", cc1120_state_name());
-	}  else if (strcmp(argv[0], "cc1120_update_rf") == 0) {
+	} else if (strcmp(argv[0], "cc1120_update_rf") == 0) {
 		if (argc != 2) {
 			commands_printf("Invalid number of arguments\n");
 		} else {
@@ -134,6 +138,20 @@ void terminal_process_string(char *str) {
 			} else {
 				cc1120_update_rf(set);
 				commands_printf("Done\n");
+			}
+		}
+	} else if (strcmp(argv[0], "dw_range") == 0) {
+		if (argc != 2) {
+			commands_printf("Invalid number of arguments\n");
+		} else {
+			int dest = -1;
+			sscanf(argv[1], "%d", &dest);
+
+			if (dest < 0 || dest > 254) {
+				commands_printf("Invalid argument\n");
+			} else {
+				comm_can_set_range_func(range_callback);
+				comm_can_dw_range(CAN_DW_ID_ANY, dest, 5);
 			}
 		}
 	}
@@ -186,6 +204,9 @@ void terminal_process_string(char *str) {
 		commands_printf("  %d: %s", ind++, "CC1120_SET_434_0M_9_6K_2FSK_BW50K_12K");
 		commands_printf("  %d: %s", ind++, "CC1120_SET_452_0M_9_6K_2GFSK_BW33K_2_4K");
 		commands_printf("  %d: %s", ind++, "CC1120_SET_452_0M_9_6K_2GFSK_BW50K_2_4K");
+
+		commands_printf("dw_range [dest]");
+		commands_printf("  Measure the distance to DW module [dest] with ultra wideband.");
 
 		for (int i = 0;i < callback_write;i++) {
 			if (callbacks[i].arg_names) {
@@ -269,4 +290,8 @@ void terminal_register_command_callback(
 			callback_write = 0;
 		}
 	}
+}
+
+static void range_callback(uint8_t id, uint8_t dest, float range) {
+	commands_printf("Distance between %d (connected over CAN) and %d: %.1f cm\n", id, dest, (double)range * D(100.0));
 }

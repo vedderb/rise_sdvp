@@ -73,7 +73,7 @@
 #define RADAR_SWEEP_TIME			0.075
 
 // Ublox settings
-#define UBLOX_EN					0
+#define UBLOX_EN					1
 
 // Servo settings
 #define SERVO_OUT_RATE_HZ			50

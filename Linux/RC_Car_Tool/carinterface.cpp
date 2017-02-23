@@ -1059,7 +1059,7 @@ void CarInterface::calcMagComp()
      * Ellipsoid fit from:
      * http://www.mathworks.com/matlabcentral/fileexchange/24693-ellipsoid-fit
      *
-     * To use Eigen to convert matlab code, have a look at AsciiQuickReference.txt
+     * To use Eigen to convert matlab code, have a look at Eigen/AsciiQuickReference.txt
      */
 
     if (mMagSamples.size() < 9) {
@@ -1093,31 +1093,15 @@ void CarInterface::calcMagComp()
         eD(i, 8) = 2.0 * ez(i);
     }
 
-    eD.transpose();
     Eigen::MatrixXd etmp1 = eD.transpose() * eD;
     Eigen::MatrixXd etmp2 = eD.transpose() * Eigen::MatrixXd::Ones(samples, 1);
     Eigen::VectorXd eV = etmp1.lu().solve(etmp2);
 
     Eigen::MatrixXd eA(4, 4);
-    eA(0, 0) = eV(0);
-    eA(0, 1) = eV(3);
-    eA(0, 2) = eV(4);
-    eA(0, 3) = eV(6);
-
-    eA(1, 0) = eV(3);
-    eA(1, 1) = eV(1);
-    eA(1, 2) = eV(5);
-    eA(1, 3) = eV(7);
-
-    eA(2, 0) = eV(4);
-    eA(2, 1) = eV(5);
-    eA(2, 2) = eV(2);
-    eA(2, 3) = eV(8);
-
-    eA(3, 0) = eV(6);
-    eA(3, 1) = eV(7);
-    eA(3, 2) = eV(8);
-    eA(3, 3) = -1.0;
+    eA(0,0)=eV(0);   eA(0,1)=eV(3);   eA(0,2)=eV(4);   eA(0,3)=eV(6);
+    eA(1,0)=eV(3);   eA(1,1)=eV(1);   eA(1,2)=eV(5);   eA(1,3)=eV(7);
+    eA(2,0)=eV(4);   eA(2,1)=eV(5);   eA(2,2)=eV(2);   eA(2,3)=eV(8);
+    eA(3,0)=eV(6);   eA(3,1)=eV(7);   eA(3,2)=eV(8);   eA(3,3)=-1.0;
 
     Eigen::MatrixXd eCenter = -eA.topLeftCorner(3, 3).lu().solve(eV.segment(6, 3));
     Eigen::MatrixXd eT = Eigen::MatrixXd::Identity(4, 4);

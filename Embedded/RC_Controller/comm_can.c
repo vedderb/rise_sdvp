@@ -64,6 +64,9 @@ static const CANConfig cancfg = {
 static void send_packet_wrapper(unsigned char *data, unsigned int len);
 static void printf_wrapper(char *str);
 
+// Function pointers
+static void(*m_range_func)(uint8_t id, uint8_t dest, float range) = 0;
+
 void comm_can_init(void) {
 	for (int i = 0;i < CAN_STATUS_MSGS_TO_STORE;i++) {
 		stat_msgs[i].id = -1;
@@ -139,6 +142,8 @@ static THD_FUNCTION(cancom_process_thread, arg) {
 			CANRxFrame rxmsg = rx_frames[rx_frame_read++];
 
 			if (rxmsg.IDE == CAN_IDE_EXT) {
+				// Process extended IDs (VESC Communication)
+
 				uint8_t id = rxmsg.EID & 0xFF;
 				CAN_PACKET_ID cmd = rxmsg.EID >> 8;
 				can_status_msg *stat_tmp;
@@ -205,6 +210,24 @@ static THD_FUNCTION(cancom_process_thread, arg) {
 				default:
 					break;
 				}
+			} else if (rxmsg.IDE == CAN_IDE_STD) {
+				// Process standard IDs
+				if ((rxmsg.SID & 0x700) == CAN_MASK_DW) {
+					switch (rxmsg.data8[0]) {
+					case CMD_DW_RANGE: {
+						int32_t ind = 1;
+						uint8_t id = rxmsg.SID & 0xFF;
+						uint8_t dest = rxmsg.data8[ind++];
+						float range = (float)buffer_get_int32(rxmsg.data8, &ind) / 1000.0;
+
+						if (m_range_func) {
+							m_range_func(id, dest, range);
+						}
+					} break;
+					default:
+						break;
+					}
+				}
 			}
 
 			if (rx_frame_read == RX_FRAMES_SIZE) {
@@ -214,10 +237,23 @@ static THD_FUNCTION(cancom_process_thread, arg) {
 	}
 }
 
-void comm_can_transmit(uint32_t id, uint8_t *data, uint8_t len) {
+void comm_can_transmit_eid(uint32_t id, uint8_t *data, uint8_t len) {
 	CANTxFrame txmsg;
 	txmsg.IDE = CAN_IDE_EXT;
 	txmsg.EID = id;
+	txmsg.RTR = CAN_RTR_DATA;
+	txmsg.DLC = len;
+	memcpy(txmsg.data8, data, len);
+
+	chMtxLock(&can_mtx);
+	canTransmit(&CANDx, CAN_ANY_MAILBOX, &txmsg, MS2ST(20));
+	chMtxUnlock(&can_mtx);
+}
+
+void comm_can_transmit_sid(uint32_t id, uint8_t *data, uint8_t len) {
+	CANTxFrame txmsg;
+	txmsg.IDE = CAN_IDE_STD;
+	txmsg.SID = id;
 	txmsg.RTR = CAN_RTR_DATA;
 	txmsg.DLC = len;
 	memcpy(txmsg.data8, data, len);
@@ -254,7 +290,7 @@ void comm_can_send_buffer(uint8_t controller_id, uint8_t *data, unsigned int len
 		send_buffer[ind++] = send;
 		memcpy(send_buffer + ind, data, len);
 		ind += len;
-		comm_can_transmit(controller_id | ((uint32_t)CAN_PACKET_PROCESS_SHORT_BUFFER << 8), send_buffer, ind);
+		comm_can_transmit_eid(controller_id | ((uint32_t)CAN_PACKET_PROCESS_SHORT_BUFFER << 8), send_buffer, ind);
 	} else {
 		unsigned int end_a = 0;
 		for (unsigned int i = 0;i < len;i += 7) {
@@ -274,7 +310,7 @@ void comm_can_send_buffer(uint8_t controller_id, uint8_t *data, unsigned int len
 				memcpy(send_buffer + 1, data + i, send_len);
 			}
 
-			comm_can_transmit(controller_id | ((uint32_t)CAN_PACKET_FILL_RX_BUFFER << 8), send_buffer, send_len + 1);
+			comm_can_transmit_eid(controller_id | ((uint32_t)CAN_PACKET_FILL_RX_BUFFER << 8), send_buffer, send_len + 1);
 		}
 
 		for (unsigned int i = end_a;i < len;i += 6) {
@@ -289,7 +325,7 @@ void comm_can_send_buffer(uint8_t controller_id, uint8_t *data, unsigned int len
 				memcpy(send_buffer + 2, data + i, send_len);
 			}
 
-			comm_can_transmit(controller_id | ((uint32_t)CAN_PACKET_FILL_RX_BUFFER_LONG << 8), send_buffer, send_len + 2);
+			comm_can_transmit_eid(controller_id | ((uint32_t)CAN_PACKET_FILL_RX_BUFFER_LONG << 8), send_buffer, send_len + 2);
 		}
 
 		uint32_t ind = 0;
@@ -301,8 +337,41 @@ void comm_can_send_buffer(uint8_t controller_id, uint8_t *data, unsigned int len
 		send_buffer[ind++] = (uint8_t)(crc >> 8);
 		send_buffer[ind++] = (uint8_t)(crc & 0xFF);
 
-		comm_can_transmit(controller_id | ((uint32_t)CAN_PACKET_PROCESS_RX_BUFFER << 8), send_buffer, ind++);
+		comm_can_transmit_eid(controller_id | ((uint32_t)CAN_PACKET_PROCESS_RX_BUFFER << 8), send_buffer, ind++);
 	}
+}
+
+/**
+ * Start ranging with a DW node on the CAN bus.
+ *
+ * @param id
+ * The ID of the DW node.
+ *
+ * @param dest
+ * The ID of the node to range to.
+ *
+ * @param samples
+ * How many samples to average over.
+ */
+void comm_can_dw_range(uint8_t id, uint8_t dest, int samples) {
+	uint8_t buffer[8];
+	int32_t ind = 0;
+
+	buffer[ind++] = CMD_DW_RANGE;
+	buffer[ind++] = dest;
+	buffer[ind++] = samples;
+
+	comm_can_transmit_sid(((uint32_t)id | CAN_MASK_DW), buffer, ind);
+}
+
+/**
+ * Set the function to be called when ranging is done.
+ *
+ * @param func
+ * A pointer to the function.
+ */
+void comm_can_set_range_func(void(*func)(uint8_t id, uint8_t dest, float range)) {
+	m_range_func = func;
 }
 
 /**
