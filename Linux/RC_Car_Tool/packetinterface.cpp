@@ -396,6 +396,7 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         int32_t ind = 0;
         conf.mag_use = data[ind++];
         conf.mag_comp = data[ind++];
+        conf.yaw_use_odometry = data[ind++];
         conf.yaw_mag_gain = utility::buffer_get_double32(data, 1e6, &ind);
         conf.yaw_imu_gain = utility::buffer_get_double32(data, 1e6, &ind);
 
@@ -650,6 +651,7 @@ bool PacketInterface::setConfiguration(quint8 id, MAIN_CONFIG &conf, int retries
 
     mSendBuffer[send_index++] = conf.mag_use;
     mSendBuffer[send_index++] = conf.mag_comp;
+    mSendBuffer[send_index++] = conf.yaw_use_odometry;
     utility::buffer_append_double32(mSendBuffer, conf.yaw_mag_gain, 1e6, &send_index);
     utility::buffer_append_double32(mSendBuffer, conf.yaw_imu_gain, 1e6, &send_index);
 

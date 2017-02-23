@@ -857,171 +857,10 @@
             <layout class="QVBoxLayout" name="verticalLayout_10">
              <item>
               <layout class="QGridLayout" name="gridLayout_2">
-               <item row="5" column="0">
-                <widget class="QDoubleSpinBox" name="confMagCzBox">
-                 <property name="prefix">
-                  <string>CZ: </string>
-                 </property>
-                 <property name="decimals">
-                  <number>4</number>
-                 </property>
-                 <property name="minimum">
-                  <double>-1000.000000000000000</double>
-                 </property>
-                 <property name="maximum">
-                  <double>1000.000000000000000</double>
-                 </property>
-                 <property name="singleStep">
-                  <double>0.100000000000000</double>
-                 </property>
-                </widget>
-               </item>
-               <item row="5" column="1">
-                <widget class="QDoubleSpinBox" name="confMagXzBox">
-                 <property name="prefix">
-                  <string>XZ: </string>
-                 </property>
-                 <property name="decimals">
-                  <number>4</number>
-                 </property>
-                 <property name="minimum">
-                  <double>-1000.000000000000000</double>
-                 </property>
-                 <property name="maximum">
-                  <double>1000.000000000000000</double>
-                 </property>
-                 <property name="singleStep">
-                  <double>0.100000000000000</double>
-                 </property>
-                </widget>
-               </item>
-               <item row="4" column="3">
-                <widget class="QDoubleSpinBox" name="confMagZyBox">
-                 <property name="prefix">
-                  <string>ZY: </string>
-                 </property>
-                 <property name="decimals">
-                  <number>4</number>
-                 </property>
-                 <property name="minimum">
-                  <double>-1000.000000000000000</double>
-                 </property>
-                 <property name="maximum">
-                  <double>1000.000000000000000</double>
-                 </property>
-                 <property name="singleStep">
-                  <double>0.100000000000000</double>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="2" colspan="2">
-                <widget class="QCheckBox" name="confMagCompBox">
-                 <property name="text">
-                  <string>Magnetometer Compensation</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="1">
-                <widget class="QDoubleSpinBox" name="confMagXxBox">
-                 <property name="prefix">
-                  <string>XX: </string>
-                 </property>
-                 <property name="decimals">
-                  <number>4</number>
-                 </property>
-                 <property name="minimum">
-                  <double>-1000.000000000000000</double>
-                 </property>
-                 <property name="maximum">
-                  <double>1000.000000000000000</double>
-                 </property>
-                 <property name="singleStep">
-                  <double>0.100000000000000</double>
-                 </property>
-                </widget>
-               </item>
                <item row="4" column="0">
                 <widget class="QDoubleSpinBox" name="confMagCyBox">
                  <property name="prefix">
                   <string>CY: </string>
-                 </property>
-                 <property name="decimals">
-                  <number>4</number>
-                 </property>
-                 <property name="minimum">
-                  <double>-1000.000000000000000</double>
-                 </property>
-                 <property name="maximum">
-                  <double>1000.000000000000000</double>
-                 </property>
-                 <property name="singleStep">
-                  <double>0.100000000000000</double>
-                 </property>
-                </widget>
-               </item>
-               <item row="6" column="3">
-                <widget class="QPushButton" name="magCalLoadButton">
-                 <property name="toolTip">
-                  <string>Load from compensation tab</string>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                 <property name="icon">
-                  <iconset resource="resources.qrc">
-                   <normaloff>:/models/Icons/Process-96.png</normaloff>:/models/Icons/Process-96.png</iconset>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="0" colspan="2">
-                <widget class="QCheckBox" name="confMagUseBox">
-                 <property name="text">
-                  <string>Use Magnetometer</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="5" column="3">
-                <widget class="QDoubleSpinBox" name="confMagZzBox">
-                 <property name="prefix">
-                  <string>ZZ: </string>
-                 </property>
-                 <property name="decimals">
-                  <number>4</number>
-                 </property>
-                 <property name="minimum">
-                  <double>-1000.000000000000000</double>
-                 </property>
-                 <property name="maximum">
-                  <double>1000.000000000000000</double>
-                 </property>
-                 <property name="singleStep">
-                  <double>0.100000000000000</double>
-                 </property>
-                </widget>
-               </item>
-               <item row="4" column="2">
-                <widget class="QDoubleSpinBox" name="confMagYyBox">
-                 <property name="prefix">
-                  <string>YY: </string>
-                 </property>
-                 <property name="decimals">
-                  <number>4</number>
-                 </property>
-                 <property name="minimum">
-                  <double>-1000.000000000000000</double>
-                 </property>
-                 <property name="maximum">
-                  <double>1000.000000000000000</double>
-                 </property>
-                 <property name="singleStep">
-                  <double>0.100000000000000</double>
-                 </property>
-                </widget>
-               </item>
-               <item row="4" column="1">
-                <widget class="QDoubleSpinBox" name="confMagXyBox">
-                 <property name="prefix">
-                  <string>XY: </string>
                  </property>
                  <property name="decimals">
                   <number>4</number>
@@ -1075,19 +914,86 @@
                  </property>
                 </widget>
                </item>
-               <item row="0" column="0" colspan="4">
-                <widget class="QDoubleSpinBox" name="confYawImuGainBox">
+               <item row="5" column="2">
+                <widget class="QDoubleSpinBox" name="confMagYzBox">
                  <property name="prefix">
-                  <string>Yaw IMU Gain: </string>
+                  <string>YZ: </string>
                  </property>
                  <property name="decimals">
-                  <number>5</number>
+                  <number>4</number>
+                 </property>
+                 <property name="minimum">
+                  <double>-1000.000000000000000</double>
                  </property>
                  <property name="maximum">
                   <double>1000.000000000000000</double>
                  </property>
                  <property name="singleStep">
-                  <double>0.010000000000000</double>
+                  <double>0.100000000000000</double>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0" colspan="2">
+                <widget class="QCheckBox" name="confMagUseBox">
+                 <property name="text">
+                  <string>Use Magnetometer</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="5" column="1">
+                <widget class="QDoubleSpinBox" name="confMagXzBox">
+                 <property name="prefix">
+                  <string>XZ: </string>
+                 </property>
+                 <property name="decimals">
+                  <number>4</number>
+                 </property>
+                 <property name="minimum">
+                  <double>-1000.000000000000000</double>
+                 </property>
+                 <property name="maximum">
+                  <double>1000.000000000000000</double>
+                 </property>
+                 <property name="singleStep">
+                  <double>0.100000000000000</double>
+                 </property>
+                </widget>
+               </item>
+               <item row="4" column="2">
+                <widget class="QDoubleSpinBox" name="confMagYyBox">
+                 <property name="prefix">
+                  <string>YY: </string>
+                 </property>
+                 <property name="decimals">
+                  <number>4</number>
+                 </property>
+                 <property name="minimum">
+                  <double>-1000.000000000000000</double>
+                 </property>
+                 <property name="maximum">
+                  <double>1000.000000000000000</double>
+                 </property>
+                 <property name="singleStep">
+                  <double>0.100000000000000</double>
+                 </property>
+                </widget>
+               </item>
+               <item row="5" column="0">
+                <widget class="QDoubleSpinBox" name="confMagCzBox">
+                 <property name="prefix">
+                  <string>CZ: </string>
+                 </property>
+                 <property name="decimals">
+                  <number>4</number>
+                 </property>
+                 <property name="minimum">
+                  <double>-1000.000000000000000</double>
+                 </property>
+                 <property name="maximum">
+                  <double>1000.000000000000000</double>
+                 </property>
+                 <property name="singleStep">
+                  <double>0.100000000000000</double>
                  </property>
                 </widget>
                </item>
@@ -1110,10 +1016,10 @@
                  </property>
                 </widget>
                </item>
-               <item row="5" column="2">
-                <widget class="QDoubleSpinBox" name="confMagYzBox">
+               <item row="4" column="1">
+                <widget class="QDoubleSpinBox" name="confMagXyBox">
                  <property name="prefix">
-                  <string>YZ: </string>
+                  <string>XY: </string>
                  </property>
                  <property name="decimals">
                   <number>4</number>
@@ -1129,7 +1035,26 @@
                  </property>
                 </widget>
                </item>
-               <item row="1" column="0" colspan="4">
+               <item row="5" column="3">
+                <widget class="QDoubleSpinBox" name="confMagZzBox">
+                 <property name="prefix">
+                  <string>ZZ: </string>
+                 </property>
+                 <property name="decimals">
+                  <number>4</number>
+                 </property>
+                 <property name="minimum">
+                  <double>-1000.000000000000000</double>
+                 </property>
+                 <property name="maximum">
+                  <double>1000.000000000000000</double>
+                 </property>
+                 <property name="singleStep">
+                  <double>0.100000000000000</double>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="2" colspan="2">
                 <widget class="QDoubleSpinBox" name="confYawMagGainBox">
                  <property name="prefix">
                   <string>Yaw Magnetometer Gain: </string>
@@ -1142,6 +1067,91 @@
                  </property>
                  <property name="singleStep">
                   <double>0.010000000000000</double>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="1">
+                <widget class="QDoubleSpinBox" name="confMagXxBox">
+                 <property name="prefix">
+                  <string>XX: </string>
+                 </property>
+                 <property name="decimals">
+                  <number>4</number>
+                 </property>
+                 <property name="minimum">
+                  <double>-1000.000000000000000</double>
+                 </property>
+                 <property name="maximum">
+                  <double>1000.000000000000000</double>
+                 </property>
+                 <property name="singleStep">
+                  <double>0.100000000000000</double>
+                 </property>
+                </widget>
+               </item>
+               <item row="4" column="3">
+                <widget class="QDoubleSpinBox" name="confMagZyBox">
+                 <property name="prefix">
+                  <string>ZY: </string>
+                 </property>
+                 <property name="decimals">
+                  <number>4</number>
+                 </property>
+                 <property name="minimum">
+                  <double>-1000.000000000000000</double>
+                 </property>
+                 <property name="maximum">
+                  <double>1000.000000000000000</double>
+                 </property>
+                 <property name="singleStep">
+                  <double>0.100000000000000</double>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="2" colspan="2">
+                <widget class="QDoubleSpinBox" name="confYawImuGainBox">
+                 <property name="toolTip">
+                  <string>IMU gain vs odometry gain. Higer values give the IMU more gain.</string>
+                 </property>
+                 <property name="prefix">
+                  <string>Yaw IMU Gain: </string>
+                 </property>
+                 <property name="decimals">
+                  <number>5</number>
+                 </property>
+                 <property name="maximum">
+                  <double>1000.000000000000000</double>
+                 </property>
+                 <property name="singleStep">
+                  <double>0.010000000000000</double>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="0" colspan="2">
+                <widget class="QCheckBox" name="confOdometryYawBox">
+                 <property name="text">
+                  <string>Use Odometry for YAW correction</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="0" colspan="4">
+                <widget class="QCheckBox" name="confMagCompBox">
+                 <property name="text">
+                  <string>Use Magnetometer Compensation Matrix (hard and soft iron)</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="6" column="0" colspan="4">
+                <widget class="QPushButton" name="magCalLoadButton">
+                 <property name="toolTip">
+                  <string>Load from compensation tab</string>
+                 </property>
+                 <property name="text">
+                  <string>Load from Calibration Page</string>
+                 </property>
+                 <property name="icon">
+                  <iconset resource="resources.qrc">
+                   <normaloff>:/models/Icons/Process-96.png</normaloff>:/models/Icons/Process-96.png</iconset>
                  </property>
                 </widget>
                </item>

@@ -42,7 +42,7 @@ static float m_gyro[3];
 static float m_mag[3];
 static mc_values m_mc_val;
 static float m_imu_yaw;
-static float m_yaw_offset;
+static float m_yaw_offset_gps;
 static mutex_t m_mutex_pos;
 static mutex_t m_mutex_gps;
 static int32_t m_ms_today;
@@ -61,7 +61,7 @@ void pos_init(void) {
 	memset(&m_gps, 0, sizeof(m_gps));
 	memset(&m_mc_val, 0, sizeof(m_mc_val));
 	m_imu_yaw = 0.0;
-	m_yaw_offset = 0.0;
+	m_yaw_offset_gps = 0.0;
 	m_ms_today = -1;
 	chMtxObjectInit(&m_mutex_pos);
 	chMtxObjectInit(&m_mutex_gps);
@@ -139,7 +139,7 @@ void pos_set_xya(float x, float y, float angle) {
 	m_pos.px = x;
 	m_pos.py = y;
 	m_pos.yaw = angle;
-	m_yaw_offset = m_imu_yaw - angle;
+	m_yaw_offset_gps = m_imu_yaw - angle;
 
 	m_gps.local_init_done = false;
 
@@ -150,8 +150,8 @@ void pos_set_xya(float x, float y, float angle) {
 void pos_set_yaw_offset(float angle) {
 	chMtxLock(&m_mutex_pos);
 
-	m_yaw_offset = angle;
-	m_pos.yaw = m_imu_yaw - m_yaw_offset;
+	m_yaw_offset_gps = angle;
+	m_pos.yaw = m_imu_yaw - m_yaw_offset_gps;
 
 	chMtxUnlock(&m_mutex_pos);
 }
@@ -395,11 +395,11 @@ bool pos_input_nmea(const char *data) {
 				float yaw_diff = utils_angle_difference_rad(yaw_gps, yaw_car) * 180.0 / M_PI;
 
 				if (fabsf(m_pos.speed * 3.6) > 0.5) {
-					utils_step_towards(&m_yaw_offset, m_yaw_offset + yaw_diff,
+					utils_step_towards(&m_yaw_offset_gps, m_yaw_offset_gps + yaw_diff,
 							main_config.gps_corr_gain_yaw * m_pos.gps_corr_cnt);
 				}
 
-				utils_norm_angle(&m_yaw_offset);
+				utils_norm_angle(&m_yaw_offset_gps);
 
 				utils_step_towards(&m_pos.px, m_pos.px_gps, gain);
 				utils_step_towards(&m_pos.py, m_pos.py_gps, gain);
@@ -549,22 +549,24 @@ static void update_orientation_angles(float *accel, float *gyro, float *mag, flo
 	m_pos.yaw_rate = -gyro[2] * 180.0 / M_PI;
 
 	// Correct yaw
-	if (main_config.yaw_imu_gain > 1e-10) {
-		float ang_diff = utils_angle_difference(m_pos.yaw, m_imu_yaw - m_yaw_offset);
+	if (main_config.yaw_use_odometry) {
+		if (main_config.yaw_imu_gain > 1e-10) {
+			float ang_diff = utils_angle_difference(m_pos.yaw, m_imu_yaw - m_yaw_offset_gps);
 
-		if (ang_diff > 1.2 * main_config.yaw_imu_gain) {
-			m_pos.yaw -= main_config.yaw_imu_gain;
-			utils_norm_angle(&m_pos.yaw);
-		} else if (ang_diff < -1.2 * main_config.yaw_imu_gain) {
-			m_pos.yaw += main_config.yaw_imu_gain;
-			utils_norm_angle(&m_pos.yaw);
-		} else {
-			m_pos.yaw -= ang_diff;
-			utils_norm_angle(&m_pos.yaw);
+			if (ang_diff > 1.2 * main_config.yaw_imu_gain) {
+				m_pos.yaw -= main_config.yaw_imu_gain;
+				utils_norm_angle(&m_pos.yaw);
+			} else if (ang_diff < -1.2 * main_config.yaw_imu_gain) {
+				m_pos.yaw += main_config.yaw_imu_gain;
+				utils_norm_angle(&m_pos.yaw);
+			} else {
+				m_pos.yaw -= ang_diff;
+				utils_norm_angle(&m_pos.yaw);
+			}
 		}
+	} else {
+		m_pos.yaw = m_imu_yaw - m_yaw_offset_gps;
 	}
-
-	//	m_pos.yaw = yaw;
 
 	m_pos.q0 = m_att.q0;
 	m_pos.q1 = m_att.q1;
@@ -602,7 +604,7 @@ static void mc_values_received(mc_values *val) {
 
 		m_pos.gps_corr_cnt += fabsf(distance);
 
-		if (fabsf(steering_angle) < 0.00001) {
+		if (!main_config.yaw_use_odometry || fabsf(steering_angle) < 0.00001) {
 			m_pos.px += cosf(angle_rad) * distance;
 			m_pos.py += sinf(angle_rad) * distance;
 		} else {
@@ -622,6 +624,7 @@ static void mc_values_received(mc_values *val) {
 			angle_rad += angle_diff;
 			utils_norm_angle_rad(&angle_rad);
 			m_pos.yaw = -angle_rad * 180.0 / M_PI;
+			utils_norm_angle(&m_pos.yaw);
 		}
 	}
 

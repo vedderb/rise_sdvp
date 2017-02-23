@@ -80,7 +80,8 @@ void conf_general_init(void) {
 void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 	conf->mag_use = true;
 	conf->mag_comp = true;
-	conf->yaw_mag_gain = 0.05;
+	conf->yaw_use_odometry = false;
+	conf->yaw_mag_gain = 0.01;
 	conf->yaw_imu_gain = 0.5;
 
 	conf->mag_cal_cx = 0.0;

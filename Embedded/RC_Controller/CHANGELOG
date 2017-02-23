@@ -1,3 +1,6 @@
+=== FW 8.3 ===
+* Option to disable yaw estimation from odometry.
+
 === FW 8.2 ===
 * Major yaw estimation update.
 
