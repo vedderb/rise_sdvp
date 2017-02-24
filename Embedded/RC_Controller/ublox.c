@@ -39,7 +39,6 @@
 #define SERIAL_RX_BUFFER_SIZE		1024
 #define LINE_BUFFER_SIZE			256
 #define UBX_BUFFER_SIZE				2048
-#define PRINT_UBX_MSGS				1
 #define CFG_ACK_WAIT_MS				100
 
 // Threads
@@ -49,10 +48,13 @@ static thread_t *process_tp = 0;
 static thread_t *ack_wait_tp = 0;
 
 // Variables
-static uint8_t serial_rx_buffer[SERIAL_RX_BUFFER_SIZE];
-static int serial_rx_read_pos = 0;
-static int serial_rx_write_pos = 0;
-static rtcm3_state rtcm_state;
+static uint8_t m_serial_rx_buffer[SERIAL_RX_BUFFER_SIZE];
+static int m_serial_rx_read_pos = 0;
+static int m_serial_rx_write_pos = 0;
+static rtcm3_state m_rtcm_state;
+static bool m_print_next_relposned = false;
+static bool m_print_next_rawx = false;
+static bool m_print_next_svin = false;
 
 // Private functions
 static void ubx_terminal_cmd_poll(int argc, const char **argv);
@@ -129,10 +131,10 @@ static void rxerr(UARTDriver *uartp, uartflags_t e) {
  */
 static void rxchar(UARTDriver *uartp, uint16_t c) {
 	(void)uartp;
-	serial_rx_buffer[serial_rx_write_pos++] = c;
+	m_serial_rx_buffer[m_serial_rx_write_pos++] = c;
 
-	if (serial_rx_write_pos == SERIAL_RX_BUFFER_SIZE) {
-		serial_rx_write_pos = 0;
+	if (m_serial_rx_write_pos == SERIAL_RX_BUFFER_SIZE) {
+		m_serial_rx_write_pos = 0;
 	}
 
 	chSysLockFromISR();
@@ -174,8 +176,8 @@ void ublox_init(void) {
 
 	uartStart(&HW_UART_DEV, &uart_cfg);
 
-	rtcm3_init_state(&rtcm_state);
-	rtcm3_set_rx_callback(rtcm_rx, &rtcm_state);
+	rtcm3_init_state(&m_rtcm_state);
+	rtcm3_set_rx_callback(rtcm_rx, &m_rtcm_state);
 
 	chThdCreateStatic(process_thread_wa, sizeof(process_thread_wa), NORMALPRIO, process_thread, NULL);
 
@@ -482,17 +484,17 @@ static THD_FUNCTION(process_thread, arg) {
 	for(;;) {
 		chEvtWaitAny((eventmask_t) 1);
 
-		while (serial_rx_read_pos != serial_rx_write_pos) {
-			uint8_t ch = serial_rx_buffer[serial_rx_read_pos++];
+		while (m_serial_rx_read_pos != m_serial_rx_write_pos) {
+			uint8_t ch = m_serial_rx_buffer[m_serial_rx_read_pos++];
 			bool ch_used = false;
 
-			if (serial_rx_read_pos == SERIAL_RX_BUFFER_SIZE) {
-				serial_rx_read_pos = 0;
+			if (m_serial_rx_read_pos == SERIAL_RX_BUFFER_SIZE) {
+				m_serial_rx_read_pos = 0;
 			}
 
 			// RTCM
 			if (!ch_used && line_pos == 0 && ubx_pos == 0) {
-				ch_used = rtcm3_input_data(ch, &rtcm_state) >= 0;
+				ch_used = rtcm3_input_data(ch, &m_rtcm_state) >= 0;
 			}
 
 			// Ubx
@@ -584,12 +586,15 @@ static THD_FUNCTION(process_thread, arg) {
 static void ubx_terminal_cmd_poll(int argc, const char **argv) {
 	if (argc == 2) {
 		if (strcmp(argv[1], "UBX_NAV_RELPOSNED") == 0) {
+			m_print_next_relposned = true;
 			ublox_poll(UBX_CLASS_NAV, UBX_NAV_RELPOSNED);
 			commands_printf("OK\n");
 		} else if (strcmp(argv[1], "UBX_NAV_SVIN") == 0) {
+			m_print_next_svin = true;
 			ublox_poll(UBX_CLASS_NAV, UBX_NAV_SVIN);
 			commands_printf("OK\n");
 		} else if (strcmp(argv[1], "UBX_RXM_RAWX") == 0) {
+			m_print_next_rawx = true;
 			ublox_poll(UBX_CLASS_RXM, UBX_RXM_RAWX);
 			commands_printf("OK\n");
 		} else {
@@ -758,8 +763,10 @@ static void ubx_decode_relposned(uint8_t *msg, int len) {
 
 	if (rx_relposned) {
 		rx_relposned(&pos);
-	} else {
-#if PRINT_UBX_MSGS
+	}
+
+	if (m_print_next_relposned) {
+		m_print_next_relposned = false;
 		commands_printf(
 				"NED RX\n"
 				"i_tow: %d ms\n"
@@ -777,7 +784,6 @@ static void ubx_decode_relposned(uint8_t *msg, int len) {
 				(double)pos.pos_n, (double)pos.pos_e, (double)pos.pos_d,
 				(double)pos.acc_n, (double)pos.acc_e, (double)pos.acc_d,
 				pos.fix_ok, pos.diff_soln, pos.rel_pos_valid, pos.carr_soln);
-#endif
 	}
 }
 
@@ -803,8 +809,10 @@ static void ubx_decode_svin(uint8_t *msg, int len) {
 
 	if (rx_svin) {
 		rx_svin(&svin);
-	} else {
-#if PRINT_UBX_MSGS
+	}
+
+	if (m_print_next_svin) {
+		m_print_next_svin = false;
 		commands_printf(
 				"SVIN RX\n"
 				"i_tow: %d ms\n"
@@ -818,7 +826,6 @@ static void ubx_decode_svin(uint8_t *msg, int len) {
 				svin.i_tow, svin.dur,
 				svin.meanX, svin.meanY, svin.meanZ, (double)svin.meanAcc,
 				svin.valid, svin.active);
-#endif
 	}
 }
 
@@ -902,9 +909,10 @@ static void ubx_decode_rawx(uint8_t *msg, int len) {
 
 	if (rx_rawx) {
 		rx_rawx(&raw);
-	} else {
-#if PRINT_UBX_MSGS
-		// TODO: Print table of observations?
+	}
+
+	if (m_print_next_rawx) {
+		m_print_next_rawx = false;
 		commands_printf(
 				"RAWX RX\n"
 				"tow: %.3f\n"
@@ -915,7 +923,6 @@ static void ubx_decode_rawx(uint8_t *msg, int len) {
 				"pr_1: %.3f\n",
 				raw.rcv_tow, raw.week, raw.leap_sec, raw.num_meas,
 				raw.obs[0].pr_mes, raw.obs[1].pr_mes);
-#endif
 	}
 }
 

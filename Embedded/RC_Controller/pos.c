@@ -61,7 +61,7 @@ void pos_init(void) {
 	memset(&m_gps, 0, sizeof(m_gps));
 	memset(&m_mc_val, 0, sizeof(m_mc_val));
 	m_imu_yaw = 0.0;
-	m_yaw_offset_gps = 0.0;
+	m_yaw_offset_gps = 90.0;
 	m_ms_today = -1;
 	chMtxObjectInit(&m_mutex_pos);
 	chMtxObjectInit(&m_mutex_gps);
