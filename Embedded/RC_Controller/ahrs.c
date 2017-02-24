@@ -56,37 +56,40 @@ void ahrs_init_attitude_info(ATTITUDE_INFO *att) {
 }
 
 void ahrs_update_initial_orientation(float *accelXYZ, float *magXYZ, ATTITUDE_INFO *att) {
-	float initialRoll, initialPitch;
-	float cosRoll, sinRoll, cosPitch, sinPitch;
-	float magX, magY;
-	float initialHdg, cosHeading, sinHeading;
+	// See https://cache.freescale.com/files/sensors/doc/app_note/AN4248.pdf
+	// and http://sedris.org/wg8home/Documents/WG80485.pdf
 
-	initialRoll = atan2f(-accelXYZ[1], -accelXYZ[2]);
-	initialPitch = atan2f(accelXYZ[0], -accelXYZ[2]);
+	float ax = accelXYZ[0];
+	float ay = accelXYZ[1];
+	float az = accelXYZ[2];
 
-	cosRoll = cosf(initialRoll);
-	sinRoll = sinf(initialRoll);
-	cosPitch = cosf(initialPitch);
-	sinPitch = sinf(initialPitch);
+	float mx = -magXYZ[0];
+	float my = magXYZ[1];
+	float mz = magXYZ[2];
 
-	magX = magXYZ[0] * cosPitch + magXYZ[1] * sinRoll * sinPitch + magXYZ[2] * cosRoll * sinPitch;
-	magY = magXYZ[1] * cosRoll - magXYZ[2] * sinRoll;
+	float roll = atan2f(-ay, az);
+	float sr = sinf(roll);
+	float cr = cosf(roll);
 
-	initialHdg = atan2f(-magY, magX);
+	float pitch = atanf(-ax / (-ay * sr + az * cr));
+	float sp = sinf(pitch);
+	float cp = cosf(pitch);
 
-	cosRoll = cosf(initialRoll * 0.5f);
-	sinRoll = sinf(initialRoll * 0.5f);
+	float c_mx = mx * cp + my * sr * sp + mz * sp * cr;
+	float c_my = my * cr - mz * sr;
+	float yaw = atan2f(-c_my, c_mx);
 
-	cosPitch = cosf(initialPitch * 0.5f);
-	sinPitch = sinf(initialPitch * 0.5f);
+	cr = cosf(-roll * 0.5f);
+	sr = sinf(-roll * 0.5f);
+	cp = cosf(pitch * 0.5f);
+	sp = sinf(pitch * 0.5f);
+	float cy = cosf(-yaw * 0.5f);
+	float sy = sinf(-yaw * 0.5f);
 
-	cosHeading = cosf(initialHdg * 0.5f);
-	sinHeading = sinf(initialHdg * 0.5f);
-
-	att->q0 = cosRoll * cosPitch * cosHeading + sinRoll * sinPitch * sinHeading;
-	att->q1 = sinRoll * cosPitch * cosHeading - cosRoll * sinPitch * sinHeading;
-	att->q2 = cosRoll * sinPitch * cosHeading + sinRoll * cosPitch * sinHeading;
-	att->q3 = cosRoll * cosPitch * sinHeading - sinRoll * sinPitch * cosHeading;
+	att->q0 = cr * cp * cy + sr * sp * sy;
+	att->q1 = sr * cp * cy - cr * sp * sy;
+	att->q2 = cr * sp * cy + sr * cp * sy;
+	att->q3 = cr * cp * sy - sr * sp * cy;
 }
 
 void ahrs_update_mahony(float *gyroXYZ, float *accelXYZ, float *magXYZ, float dt, ATTITUDE_INFO *att) {

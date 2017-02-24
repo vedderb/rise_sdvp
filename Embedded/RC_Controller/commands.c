@@ -55,6 +55,7 @@ static void(*m_send_func)(unsigned char *data, unsigned int len) = 0;
 static void(*m_send_func_last_radio)(unsigned char *data, unsigned int len) = 0;
 static virtual_timer_t vt;
 static mutex_t m_print_gps;
+static bool m_init_done = false;
 
 // Private functions
 static void stop_forward(void *p);
@@ -74,6 +75,8 @@ void commands_init(void) {
 #if MAIN_MODE != MAIN_MODE_CAR
 	(void)stop_forward;
 #endif
+
+	m_init_done = true;
 }
 
 /**
@@ -770,6 +773,10 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 }
 
 void commands_printf(const char* format, ...) {
+	if (!m_init_done) {
+		return;
+	}
+
 	chMtxLock(&m_print_gps);
 	va_list arg;
 	va_start (arg, format);

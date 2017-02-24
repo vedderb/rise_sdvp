@@ -1,5 +1,5 @@
 /*
-	Copyright 2016 Benjamin Vedder	benjamin@vedder.se
+	Copyright 2016 - 2017 Benjamin Vedder	benjamin@vedder.se
 
 	This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -44,6 +44,9 @@
 #define IMU_ROT_180					1
 #endif
 
+// Ublox settings
+#define UBLOX_EN					1
+
 // Log settings
 #define LOG_EN_CARREL
 //#define LOG_EN_ITRANSIT
@@ -58,7 +61,7 @@
 // General settings
 #define ID_ALL						255
 #define VESC_ID						ID_ALL // id, or ID_ALL for any VESC
-#define ID_MOTE						254 // If the packet is for the mote and not to be forwarded
+#define ID_MOTE						254 // If the packet is for the mote and not to be forwarded in mote mode
 
 // Car parameters
 #ifndef IMU_ROT_180
@@ -71,9 +74,6 @@
 #define RADAR_FREQ_SPAN				1.0e9
 #define RADAR_FREQ_PONTS			1024
 #define RADAR_SWEEP_TIME			0.075
-
-// Ublox settings
-#define UBLOX_EN					1
 
 // Servo settings
 #define SERVO_OUT_RATE_HZ			50
