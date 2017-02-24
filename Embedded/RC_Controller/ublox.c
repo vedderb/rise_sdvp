@@ -192,9 +192,6 @@ void ublox_init(void) {
 
 	uartStart(&HW_UART_DEV, &uart_cfg);
 
-	rtcm3_init_state(&m_rtcm_state);
-	rtcm3_set_rx_callback(rtcm_rx, &m_rtcm_state);
-
 	chThdCreateStatic(process_thread_wa, sizeof(process_thread_wa), NORMALPRIO, process_thread, NULL);
 
 	terminal_register_command_callback(
@@ -662,6 +659,7 @@ static THD_FUNCTION(process_thread, arg) {
 static void reset_decoder_state(void) {
 	memset(&m_decoder_state, 0, sizeof(decoder_state));
 	rtcm3_init_state(&m_rtcm_state);
+	rtcm3_set_rx_callback(rtcm_rx, &m_rtcm_state);
 	m_serial_rx_read_pos = 0;
 	m_serial_rx_write_pos = 0;
 }
