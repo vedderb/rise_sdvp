@@ -20,17 +20,27 @@
 #include "commands.h"
 #include "servo_simple.h"
 #include "radar.h"
+#include "comm_can.h"
 
 #include <string.h>
 
-// Variables
-bool m_log_en;
-bool m_write_split;
-char m_log_name[LOG_NAME_MAX_LEN + 1];
+// private variables
+static bool m_log_en;
+static bool m_write_split;
+static char m_log_name[LOG_NAME_MAX_LEN + 1];
+#ifdef LOG_EN_DW
+static int m_dw_anchor_now = 0;
+static DW_LOG_INFO m_dw_anchor_info[3];
+#endif
 
 // Threads
 static THD_WORKING_AREA(log_thread_wa, 2048);
 static THD_FUNCTION(log_thread, arg);
+
+// Private functions
+#ifdef LOG_EN_DW
+static void range_callback(uint8_t id, uint8_t dest, float range);
+#endif
 
 void log_init(void) {
 	m_log_en = false;
@@ -61,10 +71,12 @@ static THD_FUNCTION(log_thread, arg) {
 
 	for(;;) {
 		if (m_log_en) {
+#ifndef LOG_EN_DW
 			if (m_write_split) {
 				commands_printf_log_usb("//%s\n", m_log_name);
 				m_write_split = false;
 			}
+#endif
 
 #ifdef LOG_EN_CARREL
 			mc_values val;
@@ -208,6 +220,36 @@ static THD_FUNCTION(log_thread, arg) {
 					(double)mag[2],
 					val.tachometer,
 					(double)steering_angle);
+#elif defined(LOG_EN_DW)
+			comm_can_set_range_func(range_callback);
+
+			if (m_dw_anchor_now == 0 && LOG_DW_ANCHOR0 >= 0) {
+				memset(m_dw_anchor_info, 0, sizeof(m_dw_anchor_info));
+				comm_can_dw_range(CAN_DW_ID_ANY, LOG_DW_ANCHOR0, 10);
+			} else if (m_dw_anchor_now == 1 && LOG_DW_ANCHOR1 >= 0) {
+				comm_can_dw_range(CAN_DW_ID_ANY, LOG_DW_ANCHOR1, 10);
+			} else if (m_dw_anchor_now == 2 && LOG_DW_ANCHOR2 >= 0) {
+				comm_can_dw_range(CAN_DW_ID_ANY, LOG_DW_ANCHOR2, 10);
+			} else if (m_dw_anchor_now >= 3) {
+				int closest = -1;
+				float min_dist = 1e20;
+
+				for (int i = 0;i < 3;i++) {
+					if (m_dw_anchor_info[i].valid &&
+							m_dw_anchor_info[i].dw_dist < min_dist) {
+						closest = i;
+						min_dist = m_dw_anchor_info[i].dw_dist;
+					}
+				}
+
+				if (closest >= 0) {
+					commands_send_dw_sample(&m_dw_anchor_info[closest]);
+				}
+
+				m_dw_anchor_now = -1;
+			}
+
+			m_dw_anchor_now++;
 #endif
 		}
 
@@ -221,3 +263,26 @@ static THD_FUNCTION(log_thread, arg) {
 		}
 	}
 }
+
+#ifdef LOG_EN_DW
+static void range_callback(uint8_t id, uint8_t dest, float range) {
+	(void)id;
+
+	int now = m_dw_anchor_now - 1;
+
+	if (now >= 0 && now < 3) {
+		POS_STATE pos;
+		pos_get_pos(&pos);
+
+		m_dw_anchor_info[now].valid = true;
+		m_dw_anchor_info[now].dw_anchor = dest;
+		m_dw_anchor_info[now].time_today_ms = pos_get_ms_today();
+		m_dw_anchor_info[now].dw_dist = range;
+		m_dw_anchor_info[now].px = pos.px;
+		m_dw_anchor_info[now].py = pos.py;
+		m_dw_anchor_info[now].px_gps = pos.px_gps;
+		m_dw_anchor_info[now].py_gps = pos.py_gps;
+		m_dw_anchor_info[now].pz_gps = pos.pz_gps;
+	}
+}
+#endif

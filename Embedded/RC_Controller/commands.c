@@ -870,6 +870,22 @@ void commands_send_radar_samples(float *dists, int num) {
 	commands_send_packet((unsigned char*)m_send_buffer, ind);
 }
 
+void commands_send_dw_sample(DW_LOG_INFO *dw) {
+	int32_t ind = 0;
+	m_send_buffer[ind++] = main_id;
+	m_send_buffer[ind++] = CMD_DW_SAMPLE;
+	m_send_buffer[ind++] = dw->valid;
+	m_send_buffer[ind++] = dw->dw_anchor;
+	buffer_append_int32(m_send_buffer, dw->time_today_ms, &ind);
+	buffer_append_float32_auto(m_send_buffer, dw->dw_dist, &ind);
+	buffer_append_float32_auto(m_send_buffer, dw->px, &ind);
+	buffer_append_float32_auto(m_send_buffer, dw->py, &ind);
+	buffer_append_float32_auto(m_send_buffer, dw->px_gps, &ind);
+	buffer_append_float32_auto(m_send_buffer, dw->py_gps, &ind);
+	buffer_append_float32_auto(m_send_buffer, dw->pz_gps, &ind);
+	commands_send_packet((unsigned char*)m_send_buffer, ind);
+}
+
 static void stop_forward(void *p) {
 	(void)p;
 	bldc_interface_set_forward_func(0);

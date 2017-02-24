@@ -47,10 +47,18 @@
 // Ublox settings
 #define UBLOX_EN					1
 
-// Log settings
-#define LOG_EN_CARREL
+// Log configuration to enable. Choose one only.
+//#define LOG_EN_CARREL
 //#define LOG_EN_ITRANSIT
-#define LOG_INTERVAL_MS				10
+#define LOG_EN_DW
+
+// Logging time interval
+#define LOG_INTERVAL_MS				50
+
+// Anchor IDs to range against in DW logging mode. -1 to disable.
+#define LOG_DW_ANCHOR0				122
+#define LOG_DW_ANCHOR1				234
+#define LOG_DW_ANCHOR2				35
 
 // CC2520 Settings
 #define CC2520_RF_CHANNEL			12

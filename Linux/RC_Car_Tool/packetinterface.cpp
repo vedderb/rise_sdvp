@@ -495,6 +495,23 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         emit radarSamplesReceived(id, samples);
     } break;
 
+    case CMD_DW_SAMPLE: {
+        int32_t ind = 0;
+        DW_LOG_INFO dw;
+
+        dw.valid = data[ind++];
+        dw.dw_anchor = data[ind++];
+        dw.time_today_ms = utility::buffer_get_int32(data, &ind);
+        dw.dw_dist = utility::buffer_get_double32_auto(data, &ind);
+        dw.px = utility::buffer_get_double32_auto(data, &ind);
+        dw.py = utility::buffer_get_double32_auto(data, &ind);
+        dw.px_gps = utility::buffer_get_double32_auto(data, &ind);
+        dw.py_gps = utility::buffer_get_double32_auto(data, &ind);
+        dw.pz_gps = utility::buffer_get_double32_auto(data, &ind);
+
+        emit dwSampleReceived(id, dw);
+    } break;
+
     case CMD_SET_SYSTEM_TIME: {
         int32_t ind = 0;
         qint32 sec = utility::buffer_get_int32(data, &ind);

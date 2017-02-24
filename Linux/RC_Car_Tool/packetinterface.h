@@ -81,6 +81,7 @@ signals:
     void radarSamplesReceived(quint8 id, QVector<QPair<double, double> > samples);
     void systemTimeReceived(quint8 id, qint32 sec, qint32 usec);
     void rebootSystemReceived(quint8 id, bool powerOff);
+    void dwSampleReceived(quint8 id, DW_LOG_INFO dw);
     
 public slots:
     void timerSlot();

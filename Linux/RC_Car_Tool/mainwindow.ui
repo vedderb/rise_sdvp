@@ -1064,7 +1064,7 @@
                    <x>0</x>
                    <y>0</y>
                    <width>180</width>
-                   <height>384</height>
+                   <height>393</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_17">
@@ -1474,7 +1474,7 @@
                    <x>0</x>
                    <y>0</y>
                    <width>178</width>
-                   <height>410</height>
+                   <height>422</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_12">
@@ -1747,7 +1747,7 @@
                    <x>0</x>
                    <y>0</y>
                    <width>194</width>
-                   <height>471</height>
+                   <height>487</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_15">
@@ -2167,7 +2167,7 @@
       <widget class="QWidget" name="tab_3">
        <attribute name="icon">
         <iconset resource="resources.qrc">
-         <normaloff>:/models/Icons/GPS Receiving-96.png</normaloff>:/models/Icons/GPS Receiving-96.png</iconset>
+         <normaloff>:/models/Icons/Satellite-96.png</normaloff>:/models/Icons/Satellite-96.png</iconset>
        </attribute>
        <attribute name="title">
         <string/>
@@ -2184,7 +2184,7 @@
       <widget class="QWidget" name="tab_4">
        <attribute name="icon">
         <iconset resource="resources.qrc">
-         <normaloff>:/models/Icons/Radio Tower-96.png</normaloff>:/models/Icons/Radio Tower-96.png</iconset>
+         <normaloff>:/models/Icons/GPS Receiving-96.png</normaloff>:/models/Icons/GPS Receiving-96.png</iconset>
        </attribute>
        <attribute name="title">
         <string/>
@@ -2259,7 +2259,7 @@
      <x>0</x>
      <y>0</y>
      <width>1103</width>
-     <height>19</height>
+     <height>20</height>
     </rect>
    </property>
   </widget>

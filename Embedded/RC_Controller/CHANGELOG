@@ -6,6 +6,7 @@
 * Send GPS position for fixes that are not RTK as well.
 * Added terminal command to reset ENU reference.
 * Added option to use GPS without RTK solution.
+* Added support for decawave range logging.
 
 === FW 8.3 ===
 * Option to disable yaw estimation from odometry.

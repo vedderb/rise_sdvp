@@ -135,6 +135,7 @@ typedef enum {
 	CMD_RADAR_SETUP_SET,
 	CMD_RADAR_SETUP_GET,
 	CMD_RADAR_SAMPLES,
+	CMD_DW_SAMPLE,
 
 	// Mote commands
 	CMD_MOTE_UBX_START_BASE = 200,
@@ -237,6 +238,19 @@ typedef struct {
 	float oy;
 	float orot;
 } GPS_STATE;
+
+// DW Logging Info
+typedef struct {
+	bool valid;
+	uint8_t dw_anchor;
+	int32_t time_today_ms;
+	float dw_dist;
+	float px;
+	float py;
+	float px_gps;
+	float py_gps;
+	float pz_gps;
+} DW_LOG_INFO;
 
 // ============== UBLOX Datatypes ================== //
 

@@ -79,6 +79,7 @@ private slots:
     void plotDataReceived(quint8 id, double x, double y);
     void radarSetupReceived(quint8 id, radar_settings_t s);
     void radarSamplesReceived(quint8 id, QVector<QPair<double, double> > samples);
+    void dwSampleReceived(quint8 id, DW_LOG_INFO dw);
 
     void on_terminalSendButton_clicked();
     void on_terminalSendVescButton_clicked();
@@ -110,6 +111,10 @@ private slots:
     void on_magOpenFileButton_clicked();
     void on_magCalcCompButton_clicked();
     void on_magReplotButton_clicked();
+    void on_dwAnch0GetButton_clicked();
+    void on_dwAnch1GetButton_clicked();
+    void on_dwAnch2GetButton_clicked();
+    void on_dwClearSamplesButton_clicked();
 
 private:
     Ui::CarInterface *ui;
@@ -134,9 +139,11 @@ private:
 #endif
 
     int mId;
+    CAR_STATE mLastCarState;
     QVector<QVector<double> > mMagSamples;
     QVector<double> mMagComp;
     QVector<double> mMagCompCenter;
+    QList<DW_LOG_INFO> mDwData;
     QTimer *mTimer;
     QUdpSocket *mUdpSocket;
     QHostAddress mLastHostAddress;
@@ -153,6 +160,7 @@ private:
     void calcMagComp();
     void updateMagPlots();
     void clearMagPlots();
+    void plotDwData();
 
 };
 

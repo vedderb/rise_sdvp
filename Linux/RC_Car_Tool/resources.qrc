@@ -52,5 +52,8 @@
         <file>Icons/Restart-96.png</file>
         <file>Icons/Shutdown-96.png</file>
         <file>Icons/Bicycle-100.png</file>
+        <file>Icons/Electrical Sensor-96.png</file>
+        <file>Icons/Satellite-96.png</file>
+        <file>Icons/Radar-96.png</file>
     </qresource>
 </RCC>

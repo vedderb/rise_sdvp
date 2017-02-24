@@ -57,6 +57,8 @@ CarInterface::CarInterface(QWidget *parent) :
     ui->orientationLayout->insertWidget(0, mOrientationWidget, 1);
 #endif
 
+    memset(&mLastCarState, 0, sizeof(CAR_STATE));
+
     // Plots
     ui->accelPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
     ui->gyroPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
@@ -65,6 +67,7 @@ CarInterface::CarInterface(QWidget *parent) :
     ui->magSampXyPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
     ui->magSampXzPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
     ui->magSampYzPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
+    ui->dwPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
 
     // The raw IMU plots
     maxSampleSize = 1000;
@@ -166,7 +169,6 @@ CarInterface::CarInterface(QWidget *parent) :
     ui->magPlot->replot();
 
     ui->magSampXyPlot->yAxis->setLabel("XY");
-//    ui->magSampXyPlot->legend->setVisible(true);
     ui->magSampXyPlot->addGraph();
     ui->magSampXyPlot->graph()->setPen(QPen(Qt::red));
     ui->magSampXyPlot->graph()->setName("Uncompensated");
@@ -179,7 +181,6 @@ CarInterface::CarInterface(QWidget *parent) :
     ui->magSampXyPlot->graph()->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCross, 4));
 
     ui->magSampXzPlot->yAxis->setLabel("XZ");
-//    ui->magSampXzPlot->legend->setVisible(true);
     ui->magSampXzPlot->addGraph();
     ui->magSampXzPlot->graph()->setPen(QPen(Qt::red));
     ui->magSampXzPlot->graph()->setName("Uncompensated");
@@ -192,7 +193,6 @@ CarInterface::CarInterface(QWidget *parent) :
     ui->magSampXzPlot->graph()->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCross, 4));
 
     ui->magSampYzPlot->yAxis->setLabel("YZ");
-//    ui->magSampYzPlot->legend->setVisible(true);
     ui->magSampYzPlot->addGraph();
     ui->magSampYzPlot->graph()->setPen(QPen(Qt::red));
     ui->magSampYzPlot->graph()->setName("Uncompensated");
@@ -203,6 +203,24 @@ CarInterface::CarInterface(QWidget *parent) :
     ui->magSampYzPlot->graph()->setName("Compensated");
     ui->magSampYzPlot->graph()->setLineStyle(QCPGraph::lsNone);
     ui->magSampYzPlot->graph()->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCross, 4));
+
+    ui->dwPlot->addGraph();
+    ui->dwPlot->graph()->setPen(QPen(Qt::blue));
+    ui->dwPlot->graph()->setName("Fusion Error");
+    ui->dwPlot->graph()->setPen(QPen(Qt::blue));
+    ui->dwPlot->addGraph();
+    ui->dwPlot->graph()->setPen(QPen(Qt::blue));
+    ui->dwPlot->graph()->setName("GPS Error");
+    ui->dwPlot->graph()->setPen(QPen(Qt::red));
+    ui->dwPlot->addGraph(ui->dwPlot->xAxis, ui->dwPlot->yAxis2);
+    ui->dwPlot->graph()->setPen(QPen(Qt::magenta));
+    ui->dwPlot->graph()->setName("Current Anchor");
+    ui->dwPlot->graph()->setPen(QPen(Qt::black));
+    ui->dwPlot->legend->setVisible(true);
+    ui->dwPlot->yAxis2->setVisible(true);
+    ui->dwPlot->xAxis->setLabel("Time (s)");
+    ui->dwPlot->yAxis->setLabel("Error (m)");
+    ui->dwPlot->yAxis2->setLabel("Anchor Now");
 }
 
 CarInterface::~CarInterface()
@@ -250,6 +268,8 @@ void CarInterface::setOrientation(double roll, double pitch, double yaw)
 
 void CarInterface::setStateData(CAR_STATE data)
 {
+    mLastCarState = data;
+
     accelXData.append(data.accel[0]);
     accelXData.remove(0, 1);
     accelYData.append(data.accel[1]);
@@ -423,6 +443,8 @@ void CarInterface::setPacketInterface(PacketInterface *packetInterface)
             this, SLOT(radarSetupReceived(quint8,radar_settings_t)));
     connect(mPacketInterface, SIGNAL(radarSamplesReceived(quint8,QVector<QPair<double,double> >)),
             this, SLOT(radarSamplesReceived(quint8,QVector<QPair<double,double> >)));
+    connect(mPacketInterface, SIGNAL(dwSampleReceived(quint8,DW_LOG_INFO)),
+            this, SLOT(dwSampleReceived(quint8,DW_LOG_INFO)));
 }
 
 void CarInterface::setControlValues(double throttle, double steering, double max, bool currentMode)
@@ -693,6 +715,14 @@ void CarInterface::radarSamplesReceived(quint8 id, QVector<QPair<double, double>
                 mMap->addInfoPoint(p);
             }
         }
+    }
+}
+
+void CarInterface::dwSampleReceived(quint8 id, DW_LOG_INFO dw)
+{
+    if (id == mId) {
+        mDwData.append(dw);
+        plotDwData();
     }
 }
 
@@ -1219,6 +1249,59 @@ void CarInterface::clearMagPlots()
     ui->magSampYzPlot->replot();
 }
 
+void CarInterface::plotDwData()
+{
+    QVector<double> time;
+    QVector<double> error;
+    QVector<double> error_gps;
+    QVector<double> anchor;
+
+    for (int i = 0;i < mDwData.size();i++) {
+        DW_LOG_INFO &dw = mDwData[i];
+
+        double px = 0;
+        double py = 0;
+        double pz = 0;
+        double anch = -1.0;
+
+        if (dw.dw_anchor == ui->dwAnch0IdBox->value()) {
+            px = ui->dwAnch0PxBox->value();
+            py = ui->dwAnch0PyBox->value();
+            pz = ui->dwAnch0PzBox->value();
+            anch = 0.0;
+        } else if (dw.dw_anchor == ui->dwAnch1IdBox->value()) {
+            px = ui->dwAnch1PxBox->value();
+            py = ui->dwAnch1PyBox->value();
+            pz = ui->dwAnch1PzBox->value();
+            anch = 1.0;
+        } else if (dw.dw_anchor == ui->dwAnch2IdBox->value()) {
+            px = ui->dwAnch2PxBox->value();
+            py = ui->dwAnch2PyBox->value();
+            pz = ui->dwAnch2PzBox->value();
+            anch = 2.0;
+        }
+
+        double err = fabs(sqrt((dw.px - px) * (dw.px - px) +
+                               (dw.py - py) * (dw.py - py) +
+                               (pz) * (pz)) - dw.dw_dist);
+
+        double err_gps = fabs(sqrt((dw.px_gps - px) * (dw.px_gps - px) +
+                                   (dw.py_gps - py) * (dw.py_gps - py) +
+                                   (pz) * (pz)) - dw.dw_dist);
+
+        time.append((double)dw.time_today_ms / 1000.0);
+        error.append(err);
+        error_gps.append(err_gps);
+        anchor.append(anch);
+    }
+
+    ui->dwPlot->graph(0)->setData(time, error);
+    ui->dwPlot->graph(1)->setData(time, error_gps);
+    ui->dwPlot->graph(2)->setData(time, anchor);
+    ui->dwPlot->rescaleAxes();
+    ui->dwPlot->replot();
+}
+
 void CarInterface::on_nmeaLogChooseButton_clicked()
 {
     QString path;
@@ -1382,4 +1465,28 @@ void CarInterface::on_magCalcCompButton_clicked()
 void CarInterface::on_magReplotButton_clicked()
 {
     updateMagPlots();
+}
+
+void CarInterface::on_dwAnch0GetButton_clicked()
+{
+    ui->dwAnch0PxBox->setValue(mLastCarState.px);
+    ui->dwAnch0PyBox->setValue(mLastCarState.py);
+}
+
+void CarInterface::on_dwAnch1GetButton_clicked()
+{
+    ui->dwAnch1PxBox->setValue(mLastCarState.px);
+    ui->dwAnch1PyBox->setValue(mLastCarState.py);
+}
+
+void CarInterface::on_dwAnch2GetButton_clicked()
+{
+    ui->dwAnch2PxBox->setValue(mLastCarState.px);
+    ui->dwAnch2PyBox->setValue(mLastCarState.py);
+}
+
+void CarInterface::on_dwClearSamplesButton_clicked()
+{
+    mDwData.clear();
+    plotDwData();
 }
