@@ -28,6 +28,7 @@ void ublox_set_rx_callback_relposned(void(*func)(ubx_nav_relposned *pos));
 void ublox_set_rx_callback_rawx(void(*func)(ubx_rxm_rawx *pos));
 void ublox_set_rx_callback_svin(void(*func)(ubx_nav_svin *pos));
 void ublox_poll(uint8_t msg_class, uint8_t id);
+int ublox_cfg_prt_uart(ubx_cfg_prt_uart *cfg);
 int ublox_cfg_tmode3(ubx_cfg_tmode3 *cfg);
 int ublox_cfg_msg(uint8_t msg_class, uint8_t id, uint8_t rate);
 int ublox_cfg_rate(uint16_t meas_rate_ms, uint16_t nav_rate_ms, uint16_t time_ref);
@@ -62,6 +63,7 @@ int ublox_cfg_nav5(ubx_cfg_nav5 *cfg);
 #define UBX_ACK_NAK						0x00
 
 // Configuration messages
+#define UBX_CFG_PRT						0x00
 #define UBX_CFG_MSG						0x01
 #define UBX_CFG_RATE					0x08
 #define UBX_CFG_NAV5					0x24

@@ -41,13 +41,26 @@
 #define UBX_BUFFER_SIZE				2048
 #define CFG_ACK_WAIT_MS				100
 
+// Private types
+typedef struct {
+	uint8_t line[LINE_BUFFER_SIZE];
+	uint8_t ubx[UBX_BUFFER_SIZE];
+	int line_pos;
+	int ubx_pos;
+	uint8_t ubx_class;
+	uint8_t ubx_id;
+	uint8_t ubx_ck_a;
+	uint8_t ubx_ck_b;
+	int ubx_len;
+} decoder_state;
+
 // Threads
 static THD_FUNCTION(process_thread, arg);
 static THD_WORKING_AREA(process_thread_wa, 4096);
 static thread_t *process_tp = 0;
 static thread_t *ack_wait_tp = 0;
 
-// Variables
+// Private variables
 static uint8_t m_serial_rx_buffer[SERIAL_RX_BUFFER_SIZE];
 static int m_serial_rx_read_pos = 0;
 static int m_serial_rx_write_pos = 0;
@@ -55,12 +68,15 @@ static rtcm3_state m_rtcm_state;
 static bool m_print_next_relposned = false;
 static bool m_print_next_rawx = false;
 static bool m_print_next_svin = false;
+static decoder_state m_decoder_state;
 
 // Private functions
+static void reset_decoder_state(void);
 static void ubx_terminal_cmd_poll(int argc, const char **argv);
 static void ubx_encode_send(uint8_t class, uint8_t id, uint8_t *msg, int len);
 static int wait_ack_nak(int timeout_ms);
 static void rtcm_rx(uint8_t *data, int len, int type);
+static void set_baudrate(uint32_t baud);
 
 // Decode functions
 static void ubx_decode(uint8_t class, uint8_t id, uint8_t *msg, int len);
@@ -217,6 +233,24 @@ void ublox_init(void) {
 
 	chThdSleepMilliseconds(100);
 
+	// Make sure that the baudrate is correct.
+	// TODO: For some reason this does not work.
+	if (ublox_cfg_rate(200, 1, 0) == -1) {
+		ubx_cfg_prt_uart uart;
+		uart.baudrate = BAUDRATE;
+		uart.in_ubx = true;
+		uart.in_nmea = true;
+		uart.in_rtcm3 = true;
+		uart.out_ubx = true;
+		uart.out_nmea = true;
+		uart.out_rtcm3 = true;
+
+		set_baudrate(9600);
+		reset_decoder_state();
+		ublox_cfg_prt_uart(&uart);
+		set_baudrate(BAUDRATE);
+	}
+
 	// Disable survey in
 	ubx_cfg_tmode3 tmode3;
 	memset(&tmode3, 0, sizeof(ubx_cfg_tmode3));
@@ -236,6 +270,9 @@ void ublox_init(void) {
 	nav5.apply_dyn = true;
 	nav5.dyn_model = 4;
 	ublox_cfg_nav5(&nav5);
+
+	// Switch in RELPOSNED messages
+	ublox_cfg_msg(UBX_CLASS_NAV, UBX_NAV_RELPOSNED, 1);
 }
 
 void ublox_send(unsigned char *data, unsigned int len) {
@@ -270,6 +307,56 @@ void ublox_set_rx_callback_svin(void(*func)(ubx_nav_svin *pos)) {
 
 void ublox_poll(uint8_t msg_class, uint8_t id) {
 	ubx_encode_send(msg_class, id, 0, 0);
+}
+
+/**
+ * Set the uart1 port configuration.
+ *
+ * @param cfg
+ * The configuration. Notice that always 8N1 configuration
+ * and no tx ready function is used.
+ *
+ * @return
+ * 0: Ack received
+ * 1: Nak received (rejected)
+ * -1: Timeout when waiting for ack/nak
+ */
+int ublox_cfg_prt_uart(ubx_cfg_prt_uart *cfg) {
+	uint8_t buffer[40];
+	int ind = 0;
+
+	ubx_put_U1(buffer, &ind, 1); // ID for UART1
+	ubx_put_U1(buffer, &ind, 0);
+	ubx_put_X2(buffer, &ind, 0); // Always disable txready function
+
+	uint32_t mode = 0;
+	mode |= 3 << 6; // Always use 8 bits
+	mode |= 4 << 9; // No parity
+	mode |= 0 << 12; // 1 stop bit
+
+	ubx_put_X4(buffer, &ind, mode);
+	ubx_put_U4(buffer, &ind, cfg->baudrate);
+
+	uint16_t in_proto = 0;
+	in_proto |= (cfg->in_ubx ? 1 : 0) << 0;
+	in_proto |= (cfg->in_nmea ? 1 : 0) << 1;
+	in_proto |= (cfg->in_rtcm2 ? 1 : 0) << 2;
+	in_proto |= (cfg->in_rtcm3 ? 1 : 0) << 5;
+
+	ubx_put_X2(buffer, &ind, in_proto);
+
+	uint16_t out_proto = 0;
+	in_proto |= (cfg->out_ubx ? 1 : 0) << 0;
+	in_proto |= (cfg->out_nmea ? 1 : 0) << 1;
+	in_proto |= (cfg->out_rtcm3 ? 1 : 0) << 5;
+
+	ubx_put_X2(buffer, &ind, out_proto);
+	ubx_put_X2(buffer, &ind, 0); // No extended timeout
+	ubx_put_U1(buffer, &ind, 0);
+	ubx_put_U1(buffer, &ind, 0);
+
+	ubx_encode_send(UBX_CLASS_CFG, UBX_CFG_TMODE3, buffer, ind);
+	return wait_ack_nak(CFG_ACK_WAIT_MS);
 }
 
 /**
@@ -471,15 +558,7 @@ static THD_FUNCTION(process_thread, arg) {
 
 	process_tp = chThdGetSelfX();
 
-	static uint8_t line[LINE_BUFFER_SIZE];
-	static uint8_t ubx[UBX_BUFFER_SIZE];
-	int line_pos = 0;
-	int ubx_pos = 0;
-	uint8_t ubx_class = 0;
-	uint8_t ubx_id = 0;
-	uint8_t ubx_ck_a = 0;
-	uint8_t ubx_ck_b = 0;
-	int ubx_len = 0;
+	reset_decoder_state();
 
 	for(;;) {
 		chEvtWaitAny((eventmask_t) 1);
@@ -493,94 +572,98 @@ static THD_FUNCTION(process_thread, arg) {
 			}
 
 			// RTCM
-			if (!ch_used && line_pos == 0 && ubx_pos == 0) {
+			if (!ch_used && m_decoder_state.line_pos == 0 && m_decoder_state.ubx_pos == 0) {
 				ch_used = rtcm3_input_data(ch, &m_rtcm_state) >= 0;
 			}
 
 			// Ubx
-			if (!ch_used && line_pos == 0) {
-				int ubx_pos_last = ubx_pos;
+			if (!ch_used && m_decoder_state.line_pos == 0) {
+				int ubx_pos_last = m_decoder_state.ubx_pos;
 
-				if (ubx_pos == 0) {
+				if (m_decoder_state.ubx_pos == 0) {
 					if (ch == 0xB5) {
-						ubx_pos++;
+						m_decoder_state.ubx_pos++;
 					}
-				} else if (ubx_pos == 1) {
+				} else if (m_decoder_state.ubx_pos == 1) {
 					if (ch == 0x62) {
-						ubx_pos++;
-						ubx_ck_a = 0;
-						ubx_ck_b = 0;
+						m_decoder_state.ubx_pos++;
+						m_decoder_state.ubx_ck_a = 0;
+						m_decoder_state.ubx_ck_b = 0;
 					}
-				} else if (ubx_pos == 2) {
-					ubx_class = ch;
-					ubx_ck_a += ch;
-					ubx_ck_b += ubx_ck_a;
-					ubx_pos++;
-				} else if (ubx_pos == 3) {
-					ubx_id = ch;
-					ubx_ck_a += ch;
-					ubx_ck_b += ubx_ck_a;
-					ubx_pos++;
-				} else if (ubx_pos == 4) {
-					ubx_len = ch;
-					ubx_ck_a += ch;
-					ubx_ck_b += ubx_ck_a;
-					ubx_pos++;
-				} else if (ubx_pos == 5) {
-					ubx_len |= ch << 8;
-					ubx_ck_a += ch;
-					ubx_ck_b += ubx_ck_a;
-					ubx_pos++;
-				} else if ((ubx_pos - 6) < ubx_len) {
-					ubx[ubx_pos - 6] = ch;
-					ubx_ck_a += ch;
-					ubx_ck_b += ubx_ck_a;
-					ubx_pos++;
-				} else if ((ubx_pos - 6) == ubx_len) {
-					if (ch == ubx_ck_a) {
-						ubx_pos++;
-					} else {
-						commands_printf("UBX Checksum A Error");
+				} else if (m_decoder_state.ubx_pos == 2) {
+					m_decoder_state.ubx_class = ch;
+					m_decoder_state.ubx_ck_a += ch;
+					m_decoder_state.ubx_ck_b += m_decoder_state.ubx_ck_a;
+					m_decoder_state.ubx_pos++;
+				} else if (m_decoder_state.ubx_pos == 3) {
+					m_decoder_state.ubx_id = ch;
+					m_decoder_state.ubx_ck_a += ch;
+					m_decoder_state.ubx_ck_b += m_decoder_state.ubx_ck_a;
+					m_decoder_state.ubx_pos++;
+				} else if (m_decoder_state.ubx_pos == 4) {
+					m_decoder_state.ubx_len = ch;
+					m_decoder_state.ubx_ck_a += ch;
+					m_decoder_state.ubx_ck_b += m_decoder_state.ubx_ck_a;
+					m_decoder_state.ubx_pos++;
+				} else if (m_decoder_state.ubx_pos == 5) {
+					m_decoder_state.ubx_len |= ch << 8;
+					m_decoder_state.ubx_ck_a += ch;
+					m_decoder_state.ubx_ck_b += m_decoder_state.ubx_ck_a;
+					m_decoder_state.ubx_pos++;
+				} else if ((m_decoder_state.ubx_pos - 6) < m_decoder_state.ubx_len) {
+					m_decoder_state.ubx[m_decoder_state.ubx_pos - 6] = ch;
+					m_decoder_state.ubx_ck_a += ch;
+					m_decoder_state.ubx_ck_b += m_decoder_state.ubx_ck_a;
+					m_decoder_state.ubx_pos++;
+				} else if ((m_decoder_state.ubx_pos - 6) == m_decoder_state.ubx_len) {
+					if (ch == m_decoder_state.ubx_ck_a) {
+						m_decoder_state.ubx_pos++;
 					}
-				} else if ((ubx_pos - 6) == (ubx_len + 1)) {
-					if (ch == ubx_ck_b) {
-						ubx_decode(ubx_class, ubx_id, ubx, ubx_len);
-						ubx_pos = 0;
-					} else {
-						commands_printf("UBX Checksum B Error");
+				} else if ((m_decoder_state.ubx_pos - 6) == (m_decoder_state.ubx_len + 1)) {
+					if (ch == m_decoder_state.ubx_ck_b) {
+						ubx_decode(m_decoder_state.ubx_class, m_decoder_state.ubx_id,
+								m_decoder_state.ubx, m_decoder_state.ubx_len);
+						m_decoder_state.ubx_pos = 0;
 					}
 				}
 
-				if (ubx_pos_last != ubx_pos) {
+				if (ubx_pos_last != m_decoder_state.ubx_pos) {
 					ch_used = true;
 				} else {
-					ubx_pos = 0;
+					m_decoder_state.ubx_pos = 0;
 				}
 			}
 
 			// NMEA
 			if (!ch_used) {
-				line[line_pos++] = ch;
-				if (line_pos == LINE_BUFFER_SIZE) {
-					line_pos = 0;
+				m_decoder_state.line[m_decoder_state.line_pos++] = ch;
+				if (m_decoder_state.line_pos == LINE_BUFFER_SIZE) {
+					m_decoder_state.line_pos = 0;
 				}
 
-				if (line_pos > 0 && line[line_pos - 1] == '\n') {
-					line[line_pos] = '\0';
-					line_pos = 0;
+				if (m_decoder_state.line_pos > 0 && m_decoder_state.line[m_decoder_state.line_pos - 1] == '\n') {
+					m_decoder_state.line[m_decoder_state.line_pos] = '\0';
+					m_decoder_state.line_pos = 0;
 
 #if MAIN_MODE == MAIN_MODE_CAR
-					bool found = pos_input_nmea((const char*)line);
+					bool found = pos_input_nmea((const char*)m_decoder_state.line);
 
 					// Only send the lines that pos decoded
 					if (found) {
-						commands_send_nmea(line, strlen((char*)line));
+						commands_send_nmea(m_decoder_state.line, strlen((char*)m_decoder_state.line));
 					}
 #endif
 				}
 			}
 		}
 	}
+}
+
+static void reset_decoder_state(void) {
+	memset(&m_decoder_state, 0, sizeof(decoder_state));
+	rtcm3_init_state(&m_rtcm_state);
+	m_serial_rx_read_pos = 0;
+	m_serial_rx_write_pos = 0;
 }
 
 static void ubx_terminal_cmd_poll(int argc, const char **argv) {
@@ -689,6 +772,14 @@ static void rtcm_rx(uint8_t *data, int len, int type) {
 #else
 	comm_cc2520_send_buffer(data, len);
 #endif
+}
+
+static void set_baudrate(uint32_t baud) {
+	if (HW_UART_DEV.usart == USART1) {
+		HW_UART_DEV.usart->BRR = STM32_PCLK2 / baud;
+	} else {
+		HW_UART_DEV.usart->BRR = STM32_PCLK1 / baud;
+	}
 }
 
 static void ubx_decode(uint8_t class, uint8_t id, uint8_t *msg, int len) {

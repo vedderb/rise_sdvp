@@ -912,10 +912,13 @@ void CarInterface::getConfGui(MAIN_CONFIG &conf)
     conf.gps_ant_x = ui->confGpsAntXBox->value();
     conf.gps_ant_y = ui->confGpsAntYBox->value();
     conf.gps_comp = ui->confGpsCorrBox->isChecked();
+    conf.gps_req_rtk = ui->confGpsReqRtkBox->isChecked();
     conf.gps_corr_gain_stat = ui->confGpsCorrStatBox->value();
     conf.gps_corr_gain_dyn = ui->confGpsCorrDynBox->value();
     conf.gps_corr_gain_yaw = ui->confGpsCorrYawBox->value();
     conf.gps_send_nmea = ui->confGpsSendNmeaBox->isChecked();
+    conf.gps_use_ubx_info = ui->confGpsUbxUseInfoBox->isChecked();
+    conf.gps_ubx_max_acc = ui->confGpsUbxMaxAccBox->value();
 
     conf.ap_repeat_routes = ui->confApRepeatBox->isChecked();
     conf.ap_base_rad = ui->confApBaseRadBox->value();
@@ -961,10 +964,13 @@ void CarInterface::setConfGui(MAIN_CONFIG &conf)
     ui->confGpsAntXBox->setValue(conf.gps_ant_x);
     ui->confGpsAntYBox->setValue(conf.gps_ant_y);
     ui->confGpsCorrBox->setChecked(conf.gps_comp);
+    ui->confGpsReqRtkBox->setChecked(conf.gps_req_rtk);
     ui->confGpsCorrStatBox->setValue(conf.gps_corr_gain_stat);
     ui->confGpsCorrDynBox->setValue(conf.gps_corr_gain_dyn);
     ui->confGpsCorrYawBox->setValue(conf.gps_corr_gain_yaw);
     ui->confGpsSendNmeaBox->setChecked(conf.gps_send_nmea);
+    ui->confGpsUbxUseInfoBox->setChecked(conf.gps_use_ubx_info);
+    ui->confGpsUbxMaxAccBox->setValue(conf.gps_ubx_max_acc);
 
     ui->confApRepeatBox->setChecked(conf.ap_repeat_routes);
     ui->confApBaseRadBox->setValue(conf.ap_base_rad);

@@ -1186,42 +1186,10 @@
             <layout class="QVBoxLayout" name="verticalLayout_11">
              <item>
               <layout class="QGridLayout" name="gridLayout_5">
-               <item row="0" column="1">
-                <widget class="QDoubleSpinBox" name="confGpsAntXBox">
-                 <property name="prefix">
-                  <string>Ant X: </string>
-                 </property>
-                 <property name="decimals">
-                  <number>3</number>
-                 </property>
-                 <property name="minimum">
-                  <double>-99.989999999999995</double>
-                 </property>
-                 <property name="singleStep">
-                  <double>0.010000000000000</double>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="2">
-                <widget class="QDoubleSpinBox" name="confGpsAntYBox">
-                 <property name="prefix">
-                  <string>Ant Y: </string>
-                 </property>
-                 <property name="decimals">
-                  <number>3</number>
-                 </property>
-                 <property name="minimum">
-                  <double>-99.989999999999995</double>
-                 </property>
-                 <property name="singleStep">
-                  <double>0.010000000000000</double>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="2">
+               <item row="2" column="2">
                 <widget class="QDoubleSpinBox" name="confGpsCorrDynBox">
                  <property name="prefix">
-                  <string>Dynamic: </string>
+                  <string>Gain Dynamic: </string>
                  </property>
                  <property name="decimals">
                   <number>3</number>
@@ -1235,9 +1203,9 @@
                 </widget>
                </item>
                <item row="2" column="1">
-                <widget class="QDoubleSpinBox" name="confGpsCorrYawBox">
+                <widget class="QDoubleSpinBox" name="confGpsCorrStatBox">
                  <property name="prefix">
-                  <string>Yaw: </string>
+                  <string>Gain Static: </string>
                  </property>
                  <property name="decimals">
                   <number>3</number>
@@ -1250,17 +1218,10 @@
                  </property>
                 </widget>
                </item>
-               <item row="0" column="0">
-                <widget class="QCheckBox" name="confGpsCorrBox">
-                 <property name="text">
-                  <string>Enable GPS correction</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="1">
-                <widget class="QDoubleSpinBox" name="confGpsCorrStatBox">
+               <item row="3" column="1">
+                <widget class="QDoubleSpinBox" name="confGpsCorrYawBox">
                  <property name="prefix">
-                  <string>Static: </string>
+                  <string>Gain Yaw: </string>
                  </property>
                  <property name="decimals">
                   <number>3</number>
@@ -1274,12 +1235,152 @@
                 </widget>
                </item>
                <item row="1" column="0">
+                <widget class="QLabel" name="label_6">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="text">
+                  <string>Antenna Position:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QDoubleSpinBox" name="confGpsAntXBox">
+                 <property name="prefix">
+                  <string>Ant X: </string>
+                 </property>
+                 <property name="suffix">
+                  <string> m</string>
+                 </property>
+                 <property name="decimals">
+                  <number>3</number>
+                 </property>
+                 <property name="minimum">
+                  <double>-99.989999999999995</double>
+                 </property>
+                 <property name="singleStep">
+                  <double>0.010000000000000</double>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="2">
+                <widget class="QDoubleSpinBox" name="confGpsAntYBox">
+                 <property name="prefix">
+                  <string>Ant Y: </string>
+                 </property>
+                 <property name="suffix">
+                  <string> m</string>
+                 </property>
+                 <property name="decimals">
+                  <number>3</number>
+                 </property>
+                 <property name="minimum">
+                  <double>-99.989999999999995</double>
+                 </property>
+                 <property name="singleStep">
+                  <double>0.010000000000000</double>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="0">
+                <widget class="QLabel" name="label_7">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="text">
+                  <string>Position Correction:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="0">
+                <widget class="QLabel" name="label_8">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="text">
+                  <string>Yaw Correction:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="4" column="2">
+                <widget class="QCheckBox" name="confGpsUbxUseInfoBox">
+                 <property name="text">
+                  <string>Require Ublox Quality</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="4" column="1">
+                <widget class="QCheckBox" name="confGpsReqRtkBox">
+                 <property name="text">
+                  <string>Require RTK Solution</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="2">
                 <widget class="QCheckBox" name="confGpsSendNmeaBox">
                  <property name="toolTip">
                   <string>Send NMEA over the radio (or USB) for logging or debugging</string>
                  </property>
                  <property name="text">
                   <string>Send NMEA data</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QCheckBox" name="confGpsCorrBox">
+                 <property name="text">
+                  <string>Enable GPS Correction</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="5" column="1" colspan="2">
+                <widget class="QDoubleSpinBox" name="confGpsUbxMaxAccBox">
+                 <property name="prefix">
+                  <string>Ublox Required Accuracy: </string>
+                 </property>
+                 <property name="suffix">
+                  <string> m</string>
+                 </property>
+                 <property name="decimals">
+                  <number>3</number>
+                 </property>
+                 <property name="singleStep">
+                  <double>0.010000000000000</double>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="0">
+                <widget class="QLabel" name="label_9">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="text">
+                  <string>General:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="4" column="0">
+                <widget class="QLabel" name="label_10">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="text">
+                  <string>Position Quality:</string>
                  </property>
                 </widget>
                </item>

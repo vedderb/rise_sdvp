@@ -187,10 +187,13 @@ typedef struct {
 	float gps_ant_x; // Antenna offset from vehicle center in X
 	float gps_ant_y; // Antenna offset from vehicle center in Y
 	bool gps_comp; // Use GPS position correction
+	bool gps_req_rtk; // Require RTK solution
 	float gps_corr_gain_stat; // Static GPS correction gain
 	float gps_corr_gain_dyn; // Dynamic GPS correction gain
 	float gps_corr_gain_yaw; // Gain for yaw correction
 	bool gps_send_nmea; // Send NMEA data for logging and debugging
+	bool gps_use_ubx_info; // Use info about the ublox solution
+	float gps_ubx_max_acc; // Maximum ublox accuracy to use solution (m, higher = worse)
 
 	// Autopilot parameters
 	bool ap_repeat_routes; // Repeat the same route when the end is reached
@@ -291,6 +294,17 @@ typedef struct {
 	bool clk_reset;
 	ubx_rxm_rawx_obs obs[32];
 } ubx_rxm_rawx;
+
+typedef struct {
+	uint32_t baudrate;
+	bool in_rtcm3;
+	bool in_rtcm2;
+	bool in_nmea;
+	bool in_ubx;
+	bool out_rtcm3;
+	bool out_nmea;
+	bool out_ubx;
+} ubx_cfg_prt_uart;
 
 typedef struct {
 	bool lla; // Use lla instead of ecef

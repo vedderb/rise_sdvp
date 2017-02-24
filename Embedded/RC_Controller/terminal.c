@@ -124,6 +124,8 @@ void terminal_process_string(char *str) {
 
 	else if (strcmp(argv[0], "reset_att") == 0) {
 		pos_reset_attitude();
+	} else if (strcmp(argv[0], "reset_enu") == 0) {
+		pos_reset_enu_ref();
 	} else if (strcmp(argv[0], "cc1120_state") == 0) {
 		commands_printf("%s\n", cc1120_state_name());
 	} else if (strcmp(argv[0], "cc1120_update_rf") == 0) {
@@ -186,6 +188,9 @@ void terminal_process_string(char *str) {
 
 		commands_printf("reset_att");
 		commands_printf("  Re-initialize the attitude estimation");
+
+		commands_printf("reset_enu");
+		commands_printf("  Re-initialize the ENU reference on the next GNSS sample");
 
 		commands_printf("cc1120_state");
 		commands_printf("  Print the state of the CC1120");

@@ -28,6 +28,7 @@
 #include "utils.h"
 #include "servo_simple.h"
 #include "commands.h"
+#include "ublox.h"
 
 // Defines
 #define ITERATION_TIMER_FREQ			50000
@@ -46,6 +47,7 @@ static float m_yaw_offset_gps;
 static mutex_t m_mutex_pos;
 static mutex_t m_mutex_gps;
 static int32_t m_ms_today;
+static bool m_ubx_pos_valid;
 
 // Private functions
 static void mpu9150_read(void);
@@ -53,6 +55,7 @@ static void update_orientation_angles(float *accel, float *gyro, float *mag, flo
 static void mc_values_received(mc_values *val);
 static void init_gps_local(GPS_STATE *gps);
 static double nmea_parse_val(char *str);
+static void ublox_relposned_rx(ubx_nav_relposned *pos);
 
 void pos_init(void) {
 	ahrs_init_attitude_info(&m_att);
@@ -85,6 +88,7 @@ void pos_init(void) {
 
 	mpu9150_set_read_callback(mpu9150_read);
 	bldc_interface_set_rx_value_func(mc_values_received);
+	ublox_set_rx_callback_relposned(ublox_relposned_rx);
 }
 
 void pos_get_imu(float *accel, float *gyro, float *mag) {
@@ -140,8 +144,6 @@ void pos_set_xya(float x, float y, float angle) {
 	m_pos.py = y;
 	m_pos.yaw = angle;
 	m_yaw_offset_gps = m_imu_yaw - angle;
-
-	m_gps.local_init_done = false;
 
 	chMtxUnlock(&m_mutex_gps);
 	chMtxUnlock(&m_mutex_pos);
@@ -205,6 +207,10 @@ void pos_get_enu_ref(double *llh) {
 	chMtxLock(&m_mutex_gps);
 	utils_xyz_to_llh(m_gps.ix, m_gps.iy, m_gps.iz, &llh[0], &llh[1], &llh[2]);
 	chMtxUnlock(&m_mutex_gps);
+}
+
+void pos_reset_enu_ref(void) {
+	m_gps.local_init_done = false;
 }
 
 void pos_get_mc_val(mc_values *v) {
@@ -335,8 +341,8 @@ bool pos_input_nmea(const char *data) {
 		m_ms_today = ms;
 	}
 
-	// Only use RTK float or fix
-	if (fix_type == 4 || fix_type == 5) {
+	// Only use valid fixes
+	if (fix_type == 1 || fix_type == 2 || fix_type == 4 || fix_type == 5) {
 		// Convert llh to ecef
 		double sinp = sin(lat * D_PI / D(180.0));
 		double cosp = cos(lat * D_PI / D(180.0));
@@ -357,7 +363,7 @@ bool pos_input_nmea(const char *data) {
 		m_gps.y = (v + height) * cosp * sinl;
 		m_gps.z = (v * (D(1.0) - e2) + height) * sinp;
 
-		// Convert to local ENU frame if initialized
+		// Continue if ENU frame is initialized
 		if (m_gps.local_init_done) {
 			float dx = (float)(m_gps.x - m_gps.ix);
 			float dy = (float)(m_gps.y - m_gps.iy);
@@ -384,7 +390,11 @@ bool pos_input_nmea(const char *data) {
 			m_pos.pz_gps = m_gps.lz;
 
 			// Correct position
-			if (main_config.gps_comp) {
+			// Optionally require RTK and good ublox quality indication.
+			if (main_config.gps_comp &&
+					(!main_config.gps_req_rtk || (fix_type == 4 || fix_type == 5)) &&
+					(!main_config.gps_use_ubx_info || m_ubx_pos_valid)) {
+
 				float gain = main_config.gps_corr_gain_stat +
 						main_config.gps_corr_gain_dyn * m_pos.gps_corr_cnt;
 
@@ -415,6 +425,7 @@ bool pos_input_nmea(const char *data) {
 			chMtxUnlock(&m_mutex_pos);
 		} else {
 			init_gps_local(&m_gps);
+			m_gps.local_init_done = true;
 		}
 
 		m_gps.update_time = chVTGetSystemTimeX();
@@ -492,7 +503,7 @@ static void update_orientation_angles(float *accel, float *gyro, float *mag, flo
 		ahrs_update_initial_orientation(accel, mag_tmp, (ATTITUDE_INFO*)&m_att);
 		m_attitude_init_done = true;
 	} else {
-//		ahrs_update_mahony_imu(gyro, accel, dt, (ATTITUDE_INFO*)&m_att);
+		//		ahrs_update_mahony_imu(gyro, accel, dt, (ATTITUDE_INFO*)&m_att);
 		ahrs_update_madgwick_imu(gyro, accel, dt, (ATTITUDE_INFO*)&m_att);
 	}
 
@@ -594,8 +605,8 @@ static void mc_values_received(mc_values *val) {
 
 	float steering_angle = (servo_simple_get_pos_now()
 			- main_config.steering_center)
-					* ((2.0 * main_config.steering_max_angle_rad)
-							/ main_config.steering_range);
+									* ((2.0 * main_config.steering_max_angle_rad)
+											/ main_config.steering_range);
 
 	chMtxLock(&m_mutex_pos);
 
@@ -669,8 +680,6 @@ static void init_gps_local(GPS_STATE *gps) {
 	const float c_yaw = cosf(-m_pos.yaw * M_PI / 180.0);
 	gps->ox += c_yaw * main_config.gps_ant_x + s_yaw * main_config.gps_ant_y;
 	gps->oy += s_yaw * main_config.gps_ant_x + c_yaw * main_config.gps_ant_y;
-
-	gps->local_init_done = true;
 }
 
 static double nmea_parse_val(char *str) {
@@ -698,4 +707,24 @@ static double nmea_parse_val(char *str) {
 	}
 
 	return retval;
+}
+
+static void ublox_relposned_rx(ubx_nav_relposned *pos) {
+	bool valid = true;
+
+	if (pos->acc_n > main_config.gps_ubx_max_acc) {
+		valid = false;
+	} else if (pos->acc_e > main_config.gps_ubx_max_acc) {
+		valid = false;
+	} else if (pos->acc_d > main_config.gps_ubx_max_acc) {
+		valid = false;
+	} else if (!pos->carr_soln) {
+		valid = false;
+	} else if (!pos->fix_ok) {
+		valid = false;
+	} else if (!pos->rel_pos_valid) {
+		valid = false;
+	}
+
+	m_ubx_pos_valid = valid;
 }
