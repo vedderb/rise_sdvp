@@ -160,6 +160,8 @@ typedef struct {
 	float yaw_mag_gain; // Gain for yaw angle from magnetomer (vs gyro)
 	float yaw_imu_gain; // Gain for yaw angle from IMU (vs odometry)
 
+	bool disable_motor; // Disable motor drive commands to make sure that the motor does not move.
+
 	// Magnetometer calibration
 	float mag_cal_cx;
 	float mag_cal_cy;

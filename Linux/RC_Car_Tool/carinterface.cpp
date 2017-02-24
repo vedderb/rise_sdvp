@@ -918,6 +918,8 @@ void CarInterface::getConfGui(MAIN_CONFIG &conf)
     conf.yaw_mag_gain = ui->confYawMagGainBox->value();
     conf.yaw_imu_gain = ui->confYawImuGainBox->value();
 
+    conf.disable_motor = ui->confMiscDisableMotorBox->isChecked();
+
     conf.mag_cal_cx = ui->confMagCxBox->value();
     conf.mag_cal_cy = ui->confMagCyBox->value();
     conf.mag_cal_cz = ui->confMagCzBox->value();
@@ -969,6 +971,8 @@ void CarInterface::setConfGui(MAIN_CONFIG &conf)
     ui->confOdometryYawBox->setChecked(conf.yaw_use_odometry);
     ui->confYawMagGainBox->setValue(conf.yaw_mag_gain);
     ui->confYawImuGainBox->setValue(conf.yaw_imu_gain);
+
+    ui->confMiscDisableMotorBox->setChecked(conf.disable_motor);
 
     ui->confMagCxBox->setValue(conf.mag_cal_cx);
     ui->confMagCyBox->setValue(conf.mag_cal_cy);

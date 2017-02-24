@@ -164,7 +164,9 @@ void autopilot_set_motor_speed(float speed) {
 	float rpm = speed / (main_config.gear_ratio
 			* (2.0 / main_config.motor_poles) * (1.0 / 60.0)
 			* main_config.wheel_diam * M_PI);
-	bldc_interface_set_rpm((int)rpm);
+	if (!main_config.disable_motor) {
+		bldc_interface_set_rpm((int)rpm);
+	}
 }
 
 /**
@@ -498,7 +500,9 @@ static THD_FUNCTION(ap_thread, arg) {
 
 		if (route_end) {
 			servo_simple_set_pos_ramp(main_config.steering_center);
-			bldc_interface_set_current_brake(10.0);
+			if (!main_config.disable_motor) {
+				bldc_interface_set_current_brake(10.0);
+			}
 			m_rad_now = -1.0;
 		}
 

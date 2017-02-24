@@ -229,12 +229,16 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 			switch (mode) {
 			case RC_MODE_CURRENT:
-				bldc_interface_set_current(throttle);
+				if (!main_config.disable_motor) {
+					bldc_interface_set_current(throttle);
+				}
 				break;
 
 			case RC_MODE_DUTY:
 				utils_truncate_number(&throttle, -1.0, 1.0);
-				bldc_interface_set_duty_cycle(throttle);
+				if (!main_config.disable_motor) {
+					bldc_interface_set_duty_cycle(throttle);
+				}
 				break;
 
 			case RC_MODE_PID: // In m/s
@@ -242,7 +246,9 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 				break;
 
 			case RC_MODE_CURRENT_BRAKE:
-				bldc_interface_set_current_brake(throttle);
+				if (!main_config.disable_motor) {
+					bldc_interface_set_current_brake(throttle);
+				}
 				break;
 
 			default:
@@ -473,6 +479,8 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			main_config.yaw_mag_gain = buffer_get_float32(data, 1e6, &ind);
 			main_config.yaw_imu_gain = buffer_get_float32(data, 1e6, &ind);
 
+			main_config.disable_motor = data[ind++];
+
 			main_config.mag_cal_cx = buffer_get_float32(data, 1e6, &ind);
 			main_config.mag_cal_cy = buffer_get_float32(data, 1e6, &ind);
 			main_config.mag_cal_cz = buffer_get_float32(data, 1e6, &ind);
@@ -552,6 +560,8 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			m_send_buffer[send_index++] = main_cfg_tmp.yaw_use_odometry;
 			buffer_append_float32(m_send_buffer, main_cfg_tmp.yaw_mag_gain, 1e6, &send_index);
 			buffer_append_float32(m_send_buffer, main_cfg_tmp.yaw_imu_gain, 1e6, &send_index);
+
+			m_send_buffer[send_index++] = main_cfg_tmp.disable_motor;
 
 			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_cx, 1e6, &send_index);
 			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_cy, 1e6, &send_index);
