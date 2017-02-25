@@ -529,7 +529,8 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 			conf_general_store_main_config(&main_config);
 
-			pos_reset_attitude();
+			// Doing this while driving will get wrong as there is so much accelerometer noise then.
+			//pos_reset_attitude();
 
 			// Send ack
 			int32_t send_index = 0;

@@ -196,14 +196,6 @@ void pos_set_enu_ref(double lat, double lon, double height) {
 	m_gps.ly = 0.0;
 	m_gps.lz = 0.0;
 
-	m_gps.ox = 0.0;
-	m_gps.oy = 0.0;
-
-	const float s_yaw = sinf(-m_pos.yaw * M_PI / 180.0);
-	const float c_yaw = cosf(-m_pos.yaw * M_PI / 180.0);
-	m_gps.ox += c_yaw * main_config.gps_ant_x + s_yaw * main_config.gps_ant_y;
-	m_gps.oy += s_yaw * main_config.gps_ant_x + c_yaw * main_config.gps_ant_y;
-
 	m_gps.local_init_done = true;
 
 	chMtxUnlock(&m_mutex_gps);
@@ -379,12 +371,10 @@ bool pos_input_nmea(const char *data) {
 			m_gps.ly = m_gps.r2c1 * dx + m_gps.r2c2 * dy + m_gps.r2c3 * dz;
 			m_gps.lz = m_gps.r3c1 * dx + m_gps.r3c2 * dy + m_gps.r3c3 * dz;
 
-			// Apply offsets and rotation for local position
-			const float s_rot = sinf(m_gps.orot);
-			const float c_rot = cosf(m_gps.orot);
-			float px = m_gps.lx * c_rot + m_gps.ly * s_rot + m_gps.ox;
-			float py = m_gps.lx * s_rot + m_gps.ly * c_rot + m_gps.oy;
+			float px = m_gps.lx;
+			float py = m_gps.lx;
 
+			// Apply antenna offset
 			const float s_yaw = sinf(-m_pos.yaw * M_PI / 180.0);
 			const float c_yaw = cosf(-m_pos.yaw * M_PI / 180.0);
 			px -= c_yaw * main_config.gps_ant_x + s_yaw * main_config.gps_ant_y;
@@ -678,14 +668,6 @@ static void init_gps_local(GPS_STATE *gps) {
 	gps->lx = 0.0;
 	gps->ly = 0.0;
 	gps->lz = 0.0;
-
-	gps->ox = m_pos.px;
-	gps->oy = m_pos.py;
-
-	const float s_yaw = sinf(-m_pos.yaw * M_PI / 180.0);
-	const float c_yaw = cosf(-m_pos.yaw * M_PI / 180.0);
-	gps->ox += c_yaw * main_config.gps_ant_x + s_yaw * main_config.gps_ant_y;
-	gps->oy += s_yaw * main_config.gps_ant_x + c_yaw * main_config.gps_ant_y;
 }
 
 static double nmea_parse_val(char *str) {

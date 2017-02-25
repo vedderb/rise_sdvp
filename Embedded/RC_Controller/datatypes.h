@@ -235,10 +235,6 @@ typedef struct {
 	float r1c1, r1c2, r1c3;
 	float r2c1, r2c2, r2c3;
 	float r3c1, r3c2, r3c3;
-	// Local position offset and rotation
-	float ox;
-	float oy;
-	float orot;
 } GPS_STATE;
 
 // DW Logging Info

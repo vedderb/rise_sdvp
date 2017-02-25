@@ -27,7 +27,7 @@
 #define MAIN_MODE_QUADCOPTER		4
 
 // Main mode
-#define MAIN_MODE					MAIN_MODE_MOTE_2400
+#define MAIN_MODE					MAIN_MODE_CAR
 
 // Mode macros
 #define MAIN_MODE_IS_MOTE			(MAIN_MODE == MAIN_MODE_MOTE_2400 || MAIN_MODE == MAIN_MODE_MOTE_400 || MAIN_MODE == MAIN_MODE_MOTE_HYBRID)
@@ -37,7 +37,7 @@
 #define FW_VERSION_MINOR			4
 
 // Default car settings
-#define CAR_TERO // Benjamins tero car
+//#define CAR_TERO // Benjamins tero car
 
 // Defaults for different cars
 #ifdef CAR_TERO
