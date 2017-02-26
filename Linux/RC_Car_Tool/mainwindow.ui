@@ -600,15 +600,16 @@
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
+          <zorder></zorder>
          </widget>
         </item>
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_10">
+          <property name="spacing">
+           <number>2</number>
+          </property>
           <item>
-           <widget class="QGroupBox" name="groupBox_5">
-            <property name="title">
-             <string>Selection</string>
-            </property>
+           <widget class="QWidget" name="widget_5" native="true">
             <layout class="QVBoxLayout" name="verticalLayout_5">
              <property name="spacing">
               <number>2</number>
@@ -781,6 +782,87 @@
            </widget>
           </item>
           <item>
+           <widget class="QWidget" name="widget_8" native="true">
+            <layout class="QHBoxLayout" name="horizontalLayout_7">
+             <property name="spacing">
+              <number>2</number>
+             </property>
+             <property name="leftMargin">
+              <number>4</number>
+             </property>
+             <property name="topMargin">
+              <number>4</number>
+             </property>
+             <property name="rightMargin">
+              <number>4</number>
+             </property>
+             <property name="bottomMargin">
+              <number>4</number>
+             </property>
+             <item>
+              <widget class="QPushButton" name="mapApButton">
+               <property name="toolTip">
+                <string>Autopilot</string>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="icon">
+                <iconset resource="resources.qrc">
+                 <normaloff>:/models/Icons/Computer-96.png</normaloff>:/models/Icons/Computer-96.png</iconset>
+               </property>
+               <property name="iconSize">
+                <size>
+                 <width>25</width>
+                 <height>25</height>
+                </size>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="mapKbButton">
+               <property name="toolTip">
+                <string>Manual control</string>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="icon">
+                <iconset resource="resources.qrc">
+                 <normaloff>:/models/Icons/Controller-96.png</normaloff>:/models/Icons/Controller-96.png</iconset>
+               </property>
+               <property name="iconSize">
+                <size>
+                 <width>25</width>
+                 <height>25</height>
+                </size>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="mapOffButton">
+               <property name="toolTip">
+                <string>Stop</string>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="icon">
+                <iconset resource="resources.qrc">
+                 <normaloff>:/models/Icons/Stop Sign-96.png</normaloff>:/models/Icons/Stop Sign-96.png</iconset>
+               </property>
+               <property name="iconSize">
+                <size>
+                 <width>25</width>
+                 <height>25</height>
+                </size>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
            <widget class="QTabWidget" name="tabWidget_2">
             <property name="tabPosition">
              <enum>QTabWidget::South</enum>
@@ -819,14 +901,11 @@
                <number>4</number>
               </property>
               <item>
-               <widget class="QGroupBox" name="groupBox_8">
+               <widget class="QGroupBox" name="groupBox_7">
                 <property name="title">
-                 <string>Control</string>
+                 <string>ENU Reference Point</string>
                 </property>
-                <layout class="QHBoxLayout" name="horizontalLayout_7">
-                 <property name="spacing">
-                  <number>2</number>
-                 </property>
+                <layout class="QGridLayout" name="gridLayout_7">
                  <property name="leftMargin">
                   <number>4</number>
                  </property>
@@ -839,63 +918,34 @@
                  <property name="bottomMargin">
                   <number>4</number>
                  </property>
-                 <item>
-                  <widget class="QPushButton" name="mapApButton">
+                 <property name="spacing">
+                  <number>2</number>
+                 </property>
+                 <item row="0" column="0">
+                  <widget class="QPushButton" name="mapGetEnuButton">
                    <property name="toolTip">
-                    <string>Autopilot</string>
+                    <string>Get enu reference point from car and use it</string>
                    </property>
                    <property name="text">
                     <string/>
                    </property>
                    <property name="icon">
                     <iconset resource="resources.qrc">
-                     <normaloff>:/models/Icons/Computer-96.png</normaloff>:/models/Icons/Computer-96.png</iconset>
-                   </property>
-                   <property name="iconSize">
-                    <size>
-                     <width>32</width>
-                     <height>32</height>
-                    </size>
+                     <normaloff>:/models/Icons/Upload-96.png</normaloff>:/models/Icons/Upload-96.png</iconset>
                    </property>
                   </widget>
                  </item>
-                 <item>
-                  <widget class="QPushButton" name="mapKbButton">
+                 <item row="0" column="1">
+                  <widget class="QPushButton" name="mapSetEnuButton">
                    <property name="toolTip">
-                    <string>Manual control</string>
+                    <string>Set current ENU reference point</string>
                    </property>
                    <property name="text">
                     <string/>
                    </property>
                    <property name="icon">
                     <iconset resource="resources.qrc">
-                     <normaloff>:/models/Icons/Controller-96.png</normaloff>:/models/Icons/Controller-96.png</iconset>
-                   </property>
-                   <property name="iconSize">
-                    <size>
-                     <width>32</width>
-                     <height>32</height>
-                    </size>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QPushButton" name="mapOffButton">
-                   <property name="toolTip">
-                    <string>Stop</string>
-                   </property>
-                   <property name="text">
-                    <string/>
-                   </property>
-                   <property name="icon">
-                    <iconset resource="resources.qrc">
-                     <normaloff>:/models/Icons/Stop Sign-96.png</normaloff>:/models/Icons/Stop Sign-96.png</iconset>
-                   </property>
-                   <property name="iconSize">
-                    <size>
-                     <width>32</width>
-                     <height>32</height>
-                    </size>
+                     <normaloff>:/models/Icons/Download-96.png</normaloff>:/models/Icons/Download-96.png</iconset>
                    </property>
                   </widget>
                  </item>
@@ -946,58 +996,6 @@
                    </property>
                    <property name="statusTip">
                     <string>Set</string>
-                   </property>
-                   <property name="text">
-                    <string/>
-                   </property>
-                   <property name="icon">
-                    <iconset resource="resources.qrc">
-                     <normaloff>:/models/Icons/Download-96.png</normaloff>:/models/Icons/Download-96.png</iconset>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-              <item>
-               <widget class="QGroupBox" name="groupBox_7">
-                <property name="title">
-                 <string>ENU Reference Point</string>
-                </property>
-                <layout class="QGridLayout" name="gridLayout_7">
-                 <property name="leftMargin">
-                  <number>4</number>
-                 </property>
-                 <property name="topMargin">
-                  <number>4</number>
-                 </property>
-                 <property name="rightMargin">
-                  <number>4</number>
-                 </property>
-                 <property name="bottomMargin">
-                  <number>4</number>
-                 </property>
-                 <property name="spacing">
-                  <number>2</number>
-                 </property>
-                 <item row="0" column="0">
-                  <widget class="QPushButton" name="mapGetEnuButton">
-                   <property name="toolTip">
-                    <string>Get enu reference point from car and use it</string>
-                   </property>
-                   <property name="text">
-                    <string/>
-                   </property>
-                   <property name="icon">
-                    <iconset resource="resources.qrc">
-                     <normaloff>:/models/Icons/Upload-96.png</normaloff>:/models/Icons/Upload-96.png</iconset>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="1">
-                  <widget class="QPushButton" name="mapSetEnuButton">
-                   <property name="toolTip">
-                    <string>Set current ENU reference point</string>
                    </property>
                    <property name="text">
                     <string/>
@@ -1063,8 +1061,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>180</width>
-                   <height>393</height>
+                   <width>194</width>
+                   <height>447</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_17">
@@ -1473,8 +1471,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>178</width>
-                   <height>422</height>
+                   <width>194</width>
+                   <height>447</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_12">
@@ -1747,7 +1745,7 @@
                    <x>0</x>
                    <y>0</y>
                    <width>194</width>
-                   <height>487</height>
+                   <height>471</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_15">
@@ -2259,7 +2257,7 @@
      <x>0</x>
      <y>0</y>
      <width>1103</width>
-     <height>20</height>
+     <height>19</height>
     </rect>
    </property>
   </widget>
