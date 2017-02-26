@@ -323,6 +323,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			commands_set_send_func(func);
 
 			int32_t ind = 0;
+			bool first = true;
 
 			while (ind < (int32_t)len) {
 				ROUTE_POINT p;
@@ -330,7 +331,12 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 				p.py = buffer_get_float32(data, 1e4, &ind);
 				p.speed = buffer_get_float32(data, 1e6, &ind);
 				p.time = buffer_get_int32(data, &ind);
-				autopilot_add_point(&p);
+				bool res = autopilot_add_point(&p, first);
+				first = false;
+
+				if (!res) {
+					break;
+				}
 			}
 
 			// Send ack
@@ -396,7 +402,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 				if (first) {
 					autopilot_replace_route(&p);
 				} else {
-					autopilot_add_point(&p);
+					autopilot_add_point(&p, false);
 				}
 
 				first = false;

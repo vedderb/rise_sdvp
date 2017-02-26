@@ -53,7 +53,7 @@ static void steering_angle_to_point(
 		float goal_y,
 		float *steering_angle,
 		float *distance);
-static void add_point(ROUTE_POINT *p);
+static bool add_point(ROUTE_POINT *p, bool first);
 
 void autopilot_init(void) {
 	memset(m_route, 0, sizeof(m_route));
@@ -73,12 +73,26 @@ void autopilot_init(void) {
 			NORMALPRIO, ap_thread, NULL);
 }
 
-void autopilot_add_point(ROUTE_POINT *p) {
+/**
+ * Add a point to the route
+ *
+ * @param p
+ * The point to add
+ *
+ * @param first
+ * True if this is the first point in the packet. Used to check for duplicate packets.
+ *
+ * @return
+ * True if the point was added, false otherwise.
+ */
+bool autopilot_add_point(ROUTE_POINT *p, bool first) {
 	chMtxLock(&m_ap_lock);
 
-	add_point(p);
+	bool res = add_point(p, first);
 
 	chMtxUnlock(&m_ap_lock);
+
+	return res;
 }
 
 void autopilot_remove_last_point(void) {
@@ -111,7 +125,7 @@ void autopilot_replace_route(ROUTE_POINT *p) {
 
 	if (!m_is_active) {
 		autopilot_clear_route();
-		autopilot_add_point(p);
+		add_point(p, true);
 	} else {
 		while (m_point_last != m_point_now) {
 			m_point_last--;
@@ -121,7 +135,7 @@ void autopilot_replace_route(ROUTE_POINT *p) {
 		}
 
 		m_has_prev_point = false;
-		add_point(p);
+		add_point(p, true);
 	}
 
 	chMtxUnlock(&m_ap_lock);
@@ -544,13 +558,16 @@ static void steering_angle_to_point(
 	*steering_angle = atanf(main_config.axis_distance / circle_radius) * angle_correction;
 }
 
-static void add_point(ROUTE_POINT *p) {
-	if (m_point_rx_prev_set && utils_point_distance(m_point_rx_prev.px, m_point_rx_prev.py, p->px, p->py) < 1e-4) {
-		return;
+static bool add_point(ROUTE_POINT *p, bool first) {
+	if (first && m_point_rx_prev_set &&
+			utils_point_distance(m_point_rx_prev.px, m_point_rx_prev.py, p->px, p->py) < 1e-4) {
+		return false;
 	}
 
-	m_point_rx_prev = *p;
-	m_point_rx_prev_set = true;
+	if (first) {
+		m_point_rx_prev = *p;
+		m_point_rx_prev_set = true;
+	}
 
 	m_route[m_point_last++] = *p;
 
@@ -574,4 +591,6 @@ static void add_point(ROUTE_POINT *p) {
 	if (main_config.ap_repeat_routes) {
 		m_route[AP_ROUTE_SIZE - 1] = *p;
 	}
+
+	return true;
 }

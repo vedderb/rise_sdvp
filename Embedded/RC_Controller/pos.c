@@ -372,7 +372,7 @@ bool pos_input_nmea(const char *data) {
 			m_gps.lz = m_gps.r3c1 * dx + m_gps.r3c2 * dy + m_gps.r3c3 * dz;
 
 			float px = m_gps.lx;
-			float py = m_gps.lx;
+			float py = m_gps.ly;
 
 			// Apply antenna offset
 			const float s_yaw = sinf(-m_pos.yaw * M_PI / 180.0);
