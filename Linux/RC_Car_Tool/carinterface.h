@@ -80,6 +80,7 @@ private slots:
     void radarSetupReceived(quint8 id, radar_settings_t s);
     void radarSamplesReceived(quint8 id, QVector<QPair<double, double> > samples);
     void dwSampleReceived(quint8 id, DW_LOG_INFO dw);
+    void updateAnchorsMap();
 
     void on_terminalSendButton_clicked();
     void on_terminalSendVescButton_clicked();

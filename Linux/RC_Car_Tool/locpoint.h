@@ -27,7 +27,7 @@ class LocPoint
 public:
     LocPoint(double x = 0, double y = 0, double alpha = 0,
              double speed = 0.5, double radius = 5.0, double sigma = 0.0,
-             QColor color = Qt::darkGreen, qint32 time = 0);
+             QColor color = Qt::darkGreen, qint32 time = 0, int id = 0);
     LocPoint(const LocPoint &point);
 
     double getX() const;
@@ -41,6 +41,7 @@ public:
     QString getInfo() const;
     QColor getColor() const;
     qint32 getTime() const;
+    int getId() const;
 
     void setX(double x);
     void setY(double y);
@@ -54,6 +55,7 @@ public:
     void setInfo(const QString &info);
     void setColor(const QColor &color);
     void setTime(const qint32 &time);
+    void setId(int id);
 
     // Operators
     LocPoint& operator=(const LocPoint& point);
@@ -70,6 +72,7 @@ private:
     QString mInfo;
     QColor mColor;
     qint32 mTime;
+    int mId;
 
 };
 

@@ -52,8 +52,11 @@ public:
     void setFollowCar(int car);
     void setTraceCar(int car);
     void setSelectedCar(int car);
-    void addCar(CarInfo car);
+    void addCar(const CarInfo &car);
     bool removeCar(int carId);
+    LocPoint* getAnchor(int id);
+    void addAnchor(const LocPoint &anchor);
+    bool removeAnchor(int id);
     void setScaleFactor(double scale);
     void setRotation(double rotation);
     void setXOffset(double offset);
@@ -135,6 +138,7 @@ private:
     QList<CarInfo> mCarInfo;
     QList<LocPoint> mCarTrace;
     QList<LocPoint> mCarTraceGps;
+    QList<LocPoint> mAnchors;
     QList<QList<LocPoint> > mRoutes;
     QList<QList<LocPoint> > mInfoTraces;
     QList<LocPoint> mVisibleInfoTracePoints;

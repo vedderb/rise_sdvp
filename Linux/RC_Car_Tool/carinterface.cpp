@@ -411,6 +411,40 @@ void CarInterface::setMap(MapWidget *map)
             this, SLOT(routePointSet(LocPoint)));
     connect(mMap, SIGNAL(lastRoutePointRemoved(LocPoint)),
             this, SLOT(lastRoutePointRemoved()));
+
+    // Anchor updates
+    connect(ui->dwAnch0DrawBox, SIGNAL(toggled(bool)),
+            this, SLOT(updateAnchorsMap()));
+    connect(ui->dwAnch0IdBox, SIGNAL(valueChanged(int)),
+            this, SLOT(updateAnchorsMap()));
+    connect(ui->dwAnch0PxBox, SIGNAL(valueChanged(double)),
+            this, SLOT(updateAnchorsMap()));
+    connect(ui->dwAnch0PyBox, SIGNAL(valueChanged(double)),
+            this, SLOT(updateAnchorsMap()));
+    connect(ui->dwAnch0PzBox, SIGNAL(valueChanged(double)),
+            this, SLOT(updateAnchorsMap()));
+
+    connect(ui->dwAnch1DrawBox, SIGNAL(toggled(bool)),
+            this, SLOT(updateAnchorsMap()));
+    connect(ui->dwAnch1IdBox, SIGNAL(valueChanged(int)),
+            this, SLOT(updateAnchorsMap()));
+    connect(ui->dwAnch1PxBox, SIGNAL(valueChanged(double)),
+            this, SLOT(updateAnchorsMap()));
+    connect(ui->dwAnch1PyBox, SIGNAL(valueChanged(double)),
+            this, SLOT(updateAnchorsMap()));
+    connect(ui->dwAnch1PzBox, SIGNAL(valueChanged(double)),
+            this, SLOT(updateAnchorsMap()));
+
+    connect(ui->dwAnch2DrawBox, SIGNAL(toggled(bool)),
+            this, SLOT(updateAnchorsMap()));
+    connect(ui->dwAnch2IdBox, SIGNAL(valueChanged(int)),
+            this, SLOT(updateAnchorsMap()));
+    connect(ui->dwAnch2PxBox, SIGNAL(valueChanged(double)),
+            this, SLOT(updateAnchorsMap()));
+    connect(ui->dwAnch2PyBox, SIGNAL(valueChanged(double)),
+            this, SLOT(updateAnchorsMap()));
+    connect(ui->dwAnch2PzBox, SIGNAL(valueChanged(double)),
+            this, SLOT(updateAnchorsMap()));
 }
 
 void CarInterface::setPacketInterface(PacketInterface *packetInterface)
@@ -723,6 +757,76 @@ void CarInterface::dwSampleReceived(quint8 id, DW_LOG_INFO dw)
     if (id == mId) {
         mDwData.append(dw);
         plotDwData();
+    }
+}
+
+void CarInterface::updateAnchorsMap()
+{
+    if (mMap) {
+        bool update = false;
+
+        LocPoint anch0_gui;
+        anch0_gui.setId(100 * mId + 0);
+        anch0_gui.setXY(ui->dwAnch0PxBox->value(), ui->dwAnch0PyBox->value());
+        anch0_gui.setInfo(QString("Anchor %2").arg(ui->dwAnch0IdBox->value()));
+
+        LocPoint anch1_gui;
+        anch1_gui.setId(100 * mId + 1);
+        anch1_gui.setXY(ui->dwAnch1PxBox->value(), ui->dwAnch1PyBox->value());
+        anch1_gui.setInfo(QString("Anchor %2").arg(ui->dwAnch1IdBox->value()));
+
+
+        LocPoint anch2_gui;
+        anch2_gui.setId(100 * mId + 2);
+        anch2_gui.setXY(ui->dwAnch2PxBox->value(), ui->dwAnch2PyBox->value());
+        anch2_gui.setInfo(QString("Anchor %2").arg(ui->dwAnch2IdBox->value()));
+
+
+        LocPoint *anch0 = mMap->getAnchor(anch0_gui.getId());
+        if (ui->dwAnch0DrawBox->isChecked()) {
+            if (anch0) {
+                if (*anch0 != anch0_gui) {
+                    *anch0 = anch0_gui;
+                    update = true;
+                }
+            } else {
+                mMap->addAnchor(anch0_gui);
+            }
+        } else {
+            mMap->removeAnchor(anch0_gui.getId());
+        }
+
+        LocPoint *anch1 = mMap->getAnchor(anch1_gui.getId());
+        if (ui->dwAnch1DrawBox->isChecked()) {
+            if (anch1) {
+                if (*anch1 != anch1_gui) {
+                    *anch1 = anch1_gui;
+                    update = true;
+                }
+            } else {
+                mMap->addAnchor(anch1_gui);
+            }
+        } else {
+            mMap->removeAnchor(anch1_gui.getId());
+        }
+
+        LocPoint *anch2 = mMap->getAnchor(anch2_gui.getId());
+        if (ui->dwAnch2DrawBox->isChecked()) {
+            if (anch2) {
+                if (*anch2 != anch2_gui) {
+                    *anch2 = anch2_gui;
+                    update = true;
+                }
+            } else {
+                mMap->addAnchor(anch2_gui);
+            }
+        } else {
+            mMap->removeAnchor(anch2_gui.getId());
+        }
+
+        if (update) {
+            mMap->update();
+        }
     }
 }
 

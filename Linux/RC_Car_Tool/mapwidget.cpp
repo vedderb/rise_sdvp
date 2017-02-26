@@ -146,6 +146,7 @@ MapWidget::MapWidget(QWidget *parent) :
     mCarInfo.clear();
     mCarTrace.clear();
     mCarTraceGps.clear();
+    mAnchors.clear();
     mRoutePointSpeed = 1.0;
     mRoutePointTime = 0.0;
     mAntialiasDrawings = false;
@@ -208,7 +209,7 @@ CarInfo *MapWidget::getCarInfo(int car)
     return 0;
 }
 
-void MapWidget::addCar(CarInfo car)
+void MapWidget::addCar(const CarInfo &car)
 {
     mCarInfo.append(car);
     update();
@@ -225,6 +226,38 @@ bool MapWidget::removeCar(int carId)
     }
 
     return false;
+}
+
+LocPoint *MapWidget::getAnchor(int id)
+{
+    for (int i = 0;i < mAnchors.size();i++) {
+        if (mAnchors[i].getId() == id) {
+            return &mAnchors[i];
+        }
+    }
+
+    return 0;
+}
+
+void MapWidget::addAnchor(const LocPoint &anchor)
+{
+    mAnchors.append(anchor);
+    update();
+}
+
+bool MapWidget::removeAnchor(int id)
+{
+    bool found = false;
+
+    QMutableListIterator<LocPoint> i(mAnchors);
+    while (i.hasNext()) {
+        if (i.next().getId() == id) {
+            i.remove();
+            found = true;
+        }
+    }
+
+    return found;
 }
 
 void MapWidget::setScaleFactor(double scale)
@@ -949,6 +982,39 @@ void MapWidget::paintEvent(QPaintEvent *event)
         painter.setTransform(txtTrans);
         pt_txt = drawTrans.map(pt_txt);
         rect_txt.setCoords(pt_txt.x(), pt_txt.y() - 20,
+                           pt_txt.x() + 300, pt_txt.y() + 25);
+        painter.drawText(rect_txt, txt);
+    }
+
+    // Draw anchors
+    for (int i = 0;i < mAnchors.size();i++) {
+        LocPoint &anchor = mAnchors[i];
+        x = anchor.getX() * 1000.0;
+        y = anchor.getY() * 1000.0;
+        painter.setTransform(drawTrans);
+
+        // Draw anchor
+        painter.setBrush(QBrush(Qt::red));
+        painter.translate(x, y);
+
+        pt_txt.setX(x);
+        pt_txt.setY(y);
+        painter.setTransform(txtTrans);
+        pt_txt = drawTrans.map(pt_txt);
+
+        painter.drawRoundedRect(pt_txt.x() - 10,
+                                pt_txt.y() - 10,
+                                20, 20, 10, 10);
+
+        // Print data
+        txt.sprintf("%s\n(%.3f, %.3f)",
+                    anchor.getInfo().toLocal8Bit().data(),
+                    anchor.getX(), anchor.getY());
+        pt_txt.setX(x);
+        pt_txt.setY(y);
+        painter.setTransform(txtTrans);
+        pt_txt = drawTrans.map(pt_txt);
+        rect_txt.setCoords(pt_txt.x() + 15, pt_txt.y() - 20,
                            pt_txt.x() + 300, pt_txt.y() + 25);
         painter.drawText(rect_txt, txt);
     }

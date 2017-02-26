@@ -19,9 +19,9 @@
 #include <cmath>
 
 LocPoint::LocPoint(double x, double y, double alpha, double speed,
-                   double radius, double sigma, QColor color, qint32 time) :
+                   double radius, double sigma, QColor color, qint32 time, int id) :
     mX(x), mY(y), mAlpha(alpha), mSpeed(speed),
-    mRadius(radius), mSigma(sigma), mColor(color), mTime(time)
+    mRadius(radius), mSigma(sigma), mColor(color), mTime(time), mId(id)
 {
 
 }
@@ -92,6 +92,11 @@ void LocPoint::setTime(const qint32 &time)
     mTime = time;
 }
 
+void LocPoint::setId(int id)
+{
+    mId = id;
+}
+
 QString LocPoint::getInfo() const
 {
     return mInfo;
@@ -107,6 +112,11 @@ qint32 LocPoint::getTime() const
     return mTime;
 }
 
+int LocPoint::getId() const
+{
+    return mId;
+}
+
 LocPoint &LocPoint::operator =(const LocPoint &point)
 {
     mX = point.mX;
@@ -118,6 +128,7 @@ LocPoint &LocPoint::operator =(const LocPoint &point)
     mInfo = point.mInfo;
     mColor = point.mColor;
     mTime = point.mTime;
+    mId = point.mId;
     return *this;
 }
 
@@ -131,7 +142,8 @@ bool LocPoint::operator ==(const LocPoint &point)
             mSigma == point.mSigma &&
             mInfo == point.mInfo &&
             mColor == point.mColor &&
-            mTime == point.mTime) {
+            mTime == point.mTime &&
+            mId == point.mId) {
         return true;
     } else {
         return false;

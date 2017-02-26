@@ -2015,6 +2015,13 @@
                </widget>
               </item>
               <item>
+               <widget class="QCheckBox" name="dwAnch0DrawBox">
+                <property name="text">
+                 <string>Draw on Map</string>
+                </property>
+               </widget>
+              </item>
+              <item>
                <widget class="QPushButton" name="dwAnch0GetButton">
                 <property name="toolTip">
                  <string>Use current car position</string>
@@ -2132,6 +2139,13 @@
                </widget>
               </item>
               <item>
+               <widget class="QCheckBox" name="dwAnch1DrawBox">
+                <property name="text">
+                 <string>Draw on Map</string>
+                </property>
+               </widget>
+              </item>
+              <item>
                <widget class="QPushButton" name="dwAnch1GetButton">
                 <property name="toolTip">
                  <string>Use current car position</string>
@@ -2245,6 +2259,13 @@
                 </property>
                 <property name="singleStep">
                  <double>0.010000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="dwAnch2DrawBox">
+                <property name="text">
+                 <string>Draw on Map</string>
                 </property>
                </widget>
               </item>
