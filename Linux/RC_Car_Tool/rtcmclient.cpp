@@ -76,7 +76,7 @@ void rtcm_rx_obs(rtcm_obs_header_t *header, rtcm_obs_t *obs, int obs_num) {
 
 // Static member initialization
 RtcmClient *RtcmClient::currentMsgHandler = 0;
-bool RtcmClient::gpsOnly = true;
+bool RtcmClient::gpsOnly = false;
 rtcm3_state RtcmClient::rtcmState;
 
 RtcmClient::RtcmClient(QObject *parent) : QObject(parent)

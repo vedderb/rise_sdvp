@@ -40,6 +40,7 @@ RtcmWidget::RtcmWidget(QWidget *parent) :
 
     on_rtcmSerialRefreshButton_clicked();
     on_ntripBox_toggled(ui->ntripBox->isChecked());
+    on_gpsOnlyBox_toggled(ui->gpsOnlyBox->isChecked());
 
     // SPT00 default
     ui->refSendLatBox->setValue(57.71495867);
