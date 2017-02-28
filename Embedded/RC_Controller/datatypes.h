@@ -452,7 +452,7 @@ typedef struct {
 	int len;
 	uint8_t buffer[1100];
 	rtcm_obs_header_t header;
-	rtcm_obs_t obs[64];
+	rtcm_obs_t obs[32]; // 32 observations per sat system should be more than enough
 	rtcm_ref_sta_pos_t pos;
 	rtcm_ephemeris_t eph;
 	void(*rx_rtcm_obs)(rtcm_obs_header_t *header, rtcm_obs_t *obs, int obs_num);

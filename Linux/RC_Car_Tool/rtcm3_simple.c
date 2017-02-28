@@ -1,5 +1,5 @@
 /*
-    Copyright 2016 Benjamin Vedder	benjamin@vedder.se
+    Copyright 2016 - 2017 Benjamin Vedder	benjamin@vedder.se
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -26,20 +26,20 @@
 // Defines
 #define ROUND(x)        ((int)floor((x)+D(0.5)))
 #define ROUND_U(x)      ((unsigned int)floor((x)+D(0.5)))
-#define CLIGHT          D(299792458.0)         // speed of light (m/s)
-#define FREQ1           D(1.57542E9)           // L1/E1  frequency (Hz)
-#define FREQ2           D(1.22760E9)           // L2     frequency (Hz)
-#define FREQ5           D(1.17645E9)           // L5/E5a frequency (Hz)
-#define FREQ6           D(1.27875E9)           // E6/LEX frequency (Hz)
-#define FREQ7           D(1.20714E9)           // E5b    frequency (Hz)
-#define FREQ8           D(1.191795E9)          // E5a+b  frequency (Hz)
-#define FREQ1_GLO       D(1.60200E9)           // GLONASS L1 base frequency (Hz)
-#define DFRQ1_GLO       D(0.56250E6)           // GLONASS L1 bias frequency (Hz/n)
-#define FREQ2_GLO       D(1.24600E9)           // GLONASS L2 base frequency (Hz)
-#define DFRQ2_GLO       D(0.43750E6)           // GLONASS L2 bias frequency (Hz/n)
-#define SC2RAD          D(3.1415926535898)     // semi-circle to radian (IS-GPS)
-#define PRUNIT_GPS      D(299792.458)          // rtcm 3 unit of gps pseudorange (m)
-#define PRUNIT_GLO      D(599584.916)          // rtcm ver.3 unit of glonass pseudorange (m)
+#define CLIGHT          D(299792458.0)      // speed of light (m/s)
+#define FREQ1           D(1.57542E9)        // L1/E1  frequency (Hz)
+#define FREQ2           D(1.22760E9)        // L2     frequency (Hz)
+#define FREQ5           D(1.17645E9)        // L5/E5a frequency (Hz)
+#define FREQ6           D(1.27875E9)        // E6/LEX frequency (Hz)
+#define FREQ7           D(1.20714E9)        // E5b    frequency (Hz)
+#define FREQ8           D(1.191795E9)       // E5a+b  frequency (Hz)
+#define FREQ1_GLO       D(1.60200E9)        // GLONASS L1 base frequency (Hz)
+#define DFRQ1_GLO       D(0.56250E6)        // GLONASS L1 bias frequency (Hz/n)
+#define FREQ2_GLO       D(1.24600E9)        // GLONASS L2 base frequency (Hz)
+#define DFRQ2_GLO       D(0.43750E6)        // GLONASS L2 bias frequency (Hz/n)
+#define SC2RAD          D(3.1415926535898)  // semi-circle to radian (IS-GPS)
+#define PRUNIT_GPS      D(299792.458)       // rtcm 3 unit of gps pseudorange (m)
+#define PRUNIT_GLO      D(599584.916)       // rtcm ver.3 unit of glonass pseudorange (m)
 #define CODE_L1C        1                   // obs code: L1C/A,G1C/A,E1C (GPS,GLO,GAL,QZS,SBS)
 #define CODE_L1P        2                   // obs code: L1P,G1P    (GPS,GLO)
 #define CODE_L2C        14                  // obs code: L2C/A,G1C/A (GPS,GLO)
@@ -80,7 +80,8 @@ const double lam_carr[] = { // carrier wave length (m)
 static int last_wn = 1874;
 
 // Private functions
-static int encode_head(rtcm_obs_header_t *header, int nsat, int sys, uint8_t *buffer);
+static int encode_head(rtcm_obs_header_t *header, int nsat, int sys,
+                       uint8_t *buffer, double *tadj);
 static int decode_head1001(rtcm_obs_header_t *header, int *nsat, uint8_t *buffer);
 static int decode_head1009(rtcm_obs_header_t *header, int *nsat, uint8_t *buffer);
 static int encode_end(uint8_t *buffer, int nbit);
@@ -269,28 +270,34 @@ int rtcm3_input_data(uint8_t data, rtcm3_state *state) {
  */
 int rtcm3_encode_1002(rtcm_obs_header_t *header, rtcm_obs_t *obs,
                       int obs_num, uint8_t *buffer, int *buffer_len) {
-    int i,j, prn;
-    int code1,pr1,ppr1,lock1,amb,cnr1;
+    int i, j, prn;
+    int code1, pr1, ppr1, lock1, amb, cnr1;
+    double tadj;
 
     // encode header
     header->type = 1002;
-    i = encode_head(header, obs_num, SYS_GPS, buffer);
+    i = encode_head(header, obs_num, SYS_GPS, buffer, &tadj);
 
     for (j=0;j < obs_num;j++) {
-        double lam1,pr1c=0.0,ppr;
+        double lam1, pr1c = 0.0, ppr;
+        double P0, L0;
 
         lam1 = CLIGHT / FREQ1;
         pr1 = 0;
         amb = 0;
         ppr1 = 0xFFF80000;
 
+        // See https://rtklibexplorer.wordpress.com/2017/02/01/a-fix-for-the-rtcm-time-tag-issue/
+        P0 = obs[j].P[0] == D(0.0) ? D(0.0) : obs[j].P[0] - tadj * CLIGHT;
+        L0 = obs[j].L[0] == D(0.0) ? D(0.0) : obs[j].L[0] - tadj * FREQ1;
+
         // L1 peudorange
-        amb = (int)floor(obs[j].P[0] / PRUNIT_GPS);
-        pr1 = ROUND((obs[j].P[0] - amb * PRUNIT_GPS) / D(0.02));
+        amb = (int)floor(P0 / PRUNIT_GPS);
+        pr1 = ROUND((P0 - amb * PRUNIT_GPS) / D(0.02));
         pr1c = pr1 * D(0.02) + amb * PRUNIT_GPS;
 
         // L1 phaserange - L1 pseudorange
-        ppr = cp_pr(obs[j].L[0], pr1c / lam1);
+        ppr = cp_pr(L0, pr1c / lam1);
         ppr1 = ROUND(ppr * lam1 / D(0.0005));
 
         lock1 = obs[j].lock[0];
@@ -343,27 +350,34 @@ int rtcm3_encode_1010(rtcm_obs_header_t *header, rtcm_obs_t *obs,
                       int obs_num, uint8_t *buffer, int *buffer_len)
 {
     int i, j, prn, fcn;
-    int code1,pr1,ppr1,lock1,amb,cnr1;
+    int code1, pr1, ppr1, lock1, amb, cnr1;
+    double tadj;
 
     // encode header
     header->type = 1010;
-    i = encode_head(header, obs_num, SYS_GLO, buffer);
+    i = encode_head(header, obs_num, SYS_GLO, buffer, &tadj);
 
     for (j=0;j < obs_num;j++) {
-        double lam1,pr1c=0.0,ppr;
+        double lam1, pr1c=0.0, ppr;
+        double P0, L0, freq1;
 
-        lam1 = CLIGHT / (FREQ1_GLO + DFRQ1_GLO * (obs->freq - 7));
+        freq1 = FREQ1_GLO + DFRQ1_GLO * (obs->freq - 7);
+        lam1 = CLIGHT / freq1;
         pr1 = 0;
         amb = 0;
         ppr1 = 0xFFF80000;
 
+        // See https://rtklibexplorer.wordpress.com/2017/02/01/a-fix-for-the-rtcm-time-tag-issue/
+        P0 = obs[j].P[0] == D(0.0) ? D(0.0) : obs[j].P[0] - tadj * CLIGHT;
+        L0 = obs[j].L[0] == D(0.0) ? D(0.0) : obs[j].L[0] - tadj * freq1;
+
         // L1 peudorange
-        amb = (int)floor(obs[j].P[0] / PRUNIT_GLO);
-        pr1 = ROUND((obs[j].P[0] - amb * PRUNIT_GLO) / D(0.02));
+        amb = (int)floor(P0 / PRUNIT_GLO);
+        pr1 = ROUND((P0 - amb * PRUNIT_GLO) / D(0.02));
         pr1c = pr1 * D(0.02) + amb * PRUNIT_GLO;
 
         // L1 phaserange - L1 pseudorange
-        ppr = cp_pr(obs[j].L[0], pr1c / lam1);
+        ppr = cp_pr(L0, pr1c / lam1);
         ppr1 = ROUND(ppr * lam1 / D(0.0005));
 
         lock1 = obs[j].lock[0];
@@ -537,7 +551,8 @@ int rtcm3_encode_1019(rtcm_ephemeris_t *eph, uint8_t *buffer, int *buffer_len) {
     return *buffer_len > 0;
 }
 
-static int encode_head(rtcm_obs_header_t *header, int nsat, int sys, uint8_t *buffer) {
+static int encode_head(rtcm_obs_header_t *header, int nsat, int sys,
+                       uint8_t *buffer, double *tadj) {
     int i=0, epoch;
 
     // set preamble and reserved
@@ -550,9 +565,11 @@ static int encode_head(rtcm_obs_header_t *header, int nsat, int sys, uint8_t *bu
 
     if (sys == SYS_GLO) {
         epoch = ROUND(header->t_tod / D(0.001));
+        *tadj = (header->t_tod / D(0.001) - epoch) * D(0.001);
         setbitu(buffer,i,27,epoch); i += 27; // glonass epoch time
     } else {
         epoch = ROUND(header->t_tow / D(0.001));
+        *tadj = (header->t_tow / D(0.001) - epoch) * D(0.001);
         setbitu(buffer, i, 30, epoch); i += 30; // gps epoch time
     }
 
