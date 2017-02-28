@@ -87,7 +87,11 @@ typedef struct {
     // Settings
     bool mag_use; // Use the magnetometer
     bool mag_comp; // Should be 0 when capturing samples for the calibration
-    float yaw_imu_gain;
+    bool yaw_use_odometry; // Use odometry data for yaw angle correction.
+    float yaw_mag_gain; // Gain for yaw angle from magnetomer (vs gyro)
+    float yaw_imu_gain; // Gain for yaw angle from IMU (vs odometry)
+
+    bool disable_motor; // Disable motor drive commands to make sure that the motor does not move.
 
     // Magnetometer calibration
     float mag_cal_cx;
@@ -117,10 +121,13 @@ typedef struct {
     float gps_ant_x; // Antenna offset from vehicle center in X
     float gps_ant_y; // Antenna offset from vehicle center in Y
     bool gps_comp; // Use GPS position correction
+    bool gps_req_rtk; // Require RTK solution
     float gps_corr_gain_stat; // Static GPS correction gain
     float gps_corr_gain_dyn; // Dynamic GPS correction gain
     float gps_corr_gain_yaw; // Gain for yaw correction
     bool gps_send_nmea; // Send NMEA data for logging and debugging
+    bool gps_use_ubx_info; // Use info about the ublox solution
+    float gps_ubx_max_acc; // Maximum ublox accuracy to use solution (m, higher = worse)
 
     // Autopilot parameters
     bool ap_repeat_routes; // Repeat the same route when the end is reached
@@ -171,6 +178,7 @@ typedef enum {
     CMD_RADAR_SETUP_SET,
     CMD_RADAR_SETUP_GET,
     CMD_RADAR_SAMPLES,
+    CMD_DW_SAMPLE,
 
     // Mote commands
     CMD_MOTE_UBX_START_BASE = 200,
@@ -197,6 +205,19 @@ typedef struct {
     float cc_rad;
     int log_rate_ms;
 } radar_settings_t;
+
+// DW Logging Info
+typedef struct {
+    bool valid;
+    uint8_t dw_anchor;
+    int32_t time_today_ms;
+    float dw_dist;
+    float px;
+    float py;
+    float px_gps;
+    float py_gps;
+    float pz_gps;
+} DW_LOG_INFO;
 
 typedef enum {
     JS_TYPE_HK = 0,

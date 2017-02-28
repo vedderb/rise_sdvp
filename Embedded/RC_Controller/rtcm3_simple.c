@@ -357,11 +357,11 @@ int rtcm3_encode_1010(rtcm_obs_header_t *header, rtcm_obs_t *obs,
 	header->type = 1010;
 	i = encode_head(header, obs_num, SYS_GLO, buffer, &tadj);
 
-	for (j=0;j < obs_num;j++) {
-		double lam1, pr1c=0.0, ppr;
+	for (j = 0;j < obs_num;j++) {
+		double lam1, pr1c = 0.0, ppr;
 		double P0, L0, freq1;
 
-		freq1 = FREQ1_GLO + DFRQ1_GLO * (obs->freq - 7);
+		freq1 = FREQ1_GLO + DFRQ1_GLO * (obs[j].freq - 7);
 		lam1 = CLIGHT / freq1;
 		pr1 = 0;
 		amb = 0;
@@ -395,10 +395,10 @@ int rtcm3_encode_1010(rtcm_obs_header_t *header, rtcm_obs_t *obs,
 		setbitu(buffer,i, 6,prn  ); i+= 6;
 		setbitu(buffer,i, 1,code1); i+= 1;
 		setbitu(buffer,i, 5,fcn  ); i+= 5;
-		setbitu(buffer,i,25,pr1  ); i+=24;
+		setbitu(buffer,i,25,pr1  ); i+=25;
 		setbits(buffer,i,20,ppr1 ); i+=20;
 		setbitu(buffer,i, 7,lock1); i+= 7;
-		setbitu(buffer,i, 7,amb  ); i+= 8;
+		setbitu(buffer,i, 7,amb  ); i+= 7;
 		setbitu(buffer,i, 8,cnr1 ); i+= 8;
 	}
 
@@ -586,7 +586,7 @@ static int decode_head1001(rtcm_obs_header_t *header, int *nsat, uint8_t *buffer
 
 	header->type = getbitu(buffer, i, 12);          i+=12;
 	header->staid = getbitu(buffer, i, 12);         i+=12;
-	header->t_tow = getbitu(buffer, i, 30) * 0.001; i+=30;
+	header->t_tow = getbitu(buffer, i, 30) * D(0.001); i+=30;
 	header->sync  = getbitu(buffer, i, 1);          i+=1;
 	*nsat = getbitu(buffer, i, 5);                  i+=5;
 
@@ -601,7 +601,7 @@ static int decode_head1009(rtcm_obs_header_t *header, int *nsat, uint8_t *buffer
 
 	header->type = getbitu(buffer, i, 12);          i+=12;
 	header->staid = getbitu(buffer, i, 12);         i+=12;
-	header->t_tod = getbitu(buffer, i, 27) * 0.001; i+=27;
+	header->t_tod = getbitu(buffer, i, 27) * D(0.001); i+=27;
 	header->sync  = getbitu(buffer, i, 1);          i+=1;
 	*nsat = getbitu(buffer, i, 5);                  i+=5;
 
@@ -834,7 +834,7 @@ static int decode_1006(rtcm3_state *state) {
 
 static int decode_1010(rtcm3_state *state) {
 	double pr1,cnr1,cp1,lam1;
-	int i=24+64,j,nsat,prn,code,freq,ppr1,lock1,amb;
+	int i=24+61,j,nsat,prn,code,freq,ppr1,lock1,amb;
 
 	decode_head1009(&state->header, &nsat, state->buffer);
 
@@ -874,7 +874,7 @@ static int decode_1010(rtcm3_state *state) {
 
 static int decode_1012(rtcm3_state *state) {
 	double pr1, cnr1, cnr2, cp1, cp2, lam1, lam2;
-	int i=24+64, j, nsat, prn, freq, code1, code2, pr21, ppr1, ppr2;
+	int i=24+61, j, nsat, prn, freq, code1, code2, pr21, ppr1, ppr2;
 	int lock1, lock2, amb;
 
 	decode_head1009(&state->header, &nsat, state->buffer);
@@ -894,7 +894,7 @@ static int decode_1012(rtcm3_state *state) {
 		lock2 = getbitu(state->buffer,i, 7); i+= 7;
 		cnr2  = getbitu(state->buffer,i, 8); i+= 8;
 
-		pr1 = pr1 * D(0.02) + amb * PRUNIT_GPS;
+		pr1 = pr1 * D(0.02) + amb * PRUNIT_GLO;
 
 		if (ppr1 != (int)0xFFF80000) {
 			state->obs[j].P[0] = pr1;

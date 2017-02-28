@@ -84,7 +84,7 @@ PacketInterface::PacketInterface(QObject *parent) :
 
 PacketInterface::~PacketInterface()
 {
-    delete mSendBuffer;
+    delete[] mSendBuffer;
 }
 
 void PacketInterface::processData(QByteArray &data)
@@ -396,7 +396,11 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         int32_t ind = 0;
         conf.mag_use = data[ind++];
         conf.mag_comp = data[ind++];
+        conf.yaw_use_odometry = data[ind++];
+        conf.yaw_mag_gain = utility::buffer_get_double32(data, 1e6, &ind);
         conf.yaw_imu_gain = utility::buffer_get_double32(data, 1e6, &ind);
+
+        conf.disable_motor = data[ind++];
 
         conf.mag_cal_cx = utility::buffer_get_double32(data, 1e6, &ind);
         conf.mag_cal_cy = utility::buffer_get_double32(data, 1e6, &ind);
@@ -423,10 +427,13 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         conf.gps_ant_x = utility::buffer_get_double32(data, 1e6, &ind);
         conf.gps_ant_y = utility::buffer_get_double32(data, 1e6, &ind);
         conf.gps_comp = data[ind++];
+        conf.gps_req_rtk = data[ind++];
         conf.gps_corr_gain_stat = utility::buffer_get_double32(data, 1e6, &ind);
         conf.gps_corr_gain_dyn = utility::buffer_get_double32(data, 1e6, &ind);
         conf.gps_corr_gain_yaw = utility::buffer_get_double32(data, 1e6, &ind);
         conf.gps_send_nmea = data[ind++];
+        conf.gps_use_ubx_info = data[ind++];
+        conf.gps_ubx_max_acc = utility::buffer_get_double32(data, 1e6, &ind);
 
         conf.ap_repeat_routes = data[ind++];
         conf.ap_base_rad = utility::buffer_get_double32(data, 1e6, &ind);
@@ -488,6 +495,23 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         }
 
         emit radarSamplesReceived(id, samples);
+    } break;
+
+    case CMD_DW_SAMPLE: {
+        int32_t ind = 0;
+        DW_LOG_INFO dw;
+
+        dw.valid = data[ind++];
+        dw.dw_anchor = data[ind++];
+        dw.time_today_ms = utility::buffer_get_int32(data, &ind);
+        dw.dw_dist = utility::buffer_get_double32_auto(data, &ind);
+        dw.px = utility::buffer_get_double32_auto(data, &ind);
+        dw.py = utility::buffer_get_double32_auto(data, &ind);
+        dw.px_gps = utility::buffer_get_double32_auto(data, &ind);
+        dw.py_gps = utility::buffer_get_double32_auto(data, &ind);
+        dw.pz_gps = utility::buffer_get_double32_auto(data, &ind);
+
+        emit dwSampleReceived(id, dw);
     } break;
 
     case CMD_SET_SYSTEM_TIME: {
@@ -649,7 +673,11 @@ bool PacketInterface::setConfiguration(quint8 id, MAIN_CONFIG &conf, int retries
 
     mSendBuffer[send_index++] = conf.mag_use;
     mSendBuffer[send_index++] = conf.mag_comp;
+    mSendBuffer[send_index++] = conf.yaw_use_odometry;
+    utility::buffer_append_double32(mSendBuffer, conf.yaw_mag_gain, 1e6, &send_index);
     utility::buffer_append_double32(mSendBuffer, conf.yaw_imu_gain, 1e6, &send_index);
+
+    mSendBuffer[send_index++] = conf.disable_motor;
 
     utility::buffer_append_double32(mSendBuffer, conf.mag_cal_cx, 1e6, &send_index);
     utility::buffer_append_double32(mSendBuffer, conf.mag_cal_cy, 1e6, &send_index);
@@ -676,10 +704,13 @@ bool PacketInterface::setConfiguration(quint8 id, MAIN_CONFIG &conf, int retries
     utility::buffer_append_double32(mSendBuffer, conf.gps_ant_x, 1e6, &send_index);
     utility::buffer_append_double32(mSendBuffer, conf.gps_ant_y, 1e6, &send_index);
     mSendBuffer[send_index++] = conf.gps_comp;
+    mSendBuffer[send_index++] = conf.gps_req_rtk;
     utility::buffer_append_double32(mSendBuffer, conf.gps_corr_gain_stat, 1e6, &send_index);
     utility::buffer_append_double32(mSendBuffer, conf.gps_corr_gain_dyn, 1e6, &send_index);
     utility::buffer_append_double32(mSendBuffer, conf.gps_corr_gain_yaw, 1e6, &send_index);
     mSendBuffer[send_index++] = conf.gps_send_nmea;
+    mSendBuffer[send_index++] = conf.gps_use_ubx_info;
+    utility::buffer_append_double32(mSendBuffer, conf.gps_ubx_max_acc, 1e6, &send_index);
 
     mSendBuffer[send_index++] = conf.ap_repeat_routes;
     utility::buffer_append_double32(mSendBuffer, conf.ap_base_rad, 1e6, &send_index);

@@ -36,9 +36,6 @@ void rtcm_rx_1006(rtcm_ref_sta_pos_t *pos) {
 }
 
 void rtcm_rx_obs(rtcm_obs_header_t *header, rtcm_obs_t *obs, int obs_num) {
-    (void)header;
-    (void)obs;
-
     // Don't send empty observations.
     if (RtcmClient::currentMsgHandler && obs_num > 0) {
         if (header->type == 1002 || header->type == 1004) {

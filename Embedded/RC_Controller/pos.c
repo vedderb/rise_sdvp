@@ -64,6 +64,7 @@ void pos_init(void) {
 	memset(&m_gps, 0, sizeof(m_gps));
 	memset(&m_mc_val, 0, sizeof(m_mc_val));
 	m_imu_yaw = 0.0;
+	m_ubx_pos_valid = true;
 
 #ifdef IMU_ROT_180
 	m_yaw_offset_gps = -90.0;

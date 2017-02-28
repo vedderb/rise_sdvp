@@ -52,7 +52,6 @@
 // Private variables
 static uint8_t m_send_buffer[PACKET_MAX_PL_LEN];
 static void(*m_send_func)(unsigned char *data, unsigned int len) = 0;
-static void(*m_send_func_last_radio)(unsigned char *data, unsigned int len) = 0;
 static virtual_timer_t vt;
 static mutex_t m_print_gps;
 static bool m_init_done = false;
@@ -87,10 +86,6 @@ void commands_init(void) {
  */
 void commands_set_send_func(void(*func)(unsigned char *data, unsigned int len)) {
 	m_send_func = func;
-
-	if (func != comm_usb_send_packet) {
-		m_send_func_last_radio = func;
-	}
 }
 
 /**
@@ -312,8 +307,8 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			int32_t send_index = 0;
 			m_send_buffer[send_index++] = main_id;
 			m_send_buffer[send_index++] = CMD_GET_ENU_REF;
-			buffer_append_double64(m_send_buffer, llh[0], 1e16, &send_index);
-			buffer_append_double64(m_send_buffer, llh[1], 1e16, &send_index);
+			buffer_append_double64(m_send_buffer, llh[0], D(1e16), &send_index);
+			buffer_append_double64(m_send_buffer, llh[1], D(1e16), &send_index);
 			buffer_append_float32(m_send_buffer, llh[2], 1e3, &send_index);
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
@@ -458,11 +453,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 					memcpy(m_send_buffer + send_index, curLine, len_line);
 					send_index += len_line;
 
-					if (m_send_func_last_radio) {
-						m_send_func_last_radio(m_send_buffer, send_index);
-					} else {
-						comm_cc2520_send_buffer(m_send_buffer, send_index);
-					}
+					commands_send_packet(m_send_buffer, send_index);
 				}
 
 				if (nextLine) {
