@@ -1060,8 +1060,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>194</width>
-                   <height>447</height>
+                   <width>180</width>
+                   <height>393</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_17">
@@ -1470,8 +1470,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>194</width>
-                   <height>447</height>
+                   <width>178</width>
+                   <height>422</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_12">
@@ -1744,7 +1744,7 @@
                    <x>0</x>
                    <y>0</y>
                    <width>194</width>
-                   <height>471</height>
+                   <height>487</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_15">
@@ -1857,7 +1857,7 @@
                         <string>Vedder</string>
                        </property>
                        <property name="checked">
-                        <bool>true</bool>
+                        <bool>false</bool>
                        </property>
                       </widget>
                      </item>
@@ -1887,7 +1887,7 @@
                         <string>VHR</string>
                        </property>
                        <property name="checked">
-                        <bool>false</bool>
+                        <bool>true</bool>
                        </property>
                       </widget>
                      </item>
@@ -2256,7 +2256,7 @@
      <x>0</x>
      <y>0</y>
      <width>1103</width>
-     <height>19</height>
+     <height>20</height>
     </rect>
    </property>
   </widget>
