@@ -22,6 +22,7 @@
 
 // Functions
 void comm_cc1120_init(void);
+bool comm_cc1120_init_done(void);
 void comm_cc1120_send_buffer(uint8_t *data, unsigned int len);
 
 #endif /* COMM_CC1120_H_ */

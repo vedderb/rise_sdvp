@@ -216,6 +216,8 @@ CarInterface::CarInterface(QWidget *parent) :
     ui->dwPlot->graph()->setPen(QPen(Qt::magenta));
     ui->dwPlot->graph()->setName("Current Anchor");
     ui->dwPlot->graph()->setPen(QPen(Qt::black));
+    ui->dwPlot->graph()->setLineStyle(QCPGraph::lsNone);
+    ui->dwPlot->graph()->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCross, 4));
     ui->dwPlot->legend->setVisible(true);
     ui->dwPlot->yAxis2->setVisible(true);
     ui->dwPlot->xAxis->setLabel("Time (s)");
@@ -1407,6 +1409,9 @@ void CarInterface::plotDwData()
     ui->dwPlot->graph(1)->setData(time, error_gps);
     ui->dwPlot->graph(2)->setData(time, anchor);
     ui->dwPlot->rescaleAxes();
+    ui->dwPlot->yAxis->setRangeLower(0.0);
+    ui->dwPlot->yAxis2->setRangeLower(-0.2);
+    ui->dwPlot->yAxis2->setRangeUpper(2.2);
     ui->dwPlot->replot();
 }
 

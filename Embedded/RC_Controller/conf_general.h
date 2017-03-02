@@ -27,7 +27,7 @@
 #define MAIN_MODE_QUADCOPTER		4
 
 // Main mode
-#define MAIN_MODE					MAIN_MODE_MOTE_2400
+#define MAIN_MODE					MAIN_MODE_CAR
 
 // Mode macros
 #define MAIN_MODE_IS_MOTE			(MAIN_MODE == MAIN_MODE_MOTE_2400 || MAIN_MODE == MAIN_MODE_MOTE_400 || MAIN_MODE == MAIN_MODE_MOTE_HYBRID)
@@ -38,6 +38,7 @@
 
 // Default car settings
 //#define CAR_TERO // Benjamins tero car
+#define EBIKE_BENJAMIN // Benjamins ebike
 
 // Defaults for different cars
 #ifdef CAR_TERO
@@ -59,6 +60,7 @@
 #define LOG_DW_ANCHOR0				122
 #define LOG_DW_ANCHOR1				234
 #define LOG_DW_ANCHOR2				35
+#define LOG_DW_FORCE_CC1120			1
 
 // CC2520 Settings
 #define CC2520_RF_CHANNEL			12

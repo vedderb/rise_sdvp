@@ -186,6 +186,32 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 	conf->gps_ant_y = 0.0;
 #endif
 
+#ifdef EBIKE_BENJAMIN
+	conf->disable_motor = true;
+	conf->gear_ratio = 1.0;
+	conf->wheel_diam = 0.655;
+	conf->motor_poles = 46.0;
+
+	conf->gps_ant_x = -0.1;
+	conf->gps_ant_y = 0.0;
+
+	conf->mag_cal_cx = 7.1270;
+	conf->mag_cal_cy = -209.5598;
+	conf->mag_cal_cz = 106.1795;
+
+	conf->mag_cal_xx = 0.8868;
+	conf->mag_cal_xy = 0.0028;
+	conf->mag_cal_xz = -0.0046;
+
+	conf->mag_cal_yx = 0.0028;
+	conf->mag_cal_yy = 0.7761;
+	conf->mag_cal_yz = 0.0539;
+
+	conf->mag_cal_zx = -0.0046;
+	conf->mag_cal_zy = 0.0539;
+	conf->mag_cal_zz = 0.9869;
+#endif
+
 }
 
 /**

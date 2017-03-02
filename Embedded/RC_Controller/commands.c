@@ -40,6 +40,7 @@
 #include "radar.h"
 #include "ublox.h"
 #include "rtcm3_simple.h"
+#include "comm_cc1120.h"
 
 #include <math.h>
 #include <string.h>
@@ -47,7 +48,7 @@
 #include <stdio.h>
 
 // Defines
-#define FWD_TIME		5000
+#define FWD_TIME		20000
 
 // Private variables
 static uint8_t m_send_buffer[PACKET_MAX_PL_LEN];
@@ -891,7 +892,16 @@ void commands_send_dw_sample(DW_LOG_INFO *dw) {
 	buffer_append_float32_auto(m_send_buffer, dw->px_gps, &ind);
 	buffer_append_float32_auto(m_send_buffer, dw->py_gps, &ind);
 	buffer_append_float32_auto(m_send_buffer, dw->pz_gps, &ind);
-	commands_send_packet((unsigned char*)m_send_buffer, ind);
+
+#if LOG_DW_FORCE_CC1120
+	if (comm_cc1120_init_done()) {
+		comm_cc1120_send_buffer(m_send_buffer, ind);
+	} else {
+		commands_send_packet(m_send_buffer, ind);
+	}
+#else
+	commands_send_packet(m_send_buffer, ind);
+#endif
 }
 
 static void stop_forward(void *p) {

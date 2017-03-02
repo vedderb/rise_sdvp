@@ -65,6 +65,10 @@ void comm_cc1120_init(void) {
 			NORMALPRIO, tx_thread, NULL);
 }
 
+bool comm_cc1120_init_done(void) {
+	return init_done;
+}
+
 void comm_cc1120_send_buffer(uint8_t *data, unsigned int len) {
 	if (!init_done) {
 		return;

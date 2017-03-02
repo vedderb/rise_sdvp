@@ -225,11 +225,11 @@ static THD_FUNCTION(log_thread, arg) {
 
 			if (m_dw_anchor_now == 0 && LOG_DW_ANCHOR0 >= 0) {
 				memset(m_dw_anchor_info, 0, sizeof(m_dw_anchor_info));
-				comm_can_dw_range(CAN_DW_ID_ANY, LOG_DW_ANCHOR0, 10);
+				comm_can_dw_range(CAN_DW_ID_ANY, LOG_DW_ANCHOR0, 5);
 			} else if (m_dw_anchor_now == 1 && LOG_DW_ANCHOR1 >= 0) {
-				comm_can_dw_range(CAN_DW_ID_ANY, LOG_DW_ANCHOR1, 10);
+				comm_can_dw_range(CAN_DW_ID_ANY, LOG_DW_ANCHOR1, 5);
 			} else if (m_dw_anchor_now == 2 && LOG_DW_ANCHOR2 >= 0) {
-				comm_can_dw_range(CAN_DW_ID_ANY, LOG_DW_ANCHOR2, 10);
+				comm_can_dw_range(CAN_DW_ID_ANY, LOG_DW_ANCHOR2, 5);
 			} else if (m_dw_anchor_now >= 3) {
 				int closest = -1;
 				float min_dist = 1e20;
