@@ -205,15 +205,12 @@ CarInterface::CarInterface(QWidget *parent) :
     ui->magSampYzPlot->graph()->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCross, 4));
 
     ui->dwPlot->addGraph();
-    ui->dwPlot->graph()->setPen(QPen(Qt::blue));
     ui->dwPlot->graph()->setName("Fusion Error");
     ui->dwPlot->graph()->setPen(QPen(Qt::blue));
     ui->dwPlot->addGraph();
-    ui->dwPlot->graph()->setPen(QPen(Qt::blue));
     ui->dwPlot->graph()->setName("GPS Error");
     ui->dwPlot->graph()->setPen(QPen(Qt::red));
     ui->dwPlot->addGraph(ui->dwPlot->xAxis, ui->dwPlot->yAxis2);
-    ui->dwPlot->graph()->setPen(QPen(Qt::magenta));
     ui->dwPlot->graph()->setName("Current Anchor");
     ui->dwPlot->graph()->setPen(QPen(Qt::black));
     ui->dwPlot->graph()->setLineStyle(QCPGraph::lsNone);
