@@ -114,19 +114,8 @@ private slots:
 
 private:
     Ui::CarInterface *ui;
-    QVector<double> accelXData;
-    QVector<double> accelYData;
-    QVector<double> accelZData;
-    QVector<double> gyroXData;
-    QVector<double> gyroYData;
-    QVector<double> gyroZData;
-    QVector<double> magXData;
-    QVector<double> magYData;
-    QVector<double> magZData;
-    QVector<double> accelGyroMagXAxis;
     QVector<double> experimentDataX;
     QVector<double> experimentDataY;
-    int maxSampleSize;
     MapWidget *mMap;
     PacketInterface *mPacketInterface;
 

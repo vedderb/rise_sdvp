@@ -38,7 +38,7 @@
 
 // Default car settings
 //#define CAR_TERO // Benjamins tero car
-#define EBIKE_BENJAMIN // Benjamins ebike
+//#define EBIKE_BENJAMIN // Benjamins ebike
 
 // Defaults for different cars
 #ifdef CAR_TERO
