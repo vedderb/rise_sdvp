@@ -1,7 +1,7 @@
 /*
-	Copyright 2016 Benjamin Vedder	benjamin@vedder.se
+    Copyright 2016 Benjamin Vedder	benjamin@vedder.se
 
-	This program is free software: you can redistribute it and/or modify
+    This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
@@ -31,15 +31,15 @@
 
 // Orientation data
 typedef struct {
-	float q0;
-	float q1;
-	float q2;
-	float q3;
-	float integralFBx;
-	float integralFBy;
-	float integralFBz;
-	float accMagP;
-	int initialUpdateDone;
+    float q0;
+    float q1;
+    float q2;
+    float q3;
+    float integralFBx;
+    float integralFBy;
+    float integralFBz;
+    float accMagP;
+    int initialUpdateDone;
 } ATTITUDE_INFO;
 
 typedef enum {
@@ -76,10 +76,10 @@ typedef struct {
 } CAR_STATE;
 
 typedef enum {
-	MOTE_PACKET_FILL_RX_BUFFER = 0,
-	MOTE_PACKET_FILL_RX_BUFFER_LONG,
-	MOTE_PACKET_PROCESS_RX_BUFFER,
-	MOTE_PACKET_PROCESS_SHORT_BUFFER,
+    MOTE_PACKET_FILL_RX_BUFFER = 0,
+    MOTE_PACKET_FILL_RX_BUFFER_LONG,
+    MOTE_PACKET_PROCESS_RX_BUFFER,
+    MOTE_PACKET_PROCESS_SHORT_BUFFER,
 } MOTE_PACKET;
 
 // Car configuration
@@ -141,15 +141,14 @@ typedef struct {
     char log_name[LOG_NAME_MAX_LEN + 1];
 } MAIN_CONFIG;
 
+// Commands
 typedef enum {
     // General commands
     CMD_PRINTF = 0,
     CMD_TERMINAL_CMD,
 
-    // Car commands
-    CMD_GET_STATE = 50,
-    CMD_VESC_FWD,
-    CMD_RC_CONTROL,
+    // Common vehicle commands
+    CMD_VESC_FWD = 50,
     CMD_SET_POS,
     CMD_SET_POS_ACK,
     CMD_SET_ENU_REF,
@@ -159,12 +158,8 @@ typedef enum {
     CMD_AP_CLEAR_POINTS,
     CMD_AP_SET_ACTIVE,
     CMD_AP_REPLACE_ROUTE,
-    CMD_SET_SERVO_DIRECT,
     CMD_SEND_RTCM_USB,
     CMD_SEND_NMEA_RADIO,
-    CMD_SET_MAIN_CONFIG,
-    CMD_GET_MAIN_CONFIG,
-    CMD_GET_MAIN_CONFIG_DEFAULT,
     CMD_SET_YAW_OFFSET,
     CMD_SET_YAW_OFFSET_ACK,
     CMD_LOG_LINE_USB,
@@ -179,6 +174,23 @@ typedef enum {
     CMD_RADAR_SETUP_GET,
     CMD_RADAR_SAMPLES,
     CMD_DW_SAMPLE,
+    CMD_EMERGENCY_STOP,
+
+    // Car commands
+    CMD_GET_STATE = 120,
+    CMD_RC_CONTROL,
+    CMD_SET_SERVO_DIRECT,
+    CMD_SET_MAIN_CONFIG,
+    CMD_GET_MAIN_CONFIG,
+    CMD_GET_MAIN_CONFIG_DEFAULT,
+
+    // Multirotor commands
+    CMD_MR_GET_STATE = 160,
+    CMD_MR_RC_CONTROL,
+    CMD_MR_SET_MAIN_CONFIG,
+    CMD_MR_GET_MAIN_CONFIG,
+    CMD_MR_GET_MAIN_CONFIG_DEFAULT,
+    CMD_MR_OVERRIDE_POWER,
 
     // Mote commands
     CMD_MOTE_UBX_START_BASE = 200,

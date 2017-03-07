@@ -87,8 +87,6 @@ private slots:
     void on_terminalSendRadarButton_clicked();
     void on_terminalClearButton_clicked();
     void on_idBox_valueChanged(int arg1);
-    void on_magSampleClearButton_clicked();
-    void on_magSampleSaveButton_clicked();
     void on_bldcToolUdpBox_toggled(bool checked);
     void on_vescToolTcpBox_toggled(bool checked);
     void on_autopilotBox_toggled(bool checked);
@@ -109,9 +107,6 @@ private slots:
     void on_setClockPiButton_clicked();
     void on_rebootPiButton_clicked();
     void on_shutdownPiButton_clicked();
-    void on_magOpenFileButton_clicked();
-    void on_magCalcCompButton_clicked();
-    void on_magReplotButton_clicked();
     void on_dwAnch0GetButton_clicked();
     void on_dwAnch1GetButton_clicked();
     void on_dwAnch2GetButton_clicked();
@@ -141,9 +136,6 @@ private:
 
     int mId;
     CAR_STATE mLastCarState;
-    QVector<QVector<double> > mMagSamples;
-    QVector<double> mMagComp;
-    QVector<double> mMagCompCenter;
     QList<DW_LOG_INFO> mDwData;
     QTimer *mTimer;
     QUdpSocket *mUdpSocket;
@@ -152,15 +144,9 @@ private:
     TcpBroadcast *mNmeaForwardServer;
     TcpServerSimple *mTcpServer;
     bool mExperimentReplot;
-    bool mMagReplot;
 
     void getConfGui(MAIN_CONFIG &conf);
     void setConfGui(MAIN_CONFIG &conf);
-    void loadMagPoints(QString path);
-    void plotMagPoints();
-    void calcMagComp();
-    void updateMagPlots();
-    void clearMagPlots();
     void plotDwData();
 
 };
