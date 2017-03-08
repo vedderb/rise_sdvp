@@ -204,7 +204,7 @@ void CarInterface::setStateData(CAR_STATE data)
         LocPoint loc = car->getLocation();
         LocPoint loc_gps = car->getLocationGps();
         LocPoint ap_goal = car->getApGoal();
-        loc.setAlpha(data.yaw * M_PI / 180.0);
+        loc.setYaw(data.yaw * M_PI / 180.0);
         loc.setXY(data.px, data.py);
         loc_gps.setXY(data.px_gps, data.py_gps);
         ap_goal.setXY(data.ap_goal_px, data.ap_goal_py);
@@ -557,8 +557,8 @@ void CarInterface::radarSamplesReceived(quint8 id, QVector<QPair<double, double>
                 double cx = 0;
                 double cy = 0;
 
-                cx = p_car.getX() + samples[i].first * sin(p_car.getAlpha());
-                cy = p_car.getY() + samples[i].first * cos(p_car.getAlpha());
+                cx = p_car.getX() + samples[i].first * sin(p_car.getYaw());
+                cy = p_car.getY() + samples[i].first * cos(p_car.getYaw());
                 p.setXY(cx, cy);
 
                 QString info;
@@ -594,12 +594,10 @@ void CarInterface::updateAnchorsMap()
         anch1_gui.setXY(ui->dwAnch1PxBox->value(), ui->dwAnch1PyBox->value());
         anch1_gui.setInfo(QString("Anchor %2").arg(ui->dwAnch1IdBox->value()));
 
-
         LocPoint anch2_gui;
         anch2_gui.setId(100 * mId + 2);
         anch2_gui.setXY(ui->dwAnch2PxBox->value(), ui->dwAnch2PyBox->value());
         anch2_gui.setInfo(QString("Anchor %2").arg(ui->dwAnch2IdBox->value()));
-
 
         LocPoint *anch0 = mMap->getAnchor(anch0_gui.getId());
         if (ui->dwAnch0DrawBox->isChecked()) {

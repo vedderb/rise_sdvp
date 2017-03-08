@@ -144,6 +144,7 @@ MapWidget::MapWidget(QWidget *parent) :
     xRealPos = 0;
     yRealPos = 0;
     mCarInfo.clear();
+    mCopterInfo.clear();
     mCarTrace.clear();
     mCarTraceGps.clear();
     mAnchors.clear();
@@ -179,9 +180,9 @@ MapWidget::MapWidget(QWidget *parent) :
     mRefHeight = 219.0;
 
     // Home
-//    mRefLat = 57.57848470;
-//    mRefLon = 13.11463205;
-//    mRefHeight = 204.626;
+    //    mRefLat = 57.57848470;
+    //    mRefLon = 13.11463205;
+    //    mRefHeight = 204.626;
 
     // Hardcoded for now
     mOsm->setCacheDir("osm_tiles");
@@ -209,9 +210,26 @@ CarInfo *MapWidget::getCarInfo(int car)
     return 0;
 }
 
+CopterInfo *MapWidget::getCopterInfo(int copter)
+{
+    for (int i = 0;i < mCopterInfo.size();i++) {
+        if (mCopterInfo[i].getId() == copter) {
+            return &mCopterInfo[i];
+        }
+    }
+
+    return 0;
+}
+
 void MapWidget::addCar(const CarInfo &car)
 {
     mCarInfo.append(car);
+    update();
+}
+
+void MapWidget::addCopter(const CopterInfo &copter)
+{
+    mCopterInfo.append(copter);
     update();
 }
 
@@ -220,6 +238,19 @@ bool MapWidget::removeCar(int carId)
     QMutableListIterator<CarInfo> i(mCarInfo);
     while (i.hasNext()) {
         if (i.next().getId() == carId) {
+            i.remove();
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool MapWidget::removeCopter(int copterId)
+{
+    QMutableListIterator<CopterInfo> i(mCopterInfo);
+    while (i.hasNext()) {
+        if (i.next().getId() == copterId) {
             i.remove();
             return true;
         }
@@ -446,7 +477,7 @@ void MapWidget::paintEvent(QPaintEvent *event)
         mYOffset *= scaleDiff;
     }
 
-    // Optionally follow a car
+    // Optionally follow a car or copter
     if (mFollowCar >= 0) {
         for (int i = 0;i < mCarInfo.size();i++) {
             CarInfo &carInfo = mCarInfo[i];
@@ -455,7 +486,15 @@ void MapWidget::paintEvent(QPaintEvent *event)
                 mXOffset = -followLoc.getX() * 1000.0 * mScaleFactor;
                 mYOffset = -followLoc.getY() * 1000.0 * mScaleFactor;
             }
+        }
 
+        for (int i = 0;i < mCopterInfo.size();i++) {
+            CopterInfo &copterInfo = mCopterInfo[i];
+            if (copterInfo.getId() == mFollowCar) {
+                LocPoint followLoc = copterInfo.getLocation();
+                mXOffset = -followLoc.getX() * 1000.0 * mScaleFactor;
+                mYOffset = -followLoc.getY() * 1000.0 * mScaleFactor;
+            }
         }
     }
 
@@ -695,7 +734,7 @@ void MapWidget::paintEvent(QPaintEvent *event)
         }
     }
 
-    // Store trace for the selected car
+    // Store trace for the selected car or copter
     if (mTraceCar >= 0) {
         for (int i = 0;i < mCarInfo.size();i++) {
             CarInfo &carInfo = mCarInfo[i];
@@ -703,23 +742,34 @@ void MapWidget::paintEvent(QPaintEvent *event)
                 if (mCarTrace.isEmpty()) {
                     mCarTrace.append(carInfo.getLocation());
                 }
-
                 if (mCarTrace.last().getDistanceTo(carInfo.getLocation()) > mTraceMinSpaceCar) {
                     mCarTrace.append(carInfo.getLocation());
+                }
+                // GPS trace
+                if (mCarTraceGps.isEmpty()) {
+                    mCarTraceGps.append(carInfo.getLocationGps());
+                }
+                if (mCarTraceGps.last().getDistanceTo(carInfo.getLocationGps()) > mTraceMinSpaceGps) {
+                    mCarTraceGps.append(carInfo.getLocationGps());
                 }
             }
         }
 
-        // GPS Trace
-        for (int i = 0;i < mCarInfo.size();i++) {
-            CarInfo &carInfo = mCarInfo[i];
-            if (carInfo.getId() == mTraceCar) {
-                if (mCarTraceGps.isEmpty()) {
-                    mCarTraceGps.append(carInfo.getLocationGps());
+        for (int i = 0;i < mCopterInfo.size();i++) {
+            CopterInfo &copterInfo = mCopterInfo[i];
+            if (copterInfo.getId() == mTraceCar) {
+                if (mCarTrace.isEmpty()) {
+                    mCarTrace.append(copterInfo.getLocation());
                 }
-
-                if (mCarTraceGps.last().getDistanceTo(carInfo.getLocationGps()) > mTraceMinSpaceGps) {
-                    mCarTraceGps.append(carInfo.getLocationGps());
+                if (mCarTrace.last().getDistanceTo(copterInfo.getLocation()) > mTraceMinSpaceCar) {
+                    mCarTrace.append(copterInfo.getLocation());
+                }
+                // GPS trace
+                if (mCarTraceGps.isEmpty()) {
+                    mCarTraceGps.append(copterInfo.getLocationGps());
+                }
+                if (mCarTraceGps.last().getDistanceTo(copterInfo.getLocationGps()) > mTraceMinSpaceGps) {
+                    mCarTraceGps.append(copterInfo.getLocationGps());
                 }
             }
         }
@@ -905,7 +955,7 @@ void MapWidget::paintEvent(QPaintEvent *event)
         y = pos.getY() * 1000.0;
         double x_gps = pos_gps.getX() * 1000.0;
         double y_gps = pos_gps.getY() * 1000.0;
-        angle = pos.getAlpha() * 180.0 / M_PI;
+        angle = pos.getYaw() * 180.0 / M_PI;
         painter.setTransform(drawTrans);
 
         QColor col_sigma = Qt::red;
@@ -958,6 +1008,7 @@ void MapWidget::paintEvent(QPaintEvent *event)
         LocPoint ap_goal = carInfo.getApGoal();
         if (ap_goal.getRadius() > 0.0) {
             QPointF p = ap_goal.getPointMm();
+            pen.setWidthF(3.0 / mScaleFactor);
             pen.setColor(col_ap);
             painter.setPen(pen);
             painter.drawEllipse(p, 10 / mScaleFactor, 10 / mScaleFactor);
@@ -977,7 +1028,7 @@ void MapWidget::paintEvent(QPaintEvent *event)
                     carInfo.getName().toLocal8Bit().data(),
                     pos.getX(), pos.getY(), angle,
                     t.hour(), t.minute(), t.second(), t.msec());
-        pt_txt.setX(x + 120 + (car_w - 190) * ((cos(pos.getAlpha()) + 1) / 2));
+        pt_txt.setX(x + 120 + (car_w - 190) * ((cos(pos.getYaw()) + 1) / 2));
         pt_txt.setY(y);
         painter.setTransform(txtTrans);
         pt_txt = drawTrans.map(pt_txt);
@@ -985,6 +1036,97 @@ void MapWidget::paintEvent(QPaintEvent *event)
                            pt_txt.x() + 300, pt_txt.y() + 25);
         painter.drawText(rect_txt, txt);
     }
+
+    // Draw copters
+    for(int i = 0;i < mCopterInfo.size();i++) {
+        pen.setWidthF(2.0 / mScaleFactor);
+        pen.setColor(textColor);
+        painter.setPen(pen);
+
+        CopterInfo &copterInfo = mCopterInfo[i];
+        LocPoint pos = copterInfo.getLocation();
+        LocPoint pos_gps = copterInfo.getLocationGps();
+        x = pos.getX() * 1000.0;
+        y = pos.getY() * 1000.0;
+
+        double x_gps = pos_gps.getX() * 1000.0;
+        double y_gps = pos_gps.getY() * 1000.0;
+        angle = pos.getYaw() * 180.0 / M_PI;
+
+        painter.setTransform(drawTrans);
+        painter.translate(x, y);
+        painter.rotate(-angle);
+
+        QColor col_frame = copterInfo.getColor();
+        QColor col_prop_main = Qt::red;
+        QColor col_prop_other = Qt::green;
+        QColor col_gps = Qt::magenta;
+        QColor col_ap = copterInfo.getColor();
+
+        if (copterInfo.getId() != mSelectedCar) {
+            col_prop_main = Qt::darkGray;
+            col_prop_other = Qt::lightGray;
+            col_ap = Qt::lightGray;
+        }
+
+        // Draw the Quadcopter
+        painter.setBrush(col_frame);
+        painter.drawRoundedRect(-20, 0, 40, 300, 10, 10);
+        painter.drawRoundedRect(-300, -20, 600, 40, 10, 10);
+        painter.drawRoundedRect(-20, -300, 40, 300, 10, 10);
+
+        // Draw propellers
+        QColor col = col_prop_main;
+        col.setAlphaF(0.3);
+        painter.setBrush(QBrush(col));
+        painter.drawEllipse(QPointF(0, 275), 130, 130);
+        col = col_prop_other;
+        col.setAlphaF(0.3);
+        painter.setBrush(QBrush(col));
+        painter.drawEllipse(QPointF(0, -275), 130, 130);
+        painter.drawEllipse(QPointF(275, 0), 130, 130);
+        painter.drawEllipse(QPointF(-275, 0), 130, 130);
+
+        // Draw the acceleration vector
+        painter.setBrush(QBrush(Qt::green));
+        painter.setPen(QPen(Qt::green, 30));
+        painter.drawLine(QPointF(0.0, 0.0), QPointF(pos.getRoll() * 800.0, -pos.getPitch() * 800.0));
+        painter.setPen(QPen(textColor));
+
+        // Print data
+        QTime t = QTime::fromMSecsSinceStartOfDay(copterInfo.getTime());
+        txt.sprintf("%s\n"
+                    "(%.3f, %.3f, %.0f)\n"
+                    "%02d:%02d:%02d:%03d",
+                    copterInfo.getName().toLocal8Bit().data(),
+                    pos.getX(), pos.getY(), angle,
+                    t.hour(), t.minute(), t.second(), t.msec());
+        pt_txt.setX(x + 450);
+        pt_txt.setY(y);
+        painter.setTransform(txtTrans);
+        pt_txt = drawTrans.map(pt_txt);
+        rect_txt.setCoords(pt_txt.x(), pt_txt.y() - 20,
+                           pt_txt.x() + 150, pt_txt.y() + 25);
+        painter.drawText(rect_txt, txt);
+
+        // Restore transform
+        painter.setTransform(drawTrans);
+
+        // Autopilot state
+        LocPoint ap_goal = copterInfo.getApGoal();
+        if (ap_goal.getRadius() > 0.0) {
+            QPointF p = ap_goal.getPointMm();
+            pen.setColor(col_ap);
+            painter.setPen(pen);
+            painter.drawEllipse(p, 10 / mScaleFactor, 10 / mScaleFactor);
+        }
+
+        // GPS Location
+        painter.setBrush(col_gps);
+        painter.drawEllipse(QPointF(x_gps, y_gps), car_h / 15.0, car_h / 15.0);
+    }
+
+    painter.setPen(QPen(textColor));
 
     // Draw anchors
     for (int i = 0;i < mAnchors.size();i++) {
@@ -1149,6 +1291,17 @@ void MapWidget::mousePressEvent(QMouseEvent *e)
                         emit posSet(mSelectedCar, pos);
                     }
                 }
+
+                for (int i = 0;i < mCopterInfo.size();i++) {
+                    CopterInfo &copterInfo = mCopterInfo[i];
+                    if (copterInfo.getId() == mSelectedCar) {
+                        LocPoint pos = copterInfo.getLocation();
+                        QPoint p = getMousePosRelative();
+                        pos.setXY(p.x() / 1000.0, p.y() / 1000.0);
+                        copterInfo.setLocation(pos);
+                        emit posSet(mSelectedCar, pos);
+                    }
+                }
             }
         } else if (e->buttons() & Qt::RightButton) {
             if (routeFound) {
@@ -1215,10 +1368,23 @@ void MapWidget::wheelEvent(QWheelEvent *e)
             CarInfo &carInfo = mCarInfo[i];
             if (carInfo.getId() == mSelectedCar) {
                 LocPoint pos = carInfo.getLocation();
-                double angle = pos.getAlpha() + (double)e->delta() * 0.0005;
+                double angle = pos.getYaw() + (double)e->delta() * 0.0005;
                 normalizeAngleRad(angle);
-                pos.setAlpha(angle);
+                pos.setYaw(angle);
                 carInfo.setLocation(pos);
+                emit posSet(mSelectedCar, pos);
+                update();
+            }
+        }
+
+        for (int i = 0;i < mCopterInfo.size();i++) {
+            CopterInfo &copterInfo = mCopterInfo[i];
+            if (copterInfo.getId() == mSelectedCar) {
+                LocPoint pos = copterInfo.getLocation();
+                double angle = pos.getYaw() + (double)e->delta() * 0.0005;
+                normalizeAngleRad(angle);
+                pos.setYaw(angle);
+                copterInfo.setLocation(pos);
                 emit posSet(mSelectedCar, pos);
                 update();
             }

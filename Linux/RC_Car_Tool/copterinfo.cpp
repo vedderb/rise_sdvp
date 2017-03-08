@@ -1,5 +1,5 @@
 /*
-    Copyright 2012 Benjamin Vedder	benjamin@vedder.se
+    Copyright 2017 Benjamin Vedder	benjamin@vedder.se
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -15,23 +15,23 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
     */
 
-#include "carinfo.h"
+#include "copterinfo.h"
 
-CarInfo::CarInfo(int id, Qt::GlobalColor color)
+CopterInfo::CopterInfo(int id, Qt::GlobalColor color)
 {
     mId = id;
     mColor = color;
     mName = "";
-    mName.sprintf("Car %d", mId);
+    mName.sprintf("Copter %d", mId);
     mTime = 0;
 }
 
-int CarInfo::getId()
+int CopterInfo::getId()
 {
     return mId;
 }
 
-void CarInfo::setId(int id, bool changeName)
+void CopterInfo::setId(int id, bool changeName)
 {
     mId = id;
 
@@ -41,63 +41,62 @@ void CarInfo::setId(int id, bool changeName)
     }
 }
 
-QString CarInfo::getName() const
+QString CopterInfo::getName() const
 {
     return mName;
 }
 
-void CarInfo::setName(QString name)
+void CopterInfo::setName(const QString &name)
 {
     mName = name;
 }
 
-void CarInfo::setLocation(LocPoint &point)
-{
-    mLocation = point;
-}
-
-LocPoint CarInfo::getLocationGps() const
-{
-    return mLocationGps;
-}
-
-void CarInfo::setLocationGps(LocPoint &point)
-{
-    mLocationGps = point;
-}
-
-Qt::GlobalColor CarInfo::getColor() const
-{
-    return mColor;
-}
-
-void CarInfo::setColor(Qt::GlobalColor color)
-{
-    mColor = color;
-}
-
-LocPoint CarInfo::getApGoal() const
-{
-    return mApGoal;
-}
-
-void CarInfo::setApGoal(const LocPoint &apGoal)
-{
-    mApGoal = apGoal;
-}
-
-qint32 CarInfo::getTime() const
-{
-    return mTime;
-}
-
-void CarInfo::setTime(const qint32 &time)
-{
-    mTime = time;
-}
-
-LocPoint CarInfo::getLocation() const
+LocPoint CopterInfo::getLocation() const
 {
     return mLocation;
 }
 
+void CopterInfo::setLocation(const LocPoint &location)
+{
+    mLocation = location;
+}
+
+LocPoint CopterInfo::getLocationGps() const
+{
+    return mLocationGps;
+}
+
+void CopterInfo::setLocationGps(const LocPoint &locationGps)
+{
+    mLocationGps = locationGps;
+}
+
+LocPoint CopterInfo::getApGoal() const
+{
+    return mApGoal;
+}
+
+void CopterInfo::setApGoal(const LocPoint &apGoal)
+{
+    mApGoal = apGoal;
+}
+
+Qt::GlobalColor CopterInfo::getColor() const
+{
+    return mColor;
+}
+
+void CopterInfo::setColor(const Qt::GlobalColor &color)
+{
+    mColor = color;
+}
+
+qint32 CopterInfo::getTime() const
+{
+    return mTime;
+}
+
+void CopterInfo::setTime(const qint32 &time)
+{
+    mTime = time;
+}

@@ -25,14 +25,16 @@
 class LocPoint
 {
 public:
-    LocPoint(double x = 0, double y = 0, double alpha = 0,
+    LocPoint(double x = 0, double y = 0, double roll = 0, double pitch = 0, double yaw = 0,
              double speed = 0.5, double radius = 5.0, double sigma = 0.0,
              QColor color = Qt::darkGreen, qint32 time = 0, int id = 0);
     LocPoint(const LocPoint &point);
 
     double getX() const;
     double getY() const;
-    double getAlpha() const;
+    double getRoll() const;
+    double getPitch() const;
+    double getYaw() const;
     double getSpeed() const;
     QPointF getPoint() const;
     QPointF getPointMm() const;
@@ -47,7 +49,9 @@ public:
     void setY(double y);
     void setXY(double x, double y);
     void scaleXY(double scalefactor);
-    void setAlpha(double alpha);
+    void setRoll(double roll);
+    void setPitch(double pitch);
+    void setYaw(double alpha);
     void setSpeed(double speed);
     void setRadius(double radius);
     void setSigma(double sigma);
@@ -65,7 +69,9 @@ public:
 private:
     double mX;
     double mY;
-    double mAlpha;
+    double mRoll;
+    double mPitch;
+    double mYaw;
     double mSpeed;
     double mRadius;
     double mSigma;

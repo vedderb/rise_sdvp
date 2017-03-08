@@ -24,6 +24,7 @@
 #include <QSerialPort>
 #include <QLabel>
 #include "carinterface.h"
+#include "copterinterface.h"
 #include "packetinterface.h"
 #include "ping.h"
 #include "nmeaserver.h"
@@ -64,7 +65,7 @@ private slots:
     void infoTraceChanged(int traceNow);
 
     void on_carAddButton_clicked();
-    void on_carRemoveButton_clicked();
+    void on_copterAddButton_clicked();
     void on_serialConnectButton_clicked();
     void on_serialRefreshButton_clicked();
     void on_disconnectButton_clicked();
@@ -128,6 +129,7 @@ private:
     QSerialPort *mSerialPort;
     PacketInterface *mPacketInterface;
     QList<CarInterface*> mCars;
+    QList<CopterInterface*> mCopters;
     QLabel *mStatusLabel;
     int mStatusInfoTime;
     bool mKeyUp;

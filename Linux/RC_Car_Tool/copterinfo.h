@@ -1,5 +1,5 @@
 /*
-    Copyright 2012 Benjamin Vedder	benjamin@vedder.se
+    Copyright 2017 Benjamin Vedder	benjamin@vedder.se
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -15,29 +15,29 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
     */
 
-#ifndef CARINFO_H
-#define CARINFO_H
+#ifndef COPTERINFO_H
+#define COPTERINFO_H
 
 #include <QVector>
 #include <QString>
 #include "locpoint.h"
 
-class CarInfo
+class CopterInfo
 {
 public:
-    CarInfo(int id = 0, Qt::GlobalColor color = Qt::red);
+    CopterInfo(int id = 0, Qt::GlobalColor color = Qt::red);
     int getId();
     void setId(int id, bool changeName = false);
     QString getName() const;
-    void setName(QString name);
+    void setName(const QString &name);
     LocPoint getLocation() const;
-    void setLocation(LocPoint &point);
+    void setLocation(const LocPoint &location);
     LocPoint getLocationGps() const;
-    void setLocationGps(LocPoint &point);
-    Qt::GlobalColor getColor() const;
-    void setColor(Qt::GlobalColor color);
+    void setLocationGps(const LocPoint &locationGps);
     LocPoint getApGoal() const;
     void setApGoal(const LocPoint &apGoal);
+    Qt::GlobalColor getColor() const;
+    void setColor(const Qt::GlobalColor &color);
     qint32 getTime() const;
     void setTime(const qint32 &time);
 
@@ -52,4 +52,4 @@ private:
 
 };
 
-#endif // CARINFO_H
+#endif // COPTERINFO_H

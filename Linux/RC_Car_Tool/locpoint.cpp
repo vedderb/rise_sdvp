@@ -18,9 +18,9 @@
 #include "locpoint.h"
 #include <cmath>
 
-LocPoint::LocPoint(double x, double y, double alpha, double speed,
+LocPoint::LocPoint(double x, double y, double roll, double pitch, double yaw, double speed,
                    double radius, double sigma, QColor color, qint32 time, int id) :
-    mX(x), mY(y), mAlpha(alpha), mSpeed(speed),
+    mX(x), mY(y), mRoll(roll), mPitch(pitch), mYaw(yaw), mSpeed(speed),
     mRadius(radius), mSigma(sigma), mColor(color), mTime(time), mId(id)
 {
 
@@ -41,9 +41,19 @@ double LocPoint::getY() const
     return mY;
 }
 
-double LocPoint::getAlpha() const
+double LocPoint::getRoll() const
 {
-    return mAlpha;
+    return mRoll;
+}
+
+double LocPoint::getPitch() const
+{
+    return mPitch;
+}
+
+double LocPoint::getYaw() const
+{
+    return mYaw;
 }
 
 double LocPoint::getSpeed() const
@@ -121,7 +131,9 @@ LocPoint &LocPoint::operator =(const LocPoint &point)
 {
     mX = point.mX;
     mY = point.mY;
-    mAlpha = point.mAlpha;
+    mRoll = point.mRoll;
+    mPitch = point.mPitch;
+    mYaw = point.mYaw;
     mSpeed = point.mSpeed;
     mRadius = point.mRadius;
     mSigma = point.mSigma;
@@ -136,7 +148,9 @@ bool LocPoint::operator ==(const LocPoint &point)
 {
     if (    mX == point.mX &&
             mY == point.mY &&
-            mAlpha == point.mAlpha &&
+            mRoll == point.mRoll &&
+            mPitch == point.mPitch &&
+            mYaw == point.mYaw &&
             mSpeed == point.mSpeed &&
             mRadius == point.mRadius &&
             mSigma == point.mSigma &&
@@ -160,9 +174,19 @@ void LocPoint::setInfo(const QString &info)
     mInfo = info;
 }
 
-void LocPoint::setAlpha(double alpha)
+void LocPoint::setRoll(double roll)
 {
-    mAlpha = alpha;
+    mRoll = roll;
+}
+
+void LocPoint::setPitch(double pitch)
+{
+    mPitch = pitch;
+}
+
+void LocPoint::setYaw(double alpha)
+{
+    mYaw = alpha;
 }
 
 void LocPoint::setSpeed(double speed)

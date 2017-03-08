@@ -55,5 +55,6 @@
         <file>Icons/Electrical Sensor-96.png</file>
         <file>Icons/Satellite-96.png</file>
         <file>Icons/Radar-96.png</file>
+        <file>Icons/Drone-96.png</file>
     </qresource>
 </RCC>

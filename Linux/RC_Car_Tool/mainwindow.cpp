@@ -132,13 +132,24 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-    // Remove all cars before this window is destroyed to not get segfaults
+    // Remove all vehicles before this window is destroyed to not get segfaults
     // in their destructors.
-    while (mCars.size() > 0) {
-        CarInterface *car = (CarInterface*)ui->carsWidget->currentWidget();
-        ui->carsWidget->removeTab(ui->carsWidget->currentIndex());
-        mCars.removeOne(car);
-        delete car;
+    while (mCars.size() > 0 || mCopters.size() > 0) {
+        QWidget *w = ui->carsWidget->currentWidget();
+
+        if (dynamic_cast<CarInterface*>(w) != NULL) {
+            CarInterface *car = (CarInterface*)w;
+
+            ui->carsWidget->removeTab(ui->carsWidget->currentIndex());
+            mCars.removeOne(car);
+            delete car;
+        } else if (dynamic_cast<CopterInterface*>(w) != NULL) {
+            CopterInterface *copter = (CopterInterface*)w;
+
+            ui->carsWidget->removeTab(ui->carsWidget->currentIndex());
+            mCopters.removeOne(copter);
+            delete copter;
+        }
     }
 
     delete ui;
@@ -288,7 +299,7 @@ void MainWindow::timerSlot()
         }
     }
 
-    // Poll data (one car per timeslot)
+    // Poll data (one vehicle per timeslot)
     static int next_car = 0;
     int ind = 0;
     int largest = 0;
@@ -382,14 +393,14 @@ void MainWindow::stateReceived(quint8 id, CAR_STATE state)
 
 void MainWindow::mapPosSet(quint8 id, LocPoint pos)
 {
-    mPacketInterface->setPos(id, pos.getX(), pos.getY(), pos.getAlpha() * 180.0 / M_PI);
+    mPacketInterface->setPos(id, pos.getX(), pos.getY(), pos.getYaw() * 180.0 / M_PI);
 }
 
 void MainWindow::ackReceived(quint8 id, CMD_PACKET cmd, QString msg)
 {
     (void)cmd;
     QString str;
-    str.sprintf("Car %d ack: ", id);
+    str.sprintf("Vehicle %d ack: ", id);
     str += msg;
     showStatusInfo(str, true);
 }
@@ -572,7 +583,7 @@ void MainWindow::infoTraceChanged(int traceNow)
 void MainWindow::on_carAddButton_clicked()
 {
     CarInterface *car = new CarInterface(this);
-    int id = mCars.size();
+    int id = mCars.size() + mCopters.size();
     mCars.append(car);
     QString name;
     name.sprintf("Car %d", id);
@@ -584,14 +595,19 @@ void MainWindow::on_carAddButton_clicked()
     connect(car, SIGNAL(showStatusInfo(QString,bool)), this, SLOT(showStatusInfo(QString,bool)));
 }
 
-void MainWindow::on_carRemoveButton_clicked()
+void MainWindow::on_copterAddButton_clicked()
 {
-    if (mCars.size() > 0) {
-        CarInterface *car = (CarInterface*)ui->carsWidget->currentWidget();
-        ui->carsWidget->removeTab(ui->carsWidget->currentIndex());
-        mCars.removeOne(car);
-        delete car;
-    }
+    CopterInterface *copter = new CopterInterface(this);
+    int id = mCars.size() + mCopters.size();
+    mCopters.append(copter);
+    QString name;
+    name.sprintf("Copter %d", id);
+    copter->setID(id);
+    ui->carsWidget->addTab(copter, name);
+    copter->setMap(ui->mapWidget);
+    copter->setPacketInterface(mPacketInterface);
+
+    connect(copter, SIGNAL(showStatusInfo(QString,bool)), this, SLOT(showStatusInfo(QString,bool)));
 }
 
 void MainWindow::on_serialConnectButton_clicked()
@@ -734,11 +750,17 @@ void MainWindow::on_mapAntialiasBox_toggled(bool checked)
 
 void MainWindow::on_carsWidget_tabCloseRequested(int index)
 {
-    if (mCars.size() > 0) {
-        CarInterface *car = (CarInterface*)ui->carsWidget->widget(index);
-        ui->carsWidget->removeTab(index);
+    QWidget *w = ui->carsWidget->widget(index);
+    ui->carsWidget->removeTab(index);
+
+    if (dynamic_cast<CarInterface*>(w) != NULL) {
+        CarInterface *car = (CarInterface*)w;
         mCars.removeOne(car);
         delete car;
+    } else if (dynamic_cast<CopterInterface*>(w) != NULL) {
+        CopterInterface *copter = (CopterInterface*)w;
+        mCopters.removeOne(copter);
+        delete copter;
     }
 }
 
@@ -756,7 +778,7 @@ void MainWindow::on_genCircButton_clicked()
         CarInfo *car = ui->mapWidget->getCarInfo(ui->mapCarBox->value());
         if (car) {
             LocPoint p = car->getLocation();
-            double ang = p.getAlpha();
+            double ang = p.getYaw();
 
             cx = p.getX();
             cy = p.getY();
