@@ -194,6 +194,23 @@
          </item>
         </layout>
        </widget>
+       <widget class="QWidget" name="tab_4">
+        <attribute name="icon">
+         <iconset resource="resources.qrc">
+          <normaloff>:/models/Icons/Satellite-96.png</normaloff>:/models/Icons/Satellite-96.png</iconset>
+        </attribute>
+        <attribute name="title">
+         <string/>
+        </attribute>
+        <attribute name="toolTip">
+         <string>NMEA</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_6">
+         <item>
+          <widget class="NmeaWidget" name="nmeaWidget" native="true"/>
+         </item>
+        </layout>
+       </widget>
       </widget>
      </item>
      <item>
@@ -355,6 +372,12 @@
    <class>ImuPlot</class>
    <extends>QWidget</extends>
    <header>imuplot.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>NmeaWidget</class>
+   <extends>QWidget</extends>
+   <header>nmeawidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

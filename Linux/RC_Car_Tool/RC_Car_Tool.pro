@@ -76,7 +76,8 @@ SOURCES += main.cpp\
     magcal.cpp \
     imuplot.cpp \
     copterinfo.cpp \
-    copterinterface.cpp
+    copterinterface.cpp \
+    nmeawidget.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
@@ -105,7 +106,8 @@ HEADERS  += mainwindow.h \
     magcal.h \
     imuplot.h \
     copterinfo.h \
-    copterinterface.h
+    copterinterface.h \
+    nmeawidget.h
 
 FORMS    += mainwindow.ui \
     carinterface.ui \
@@ -116,7 +118,8 @@ FORMS    += mainwindow.ui \
     moteconfig.ui \
     magcal.ui \
     imuplot.ui \
-    copterinterface.ui
+    copterinterface.ui \
+    nmeawidget.ui
 
 contains(DEFINES, HAS_JOYSTICK) {
     SOURCES += joystick.cpp

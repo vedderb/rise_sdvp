@@ -25,7 +25,6 @@
 #include "datatypes.h"
 #include "mapwidget.h"
 #include "packetinterface.h"
-#include "tcpbroadcast.h"
 #include "tcpserversimple.h"
 
 #ifdef HAS_OPENGL
@@ -93,12 +92,9 @@ private slots:
     void on_clearRouteButton_clicked();
     void on_servoDirectSlider_valueChanged(int value);
     void on_servoMappedSlider_valueChanged(int value);
-    void on_nmeaServerActiveBox_toggled(bool checked);
     void on_confReadButton_clicked();
     void on_confReadDefaultButton_clicked();
     void on_confWriteButton_clicked();
-    void on_nmeaLogChooseButton_clicked();
-    void on_nmeaLogActiveBox_toggled(bool checked);
     void on_magCalLoadButton_clicked();
     void on_radarReadButton_clicked();
     void on_radarWriteButton_clicked();
@@ -130,7 +126,6 @@ private:
     QUdpSocket *mUdpSocket;
     QHostAddress mLastHostAddress;
     quint16 mUdpPort;
-    TcpBroadcast *mNmeaForwardServer;
     TcpServerSimple *mTcpServer;
     bool mExperimentReplot;
 

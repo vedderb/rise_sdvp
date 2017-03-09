@@ -33,7 +33,7 @@ CopterInterface::CopterInterface(QWidget *parent) :
     ui->setupUi(this);
 
 #ifdef HAS_OPENGL
-    mOrientationWidget = new OrientationWidget(this);
+    mOrientationWidget = new OrientationWidget(this, OrientationWidget::MODEL_QUADROTOR);
     ui->orientationLayout->removeItem(ui->orientationSpacer);
     ui->orientationLayout->insertWidget(0, mOrientationWidget, 1);
 #endif
@@ -187,9 +187,9 @@ void CopterInterface::lastRoutePointRemoved()
 
 void CopterInterface::nmeaReceived(quint8 id, QByteArray nmea_msg)
 {
-    (void)id;
-    (void)nmea_msg;
-    // TODO: Split gps page into separate class
+    if (id == mId) {
+        ui->nmeaWidget->inputNmea(nmea_msg);
+    }
 }
 
 void CopterInterface::on_idBox_valueChanged(int arg1)

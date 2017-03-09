@@ -27,7 +27,21 @@ class OrientationWidget : public QGLWidget, protected QGLFunctions
     Q_OBJECT
 
 public:
-    OrientationWidget(QWidget *parent = 0);
+    typedef struct {
+        QVector<float> vertexArray;
+        QVector<float> normalArray;
+        QVector<float> uvArray;
+        int numTriangles;
+        int numUvCoords;
+        float faceColor[4];
+    } MESHDATA_t;
+
+    typedef enum {
+        MODEL_CAR = 0,
+        MODEL_QUADROTOR
+    } MODEL_TYPE;
+
+    OrientationWidget(QWidget *parent = 0, MODEL_TYPE model = MODEL_CAR);
     ~OrientationWidget();
 
     QSize minimumSizeHint() const;
@@ -37,15 +51,6 @@ public:
     void setQuanternions(float q0, float q1, float q2, float q3);
     void saveModel(QString path);
     void loadModel(QString path);
-
-    typedef struct {
-        QVector<float> vertexArray;
-        QVector<float> normalArray;
-        QVector<float> uvArray;
-        int numTriangles;
-        int numUvCoords;
-        float faceColor[4];
-    } MESHDATA_t;
 
 public slots:
     void setXRotation(float angle);

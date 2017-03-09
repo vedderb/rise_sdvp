@@ -19,7 +19,6 @@
 #include "ui_carinterface.h"
 #include "carinfo.h"
 #include "utility.h"
-#include "nmeaserver.h"
 #include <QFileDialog>
 #include <QMessageBox>
 #include <cmath>
@@ -72,8 +71,6 @@ CarInterface::CarInterface(QWidget *parent) :
     mLastHostAddress.clear();
     mUdpPort = 27800;
     mTcpServer = new TcpServerSimple(this);
-
-    mNmeaForwardServer = new TcpBroadcast(this);
 
     connect(mTimer, SIGNAL(timeout()), this, SLOT(timerSlot()));
     connect(mUdpSocket, SIGNAL(readyRead()), this, SLOT(udpReadReady()));
@@ -450,45 +447,7 @@ void CarInterface::lastRoutePointRemoved()
 void CarInterface::nmeaReceived(quint8 id, QByteArray nmea_msg)
 {
     if (id == mId) {
-        if (ui->nmeaPrintBox->isChecked()) {
-            ui->nmeaBrowser->append(QString::fromLocal8Bit(nmea_msg));
-        }
-
-        mNmeaForwardServer->broadcastData(nmea_msg);
-
-        NmeaServer::nmea_gga_info_t gga;
-        QTextStream msgs(nmea_msg);
-
-        while(!msgs.atEnd()) {
-            QString str = msgs.readLine();
-            QByteArray data = str.toLocal8Bit();
-
-            // Hack
-            if (str == "$GPGSA,A,1,,,,,,,,,,,,,,,*1E") {
-                ui->nmeaFixTypeLabel->setText("Solution: Invalid");
-                ui->nmeaSatsLabel->setText("Satellites: 0");
-            }
-
-            if (NmeaServer::decodeNmeaGGA(data, gga) >= 0) {
-                QString satStr;
-                satStr.sprintf("Satellites: %d", gga.n_sat);
-                ui->nmeaSatsLabel->setText(satStr);
-
-                QString fix_type;
-                switch (gga.fix_type) {
-                case 0: fix_type = "Solution: Invalid"; break;
-                case 1: fix_type = "Solution: SPP"; break;
-                case 2: fix_type = "Solution: DGPS"; break;
-                case 3: fix_type = "Solution: PPS"; break;
-                case 4: fix_type = "Solution: RTK Fix"; break;
-                case 5: fix_type = "Solution: RTK Float"; break;
-                default: fix_type = "Solution: Unknown"; break;
-                }
-
-                ui->nmeaFixTypeLabel->setText(fix_type);
-                ui->nmeaCorrAgeLabel->setText(QString("Corr age: %1 s").arg(gga.diff_age));
-            }
-        }
+        ui->nmeaWidget->inputNmea(nmea_msg);
     }
 }
 
@@ -758,20 +717,6 @@ void CarInterface::on_servoMappedSlider_valueChanged(int value)
     emit setRcCurrent(mId, 0.0, val_mapped);
 }
 
-void CarInterface::on_nmeaServerActiveBox_toggled(bool checked)
-{
-    if (checked) {
-        if (!mNmeaForwardServer->startTcpServer(ui->nmeaServerPortBox->value())) {
-            QMessageBox::warning(this, "TCP Server Error",
-                                 "Creating TCP server for NMEA data failed. Make sure that the port is not "
-                                 "already in use.");
-            ui->nmeaServerActiveBox->setChecked(false);
-        }
-    } else {
-        mNmeaForwardServer->stopServer();
-    }
-}
-
 void CarInterface::on_confReadButton_clicked()
 {
     if (mPacketInterface) {
@@ -964,32 +909,6 @@ void CarInterface::plotDwData()
     ui->dwPlot->yAxis2->setRangeLower(-0.2);
     ui->dwPlot->yAxis2->setRangeUpper(2.2);
     ui->dwPlot->replot();
-}
-
-void CarInterface::on_nmeaLogChooseButton_clicked()
-{
-    QString path;
-    path = QFileDialog::getSaveFileName(this, tr("Choose where to save the NMEA log"));
-    if (path.isNull()) {
-        return;
-    }
-
-    ui->nmeaLogEdit->setText(path);
-}
-
-void CarInterface::on_nmeaLogActiveBox_toggled(bool checked)
-{
-    if (checked) {
-        bool ok = mNmeaForwardServer->logToFile(ui->nmeaLogEdit->text());
-
-        if (!ok) {
-            QMessageBox::warning(this, "NMEA Log",
-                                 "Could not open log file.");
-            ui->nmeaLogActiveBox->setChecked(false);
-        }
-    } else {
-        mNmeaForwardServer->logStop();
-    }
 }
 
 void CarInterface::on_magCalLoadButton_clicked()

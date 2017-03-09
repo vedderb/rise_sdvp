@@ -90,7 +90,7 @@ static void get_bounding_box (aiVector3D* min, aiVector3D* max, const aiScene *s
 #endif
 }
 
-OrientationWidget::OrientationWidget(QWidget *parent)
+OrientationWidget::OrientationWidget(QWidget *parent, MODEL_TYPE model)
     : QGLWidget(QGLFormat(QGL::SampleBuffers), parent)
 {
     mXRot = 0;
@@ -119,11 +119,22 @@ OrientationWidget::OrientationWidget(QWidget *parent)
     Assimp::Importer importer;
     const aiScene *scene = 0;
 
-    QFile file(":/models/Models/car.3ds");
-    if (file.open(QIODevice::ReadOnly)) {
-        QByteArray data = file.readAll();
-        scene = importer.ReadFileFromMemory(data.data(), data.size(),
-                                            aiProcessPreset_TargetRealtime_Quality);
+    if (model == MODEL_CAR) {
+        QFile file(":/models/Models/car.3ds");
+        if (file.open(QIODevice::ReadOnly)) {
+            QByteArray data = file.readAll();
+            scene = importer.ReadFileFromMemory(data.data(), data.size(),
+                                                aiProcessPreset_TargetRealtime_Quality,
+                                                "3ds");
+        }
+    } else {
+        QFile file(":/models/Models/quadrotor.blend");
+        if (file.open(QIODevice::ReadOnly)) {
+            QByteArray data = file.readAll();
+            scene = importer.ReadFileFromMemory(data.data(), data.size(),
+                                                aiProcessPreset_TargetRealtime_Quality,
+                                                "blend");
+        }
     }
 
     if (!scene) {
@@ -194,9 +205,13 @@ OrientationWidget::OrientationWidget(QWidget *parent)
         }
     }
 
-//    saveModel("car.model");
+//    saveModel("quadrotor.model");
 #else
-    loadModel(":/models/Models/car.model");
+    if (model == MODEL_CAR) {
+        loadModel(":/models/Models/car.model");
+    } else {
+        loadModel(":/models/Models/quadrotor.model");
+    }
 #endif
 }
 
