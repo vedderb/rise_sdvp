@@ -26,6 +26,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_conf.h"
+#include "datatypes.h"
 
 /* Exported constants --------------------------------------------------------*/
 /* Define the size of the sectors to be used */
@@ -69,7 +70,7 @@
 #define PAGE_FULL             ((uint8_t)0x80)
 
 /* Variables' number */
-#define NB_OF_VAR             (320)
+#define NB_OF_VAR             ((uint16_t)sizeof(MAIN_CONFIG))
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/

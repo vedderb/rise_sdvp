@@ -175,10 +175,10 @@ void autopilot_set_speed_override(bool is_override, float speed) {
  * Speed in m/s.
  */
 void autopilot_set_motor_speed(float speed) {
-	float rpm = speed / (main_config.gear_ratio
-			* (2.0 / main_config.motor_poles) * (1.0 / 60.0)
-			* main_config.wheel_diam * M_PI);
-	if (!main_config.disable_motor) {
+	float rpm = speed / (main_config.car.gear_ratio
+			* (2.0 / main_config.car.motor_poles) * (1.0 / 60.0)
+			* main_config.car.wheel_diam * M_PI);
+	if (!main_config.car.disable_motor) {
 		bldc_interface_set_rpm((int)rpm);
 	}
 }
@@ -447,7 +447,7 @@ static THD_FUNCTION(ap_thread, arg) {
 						rp_now.py, &steering_angle, &distance);
 
 				// Scale maximum steering by speed
-				float max_rad = main_config.steering_max_angle_rad * autopilot_get_steering_scale();
+				float max_rad = main_config.car.steering_max_angle_rad * autopilot_get_steering_scale();
 
 				if (steering_angle >= max_rad) {
 					steering_angle = max_rad;
@@ -460,9 +460,9 @@ static THD_FUNCTION(ap_thread, arg) {
 				}
 
 				servo_pos = steering_angle
-						/ ((2.0 * main_config.steering_max_angle_rad)
-								/ main_config.steering_range)
-								+ main_config.steering_center;
+						/ ((2.0 * main_config.car.steering_max_angle_rad)
+								/ main_config.car.steering_range)
+								+ main_config.car.steering_center;
 
 				float speed = 0.0;
 
@@ -513,8 +513,8 @@ static THD_FUNCTION(ap_thread, arg) {
 		}
 
 		if (route_end) {
-			servo_simple_set_pos_ramp(main_config.steering_center);
-			if (!main_config.disable_motor) {
+			servo_simple_set_pos_ramp(main_config.car.steering_center);
+			if (!main_config.car.disable_motor) {
 				bldc_interface_set_current_brake(10.0);
 			}
 			m_rad_now = -1.0;
@@ -555,7 +555,7 @@ static void steering_angle_to_point(
 		angle_correction = 5.0;
 	}
 
-	*steering_angle = atanf(main_config.axis_distance / circle_radius) * angle_correction;
+	*steering_angle = atanf(main_config.car.axis_distance / circle_radius) * angle_correction;
 }
 
 static bool add_point(ROUTE_POINT *p, bool first) {

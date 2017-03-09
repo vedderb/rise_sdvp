@@ -101,7 +101,7 @@ static THD_FUNCTION(ramp_thread, arg) {
 
 	for(;;) {
 		float pos_prev = m_pos_now;
-		utils_step_towards(&m_pos_now, m_pos_set, 1.0 / ((float)RAMP_LOOP_HZ * main_config.steering_ramp_time));
+		utils_step_towards(&m_pos_now, m_pos_set, 1.0 / ((float)RAMP_LOOP_HZ * main_config.car.steering_ramp_time));
 
 		if (m_pos_now != pos_prev) {
 			float us = (float)SERVO_OUT_PULSE_MIN_US + m_pos_now * (float)(SERVO_OUT_PULSE_MAX_US - SERVO_OUT_PULSE_MIN_US);

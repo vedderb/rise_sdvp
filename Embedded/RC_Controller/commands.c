@@ -151,114 +151,8 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			terminal_process_string((char*)data);
 		} break;
 
-		// ==================== Car commands ==================== //
-#if MAIN_MODE == MAIN_MODE_CAR
-		case CMD_GET_STATE: {
-			timeout_reset();
-
-			POS_STATE pos;
-			mc_values mcval;
-			float accel[3];
-			float gyro[3];
-			float mag[3];
-			ROUTE_POINT rp_goal;
-
-			commands_set_send_func(func);
-
-			pos_get_imu(accel, gyro, mag);
-			pos_get_pos(&pos);
-			pos_get_mc_val(&mcval);
-			autopilot_get_goal_now(&rp_goal);
-
-			int32_t send_index = 0;
-			m_send_buffer[send_index++] = main_id; // 1
-			m_send_buffer[send_index++] = CMD_GET_STATE; // 2
-			m_send_buffer[send_index++] = FW_VERSION_MAJOR; // 3
-			m_send_buffer[send_index++] = FW_VERSION_MINOR; // 4
-			buffer_append_float32(m_send_buffer, pos.roll, 1e6, &send_index); // 8
-			buffer_append_float32(m_send_buffer, pos.pitch, 1e6, &send_index); // 12
-			buffer_append_float32(m_send_buffer, pos.yaw, 1e6, &send_index); // 16
-			buffer_append_float32(m_send_buffer, accel[0], 1e6, &send_index); // 20
-			buffer_append_float32(m_send_buffer, accel[1], 1e6, &send_index); // 24
-			buffer_append_float32(m_send_buffer, accel[2], 1e6, &send_index); // 28
-			buffer_append_float32(m_send_buffer, gyro[0], 1e6, &send_index); // 32
-			buffer_append_float32(m_send_buffer, gyro[1], 1e6, &send_index); // 36
-			buffer_append_float32(m_send_buffer, gyro[2], 1e6, &send_index); // 40
-			buffer_append_float32(m_send_buffer, mag[0], 1e6, &send_index); // 44
-			buffer_append_float32(m_send_buffer, mag[1], 1e6, &send_index); // 48
-			buffer_append_float32(m_send_buffer, mag[2], 1e6, &send_index); // 52
-			buffer_append_float32(m_send_buffer, pos.px, 1e4, &send_index); // 56
-			buffer_append_float32(m_send_buffer, pos.py, 1e4, &send_index); // 60
-			buffer_append_float32(m_send_buffer, pos.speed, 1e6, &send_index); // 64
-			buffer_append_float32(m_send_buffer, mcval.v_in, 1e6, &send_index); // 68
-			buffer_append_float32(m_send_buffer, mcval.temp_mos, 1e6, &send_index); // 72
-			m_send_buffer[send_index++] = mcval.fault_code; // 73
-			buffer_append_float32(m_send_buffer, pos.px_gps, 1e4, &send_index); // 77
-			buffer_append_float32(m_send_buffer, pos.py_gps, 1e4, &send_index); // 81
-			buffer_append_float32(m_send_buffer, rp_goal.px, 1e4, &send_index); // 85
-			buffer_append_float32(m_send_buffer, rp_goal.py, 1e4, &send_index); // 89
-			buffer_append_float32(m_send_buffer, autopilot_get_rad_now(), 1e6, &send_index); // 93
-			buffer_append_int32(m_send_buffer, pos_get_ms_today(), &send_index); // 97
-			commands_send_packet(m_send_buffer, send_index);
-		} break;
-
-		case CMD_VESC_FWD:
-			timeout_reset();
-			commands_set_send_func(func);
-
-			bldc_interface_set_forward_func(commands_forward_vesc_packet);
-			bldc_interface_send_packet(data, len);
-			chVTSet(&vt, MS2ST(FWD_TIME), stop_forward, NULL);
-			break;
-
-		case CMD_RC_CONTROL: {
-			timeout_reset();
-
-			RC_MODE mode;
-			float throttle, steering;
-			int32_t ind = 0;
-			mode = data[ind++];
-			throttle = buffer_get_float32(data, 1e4, &ind);
-			steering = buffer_get_float32(data, 1e6, &ind);
-
-			autopilot_set_active(false);
-
-			switch (mode) {
-			case RC_MODE_CURRENT:
-				if (!main_config.disable_motor) {
-					bldc_interface_set_current(throttle);
-				}
-				break;
-
-			case RC_MODE_DUTY:
-				utils_truncate_number(&throttle, -1.0, 1.0);
-				if (!main_config.disable_motor) {
-					bldc_interface_set_duty_cycle(throttle);
-				}
-				break;
-
-			case RC_MODE_PID: // In m/s
-				autopilot_set_motor_speed(throttle);
-				break;
-
-			case RC_MODE_CURRENT_BRAKE:
-				if (!main_config.disable_motor) {
-					bldc_interface_set_current_brake(throttle);
-				}
-				break;
-
-			default:
-				break;
-			}
-
-			utils_truncate_number(&steering, -1.0, 1.0);
-			steering *= autopilot_get_steering_scale();
-			steering = utils_map(steering, -1.0, 1.0,
-					main_config.steering_center + (main_config.steering_range / 2.0),
-					main_config.steering_center - (main_config.steering_range / 2.0));
-			servo_simple_set_pos_ramp(steering);
-		} break;
-
+		// ==================== Vehicle commands ==================== //
+#if MAIN_MODE_IS_VEHICLE
 		case CMD_SET_POS:
 		case CMD_SET_POS_ACK: {
 			timeout_reset();
@@ -411,15 +305,6 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
 
-		case CMD_SET_SERVO_DIRECT: {
-			timeout_reset();
-
-			int32_t ind = 0;
-			float steering = buffer_get_float32(data, 1e6, &ind);
-			utils_truncate_number(&steering, 0.0, 1.0);
-			servo_simple_set_pos_ramp(steering);
-		} break;
-
 		case CMD_SEND_RTCM_USB: {
 #if UBLOX_EN
 			ublox_send(data, len);
@@ -464,148 +349,6 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 				curLine = nextLine ? (nextLine + 1) : NULL;
 			}
 #endif
-		} break;
-
-		case CMD_SET_MAIN_CONFIG: {
-			timeout_reset();
-			commands_set_send_func(func);
-
-			int32_t ind = 0;
-			main_config.mag_use = data[ind++];
-			main_config.mag_comp = data[ind++];
-			main_config.yaw_use_odometry = data[ind++];
-			main_config.yaw_mag_gain = buffer_get_float32(data, 1e6, &ind);
-			main_config.yaw_imu_gain = buffer_get_float32(data, 1e6, &ind);
-
-			main_config.disable_motor = data[ind++];
-
-			main_config.mag_cal_cx = buffer_get_float32(data, 1e6, &ind);
-			main_config.mag_cal_cy = buffer_get_float32(data, 1e6, &ind);
-			main_config.mag_cal_cz = buffer_get_float32(data, 1e6, &ind);
-			main_config.mag_cal_xx = buffer_get_float32(data, 1e6, &ind);
-			main_config.mag_cal_xy = buffer_get_float32(data, 1e6, &ind);
-			main_config.mag_cal_xz = buffer_get_float32(data, 1e6, &ind);
-			main_config.mag_cal_yx = buffer_get_float32(data, 1e6, &ind);
-			main_config.mag_cal_yy = buffer_get_float32(data, 1e6, &ind);
-			main_config.mag_cal_yz = buffer_get_float32(data, 1e6, &ind);
-			main_config.mag_cal_zx = buffer_get_float32(data, 1e6, &ind);
-			main_config.mag_cal_zy = buffer_get_float32(data, 1e6, &ind);
-			main_config.mag_cal_zz = buffer_get_float32(data, 1e6, &ind);
-
-			main_config.gear_ratio = buffer_get_float32(data, 1e6, &ind);
-			main_config.wheel_diam = buffer_get_float32(data, 1e6, &ind);
-			main_config.motor_poles = buffer_get_float32(data, 1e6, &ind);
-			main_config.steering_max_angle_rad = buffer_get_float32(data, 1e6, &ind);
-			main_config.steering_center = buffer_get_float32(data, 1e6, &ind);
-			main_config.steering_range = buffer_get_float32(data, 1e6, &ind);
-			main_config.steering_ramp_time = buffer_get_float32(data, 1e6, &ind);
-			main_config.axis_distance = buffer_get_float32(data, 1e6, &ind);
-
-			main_config.gps_ant_x = buffer_get_float32(data, 1e6, &ind);
-			main_config.gps_ant_y = buffer_get_float32(data, 1e6, &ind);
-			main_config.gps_comp = data[ind++];
-			main_config.gps_req_rtk = data[ind++];
-			main_config.gps_corr_gain_stat = buffer_get_float32(data, 1e6, &ind);
-			main_config.gps_corr_gain_dyn = buffer_get_float32(data, 1e6, &ind);
-			main_config.gps_corr_gain_yaw = buffer_get_float32(data, 1e6, &ind);
-			main_config.gps_send_nmea = data[ind++];
-			main_config.gps_use_ubx_info = data[ind++];
-			main_config.gps_ubx_max_acc = buffer_get_float32(data, 1e6, &ind);
-
-			main_config.ap_repeat_routes = data[ind++];
-			main_config.ap_base_rad = buffer_get_float32(data, 1e6, &ind);
-			main_config.ap_mode_time = data[ind++];
-			main_config.ap_max_speed = buffer_get_float32(data, 1e6, &ind);
-			main_config.ap_time_add_repeat_ms = buffer_get_int32(data, &ind);
-
-			main_config.log_en = data[ind++];
-			strcpy(main_config.log_name, (const char*)(data + ind));
-			ind += strlen(main_config.log_name) + 1;
-
-			log_set_enabled(main_config.log_en);
-			log_set_name(main_config.log_name);
-
-			conf_general_store_main_config(&main_config);
-
-			// Doing this while driving will get wrong as there is so much accelerometer noise then.
-			//pos_reset_attitude();
-
-			// Send ack
-			int32_t send_index = 0;
-			m_send_buffer[send_index++] = main_id;
-			m_send_buffer[send_index++] = packet_id;
-			commands_send_packet(m_send_buffer, send_index);
-		} break;
-
-		case CMD_GET_MAIN_CONFIG:
-		case CMD_GET_MAIN_CONFIG_DEFAULT: {
-			timeout_reset();
-			commands_set_send_func(func);
-
-			MAIN_CONFIG main_cfg_tmp;
-
-			if (packet_id == CMD_GET_MAIN_CONFIG) {
-				main_cfg_tmp = main_config;
-			} else {
-				conf_general_get_default_main_config(&main_cfg_tmp);
-			}
-
-			int32_t send_index = 0;
-			m_send_buffer[send_index++] = main_id;
-			m_send_buffer[send_index++] = packet_id;
-
-			m_send_buffer[send_index++] = main_cfg_tmp.mag_use;
-			m_send_buffer[send_index++] = main_cfg_tmp.mag_comp;
-			m_send_buffer[send_index++] = main_cfg_tmp.yaw_use_odometry;
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.yaw_mag_gain, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.yaw_imu_gain, 1e6, &send_index);
-
-			m_send_buffer[send_index++] = main_cfg_tmp.disable_motor;
-
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_cx, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_cy, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_cz, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_xx, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_xy, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_xz, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_yx, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_yy, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_yz, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_zx, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_zy, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_zz, 1e6, &send_index);
-
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.gear_ratio, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.wheel_diam, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.motor_poles, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.steering_max_angle_rad, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.steering_center, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.steering_range, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.steering_ramp_time, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.axis_distance, 1e6, &send_index);
-
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.gps_ant_x, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.gps_ant_y, 1e6, &send_index);
-			m_send_buffer[send_index++] = main_cfg_tmp.gps_comp;
-			m_send_buffer[send_index++] = main_cfg_tmp.gps_req_rtk;
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.gps_corr_gain_stat, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.gps_corr_gain_dyn, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.gps_corr_gain_yaw, 1e6, &send_index);
-			m_send_buffer[send_index++] = main_cfg_tmp.gps_send_nmea;
-			m_send_buffer[send_index++] = main_cfg_tmp.gps_use_ubx_info;
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.gps_ubx_max_acc, 1e6, &send_index);
-
-			m_send_buffer[send_index++] = main_cfg_tmp.ap_repeat_routes;
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.ap_base_rad, 1e6, &send_index);
-			m_send_buffer[send_index++] = main_cfg_tmp.ap_mode_time;
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.ap_max_speed, 1e6, &send_index);
-			buffer_append_int32(m_send_buffer, main_cfg_tmp.ap_time_add_repeat_ms, &send_index);
-
-			m_send_buffer[send_index++] = main_cfg_tmp.log_en;
-			strcpy((char*)(m_send_buffer + send_index), main_cfg_tmp.log_name);
-			send_index += strlen(main_config.log_name) + 1;
-
-			commands_send_packet(m_send_buffer, send_index);
 		} break;
 
 		case CMD_SET_YAW_OFFSET:
@@ -723,6 +466,268 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			m_send_buffer[send_index++] = CMD_REBOOT_SYSTEM_ACK;
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
+
+		case CMD_SET_MAIN_CONFIG: {
+			timeout_reset();
+			commands_set_send_func(func);
+
+			int32_t ind = 0;
+			main_config.mag_use = data[ind++];
+			main_config.mag_comp = data[ind++];
+			main_config.yaw_mag_gain = buffer_get_float32(data, 1e6, &ind);
+			main_config.yaw_imu_gain = buffer_get_float32(data, 1e6, &ind);
+
+			main_config.mag_cal_cx = buffer_get_float32(data, 1e6, &ind);
+			main_config.mag_cal_cy = buffer_get_float32(data, 1e6, &ind);
+			main_config.mag_cal_cz = buffer_get_float32(data, 1e6, &ind);
+			main_config.mag_cal_xx = buffer_get_float32(data, 1e6, &ind);
+			main_config.mag_cal_xy = buffer_get_float32(data, 1e6, &ind);
+			main_config.mag_cal_xz = buffer_get_float32(data, 1e6, &ind);
+			main_config.mag_cal_yx = buffer_get_float32(data, 1e6, &ind);
+			main_config.mag_cal_yy = buffer_get_float32(data, 1e6, &ind);
+			main_config.mag_cal_yz = buffer_get_float32(data, 1e6, &ind);
+			main_config.mag_cal_zx = buffer_get_float32(data, 1e6, &ind);
+			main_config.mag_cal_zy = buffer_get_float32(data, 1e6, &ind);
+			main_config.mag_cal_zz = buffer_get_float32(data, 1e6, &ind);
+
+			main_config.gps_ant_x = buffer_get_float32(data, 1e6, &ind);
+			main_config.gps_ant_y = buffer_get_float32(data, 1e6, &ind);
+			main_config.gps_comp = data[ind++];
+			main_config.gps_req_rtk = data[ind++];
+			main_config.gps_corr_gain_stat = buffer_get_float32(data, 1e6, &ind);
+			main_config.gps_corr_gain_dyn = buffer_get_float32(data, 1e6, &ind);
+			main_config.gps_corr_gain_yaw = buffer_get_float32(data, 1e6, &ind);
+			main_config.gps_send_nmea = data[ind++];
+			main_config.gps_use_ubx_info = data[ind++];
+			main_config.gps_ubx_max_acc = buffer_get_float32(data, 1e6, &ind);
+
+			main_config.ap_repeat_routes = data[ind++];
+			main_config.ap_base_rad = buffer_get_float32(data, 1e6, &ind);
+			main_config.ap_mode_time = data[ind++];
+			main_config.ap_max_speed = buffer_get_float32(data, 1e6, &ind);
+			main_config.ap_time_add_repeat_ms = buffer_get_int32(data, &ind);
+
+			main_config.log_en = data[ind++];
+			strcpy(main_config.log_name, (const char*)(data + ind));
+			ind += strlen(main_config.log_name) + 1;
+
+			log_set_enabled(main_config.log_en);
+			log_set_name(main_config.log_name);
+
+			// Car settings
+			main_config.car.yaw_use_odometry = data[ind++];
+			main_config.car.disable_motor = data[ind++];
+
+			main_config.car.gear_ratio = buffer_get_float32(data, 1e6, &ind);
+			main_config.car.wheel_diam = buffer_get_float32(data, 1e6, &ind);
+			main_config.car.motor_poles = buffer_get_float32(data, 1e6, &ind);
+			main_config.car.steering_max_angle_rad = buffer_get_float32(data, 1e6, &ind);
+			main_config.car.steering_center = buffer_get_float32(data, 1e6, &ind);
+			main_config.car.steering_range = buffer_get_float32(data, 1e6, &ind);
+			main_config.car.steering_ramp_time = buffer_get_float32(data, 1e6, &ind);
+			main_config.car.axis_distance = buffer_get_float32(data, 1e6, &ind);
+
+			conf_general_store_main_config(&main_config);
+
+			// Doing this while driving will get wrong as there is so much accelerometer noise then.
+			//pos_reset_attitude();
+
+			// Send ack
+			int32_t send_index = 0;
+			m_send_buffer[send_index++] = main_id;
+			m_send_buffer[send_index++] = packet_id;
+			commands_send_packet(m_send_buffer, send_index);
+		} break;
+
+		case CMD_GET_MAIN_CONFIG:
+		case CMD_GET_MAIN_CONFIG_DEFAULT: {
+			timeout_reset();
+			commands_set_send_func(func);
+
+			MAIN_CONFIG main_cfg_tmp;
+
+			if (packet_id == CMD_GET_MAIN_CONFIG) {
+				main_cfg_tmp = main_config;
+			} else {
+				conf_general_get_default_main_config(&main_cfg_tmp);
+			}
+
+			int32_t send_index = 0;
+			m_send_buffer[send_index++] = main_id;
+			m_send_buffer[send_index++] = packet_id;
+
+			m_send_buffer[send_index++] = main_cfg_tmp.mag_use;
+			m_send_buffer[send_index++] = main_cfg_tmp.mag_comp;
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.yaw_mag_gain, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.yaw_imu_gain, 1e6, &send_index);
+
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_cx, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_cy, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_cz, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_xx, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_xy, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_xz, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_yx, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_yy, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_yz, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_zx, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_zy, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_zz, 1e6, &send_index);
+
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.gps_ant_x, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.gps_ant_y, 1e6, &send_index);
+			m_send_buffer[send_index++] = main_cfg_tmp.gps_comp;
+			m_send_buffer[send_index++] = main_cfg_tmp.gps_req_rtk;
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.gps_corr_gain_stat, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.gps_corr_gain_dyn, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.gps_corr_gain_yaw, 1e6, &send_index);
+			m_send_buffer[send_index++] = main_cfg_tmp.gps_send_nmea;
+			m_send_buffer[send_index++] = main_cfg_tmp.gps_use_ubx_info;
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.gps_ubx_max_acc, 1e6, &send_index);
+
+			m_send_buffer[send_index++] = main_cfg_tmp.ap_repeat_routes;
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.ap_base_rad, 1e6, &send_index);
+			m_send_buffer[send_index++] = main_cfg_tmp.ap_mode_time;
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.ap_max_speed, 1e6, &send_index);
+			buffer_append_int32(m_send_buffer, main_cfg_tmp.ap_time_add_repeat_ms, &send_index);
+
+			m_send_buffer[send_index++] = main_cfg_tmp.log_en;
+			strcpy((char*)(m_send_buffer + send_index), main_cfg_tmp.log_name);
+			send_index += strlen(main_config.log_name) + 1;
+
+			// Car settings
+			m_send_buffer[send_index++] = main_cfg_tmp.car.yaw_use_odometry;
+			m_send_buffer[send_index++] = main_cfg_tmp.car.disable_motor;
+
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.car.gear_ratio, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.car.wheel_diam, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.car.motor_poles, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.car.steering_max_angle_rad, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.car.steering_center, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.car.steering_range, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.car.steering_ramp_time, 1e6, &send_index);
+			buffer_append_float32(m_send_buffer, main_cfg_tmp.car.axis_distance, 1e6, &send_index);
+
+			commands_send_packet(m_send_buffer, send_index);
+		} break;
+
+		// ==================== Car commands ==================== //
+#if MAIN_MODE == MAIN_MODE_CAR
+		case CMD_GET_STATE: {
+			timeout_reset();
+
+			POS_STATE pos;
+			mc_values mcval;
+			float accel[3];
+			float gyro[3];
+			float mag[3];
+			ROUTE_POINT rp_goal;
+
+			commands_set_send_func(func);
+
+			pos_get_imu(accel, gyro, mag);
+			pos_get_pos(&pos);
+			pos_get_mc_val(&mcval);
+			autopilot_get_goal_now(&rp_goal);
+
+			int32_t send_index = 0;
+			m_send_buffer[send_index++] = main_id; // 1
+			m_send_buffer[send_index++] = CMD_GET_STATE; // 2
+			m_send_buffer[send_index++] = FW_VERSION_MAJOR; // 3
+			m_send_buffer[send_index++] = FW_VERSION_MINOR; // 4
+			buffer_append_float32(m_send_buffer, pos.roll, 1e6, &send_index); // 8
+			buffer_append_float32(m_send_buffer, pos.pitch, 1e6, &send_index); // 12
+			buffer_append_float32(m_send_buffer, pos.yaw, 1e6, &send_index); // 16
+			buffer_append_float32(m_send_buffer, accel[0], 1e6, &send_index); // 20
+			buffer_append_float32(m_send_buffer, accel[1], 1e6, &send_index); // 24
+			buffer_append_float32(m_send_buffer, accel[2], 1e6, &send_index); // 28
+			buffer_append_float32(m_send_buffer, gyro[0], 1e6, &send_index); // 32
+			buffer_append_float32(m_send_buffer, gyro[1], 1e6, &send_index); // 36
+			buffer_append_float32(m_send_buffer, gyro[2], 1e6, &send_index); // 40
+			buffer_append_float32(m_send_buffer, mag[0], 1e6, &send_index); // 44
+			buffer_append_float32(m_send_buffer, mag[1], 1e6, &send_index); // 48
+			buffer_append_float32(m_send_buffer, mag[2], 1e6, &send_index); // 52
+			buffer_append_float32(m_send_buffer, pos.px, 1e4, &send_index); // 56
+			buffer_append_float32(m_send_buffer, pos.py, 1e4, &send_index); // 60
+			buffer_append_float32(m_send_buffer, pos.speed, 1e6, &send_index); // 64
+			buffer_append_float32(m_send_buffer, mcval.v_in, 1e6, &send_index); // 68
+			buffer_append_float32(m_send_buffer, mcval.temp_mos, 1e6, &send_index); // 72
+			m_send_buffer[send_index++] = mcval.fault_code; // 73
+			buffer_append_float32(m_send_buffer, pos.px_gps, 1e4, &send_index); // 77
+			buffer_append_float32(m_send_buffer, pos.py_gps, 1e4, &send_index); // 81
+			buffer_append_float32(m_send_buffer, rp_goal.px, 1e4, &send_index); // 85
+			buffer_append_float32(m_send_buffer, rp_goal.py, 1e4, &send_index); // 89
+			buffer_append_float32(m_send_buffer, autopilot_get_rad_now(), 1e6, &send_index); // 93
+			buffer_append_int32(m_send_buffer, pos_get_ms_today(), &send_index); // 97
+			commands_send_packet(m_send_buffer, send_index);
+		} break;
+
+		case CMD_VESC_FWD:
+			timeout_reset();
+			commands_set_send_func(func);
+
+			bldc_interface_set_forward_func(commands_forward_vesc_packet);
+			bldc_interface_send_packet(data, len);
+			chVTSet(&vt, MS2ST(FWD_TIME), stop_forward, NULL);
+			break;
+
+		case CMD_RC_CONTROL: {
+			timeout_reset();
+
+			RC_MODE mode;
+			float throttle, steering;
+			int32_t ind = 0;
+			mode = data[ind++];
+			throttle = buffer_get_float32(data, 1e4, &ind);
+			steering = buffer_get_float32(data, 1e6, &ind);
+
+			autopilot_set_active(false);
+
+			switch (mode) {
+			case RC_MODE_CURRENT:
+				if (!main_config.car.disable_motor) {
+					bldc_interface_set_current(throttle);
+				}
+				break;
+
+			case RC_MODE_DUTY:
+				utils_truncate_number(&throttle, -1.0, 1.0);
+				if (!main_config.car.disable_motor) {
+					bldc_interface_set_duty_cycle(throttle);
+				}
+				break;
+
+			case RC_MODE_PID: // In m/s
+				autopilot_set_motor_speed(throttle);
+				break;
+
+			case RC_MODE_CURRENT_BRAKE:
+				if (!main_config.car.disable_motor) {
+					bldc_interface_set_current_brake(throttle);
+				}
+				break;
+
+			default:
+				break;
+			}
+
+			utils_truncate_number(&steering, -1.0, 1.0);
+			steering *= autopilot_get_steering_scale();
+			steering = utils_map(steering, -1.0, 1.0,
+					main_config.car.steering_center + (main_config.car.steering_range / 2.0),
+					main_config.car.steering_center - (main_config.car.steering_range / 2.0));
+			servo_simple_set_pos_ramp(steering);
+		} break;
+
+		case CMD_SET_SERVO_DIRECT: {
+			timeout_reset();
+
+			int32_t ind = 0;
+			float steering = buffer_get_float32(data, 1e6, &ind);
+			utils_truncate_number(&steering, 0.0, 1.0);
+			servo_simple_set_pos_ramp(steering);
+		} break;
+#endif
 #endif
 
 		// ==================== Mote commands ==================== //

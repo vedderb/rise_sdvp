@@ -78,13 +78,11 @@ void conf_general_init(void) {
  * A pointer to store the default configuration to.
  */
 void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
+	// Default settings
 	conf->mag_use = true;
 	conf->mag_comp = true;
-	conf->yaw_use_odometry = false;
 	conf->yaw_mag_gain = 0.01;
 	conf->yaw_imu_gain = 0.5;
-
-	conf->disable_motor = false;
 
 	conf->mag_cal_cx = 0.0;
 	conf->mag_cal_cy = 0.0;
@@ -98,15 +96,6 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 	conf->mag_cal_zx = 0.0;
 	conf->mag_cal_zy = 0.0;
 	conf->mag_cal_zz = 1.0;
-
-	conf->gear_ratio = (1.0 / 3.0) * (21.0 / 37.0);
-	conf->wheel_diam = 0.12;
-	conf->motor_poles = 4.0;
-	conf->steering_max_angle_rad = 0.42041;
-	conf->steering_center = 0.5;
-	conf->steering_range = 0.58;
-	conf->steering_ramp_time = 0.6;
-	conf->axis_distance = 0.475;
 
 	conf->gps_ant_x = 0.42;
 	conf->gps_ant_y = 0.0;
@@ -128,6 +117,24 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 	conf->log_en = false;
 	strcpy(conf->log_name, "New Log");
 
+	// Default car settings
+	conf->car.yaw_use_odometry = false;
+	conf->car.disable_motor = false;
+
+	conf->car.gear_ratio = (1.0 / 3.0) * (21.0 / 37.0);
+	conf->car.wheel_diam = 0.12;
+	conf->car.motor_poles = 4.0;
+	conf->car.steering_max_angle_rad = 0.42041;
+	conf->car.steering_center = 0.5;
+	conf->car.steering_range = 0.58;
+	conf->car.steering_ramp_time = 0.6;
+	conf->car.axis_distance = 0.475;
+
+	// Default multirotor settings
+	conf->mr.vel_decay_e = 0.8;
+	conf->mr.vel_decay_l = 0.02;
+	conf->mr.vel_max = 80.0 / 3.6;
+
 	// Custom parameters based on car ID
 	switch (main_id) {
 	case 0:
@@ -147,7 +154,7 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 		conf->mag_cal_zy = -0.0759237;
 		conf->mag_cal_zz = 0.964149;
 
-		conf->steering_center = 0.53;
+		conf->car.steering_center = 0.53;
 		break;
 
 	case 1:
@@ -173,24 +180,24 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 	}
 
 #ifdef CAR_TERO
-	conf->gear_ratio = 0.1;
-	conf->wheel_diam = 0.155;
-	conf->motor_poles = 4.0;
-	conf->steering_max_angle_rad = 0.39952;
-	conf->steering_center = 0.45;
-	conf->steering_range = -0.8;
-	conf->steering_ramp_time = 0.6;
-	conf->axis_distance = 0.57;
+	conf->car.gear_ratio = 0.1;
+	conf->car.wheel_diam = 0.155;
+	conf->car.motor_poles = 4.0;
+	conf->car.steering_max_angle_rad = 0.39952;
+	conf->car.steering_center = 0.45;
+	conf->car.steering_range = -0.8;
+	conf->car.steering_ramp_time = 0.6;
+	conf->car.axis_distance = 0.57;
 
 	conf->gps_ant_x = -0.08; // TODO: IMU_ROT_180 sign?
 	conf->gps_ant_y = 0.0;
 #endif
 
 #ifdef EBIKE_BENJAMIN
-	conf->disable_motor = true;
-	conf->gear_ratio = 1.0;
-	conf->wheel_diam = 0.655;
-	conf->motor_poles = 46.0;
+	conf->car.disable_motor = true;
+	conf->car.gear_ratio = 1.0;
+	conf->car.wheel_diam = 0.655;
+	conf->car.motor_poles = 46.0;
 
 	conf->gps_ant_x = -0.1;
 	conf->gps_ant_y = 0.0;

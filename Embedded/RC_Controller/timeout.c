@@ -68,7 +68,7 @@ static THD_FUNCTION(timeout_thread, arg) {
 	for(;;) {
 		if (m_timeout_msec != 0 && chVTTimeElapsedSinceX(m_last_update_time) > MS2ST(m_timeout_msec)) {
 			autopilot_set_active(false);
-			if (!main_config.disable_motor) {
+			if (!main_config.car.disable_motor) {
 				bldc_interface_set_current_brake(m_timeout_brake_current);
 			}
 			m_has_timeout = true;

@@ -15,20 +15,12 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SRF10_H_
-#define SRF10_H_
+#ifndef MR_CONTROL_H_
+#define MR_CONTROL_H_
 
-#include "ch.h"
-#include "hal.h"
 #include "conf_general.h"
 
 // Functions
-void srf10_init(void);
-void srf10_set_sample_callback(void (*func)(float distance));
-msg_t srf10_set_gain(uint8_t gain);
-msg_t srf10_set_range(uint8_t range);
-msg_t srf10_start_ranging(void);
-msg_t srf10_read_range(float *range);
-msg_t srf10_reset_i2c(void);
+void mr_control_init(void);
 
-#endif /* SRF10_H_ */
+#endif /* MR_CONTROL_H_ */

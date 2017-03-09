@@ -52,10 +52,17 @@ static bool m_ubx_pos_valid;
 // Private functions
 static void mpu9150_read(void);
 static void update_orientation_angles(float *accel, float *gyro, float *mag, float dt);
-static void mc_values_received(mc_values *val);
 static void init_gps_local(GPS_STATE *gps);
 static double nmea_parse_val(char *str);
 static void ublox_relposned_rx(ubx_nav_relposned *pos);
+
+#if MAIN_MODE == MAIN_MODE_CAR
+static void mc_values_received(mc_values *val);
+#endif
+
+#if MAIN_MODE == MAIN_MODE_MULTIROTOR
+static void mr_update_pos(POS_STATE *pos, float dt);
+#endif
 
 void pos_init(void) {
 	ahrs_init_attitude_info(&m_att);
@@ -94,8 +101,11 @@ void pos_init(void) {
 	TIM_Cmd(TIM6, ENABLE);
 
 	mpu9150_set_read_callback(mpu9150_read);
-	bldc_interface_set_rx_value_func(mc_values_received);
 	ublox_set_rx_callback_relposned(ublox_relposned_rx);
+
+#if MAIN_MODE == MAIN_MODE_CAR
+	bldc_interface_set_rx_value_func(mc_values_received);
+#endif
 }
 
 void pos_get_imu(float *accel, float *gyro, float *mag) {
@@ -449,6 +459,7 @@ static void mpu9150_read(void) {
 
 	update_orientation_angles(accel, gyro, mag, dt);
 
+#if MAIN_MODE == MAIN_MODE_CAR
 	// Read MC values every 10 iterations (should be 100 Hz)
 	static int mc_read_cnt = 0;
 	mc_read_cnt++;
@@ -456,6 +467,13 @@ static void mpu9150_read(void) {
 		mc_read_cnt = 0;
 		bldc_interface_get_values();
 	}
+#endif
+
+#if MAIN_MODE == MAIN_MODE_MULTIROTOR
+	chMtxLock(&m_mutex_pos);
+	mr_update_pos(&m_pos, dt);
+	chMtxUnlock(&m_mutex_pos);
+#endif
 
 	// Update time today
 	if (m_ms_today >= 0) {
@@ -557,7 +575,8 @@ static void update_orientation_angles(float *accel, float *gyro, float *mag, flo
 	m_pos.yaw_rate = -gyro[2] * 180.0 / M_PI;
 
 	// Correct yaw
-	if (main_config.yaw_use_odometry) {
+#if MAIN_MODE == MAIN_MODE_CAR
+	if (main_config.car.yaw_use_odometry) {
 		if (main_config.yaw_imu_gain > 1e-10) {
 			float ang_diff = utils_angle_difference(m_pos.yaw, m_imu_yaw - m_yaw_offset_gps);
 
@@ -575,70 +594,14 @@ static void update_orientation_angles(float *accel, float *gyro, float *mag, flo
 	} else {
 		m_pos.yaw = m_imu_yaw - m_yaw_offset_gps;
 	}
+#else
+	m_pos.yaw = m_imu_yaw - m_yaw_offset_gps;
+#endif
 
 	m_pos.q0 = m_att.q0;
 	m_pos.q1 = m_att.q1;
 	m_pos.q2 = m_att.q2;
 	m_pos.q3 = m_att.q3;
-
-	chMtxUnlock(&m_mutex_pos);
-}
-
-static void mc_values_received(mc_values *val) {
-	m_mc_val = *val;
-
-	static int32_t last_tacho = 0;
-
-	// Reset tacho the first time.
-	static bool tacho_read = false;
-	if (!tacho_read) {
-		tacho_read = true;
-		last_tacho = val->tachometer;
-	}
-
-	float distance = (float)(val->tachometer - last_tacho) * main_config.gear_ratio
-			* (2.0 / main_config.motor_poles) * (1.0 / 6.0) * main_config.wheel_diam * M_PI;
-	last_tacho = val->tachometer;
-
-	float steering_angle = (servo_simple_get_pos_now()
-			- main_config.steering_center)
-									* ((2.0 * main_config.steering_max_angle_rad)
-											/ main_config.steering_range);
-
-	chMtxLock(&m_mutex_pos);
-
-	if (fabsf(distance) > 1e-6) {
-		float angle_rad = -m_pos.yaw * M_PI / 180.0;
-
-		m_pos.gps_corr_cnt += fabsf(distance);
-
-		if (!main_config.yaw_use_odometry || fabsf(steering_angle) < 0.00001) {
-			m_pos.px += cosf(angle_rad) * distance;
-			m_pos.py += sinf(angle_rad) * distance;
-		} else {
-			const float turn_rad_rear = main_config.axis_distance / tanf(steering_angle);
-			float turn_rad_front = sqrtf(
-					main_config.axis_distance * main_config.axis_distance
-					+ turn_rad_rear * turn_rad_rear);
-
-			if (turn_rad_rear < 0) {
-				turn_rad_front = -turn_rad_front;
-			}
-
-			const float angle_diff = (distance * 2.0) / (turn_rad_rear + turn_rad_front);
-
-			m_pos.px += turn_rad_rear * (sinf(angle_rad + angle_diff) - sinf(angle_rad));
-			m_pos.py += turn_rad_rear * (cosf(angle_rad - angle_diff) - cosf(angle_rad));
-			angle_rad += angle_diff;
-			utils_norm_angle_rad(&angle_rad);
-			m_pos.yaw = -angle_rad * 180.0 / M_PI;
-			utils_norm_angle(&m_pos.yaw);
-		}
-	}
-
-	m_pos.speed = val->rpm * main_config.gear_ratio
-			* (2.0 / main_config.motor_poles) * (1.0 / 60.0)
-			* main_config.wheel_diam * M_PI;
 
 	chMtxUnlock(&m_mutex_pos);
 }
@@ -717,3 +680,120 @@ static void ublox_relposned_rx(ubx_nav_relposned *pos) {
 
 	m_ubx_pos_valid = valid;
 }
+
+#if MAIN_MODE == MAIN_MODE_CAR
+static void mc_values_received(mc_values *val) {
+	m_mc_val = *val;
+
+	static int32_t last_tacho = 0;
+
+	// Reset tacho the first time.
+	static bool tacho_read = false;
+	if (!tacho_read) {
+		tacho_read = true;
+		last_tacho = val->tachometer;
+	}
+
+	float distance = (float)(val->tachometer - last_tacho) * main_config.car.gear_ratio
+			* (2.0 / main_config.car.motor_poles) * (1.0 / 6.0) * main_config.car.wheel_diam * M_PI;
+	last_tacho = val->tachometer;
+
+	float steering_angle = (servo_simple_get_pos_now()
+			- main_config.car.steering_center)
+									* ((2.0 * main_config.car.steering_max_angle_rad)
+											/ main_config.car.steering_range);
+
+	chMtxLock(&m_mutex_pos);
+
+	if (fabsf(distance) > 1e-6) {
+		float angle_rad = -m_pos.yaw * M_PI / 180.0;
+
+		m_pos.gps_corr_cnt += fabsf(distance);
+
+		if (!main_config.car.yaw_use_odometry || fabsf(steering_angle) < 0.00001) {
+			m_pos.px += cosf(angle_rad) * distance;
+			m_pos.py += sinf(angle_rad) * distance;
+		} else {
+			const float turn_rad_rear = main_config.car.axis_distance / tanf(steering_angle);
+			float turn_rad_front = sqrtf(
+					main_config.car.axis_distance * main_config.car.axis_distance
+					+ turn_rad_rear * turn_rad_rear);
+
+			if (turn_rad_rear < 0) {
+				turn_rad_front = -turn_rad_front;
+			}
+
+			const float angle_diff = (distance * 2.0) / (turn_rad_rear + turn_rad_front);
+
+			m_pos.px += turn_rad_rear * (sinf(angle_rad + angle_diff) - sinf(angle_rad));
+			m_pos.py += turn_rad_rear * (cosf(angle_rad - angle_diff) - cosf(angle_rad));
+			angle_rad += angle_diff;
+			utils_norm_angle_rad(&angle_rad);
+			m_pos.yaw = -angle_rad * 180.0 / M_PI;
+			utils_norm_angle(&m_pos.yaw);
+		}
+	}
+
+	m_pos.speed = val->rpm * main_config.car.gear_ratio
+			* (2.0 / main_config.car.motor_poles) * (1.0 / 60.0)
+			* main_config.car.wheel_diam * M_PI;
+
+	chMtxUnlock(&m_mutex_pos);
+}
+#endif
+
+#if MAIN_MODE == MAIN_MODE_MULTIROTOR
+static void mr_update_pos(POS_STATE *pos, float dt) {
+	float roll = pos->roll + pos->acc_roll_err;
+	float pitch = pos->pitch + pos->acc_pitch_err;
+	float yaw = pos->yaw;
+
+	// Too much tilt means that this won't work anyway. Return in that case.
+	if (fabsf(roll) > 45.0 || fabsf(pitch) > 45.0) {
+		pos->vx = 0;
+		pos->vy = 0;
+		return;
+	}
+
+	roll = roll * M_PI / 180.0;
+	pitch = pitch * M_PI / 180.0;
+	yaw = yaw * M_PI / 180.0;
+
+	const float acc_v = 9.82;
+	const float cos_y = cosf(-yaw);
+	const float sin_y = sinf(-yaw);
+
+	const float dvx = acc_v * tanf(roll) * dt;
+	const float dvy = -acc_v * tanf(pitch) * dt;
+
+	pos->vx += cos_y * dvx + sin_y * dvy;
+	pos->vy += -sin_y * dvx + cos_y * dvy;
+	pos->px += pos->vx * dt;
+	pos->py += pos->vy * dt;
+
+	// Apply position and velocity limits
+//	if (utils_truncate_number(&pos->px, quad_config.map_lim.min_x, quad_config.map_lim.max_x)) {
+//		pos->vx = 0.0;
+//	} else {
+//		utils_truncate_number_abs(&pos->vx, main_config.mr.vel_max);
+//	}
+//
+//	if (utils_truncate_number(&pos->py, quad_config.map_lim.min_y, quad_config.map_lim.max_y)) {
+//		pos->vy = 0;
+//	} else {
+//		utils_truncate_number_abs(&pos->vy, main_config.mr.vel_max);
+//	}
+
+	utils_truncate_number_abs(&pos->vx, main_config.mr.vel_max);
+	utils_truncate_number_abs(&pos->vy, main_config.mr.vel_max);
+
+	// Exponential decay
+	const float decay_factor = powf(main_config.mr.vel_decay_e, dt);
+	pos->vx *= decay_factor;
+	pos->vy *= decay_factor;
+
+	// Linear decay
+	utils_step_towards(&pos->vx, 0.0, main_config.mr.vel_decay_l * dt);
+	utils_step_towards(&pos->vy, 0.0, main_config.mr.vel_decay_l * dt);
+}
+#endif

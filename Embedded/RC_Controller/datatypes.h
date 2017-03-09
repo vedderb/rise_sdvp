@@ -52,6 +52,9 @@ typedef struct {
 typedef struct {
 	float px; // Meters
 	float py; // Meters
+	float pz; // Meters
+	float vx; // Meters / second
+	float vy; // Meters / second
 	float speed; // Meters / second
 	float roll; // Degrees
 	float pitch; // Degrees
@@ -71,6 +74,8 @@ typedef struct {
 	float gps_ang_corr_y_last_gps;
 	float gps_ang_corr_x_last_car;
 	float gps_ang_corr_y_last_car;
+	float acc_roll_err;
+	float acc_pitch_err;
 } POS_STATE;
 
 // Autopilot map point
@@ -131,21 +136,18 @@ typedef enum {
 	CMD_RADAR_SAMPLES,
 	CMD_DW_SAMPLE,
 	CMD_EMERGENCY_STOP,
+	CMD_SET_MAIN_CONFIG,
+	CMD_GET_MAIN_CONFIG,
+	CMD_GET_MAIN_CONFIG_DEFAULT,
 
 	// Car commands
 	CMD_GET_STATE = 120,
 	CMD_RC_CONTROL,
 	CMD_SET_SERVO_DIRECT,
-	CMD_SET_MAIN_CONFIG,
-	CMD_GET_MAIN_CONFIG,
-	CMD_GET_MAIN_CONFIG_DEFAULT,
 
 	// Multirotor commands
 	CMD_MR_GET_STATE = 160,
 	CMD_MR_RC_CONTROL,
-	CMD_MR_SET_MAIN_CONFIG,
-	CMD_MR_GET_MAIN_CONFIG,
-	CMD_MR_GET_MAIN_CONFIG_DEFAULT,
 	CMD_MR_OVERRIDE_POWER,
 
 	// Mote commands
@@ -162,16 +164,33 @@ typedef enum {
 	RC_MODE_CURRENT_BRAKE
 } RC_MODE;
 
+typedef struct {
+	bool yaw_use_odometry; // Use odometry data for yaw angle correction.
+	bool disable_motor; // Disable motor drive commands to make sure that the motor does not move.
+
+	float gear_ratio;
+	float wheel_diam;
+	float motor_poles;
+	float steering_max_angle_rad; // = arctan(axist_distance / turn_radius_at_maximum_steering_angle)
+	float steering_center;
+	float steering_range;
+	float steering_ramp_time; // Ramp time constant for the steering servo in seconds
+	float axis_distance;
+} MAIN_CONFIG_CAR;
+
+typedef struct {
+	float vel_decay_e;
+	float vel_decay_l;
+	float vel_max;
+} MAIN_CONFIG_MULTIROTOR;
+
 // Car configuration
 typedef struct {
-	// Settings
+	// Common vehicle settings
 	bool mag_use; // Use the magnetometer
 	bool mag_comp; // Should be 0 when capturing samples for the calibration
-	bool yaw_use_odometry; // Use odometry data for yaw angle correction.
 	float yaw_mag_gain; // Gain for yaw angle from magnetomer (vs gyro)
 	float yaw_imu_gain; // Gain for yaw angle from IMU (vs odometry)
-
-	bool disable_motor; // Disable motor drive commands to make sure that the motor does not move.
 
 	// Magnetometer calibration
 	float mag_cal_cx;
@@ -186,16 +205,6 @@ typedef struct {
 	float mag_cal_zx;
 	float mag_cal_zy;
 	float mag_cal_zz;
-
-	// Car parameters
-	float gear_ratio;
-	float wheel_diam;
-	float motor_poles;
-	float steering_max_angle_rad; // = arctan(axist_distance / turn_radius_at_maximum_steering_angle)
-	float steering_center;
-	float steering_range;
-	float steering_ramp_time; // Ramp time constant for the steering servo in seconds
-	float axis_distance;
 
 	// GPS parameters
 	float gps_ant_x; // Antenna offset from vehicle center in X
@@ -219,6 +228,9 @@ typedef struct {
 	// Logging
 	bool log_en;
 	char log_name[LOG_NAME_MAX_LEN + 1];
+
+	MAIN_CONFIG_CAR car;
+	MAIN_CONFIG_MULTIROTOR mr;
 } MAIN_CONFIG;
 
 typedef struct {

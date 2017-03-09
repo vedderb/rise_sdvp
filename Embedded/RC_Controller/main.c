@@ -1,5 +1,5 @@
 /*
-	Copyright 2016 Benjamin Vedder	benjamin@vedder.se
+	Copyright 2017 Benjamin Vedder	benjamin@vedder.se
 
 	This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -45,11 +45,14 @@
 #include "comm_cc1120.h"
 #include "ublox.h"
 #include "srf10.h"
+#include "pwm_esc.h"
+#include "mr_control.h"
 
 /*
  * Timers used:
  * TIM6: Pos
- * TIM3: servo_simple
+ * TIM3: servo_simple and pwm_esc
+ * TIM9: pwm_esc
  *
  * DMA/Stream	Device		Usage
  * 2, 4			ADC1		adconv
@@ -96,6 +99,9 @@ int main(void) {
 	conf_general_init();
 	adconv_init();
 	srf10_init();
+	pwm_esc_init();
+	pos_init();
+	mr_control_init();
 #endif
 
 	comm_usb_init();
