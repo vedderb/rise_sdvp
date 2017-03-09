@@ -62,6 +62,8 @@ private slots:
 
     void on_idBox_valueChanged(int arg1);
 
+    void on_terminalSendButton_clicked();
+
 private:
     Ui::CopterInterface *ui;
     MapWidget *mMap;

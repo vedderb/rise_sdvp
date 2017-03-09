@@ -152,7 +152,8 @@ CSRC = $(STARTUPSRC) \
        digital_filter.c \
        comm_cc1120.c \
        ublox.c \
-       rtcm3_simple.c
+       rtcm3_simple.c \
+       srf10.c
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.

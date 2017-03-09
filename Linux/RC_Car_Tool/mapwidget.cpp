@@ -1106,7 +1106,7 @@ void MapWidget::paintEvent(QPaintEvent *event)
         painter.setTransform(txtTrans);
         pt_txt = drawTrans.map(pt_txt);
         rect_txt.setCoords(pt_txt.x(), pt_txt.y() - 20,
-                           pt_txt.x() + 150, pt_txt.y() + 25);
+                           pt_txt.x() + 300, pt_txt.y() + 25);
         painter.drawText(rect_txt, txt);
 
         // Restore transform

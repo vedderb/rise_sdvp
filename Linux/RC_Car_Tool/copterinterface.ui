@@ -384,5 +384,38 @@
  <resources>
   <include location="resources.qrc"/>
  </resources>
- <connections/>
+ <connections>
+  <connection>
+   <sender>terminalEdit</sender>
+   <signal>returnPressed()</signal>
+   <receiver>terminalSendButton</receiver>
+   <slot>click()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>575</x>
+     <y>450</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>609</x>
+     <y>456</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>terminalClearButton</sender>
+   <signal>clicked()</signal>
+   <receiver>terminalBrowser</receiver>
+   <slot>clear()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>648</x>
+     <y>454</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>597</x>
+     <y>383</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

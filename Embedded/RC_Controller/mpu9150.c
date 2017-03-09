@@ -19,8 +19,6 @@
 #include "chprintf.h"
 #include "utils.h"
 #include "stm32f4xx_conf.h"
-#include "ch.h"
-#include "hal.h"
 #include <string.h>
 #include <math.h>
 
@@ -92,11 +90,11 @@ void mpu9150_init(void) {
 
 	// I2C configuration
 	palSetPadMode(SCL_GPIO, SCL_PAD,
-			PAL_MODE_ALTERNATE(GPIO_AF_I2C1) |
+			PAL_MODE_ALTERNATE(GPIO_AF_I2C2) |
 			PAL_STM32_OTYPE_OPENDRAIN |
 			PAL_STM32_OSPEED_MID1);
 	palSetPadMode(SDA_GPIO, SDA_PAD,
-			PAL_MODE_ALTERNATE(GPIO_AF_I2C1) |
+			PAL_MODE_ALTERNATE(GPIO_AF_I2C2) |
 			PAL_STM32_OTYPE_OPENDRAIN |
 			PAL_STM32_OSPEED_MID1);
 	chThdSleepMilliseconds(10);

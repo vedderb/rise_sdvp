@@ -24,13 +24,14 @@
 #define MAIN_MODE_MOTE_2400			1
 #define MAIN_MODE_MOTE_400			2
 #define MAIN_MODE_MOTE_HYBRID		3 // Use 400 for slow and critical communication and 2400 for the rest.
-#define MAIN_MODE_QUADCOPTER		4
+#define MAIN_MODE_MULTIROTOR		4
 
 // Main mode
-#define MAIN_MODE					MAIN_MODE_CAR
+#define MAIN_MODE					MAIN_MODE_MULTIROTOR
 
 // Mode macros
 #define MAIN_MODE_IS_MOTE			(MAIN_MODE == MAIN_MODE_MOTE_2400 || MAIN_MODE == MAIN_MODE_MOTE_400 || MAIN_MODE == MAIN_MODE_MOTE_HYBRID)
+#define MAIN_MODE_IS_VEHICLE		(MAIN_MODE == MAIN_MODE_CAR || MAIN_MODE == MAIN_MODE_MULTIROTOR)
 
 // Firmware version
 #define FW_VERSION_MAJOR			8

@@ -44,6 +44,7 @@
 #include "radar.h"
 #include "comm_cc1120.h"
 #include "ublox.h"
+#include "srf10.h"
 
 /*
  * Timers used:
@@ -91,12 +92,18 @@ int main(void) {
 #endif
 #endif
 
+#if MAIN_MODE == MAIN_MODE_MULTIROTOR
+	conf_general_init();
+	adconv_init();
+	srf10_init();
+#endif
+
 	comm_usb_init();
 	comm_cc2520_init();
 	comm_cc1120_init();
 	commands_init();
 
-#if MAIN_MODE == MAIN_MODE_CAR
+#if MAIN_MODE_IS_VEHICLE
 	commands_set_send_func(comm_cc2520_send_buffer);
 #endif
 

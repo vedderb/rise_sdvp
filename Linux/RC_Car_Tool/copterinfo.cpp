@@ -37,7 +37,7 @@ void CopterInfo::setId(int id, bool changeName)
 
     if (changeName) {
         mName = "";
-        mName.sprintf("Car %d", mId);
+        mName.sprintf("Copter %d", mId);
     }
 }
 

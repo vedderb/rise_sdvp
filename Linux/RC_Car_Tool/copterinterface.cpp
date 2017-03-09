@@ -201,3 +201,9 @@ void CopterInterface::on_idBox_valueChanged(int arg1)
 
     mId = arg1;
 }
+
+void CopterInterface::on_terminalSendButton_clicked()
+{
+    emit terminalCmd(mId, ui->terminalEdit->text());
+    ui->terminalEdit->clear();
+}
