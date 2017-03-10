@@ -868,5 +868,8 @@ static void mr_update_pos(POS_STATE *pos, float dt) {
 	// Linear decay
 	utils_step_towards(&pos->vx, 0.0, main_config.mr.vel_decay_l * dt);
 	utils_step_towards(&pos->vy, 0.0, main_config.mr.vel_decay_l * dt);
+
+	// Update speed sum
+	pos->speed = sqrtf(pos->vx * pos->vx + pos->vy * pos->vy);
 }
 #endif

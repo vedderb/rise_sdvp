@@ -91,6 +91,71 @@ void CopterInterface::setOrientation(double roll, double pitch, double yaw)
 #endif
 }
 
+void CopterInterface::setStateData(MULTIROTOR_STATE data)
+{
+    ui->imuPlot->addSample(data.accel, data.gyro, data.mag);
+
+    // Firmware label
+    QString fwStr;
+    fwStr.sprintf("FW %d.%d", data.fw_major, data.fw_minor);
+    ui->fwLabel->setText(fwStr);
+
+    // Speed bar
+    QString speedTxt;
+    speedTxt.sprintf("Speed: %.2f km/h", data.speed * 3.6);
+    ui->speedBar->setValue(fabs(data.speed) * 3.6);
+    ui->speedBar->setFormat(speedTxt);
+
+    // Battery bar
+    double battp = utility::map(data.vin, 34.0, 42.0, 0.0, 100.0);
+    if (battp < 0.0) {
+        battp = 0.0;
+    }
+    QString battTxt;
+    battTxt.sprintf("Battery: %.1f %% (%.2f V)", battp, data.vin);
+    if (battp > 100.0) {
+        battp = 100.0;
+    }
+    ui->batteryBar->setValue((int)battp);
+    ui->batteryBar->setFormat(battTxt);
+
+    // Orientation
+    setOrientation(data.roll, data.pitch, data.yaw);
+
+    if (mMap) {
+        CopterInfo *copter = mMap->getCopterInfo(mId);
+        LocPoint loc = copter->getLocation();
+        LocPoint loc_gps = copter->getLocationGps();
+        LocPoint ap_goal = copter->getApGoal();
+        loc.setRoll(data.roll * M_PI / 180.0);
+        loc.setPitch(data.pitch * M_PI / 180.0);
+        loc.setYaw(data.yaw * M_PI / 180.0);
+        loc.setXY(data.px, data.py);
+        loc_gps.setXY(data.px_gps, data.py_gps);
+        ap_goal.setXY(data.ap_goal_px, data.ap_goal_py);
+        copter->setLocation(loc);
+        copter->setLocationGps(loc_gps);
+        copter->setApGoal(ap_goal);
+        copter->setTime(data.ms_today);
+        mMap->update();
+    }
+
+    //ui->magCal->addSample(data.mag[0], data.mag[1], data.mag[2]);
+
+    // Clock
+    if (data.ms_today >= 0) {
+        QTime time = QTime::fromMSecsSinceStartOfDay(data.ms_today);
+        QDateTime date = QDateTime::currentDateTime();
+        QTime current = QTime::currentTime().addSecs(-date.offsetFromUtc());
+
+        int diff = data.ms_today - current.msecsSinceStartOfDay();
+        ui->clockLabel->setText(time.toString("HH:mm:ss:zzz") + " " +
+                                QString("%1").arg(diff, 6, 10, QChar('0')) + " ms");
+    } else {
+        ui->clockLabel->setText("00:00:00:000");
+    }
+}
+
 void CopterInterface::setMap(MapWidget *map)
 {
     mMap = map;

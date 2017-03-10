@@ -68,6 +68,7 @@ signals:
     void packetReceived(quint8 id, CMD_PACKET cmd, const QByteArray &data);
     void printReceived(quint8 id, QString str);
     void stateReceived(quint8 id, CAR_STATE state);
+    void mrStateReceived(quint8 id, MULTIROTOR_STATE state);
     void vescFwdReceived(quint8 id, QByteArray data);
     void ackReceived(quint8 id, CMD_PACKET cmd, QString msg);
     void rtcmUsbReceived(quint8 id, QByteArray data);
@@ -87,6 +88,7 @@ public slots:
     void timerSlot();
     void readPendingDatagrams();
     void getState(quint8 id);
+    void getMrState(quint8 id);
     void sendTerminalCmd(quint8 id, QString cmd);
     void forwardVesc(quint8 id, QByteArray data);
     void setRcControlCurrent(quint8 id, double current, double steering);

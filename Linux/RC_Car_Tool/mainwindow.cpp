@@ -107,6 +107,8 @@ MainWindow::MainWindow(QWidget *parent) :
             this, SLOT(packetDataToSend(QByteArray&)));
     connect(mPacketInterface, SIGNAL(stateReceived(quint8,CAR_STATE)),
             this, SLOT(stateReceived(quint8,CAR_STATE)));
+    connect(mPacketInterface, SIGNAL(mrStateReceived(quint8,MULTIROTOR_STATE)),
+            this, SLOT(mrStateReceived(quint8,MULTIROTOR_STATE)));
     connect(ui->mapWidget, SIGNAL(posSet(quint8,LocPoint)),
             this, SLOT(mapPosSet(quint8,LocPoint)));
     connect(mPacketInterface, SIGNAL(ackReceived(quint8,CMD_PACKET,QString)),
@@ -304,6 +306,7 @@ void MainWindow::timerSlot()
     int ind = 0;
     int largest = 0;
     bool polled = false;
+
     for(QList<CarInterface*>::Iterator it_car = mCars.begin();it_car < mCars.end();it_car++) {
         CarInterface *car = *it_car;
         if (car->pollData() && ind >= next_car && !polled) {
@@ -318,6 +321,22 @@ void MainWindow::timerSlot()
 
         ind++;
     }
+
+    for(QList<CopterInterface*>::Iterator it_copter = mCopters.begin();it_copter < mCopters.end();it_copter++) {
+        CopterInterface *copter = *it_copter;
+        if (copter->pollData() && ind >= next_car && !polled) {
+            mPacketInterface->getMrState(copter->getId());
+            next_car = ind + 1;
+            polled = true;
+        }
+
+        if (copter->pollData() && ind > largest) {
+            largest = ind;
+        }
+
+        ind++;
+    }
+
     if (next_car > largest) {
         next_car = 0;
     }
@@ -387,6 +406,16 @@ void MainWindow::stateReceived(quint8 id, CAR_STATE state)
         CarInterface *car = *it_car;
         if (car->getId() == id) {
             car->setStateData(state);
+        }
+    }
+}
+
+void MainWindow::mrStateReceived(quint8 id, MULTIROTOR_STATE state)
+{
+    for(QList<CopterInterface*>::Iterator it_copter = mCopters.begin();it_copter < mCopters.end();it_copter++) {
+        CopterInterface *copter = *it_copter;
+        if (copter->getId() == id) {
+            copter->setStateData(state);
         }
     }
 }

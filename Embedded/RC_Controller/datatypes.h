@@ -93,6 +93,7 @@ typedef struct {
 typedef struct {
 	float px;
 	float py;
+	float pz;
 	float speed;
 	int32_t time;
 } ROUTE_POINT;
@@ -191,6 +192,7 @@ typedef struct {
 } MAIN_CONFIG_CAR;
 
 typedef struct {
+	// Dead reckoning
 	float vel_decay_e;
 	float vel_decay_l;
 	float vel_max;
@@ -199,6 +201,7 @@ typedef struct {
 	float map_min_y;
 	float map_max_y;
 
+	// State correction for dead reckoning
 	float vel_gain_p;
 	float vel_gain_i;
 	float vel_gain_d;
@@ -210,6 +213,7 @@ typedef struct {
 	float max_corr_error;
 	float max_tilt_error;
 
+	// Attitude controller
 	float ctrl_gain_roll_p;
 	float ctrl_gain_roll_i;
 	float ctrl_gain_roll_dp;
@@ -225,6 +229,7 @@ typedef struct {
 	float ctrl_gain_yaw_dp;
 	float ctrl_gain_yaw_de;
 
+	// Joystick gain
 	float js_gain_tilt;
 	float js_gain_yaw;
 } MAIN_CONFIG_MULTIROTOR;

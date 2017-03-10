@@ -43,6 +43,7 @@ public:
     bool pollData();
     bool updateRouteFromMap();
     void setOrientation(double roll, double pitch, double yaw);
+    void setStateData(MULTIROTOR_STATE data);
     void setMap(MapWidget *map);
     void setPacketInterface(PacketInterface *packetInterface);
     void setCtrlAp();

@@ -75,6 +75,27 @@ typedef struct {
     int32_t ms_today;
 } CAR_STATE;
 
+typedef struct {
+    uint8_t fw_major;
+    uint8_t fw_minor;
+    double roll;
+    double pitch;
+    double yaw;
+    double accel[3];
+    double gyro[3];
+    double mag[3];
+    double px;
+    double py;
+    double pz;
+    double speed;
+    double vin;
+    double px_gps;
+    double py_gps;
+    double ap_goal_px;
+    double ap_goal_py;
+    int32_t ms_today;
+} MULTIROTOR_STATE;
+
 typedef enum {
     MOTE_PACKET_FILL_RX_BUFFER = 0,
     MOTE_PACKET_FILL_RX_BUFFER_LONG,

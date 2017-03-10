@@ -53,6 +53,7 @@ private slots:
     void showStatusInfo(QString info, bool isGood);
     void packetDataToSend(QByteArray &data);
     void stateReceived(quint8 id, CAR_STATE state);
+    void mrStateReceived(quint8 id, MULTIROTOR_STATE state);
     void mapPosSet(quint8 id, LocPoint pos);
     void ackReceived(quint8 id, CMD_PACKET cmd, QString msg);
     void rtcmReceived(QByteArray data, int type);

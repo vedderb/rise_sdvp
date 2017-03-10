@@ -1089,7 +1089,7 @@ void MapWidget::paintEvent(QPaintEvent *event)
         // Draw the acceleration vector
         painter.setBrush(QBrush(Qt::green));
         painter.setPen(QPen(Qt::green, 30));
-        painter.drawLine(QPointF(0.0, 0.0), QPointF(pos.getRoll() * 800.0, -pos.getPitch() * 800.0));
+        painter.drawLine(QPointF(0.0, 0.0), QPointF(-pos.getPitch() * 800.0, -pos.getRoll() * 800.0));
         painter.setPen(QPen(textColor));
 
         // Print data
