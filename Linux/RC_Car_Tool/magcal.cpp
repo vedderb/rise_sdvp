@@ -240,6 +240,16 @@ double MagCal::getZz()
     return res;
 }
 
+QVector<double> MagCal::getCenter()
+{
+    return mMagCompCenter;
+}
+
+QVector<double> MagCal::getComp()
+{
+    return mMagComp;
+}
+
 void MagCal::timerSlot()
 {
     static int lastMagSamples = 0;

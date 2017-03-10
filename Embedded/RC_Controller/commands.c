@@ -474,37 +474,36 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			int32_t ind = 0;
 			main_config.mag_use = data[ind++];
 			main_config.mag_comp = data[ind++];
-			main_config.yaw_mag_gain = buffer_get_float32(data, 1e6, &ind);
-			main_config.yaw_imu_gain = buffer_get_float32(data, 1e6, &ind);
+			main_config.yaw_mag_gain = buffer_get_float32_auto(data, &ind);
 
-			main_config.mag_cal_cx = buffer_get_float32(data, 1e6, &ind);
-			main_config.mag_cal_cy = buffer_get_float32(data, 1e6, &ind);
-			main_config.mag_cal_cz = buffer_get_float32(data, 1e6, &ind);
-			main_config.mag_cal_xx = buffer_get_float32(data, 1e6, &ind);
-			main_config.mag_cal_xy = buffer_get_float32(data, 1e6, &ind);
-			main_config.mag_cal_xz = buffer_get_float32(data, 1e6, &ind);
-			main_config.mag_cal_yx = buffer_get_float32(data, 1e6, &ind);
-			main_config.mag_cal_yy = buffer_get_float32(data, 1e6, &ind);
-			main_config.mag_cal_yz = buffer_get_float32(data, 1e6, &ind);
-			main_config.mag_cal_zx = buffer_get_float32(data, 1e6, &ind);
-			main_config.mag_cal_zy = buffer_get_float32(data, 1e6, &ind);
-			main_config.mag_cal_zz = buffer_get_float32(data, 1e6, &ind);
+			main_config.mag_cal_cx = buffer_get_float32_auto(data, &ind);
+			main_config.mag_cal_cy = buffer_get_float32_auto(data, &ind);
+			main_config.mag_cal_cz = buffer_get_float32_auto(data, &ind);
+			main_config.mag_cal_xx = buffer_get_float32_auto(data, &ind);
+			main_config.mag_cal_xy = buffer_get_float32_auto(data, &ind);
+			main_config.mag_cal_xz = buffer_get_float32_auto(data, &ind);
+			main_config.mag_cal_yx = buffer_get_float32_auto(data, &ind);
+			main_config.mag_cal_yy = buffer_get_float32_auto(data, &ind);
+			main_config.mag_cal_yz = buffer_get_float32_auto(data, &ind);
+			main_config.mag_cal_zx = buffer_get_float32_auto(data, &ind);
+			main_config.mag_cal_zy = buffer_get_float32_auto(data, &ind);
+			main_config.mag_cal_zz = buffer_get_float32_auto(data, &ind);
 
-			main_config.gps_ant_x = buffer_get_float32(data, 1e6, &ind);
-			main_config.gps_ant_y = buffer_get_float32(data, 1e6, &ind);
+			main_config.gps_ant_x = buffer_get_float32_auto(data, &ind);
+			main_config.gps_ant_y = buffer_get_float32_auto(data, &ind);
 			main_config.gps_comp = data[ind++];
 			main_config.gps_req_rtk = data[ind++];
-			main_config.gps_corr_gain_stat = buffer_get_float32(data, 1e6, &ind);
-			main_config.gps_corr_gain_dyn = buffer_get_float32(data, 1e6, &ind);
-			main_config.gps_corr_gain_yaw = buffer_get_float32(data, 1e6, &ind);
+			main_config.gps_corr_gain_stat = buffer_get_float32_auto(data, &ind);
+			main_config.gps_corr_gain_dyn = buffer_get_float32_auto(data, &ind);
+			main_config.gps_corr_gain_yaw = buffer_get_float32_auto(data, &ind);
 			main_config.gps_send_nmea = data[ind++];
 			main_config.gps_use_ubx_info = data[ind++];
-			main_config.gps_ubx_max_acc = buffer_get_float32(data, 1e6, &ind);
+			main_config.gps_ubx_max_acc = buffer_get_float32_auto(data, &ind);
 
 			main_config.ap_repeat_routes = data[ind++];
-			main_config.ap_base_rad = buffer_get_float32(data, 1e6, &ind);
+			main_config.ap_base_rad = buffer_get_float32_auto(data, &ind);
 			main_config.ap_mode_time = data[ind++];
-			main_config.ap_max_speed = buffer_get_float32(data, 1e6, &ind);
+			main_config.ap_max_speed = buffer_get_float32_auto(data, &ind);
 			main_config.ap_time_add_repeat_ms = buffer_get_int32(data, &ind);
 
 			main_config.log_en = data[ind++];
@@ -516,16 +515,55 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 			// Car settings
 			main_config.car.yaw_use_odometry = data[ind++];
+			main_config.car.yaw_imu_gain = buffer_get_float32_auto(data, &ind);
 			main_config.car.disable_motor = data[ind++];
 
-			main_config.car.gear_ratio = buffer_get_float32(data, 1e6, &ind);
-			main_config.car.wheel_diam = buffer_get_float32(data, 1e6, &ind);
-			main_config.car.motor_poles = buffer_get_float32(data, 1e6, &ind);
-			main_config.car.steering_max_angle_rad = buffer_get_float32(data, 1e6, &ind);
-			main_config.car.steering_center = buffer_get_float32(data, 1e6, &ind);
-			main_config.car.steering_range = buffer_get_float32(data, 1e6, &ind);
-			main_config.car.steering_ramp_time = buffer_get_float32(data, 1e6, &ind);
-			main_config.car.axis_distance = buffer_get_float32(data, 1e6, &ind);
+			main_config.car.gear_ratio = buffer_get_float32_auto(data, &ind);
+			main_config.car.wheel_diam = buffer_get_float32_auto(data, &ind);
+			main_config.car.motor_poles = buffer_get_float32_auto(data, &ind);
+			main_config.car.steering_max_angle_rad = buffer_get_float32_auto(data, &ind);
+			main_config.car.steering_center = buffer_get_float32_auto(data, &ind);
+			main_config.car.steering_range = buffer_get_float32_auto(data, &ind);
+			main_config.car.steering_ramp_time = buffer_get_float32_auto(data, &ind);
+			main_config.car.axis_distance = buffer_get_float32_auto(data, &ind);
+
+			// Multirotor settings
+			main_config.mr.vel_decay_e = buffer_get_float32_auto(data, &ind);
+			main_config.mr.vel_decay_l = buffer_get_float32_auto(data, &ind);
+			main_config.mr.vel_max = buffer_get_float32_auto(data, &ind);
+			main_config.mr.map_min_x = buffer_get_float32_auto(data, &ind);
+			main_config.mr.map_max_x = buffer_get_float32_auto(data, &ind);
+			main_config.mr.map_min_y = buffer_get_float32_auto(data, &ind);
+			main_config.mr.map_max_y = buffer_get_float32_auto(data, &ind);
+
+			main_config.mr.vel_gain_p = buffer_get_float32_auto(data, &ind);
+			main_config.mr.vel_gain_i = buffer_get_float32_auto(data, &ind);
+			main_config.mr.vel_gain_d = buffer_get_float32_auto(data, &ind);
+
+			main_config.mr.tilt_gain_p = buffer_get_float32_auto(data, &ind);
+			main_config.mr.tilt_gain_i = buffer_get_float32_auto(data, &ind);
+			main_config.mr.tilt_gain_d = buffer_get_float32_auto(data, &ind);
+
+			main_config.mr.max_corr_error = buffer_get_float32_auto(data, &ind);
+			main_config.mr.max_tilt_error = buffer_get_float32_auto(data, &ind);
+
+			main_config.mr.ctrl_gain_roll_p = buffer_get_float32_auto(data, &ind);
+			main_config.mr.ctrl_gain_roll_i = buffer_get_float32_auto(data, &ind);
+			main_config.mr.ctrl_gain_roll_dp = buffer_get_float32_auto(data, &ind);
+			main_config.mr.ctrl_gain_roll_de = buffer_get_float32_auto(data, &ind);
+
+			main_config.mr.ctrl_gain_pitch_p = buffer_get_float32_auto(data, &ind);
+			main_config.mr.ctrl_gain_pitch_i = buffer_get_float32_auto(data, &ind);
+			main_config.mr.ctrl_gain_pitch_dp = buffer_get_float32_auto(data, &ind);
+			main_config.mr.ctrl_gain_pitch_de = buffer_get_float32_auto(data, &ind);
+
+			main_config.mr.ctrl_gain_yaw_p = buffer_get_float32_auto(data, &ind);
+			main_config.mr.ctrl_gain_yaw_i = buffer_get_float32_auto(data, &ind);
+			main_config.mr.ctrl_gain_yaw_dp = buffer_get_float32_auto(data, &ind);
+			main_config.mr.ctrl_gain_yaw_de = buffer_get_float32_auto(data, &ind);
+
+			main_config.mr.js_gain_tilt = buffer_get_float32_auto(data, &ind);
+			main_config.mr.js_gain_yaw = buffer_get_float32_auto(data, &ind);
 
 			conf_general_store_main_config(&main_config);
 
@@ -558,37 +596,36 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 			m_send_buffer[send_index++] = main_cfg_tmp.mag_use;
 			m_send_buffer[send_index++] = main_cfg_tmp.mag_comp;
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.yaw_mag_gain, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.yaw_imu_gain, 1e6, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.yaw_mag_gain, &send_index);
 
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_cx, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_cy, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_cz, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_xx, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_xy, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_xz, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_yx, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_yy, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_yz, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_zx, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_zy, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.mag_cal_zz, 1e6, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mag_cal_cx, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mag_cal_cy, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mag_cal_cz, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mag_cal_xx, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mag_cal_xy, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mag_cal_xz, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mag_cal_yx, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mag_cal_yy, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mag_cal_yz, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mag_cal_zx, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mag_cal_zy, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mag_cal_zz, &send_index);
 
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.gps_ant_x, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.gps_ant_y, 1e6, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.gps_ant_x, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.gps_ant_y, &send_index);
 			m_send_buffer[send_index++] = main_cfg_tmp.gps_comp;
 			m_send_buffer[send_index++] = main_cfg_tmp.gps_req_rtk;
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.gps_corr_gain_stat, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.gps_corr_gain_dyn, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.gps_corr_gain_yaw, 1e6, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.gps_corr_gain_stat, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.gps_corr_gain_dyn, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.gps_corr_gain_yaw, &send_index);
 			m_send_buffer[send_index++] = main_cfg_tmp.gps_send_nmea;
 			m_send_buffer[send_index++] = main_cfg_tmp.gps_use_ubx_info;
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.gps_ubx_max_acc, 1e6, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.gps_ubx_max_acc, &send_index);
 
 			m_send_buffer[send_index++] = main_cfg_tmp.ap_repeat_routes;
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.ap_base_rad, 1e6, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.ap_base_rad, &send_index);
 			m_send_buffer[send_index++] = main_cfg_tmp.ap_mode_time;
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.ap_max_speed, 1e6, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.ap_max_speed, &send_index);
 			buffer_append_int32(m_send_buffer, main_cfg_tmp.ap_time_add_repeat_ms, &send_index);
 
 			m_send_buffer[send_index++] = main_cfg_tmp.log_en;
@@ -597,16 +634,55 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 			// Car settings
 			m_send_buffer[send_index++] = main_cfg_tmp.car.yaw_use_odometry;
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.car.yaw_imu_gain, &send_index);
 			m_send_buffer[send_index++] = main_cfg_tmp.car.disable_motor;
 
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.car.gear_ratio, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.car.wheel_diam, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.car.motor_poles, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.car.steering_max_angle_rad, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.car.steering_center, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.car.steering_range, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.car.steering_ramp_time, 1e6, &send_index);
-			buffer_append_float32(m_send_buffer, main_cfg_tmp.car.axis_distance, 1e6, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.car.gear_ratio, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.car.wheel_diam, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.car.motor_poles, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.car.steering_max_angle_rad, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.car.steering_center, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.car.steering_range, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.car.steering_ramp_time, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.car.axis_distance, &send_index);
+
+			// Multirotor settings
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.vel_decay_e, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.vel_decay_l, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.vel_max, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.map_min_x, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.map_max_x, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.map_min_y, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.map_max_y, &send_index);
+
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.vel_gain_p, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.vel_gain_i, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.vel_gain_d, &send_index);
+
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.tilt_gain_p, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.tilt_gain_i, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.tilt_gain_d, &send_index);
+
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.max_corr_error, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.max_tilt_error, &send_index);
+
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.ctrl_gain_roll_p, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.ctrl_gain_roll_i, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.ctrl_gain_roll_dp, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.ctrl_gain_roll_de, &send_index);
+
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.ctrl_gain_pitch_p, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.ctrl_gain_pitch_i, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.ctrl_gain_pitch_dp, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.ctrl_gain_pitch_de, &send_index);
+
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.ctrl_gain_yaw_p, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.ctrl_gain_yaw_i, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.ctrl_gain_yaw_dp, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.ctrl_gain_yaw_de, &send_index);
+
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.js_gain_tilt, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.js_gain_yaw, &send_index);
 
 			commands_send_packet(m_send_buffer, send_index);
 		} break;

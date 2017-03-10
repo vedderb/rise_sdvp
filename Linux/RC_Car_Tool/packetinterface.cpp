@@ -396,54 +396,93 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         int32_t ind = 0;
         conf.mag_use = data[ind++];
         conf.mag_comp = data[ind++];
-        conf.yaw_use_odometry = data[ind++];
-        conf.yaw_mag_gain = utility::buffer_get_double32(data, 1e6, &ind);
-        conf.yaw_imu_gain = utility::buffer_get_double32(data, 1e6, &ind);
+        conf.yaw_mag_gain = utility::buffer_get_double32_auto(data, &ind);
 
-        conf.disable_motor = data[ind++];
+        conf.mag_cal_cx = utility::buffer_get_double32_auto(data, &ind);
+        conf.mag_cal_cy = utility::buffer_get_double32_auto(data, &ind);
+        conf.mag_cal_cz = utility::buffer_get_double32_auto(data, &ind);
+        conf.mag_cal_xx = utility::buffer_get_double32_auto(data, &ind);
+        conf.mag_cal_xy = utility::buffer_get_double32_auto(data, &ind);
+        conf.mag_cal_xz = utility::buffer_get_double32_auto(data, &ind);
+        conf.mag_cal_yx = utility::buffer_get_double32_auto(data, &ind);
+        conf.mag_cal_yy = utility::buffer_get_double32_auto(data, &ind);
+        conf.mag_cal_yz = utility::buffer_get_double32_auto(data, &ind);
+        conf.mag_cal_zx = utility::buffer_get_double32_auto(data, &ind);
+        conf.mag_cal_zy = utility::buffer_get_double32_auto(data, &ind);
+        conf.mag_cal_zz = utility::buffer_get_double32_auto(data, &ind);
 
-        conf.mag_cal_cx = utility::buffer_get_double32(data, 1e6, &ind);
-        conf.mag_cal_cy = utility::buffer_get_double32(data, 1e6, &ind);
-        conf.mag_cal_cz = utility::buffer_get_double32(data, 1e6, &ind);
-        conf.mag_cal_xx = utility::buffer_get_double32(data, 1e6, &ind);
-        conf.mag_cal_xy = utility::buffer_get_double32(data, 1e6, &ind);
-        conf.mag_cal_xz = utility::buffer_get_double32(data, 1e6, &ind);
-        conf.mag_cal_yx = utility::buffer_get_double32(data, 1e6, &ind);
-        conf.mag_cal_yy = utility::buffer_get_double32(data, 1e6, &ind);
-        conf.mag_cal_yz = utility::buffer_get_double32(data, 1e6, &ind);
-        conf.mag_cal_zx = utility::buffer_get_double32(data, 1e6, &ind);
-        conf.mag_cal_zy = utility::buffer_get_double32(data, 1e6, &ind);
-        conf.mag_cal_zz = utility::buffer_get_double32(data, 1e6, &ind);
-
-        conf.gear_ratio = utility::buffer_get_double32(data, 1e6, &ind);
-        conf.wheel_diam = utility::buffer_get_double32(data, 1e6, &ind);
-        conf.motor_poles = utility::buffer_get_double32(data, 1e6, &ind);
-        conf.steering_max_angle_rad = utility::buffer_get_double32(data, 1e6, &ind);
-        conf.steering_center = utility::buffer_get_double32(data, 1e6, &ind);
-        conf.steering_range = utility::buffer_get_double32(data, 1e6, &ind);
-        conf.steering_ramp_time = utility::buffer_get_double32(data, 1e6, &ind);
-        conf.axis_distance = utility::buffer_get_double32(data, 1e6, &ind);
-
-        conf.gps_ant_x = utility::buffer_get_double32(data, 1e6, &ind);
-        conf.gps_ant_y = utility::buffer_get_double32(data, 1e6, &ind);
+        conf.gps_ant_x = utility::buffer_get_double32_auto(data, &ind);
+        conf.gps_ant_y = utility::buffer_get_double32_auto(data, &ind);
         conf.gps_comp = data[ind++];
         conf.gps_req_rtk = data[ind++];
-        conf.gps_corr_gain_stat = utility::buffer_get_double32(data, 1e6, &ind);
-        conf.gps_corr_gain_dyn = utility::buffer_get_double32(data, 1e6, &ind);
-        conf.gps_corr_gain_yaw = utility::buffer_get_double32(data, 1e6, &ind);
+        conf.gps_corr_gain_stat = utility::buffer_get_double32_auto(data, &ind);
+        conf.gps_corr_gain_dyn = utility::buffer_get_double32_auto(data, &ind);
+        conf.gps_corr_gain_yaw = utility::buffer_get_double32_auto(data, &ind);
         conf.gps_send_nmea = data[ind++];
         conf.gps_use_ubx_info = data[ind++];
-        conf.gps_ubx_max_acc = utility::buffer_get_double32(data, 1e6, &ind);
+        conf.gps_ubx_max_acc = utility::buffer_get_double32_auto(data, &ind);
 
         conf.ap_repeat_routes = data[ind++];
-        conf.ap_base_rad = utility::buffer_get_double32(data, 1e6, &ind);
+        conf.ap_base_rad = utility::buffer_get_double32_auto(data, &ind);
         conf.ap_mode_time = data[ind++];
-        conf.ap_max_speed = utility::buffer_get_double32(data, 1e6, &ind);
+        conf.ap_max_speed = utility::buffer_get_double32_auto(data, &ind);
         conf.ap_time_add_repeat_ms = utility::buffer_get_int32(data, &ind);
 
         conf.log_en = data[ind++];
         strcpy(conf.log_name, (const char*)(data + ind));
         ind += strlen(conf.log_name) + 1;
+
+        // Car settings
+        conf.car.yaw_use_odometry = data[ind++];
+        conf.car.yaw_imu_gain = utility::buffer_get_double32_auto(data, &ind);
+        conf.car.disable_motor = data[ind++];
+
+        conf.car.gear_ratio = utility::buffer_get_double32_auto(data, &ind);
+        conf.car.wheel_diam = utility::buffer_get_double32_auto(data, &ind);
+        conf.car.motor_poles = utility::buffer_get_double32_auto(data, &ind);
+        conf.car.steering_max_angle_rad = utility::buffer_get_double32_auto(data, &ind);
+        conf.car.steering_center = utility::buffer_get_double32_auto(data, &ind);
+        conf.car.steering_range = utility::buffer_get_double32_auto(data, &ind);
+        conf.car.steering_ramp_time = utility::buffer_get_double32_auto(data, &ind);
+        conf.car.axis_distance = utility::buffer_get_double32_auto(data, &ind);
+
+        // Multirotor settings
+        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+
+        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+
+        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+
+        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+
+        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+
+        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+
+        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+
+        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
 
         emit configurationReceived(id, conf);
     } break;
@@ -673,54 +712,93 @@ bool PacketInterface::setConfiguration(quint8 id, MAIN_CONFIG &conf, int retries
 
     mSendBuffer[send_index++] = conf.mag_use;
     mSendBuffer[send_index++] = conf.mag_comp;
-    mSendBuffer[send_index++] = conf.yaw_use_odometry;
-    utility::buffer_append_double32(mSendBuffer, conf.yaw_mag_gain, 1e6, &send_index);
-    utility::buffer_append_double32(mSendBuffer, conf.yaw_imu_gain, 1e6, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.yaw_mag_gain, &send_index);
 
-    mSendBuffer[send_index++] = conf.disable_motor;
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mag_cal_cx, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mag_cal_cy, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mag_cal_cz, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mag_cal_xx, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mag_cal_xy, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mag_cal_xz, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mag_cal_yx, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mag_cal_yy, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mag_cal_yz, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mag_cal_zx, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mag_cal_zy, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mag_cal_zz, &send_index);
 
-    utility::buffer_append_double32(mSendBuffer, conf.mag_cal_cx, 1e6, &send_index);
-    utility::buffer_append_double32(mSendBuffer, conf.mag_cal_cy, 1e6, &send_index);
-    utility::buffer_append_double32(mSendBuffer, conf.mag_cal_cz, 1e6, &send_index);
-    utility::buffer_append_double32(mSendBuffer, conf.mag_cal_xx, 1e6, &send_index);
-    utility::buffer_append_double32(mSendBuffer, conf.mag_cal_xy, 1e6, &send_index);
-    utility::buffer_append_double32(mSendBuffer, conf.mag_cal_xz, 1e6, &send_index);
-    utility::buffer_append_double32(mSendBuffer, conf.mag_cal_yx, 1e6, &send_index);
-    utility::buffer_append_double32(mSendBuffer, conf.mag_cal_yy, 1e6, &send_index);
-    utility::buffer_append_double32(mSendBuffer, conf.mag_cal_yz, 1e6, &send_index);
-    utility::buffer_append_double32(mSendBuffer, conf.mag_cal_zx, 1e6, &send_index);
-    utility::buffer_append_double32(mSendBuffer, conf.mag_cal_zy, 1e6, &send_index);
-    utility::buffer_append_double32(mSendBuffer, conf.mag_cal_zz, 1e6, &send_index);
-
-    utility::buffer_append_double32(mSendBuffer, conf.gear_ratio, 1e6, &send_index);
-    utility::buffer_append_double32(mSendBuffer, conf.wheel_diam, 1e6, &send_index);
-    utility::buffer_append_double32(mSendBuffer, conf.motor_poles, 1e6, &send_index);
-    utility::buffer_append_double32(mSendBuffer, conf.steering_max_angle_rad, 1e6, &send_index);
-    utility::buffer_append_double32(mSendBuffer, conf.steering_center, 1e6, &send_index);
-    utility::buffer_append_double32(mSendBuffer, conf.steering_range, 1e6, &send_index);
-    utility::buffer_append_double32(mSendBuffer, conf.steering_ramp_time, 1e6, &send_index);
-    utility::buffer_append_double32(mSendBuffer, conf.axis_distance, 1e6, &send_index);
-
-    utility::buffer_append_double32(mSendBuffer, conf.gps_ant_x, 1e6, &send_index);
-    utility::buffer_append_double32(mSendBuffer, conf.gps_ant_y, 1e6, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.gps_ant_x, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.gps_ant_y, &send_index);
     mSendBuffer[send_index++] = conf.gps_comp;
     mSendBuffer[send_index++] = conf.gps_req_rtk;
-    utility::buffer_append_double32(mSendBuffer, conf.gps_corr_gain_stat, 1e6, &send_index);
-    utility::buffer_append_double32(mSendBuffer, conf.gps_corr_gain_dyn, 1e6, &send_index);
-    utility::buffer_append_double32(mSendBuffer, conf.gps_corr_gain_yaw, 1e6, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.gps_corr_gain_stat, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.gps_corr_gain_dyn, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.gps_corr_gain_yaw, &send_index);
     mSendBuffer[send_index++] = conf.gps_send_nmea;
     mSendBuffer[send_index++] = conf.gps_use_ubx_info;
-    utility::buffer_append_double32(mSendBuffer, conf.gps_ubx_max_acc, 1e6, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.gps_ubx_max_acc, &send_index);
 
     mSendBuffer[send_index++] = conf.ap_repeat_routes;
-    utility::buffer_append_double32(mSendBuffer, conf.ap_base_rad, 1e6, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.ap_base_rad, &send_index);
     mSendBuffer[send_index++] = conf.ap_mode_time;
-    utility::buffer_append_double32(mSendBuffer, conf.ap_max_speed, 1e6, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.ap_max_speed, &send_index);
     utility::buffer_append_int32(mSendBuffer, conf.ap_time_add_repeat_ms, &send_index);
 
     mSendBuffer[send_index++] = conf.log_en;
     strcpy((char*)(mSendBuffer + send_index), conf.log_name);
     send_index += strlen(conf.log_name) + 1;
+
+    // Car settings
+    mSendBuffer[send_index++] = conf.car.yaw_use_odometry;
+    utility::buffer_append_double32_auto(mSendBuffer, conf.car.yaw_imu_gain, &send_index);
+    mSendBuffer[send_index++] = conf.car.disable_motor;
+
+    utility::buffer_append_double32_auto(mSendBuffer, conf.car.gear_ratio, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.car.wheel_diam, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.car.motor_poles, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.car.steering_max_angle_rad, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.car.steering_center, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.car.steering_range, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.car.steering_ramp_time, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.car.axis_distance, &send_index);
+
+    // Multirotor settings
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.vel_decay_e, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.vel_decay_l, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.vel_max, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.map_min_x, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.map_max_x, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.map_min_y, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.map_max_y, &send_index);
+
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.vel_gain_p, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.vel_gain_i, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.vel_gain_d, &send_index);
+
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.tilt_gain_p, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.tilt_gain_i, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.tilt_gain_d, &send_index);
+
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.max_corr_error, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.max_tilt_error, &send_index);
+
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.ctrl_gain_roll_p, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.ctrl_gain_roll_i, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.ctrl_gain_roll_dp, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.ctrl_gain_roll_de, &send_index);
+
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.ctrl_gain_pitch_p, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.ctrl_gain_pitch_i, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.ctrl_gain_pitch_dp, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.ctrl_gain_pitch_de, &send_index);
+
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.ctrl_gain_yaw_p, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.ctrl_gain_yaw_i, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.ctrl_gain_yaw_dp, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.ctrl_gain_yaw_de, &send_index);
+
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.js_gain_tilt, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.js_gain_yaw, &send_index);
 
     return sendPacketAck(mSendBuffer, send_index, retries, 500);
 }

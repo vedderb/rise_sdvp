@@ -1071,20 +1071,19 @@ void MapWidget::paintEvent(QPaintEvent *event)
 
         // Draw the Quadcopter
         painter.setBrush(col_frame);
-        painter.drawRoundedRect(-20, 0, 40, 300, 10, 10);
+        painter.drawRoundedRect(-20, -300, 40, 600, 10, 10);
         painter.drawRoundedRect(-300, -20, 600, 40, 10, 10);
-        painter.drawRoundedRect(-20, -300, 40, 300, 10, 10);
 
         // Draw propellers
         QColor col = col_prop_main;
         col.setAlphaF(0.3);
         painter.setBrush(QBrush(col));
-        painter.drawEllipse(QPointF(0, 275), 130, 130);
+        painter.drawEllipse(QPointF(275, 0), 130, 130);
         col = col_prop_other;
         col.setAlphaF(0.3);
         painter.setBrush(QBrush(col));
+        painter.drawEllipse(QPointF(0, 275), 130, 130);
         painter.drawEllipse(QPointF(0, -275), 130, 130);
-        painter.drawEllipse(QPointF(275, 0), 130, 130);
         painter.drawEllipse(QPointF(-275, 0), 130, 130);
 
         // Draw the acceleration vector

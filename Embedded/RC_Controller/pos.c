@@ -55,6 +55,7 @@ static void update_orientation_angles(float *accel, float *gyro, float *mag, flo
 static void init_gps_local(GPS_STATE *gps);
 static double nmea_parse_val(char *str);
 static void ublox_relposned_rx(ubx_nav_relposned *pos);
+static void correct_pos_gps(POS_STATE *pos);
 
 #if MAIN_MODE == MAIN_MODE_CAR
 static void mc_values_received(mc_values *val);
@@ -170,7 +171,9 @@ void pos_set_yaw_offset(float angle) {
 	chMtxLock(&m_mutex_pos);
 
 	m_yaw_offset_gps = angle;
+	utils_norm_angle(&m_yaw_offset_gps);
 	m_pos.yaw = m_imu_yaw - m_yaw_offset_gps;
+	utils_norm_angle(&m_pos.yaw);
 
 	chMtxUnlock(&m_mutex_pos);
 }
@@ -402,29 +405,7 @@ bool pos_input_nmea(const char *data) {
 					(!main_config.gps_req_rtk || (fix_type == 4 || fix_type == 5)) &&
 					(!main_config.gps_use_ubx_info || m_ubx_pos_valid)) {
 
-				float gain = main_config.gps_corr_gain_stat +
-						main_config.gps_corr_gain_dyn * m_pos.gps_corr_cnt;
-
-				float yaw_gps = atan2f(m_pos.py_gps - m_pos.gps_ang_corr_y_last_gps,
-						m_pos.px_gps - m_pos.gps_ang_corr_x_last_gps);
-				float yaw_car = atan2f(m_pos.py - m_pos.gps_ang_corr_y_last_car,
-						m_pos.px - m_pos.gps_ang_corr_x_last_car);
-				float yaw_diff = utils_angle_difference_rad(yaw_gps, yaw_car) * 180.0 / M_PI;
-
-				if (fabsf(m_pos.speed * 3.6) > 0.5) {
-					utils_step_towards(&m_yaw_offset_gps, m_yaw_offset_gps + yaw_diff,
-							main_config.gps_corr_gain_yaw * m_pos.gps_corr_cnt);
-				}
-
-				utils_norm_angle(&m_yaw_offset_gps);
-
-				utils_step_towards(&m_pos.px, m_pos.px_gps, gain);
-				utils_step_towards(&m_pos.py, m_pos.py_gps, gain);
-
-				m_pos.gps_ang_corr_x_last_gps = m_pos.px_gps;
-				m_pos.gps_ang_corr_y_last_gps = m_pos.py_gps;
-				m_pos.gps_ang_corr_x_last_car = m_pos.px;
-				m_pos.gps_ang_corr_y_last_car = m_pos.py;
+				correct_pos_gps(&m_pos);
 			}
 
 			m_pos.gps_corr_cnt = 0.0;
@@ -577,14 +558,14 @@ static void update_orientation_angles(float *accel, float *gyro, float *mag, flo
 	// Correct yaw
 #if MAIN_MODE == MAIN_MODE_CAR
 	if (main_config.car.yaw_use_odometry) {
-		if (main_config.yaw_imu_gain > 1e-10) {
+		if (main_config.car.yaw_imu_gain > 1e-10) {
 			float ang_diff = utils_angle_difference(m_pos.yaw, m_imu_yaw - m_yaw_offset_gps);
 
-			if (ang_diff > 1.2 * main_config.yaw_imu_gain) {
-				m_pos.yaw -= main_config.yaw_imu_gain;
+			if (ang_diff > 1.2 * main_config.car.yaw_imu_gain) {
+				m_pos.yaw -= main_config.car.yaw_imu_gain;
 				utils_norm_angle(&m_pos.yaw);
-			} else if (ang_diff < -1.2 * main_config.yaw_imu_gain) {
-				m_pos.yaw += main_config.yaw_imu_gain;
+			} else if (ang_diff < -1.2 * main_config.car.yaw_imu_gain) {
+				m_pos.yaw += main_config.car.yaw_imu_gain;
 				utils_norm_angle(&m_pos.yaw);
 			} else {
 				m_pos.yaw -= ang_diff;
@@ -593,9 +574,11 @@ static void update_orientation_angles(float *accel, float *gyro, float *mag, flo
 		}
 	} else {
 		m_pos.yaw = m_imu_yaw - m_yaw_offset_gps;
+		utils_norm_angle(&m_pos.yaw);
 	}
 #else
 	m_pos.yaw = m_imu_yaw - m_yaw_offset_gps;
+	utils_norm_angle(&m_pos.yaw);
 #endif
 
 	m_pos.q0 = m_att.q0;
@@ -681,6 +664,99 @@ static void ublox_relposned_rx(ubx_nav_relposned *pos) {
 	m_ubx_pos_valid = valid;
 }
 
+static void correct_pos_gps(POS_STATE *pos) {
+#if MAIN_MODE == MAIN_MODE_MULTIROTOR
+	float error_x = pos->px - pos->px_gps;
+	float error_y = pos->py - pos->py_gps;
+#endif
+
+	float gain = main_config.gps_corr_gain_stat +
+			main_config.gps_corr_gain_dyn * pos->gps_corr_cnt;
+
+	float yaw_gps = atan2f(pos->py_gps - pos->gps_ang_corr_y_last_gps,
+			pos->px_gps - pos->gps_ang_corr_x_last_gps);
+	float yaw_car = atan2f(pos->py - pos->gps_ang_corr_y_last_car,
+			pos->px - pos->gps_ang_corr_x_last_car);
+	float yaw_diff = utils_angle_difference_rad(yaw_gps, yaw_car) * 180.0 / M_PI;
+
+	if (fabsf(pos->speed * 3.6) > 0.5) {
+		utils_step_towards(&m_yaw_offset_gps, m_yaw_offset_gps + yaw_diff,
+				main_config.gps_corr_gain_yaw * pos->gps_corr_cnt);
+	}
+
+	utils_norm_angle(&m_yaw_offset_gps);
+
+	utils_step_towards(&pos->px, pos->px_gps, gain);
+	utils_step_towards(&pos->py, pos->py_gps, gain);
+
+	pos->gps_ang_corr_x_last_gps = pos->px_gps;
+	pos->gps_ang_corr_y_last_gps = pos->py_gps;
+	pos->gps_ang_corr_x_last_car = pos->px;
+	pos->gps_ang_corr_y_last_car = pos->py;
+
+	// Update multirotor state
+#if MAIN_MODE == MAIN_MODE_MULTIROTOR
+	const systime_t time_now = chVTGetSystemTime();
+	static systime_t time_last = 0;
+	float dt = (float)(time_now - time_last) / (float)CH_CFG_ST_FREQUENCY;
+	time_last = time_now;
+
+	if (dt > 2.0 || dt < 0.01) {
+		return;
+	}
+
+	utils_truncate_number_abs(&error_x, main_config.mr.max_corr_error);
+	utils_truncate_number_abs(&error_y, main_config.mr.max_corr_error);
+
+	const float error_x_diff = (error_x - pos->error_x_last);
+	const float error_y_diff = (error_y - pos->error_y_last);
+	pos->error_x_last = error_x;
+	pos->error_y_last = error_y;
+
+	// Velocity
+	const float vcx_p = error_x * main_config.mr.vel_gain_p;
+	const float vcy_p = error_y * main_config.mr.vel_gain_p;
+
+	pos->vel_corr_x_int += error_x * main_config.mr.vel_gain_i * dt;
+	pos->vel_corr_y_int += error_y * main_config.mr.vel_gain_i * dt;
+	utils_truncate_number(&pos->vel_corr_x_int, -1.0, 1.0);
+	utils_truncate_number(&pos->vel_corr_y_int, -1.0, 1.0);
+
+	const float vcx_d = error_x_diff * main_config.mr.vel_gain_d / dt;
+	const float vcy_d = error_y_diff * main_config.mr.vel_gain_d / dt;
+
+	const float vcx_out = vcx_p + pos->vel_corr_x_int + vcx_d;
+	const float vcy_out = vcy_p + pos->vel_corr_y_int + vcy_d;
+
+	pos->vx -= vcx_out;
+	pos->vy -= vcy_out;
+
+	// Tilt
+	const float acx_p = error_x * main_config.mr.tilt_gain_p;
+	const float acy_p = error_y * main_config.mr.tilt_gain_p;
+
+	pos->tilt_corr_x_int += error_x * main_config.mr.tilt_gain_i * dt;
+	pos->tilt_corr_y_int += error_y * main_config.mr.tilt_gain_i * dt;
+	utils_truncate_number(&pos->tilt_corr_x_int, -1.0, 1.0);
+	utils_truncate_number(&pos->tilt_corr_y_int, -1.0, 1.0);
+
+	const float acx_d = error_x_diff * main_config.mr.tilt_gain_d / dt;
+	const float acy_d = error_y_diff * main_config.mr.tilt_gain_d / dt;
+
+	const float acx_out = acx_p + pos->tilt_corr_x_int + acx_d;
+	const float acy_out = acy_p + pos->tilt_corr_y_int + acy_d;
+
+	const float cosy = cosf(-pos->yaw * M_PI / 180.0);
+	const float siny = sinf(-pos->yaw * M_PI / 180.0);
+
+	pos->tilt_pitch_err += acx_out * cosy + acy_out * siny;
+	pos->tilt_roll_err += acy_out * cosy - acx_out * siny;
+
+	utils_truncate_number_abs(&pos->tilt_roll_err, main_config.mr.max_tilt_error);
+	utils_truncate_number_abs(&pos->tilt_pitch_err, main_config.mr.max_tilt_error);
+#endif
+}
+
 #if MAIN_MODE == MAIN_MODE_CAR
 static void mc_values_received(mc_values *val) {
 	m_mc_val = *val;
@@ -700,8 +776,8 @@ static void mc_values_received(mc_values *val) {
 
 	float steering_angle = (servo_simple_get_pos_now()
 			- main_config.car.steering_center)
-									* ((2.0 * main_config.car.steering_max_angle_rad)
-											/ main_config.car.steering_range);
+											* ((2.0 * main_config.car.steering_max_angle_rad)
+													/ main_config.car.steering_range);
 
 	chMtxLock(&m_mutex_pos);
 
@@ -744,8 +820,8 @@ static void mc_values_received(mc_values *val) {
 
 #if MAIN_MODE == MAIN_MODE_MULTIROTOR
 static void mr_update_pos(POS_STATE *pos, float dt) {
-	float roll = pos->roll + pos->acc_roll_err;
-	float pitch = pos->pitch + pos->acc_pitch_err;
+	float roll = pos->roll + pos->tilt_roll_err;
+	float pitch = pos->pitch + pos->tilt_pitch_err;
 	float yaw = pos->yaw;
 
 	// Too much tilt means that this won't work anyway. Return in that case.
@@ -763,29 +839,26 @@ static void mr_update_pos(POS_STATE *pos, float dt) {
 	const float cos_y = cosf(-yaw);
 	const float sin_y = sinf(-yaw);
 
-	const float dvx = acc_v * tanf(roll) * dt;
-	const float dvy = -acc_v * tanf(pitch) * dt;
+	const float dvx = -acc_v * tanf(pitch) * dt;
+	const float dvy = -acc_v * tanf(roll) * dt;
 
-	pos->vx += cos_y * dvx + sin_y * dvy;
-	pos->vy += -sin_y * dvx + cos_y * dvy;
+	pos->vx += cos_y * dvx - sin_y * dvy;
+	pos->vy += cos_y * dvy + sin_y * dvx;
 	pos->px += pos->vx * dt;
 	pos->py += pos->vy * dt;
 
 	// Apply position and velocity limits
-//	if (utils_truncate_number(&pos->px, quad_config.map_lim.min_x, quad_config.map_lim.max_x)) {
-//		pos->vx = 0.0;
-//	} else {
-//		utils_truncate_number_abs(&pos->vx, main_config.mr.vel_max);
-//	}
-//
-//	if (utils_truncate_number(&pos->py, quad_config.map_lim.min_y, quad_config.map_lim.max_y)) {
-//		pos->vy = 0;
-//	} else {
-//		utils_truncate_number_abs(&pos->vy, main_config.mr.vel_max);
-//	}
+	if (utils_truncate_number(&pos->px, main_config.mr.map_min_x, main_config.mr.map_max_x)) {
+		pos->vx = 0.0;
+	} else {
+		utils_truncate_number_abs(&pos->vx, main_config.mr.vel_max);
+	}
 
-	utils_truncate_number_abs(&pos->vx, main_config.mr.vel_max);
-	utils_truncate_number_abs(&pos->vy, main_config.mr.vel_max);
+	if (utils_truncate_number(&pos->py, main_config.mr.map_min_y, main_config.mr.map_max_y)) {
+		pos->vy = 0;
+	} else {
+		utils_truncate_number_abs(&pos->vy, main_config.mr.vel_max);
+	}
 
 	// Exponential decay
 	const float decay_factor = powf(main_config.mr.vel_decay_e, dt);

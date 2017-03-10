@@ -80,6 +80,7 @@ private slots:
     void radarSamplesReceived(quint8 id, QVector<QPair<double, double> > samples);
     void dwSampleReceived(quint8 id, DW_LOG_INFO dw);
     void updateAnchorsMap();
+    void loadMagCal();
 
     void on_terminalSendButton_clicked();
     void on_terminalSendVescButton_clicked();
@@ -95,7 +96,6 @@ private slots:
     void on_confReadButton_clicked();
     void on_confReadDefaultButton_clicked();
     void on_confWriteButton_clicked();
-    void on_magCalLoadButton_clicked();
     void on_radarReadButton_clicked();
     void on_radarWriteButton_clicked();
     void on_radarGetRadCCButton_clicked();

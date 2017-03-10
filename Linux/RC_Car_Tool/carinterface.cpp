@@ -76,6 +76,8 @@ CarInterface::CarInterface(QWidget *parent) :
     connect(mUdpSocket, SIGNAL(readyRead()), this, SLOT(udpReadReady()));
     connect(mTcpServer->packet(), SIGNAL(packetReceived(QByteArray&)),
             this, SLOT(tcpRx(QByteArray&)));
+    connect(ui->confCommonWidget, SIGNAL(loadMagCal()),
+            this, SLOT(loadMagCal()));
 
     mTcpServer->setUsePacket(true);
 
@@ -132,6 +134,7 @@ void CarInterface::setOrientation(double roll, double pitch, double yaw)
     ui->rollBar->setValue(roll);
     ui->pitchBar->setValue(pitch);
     ui->yawBar->setValue(yaw);
+
     mOrientationWidget->setRollPitchYaw(roll, pitch, yaw);
 #else
     (void)roll;
@@ -606,6 +609,20 @@ void CarInterface::updateAnchorsMap()
     }
 }
 
+void CarInterface::loadMagCal()
+{
+    if (!ui->magCal->calculateCompensation()) {
+        QMessageBox::warning(this, "Load Magnetometer Calibration",
+                             "Magnetometer calibration is not done. Please go to "
+                             "the calibration tab and collect "
+                             "samples, or load a file.");
+        return;
+    }
+
+    ui->confCommonWidget->setMagComp(ui->magCal->getComp());
+    ui->confCommonWidget->setMagCompCenter(ui->magCal->getCenter());
+}
+
 void CarInterface::on_terminalSendButton_clicked()
 {
     emit terminalCmd(mId, ui->terminalEdit->text());
@@ -749,110 +766,40 @@ void CarInterface::on_confWriteButton_clicked()
 
 void CarInterface::getConfGui(MAIN_CONFIG &conf)
 {
-    conf.mag_use = ui->confMagUseBox->isChecked();
-    conf.mag_comp = ui->confMagCompBox->isChecked();
-    conf.yaw_use_odometry = ui->confOdometryYawBox->isChecked();
-    conf.yaw_mag_gain = ui->confYawMagGainBox->value();
-    conf.yaw_imu_gain = ui->confYawImuGainBox->value();
+    conf.car.yaw_use_odometry = ui->confOdometryYawBox->isChecked();
+    conf.car.yaw_imu_gain = ui->confYawImuGainBox->value();
+    conf.car.disable_motor = ui->confMiscDisableMotorBox->isChecked();
 
-    conf.disable_motor = ui->confMiscDisableMotorBox->isChecked();
+    conf.car.gear_ratio = ui->confGearRatioBox->value();
+    conf.car.wheel_diam = ui->confWheelDiamBox->value();
+    conf.car.motor_poles = ui->confMotorPoleBox->value();
+    conf.car.steering_center = ui->confServoCenterBox->value();
+    conf.car.steering_range = ui->confServoRangeBox->value();
+    conf.car.steering_ramp_time = ui->confSteeringRampBox->value();
+    conf.car.axis_distance = ui->confAxisDistanceBox->value();
 
-    conf.mag_cal_cx = ui->confMagCxBox->value();
-    conf.mag_cal_cy = ui->confMagCyBox->value();
-    conf.mag_cal_cz = ui->confMagCzBox->value();
-    conf.mag_cal_xx = ui->confMagXxBox->value();
-    conf.mag_cal_xy = ui->confMagXyBox->value();
-    conf.mag_cal_xz = ui->confMagXzBox->value();
-    conf.mag_cal_yx = ui->confMagYxBox->value();
-    conf.mag_cal_yy = ui->confMagYyBox->value();
-    conf.mag_cal_yz = ui->confMagYzBox->value();
-    conf.mag_cal_zx = ui->confMagZxBox->value();
-    conf.mag_cal_zy = ui->confMagZyBox->value();
-    conf.mag_cal_zz = ui->confMagZzBox->value();
+    conf.car.steering_max_angle_rad = atan(ui->confAxisDistanceBox->value() / ui->confTurnRadBox->value());
 
-    conf.gear_ratio = ui->confGearRatioBox->value();
-    conf.wheel_diam = ui->confWheelDiamBox->value();
-    conf.motor_poles = ui->confMotorPoleBox->value();
-    conf.steering_center = ui->confServoCenterBox->value();
-    conf.steering_range = ui->confServoRangeBox->value();
-    conf.steering_ramp_time = ui->confSteeringRampBox->value();
-    conf.axis_distance = ui->confAxisDistanceBox->value();
-
-    conf.gps_ant_x = ui->confGpsAntXBox->value();
-    conf.gps_ant_y = ui->confGpsAntYBox->value();
-    conf.gps_comp = ui->confGpsCorrBox->isChecked();
-    conf.gps_req_rtk = ui->confGpsReqRtkBox->isChecked();
-    conf.gps_corr_gain_stat = ui->confGpsCorrStatBox->value();
-    conf.gps_corr_gain_dyn = ui->confGpsCorrDynBox->value();
-    conf.gps_corr_gain_yaw = ui->confGpsCorrYawBox->value();
-    conf.gps_send_nmea = ui->confGpsSendNmeaBox->isChecked();
-    conf.gps_use_ubx_info = ui->confGpsUbxUseInfoBox->isChecked();
-    conf.gps_ubx_max_acc = ui->confGpsUbxMaxAccBox->value();
-
-    conf.ap_repeat_routes = ui->confApRepeatBox->isChecked();
-    conf.ap_base_rad = ui->confApBaseRadBox->value();
-    conf.ap_mode_time = ui->confApModeTimeBox->isChecked();
-    conf.ap_max_speed = ui->confApMaxSpeedBox->value() / 3.6;
-    conf.ap_time_add_repeat_ms = ui->confApAddRepeatTimeEdit->time().msecsSinceStartOfDay();
-
-    conf.steering_max_angle_rad = atan(ui->confAxisDistanceBox->value() / ui->confTurnRadBox->value());
-
-    conf.log_en = ui->confLogEnBox->isChecked();
-    strcpy(conf.log_name, ui->confLogNameEdit->text().toLocal8Bit().data());
+    ui->confCommonWidget->getConfGui(conf);
 }
 
 void CarInterface::setConfGui(MAIN_CONFIG &conf)
 {
-    ui->confMagUseBox->setChecked(conf.mag_use);
-    ui->confMagCompBox->setChecked(conf.mag_comp);
-    ui->confOdometryYawBox->setChecked(conf.yaw_use_odometry);
-    ui->confYawMagGainBox->setValue(conf.yaw_mag_gain);
-    ui->confYawImuGainBox->setValue(conf.yaw_imu_gain);
+    ui->confOdometryYawBox->setChecked(conf.car.yaw_use_odometry);
+    ui->confYawImuGainBox->setValue(conf.car.yaw_imu_gain);
+    ui->confMiscDisableMotorBox->setChecked(conf.car.disable_motor);
 
-    ui->confMiscDisableMotorBox->setChecked(conf.disable_motor);
+    ui->confGearRatioBox->setValue(conf.car.gear_ratio);
+    ui->confWheelDiamBox->setValue(conf.car.wheel_diam);
+    ui->confMotorPoleBox->setValue(conf.car.motor_poles);
+    ui->confServoCenterBox->setValue(conf.car.steering_center);
+    ui->confServoRangeBox->setValue(conf.car.steering_range);
+    ui->confSteeringRampBox->setValue(conf.car.steering_ramp_time);
+    ui->confAxisDistanceBox->setValue(conf.car.axis_distance);
 
-    ui->confMagCxBox->setValue(conf.mag_cal_cx);
-    ui->confMagCyBox->setValue(conf.mag_cal_cy);
-    ui->confMagCzBox->setValue(conf.mag_cal_cz);
-    ui->confMagXxBox->setValue(conf.mag_cal_xx);
-    ui->confMagXyBox->setValue(conf.mag_cal_xy);
-    ui->confMagXzBox->setValue(conf.mag_cal_xz);
-    ui->confMagYxBox->setValue(conf.mag_cal_yx);
-    ui->confMagYyBox->setValue(conf.mag_cal_yy);
-    ui->confMagYzBox->setValue(conf.mag_cal_yz);
-    ui->confMagZxBox->setValue(conf.mag_cal_zx);
-    ui->confMagZyBox->setValue(conf.mag_cal_zy);
-    ui->confMagZzBox->setValue(conf.mag_cal_zz);
+    ui->confTurnRadBox->setValue(conf.car.axis_distance / tan(conf.car.steering_max_angle_rad));
 
-    ui->confGearRatioBox->setValue(conf.gear_ratio);
-    ui->confWheelDiamBox->setValue(conf.wheel_diam);
-    ui->confMotorPoleBox->setValue(conf.motor_poles);
-    ui->confServoCenterBox->setValue(conf.steering_center);
-    ui->confServoRangeBox->setValue(conf.steering_range);
-    ui->confSteeringRampBox->setValue(conf.steering_ramp_time);
-    ui->confAxisDistanceBox->setValue(conf.axis_distance);
-
-    ui->confGpsAntXBox->setValue(conf.gps_ant_x);
-    ui->confGpsAntYBox->setValue(conf.gps_ant_y);
-    ui->confGpsCorrBox->setChecked(conf.gps_comp);
-    ui->confGpsReqRtkBox->setChecked(conf.gps_req_rtk);
-    ui->confGpsCorrStatBox->setValue(conf.gps_corr_gain_stat);
-    ui->confGpsCorrDynBox->setValue(conf.gps_corr_gain_dyn);
-    ui->confGpsCorrYawBox->setValue(conf.gps_corr_gain_yaw);
-    ui->confGpsSendNmeaBox->setChecked(conf.gps_send_nmea);
-    ui->confGpsUbxUseInfoBox->setChecked(conf.gps_use_ubx_info);
-    ui->confGpsUbxMaxAccBox->setValue(conf.gps_ubx_max_acc);
-
-    ui->confApRepeatBox->setChecked(conf.ap_repeat_routes);
-    ui->confApBaseRadBox->setValue(conf.ap_base_rad);
-    ui->confApModeTimeBox->setChecked(conf.ap_mode_time);
-    ui->confApMaxSpeedBox->setValue(conf.ap_max_speed * 3.6);
-    ui->confApAddRepeatTimeEdit->setTime(QTime::fromMSecsSinceStartOfDay(conf.ap_time_add_repeat_ms));
-
-    ui->confTurnRadBox->setValue(conf.axis_distance / tan(conf.steering_max_angle_rad));
-
-    ui->confLogEnBox->setChecked(conf.log_en);
-    ui->confLogNameEdit->setText(QString::fromLocal8Bit(conf.log_name));
+    ui->confCommonWidget->setConfGui(conf);
 }
 
 void CarInterface::plotDwData()
@@ -909,33 +856,6 @@ void CarInterface::plotDwData()
     ui->dwPlot->yAxis2->setRangeLower(-0.2);
     ui->dwPlot->yAxis2->setRangeUpper(2.2);
     ui->dwPlot->replot();
-}
-
-void CarInterface::on_magCalLoadButton_clicked()
-{
-    if (!ui->magCal->calculateCompensation()) {
-        QMessageBox::warning(this, "Load Magnetometer Calibration",
-                             "Magnetometer calibration is not done. Please go to "
-                             "the calibration tab and collect "
-                             "samples, or load a file.");
-        return;
-    }
-
-    ui->confMagCxBox->setValue(ui->magCal->getCx());
-    ui->confMagCyBox->setValue(ui->magCal->getCy());
-    ui->confMagCzBox->setValue(ui->magCal->getCz());
-
-    ui->confMagXxBox->setValue(ui->magCal->getXx());
-    ui->confMagXyBox->setValue(ui->magCal->getXy());
-    ui->confMagXzBox->setValue(ui->magCal->getXz());
-
-    ui->confMagYxBox->setValue(ui->magCal->getYx());
-    ui->confMagYyBox->setValue(ui->magCal->getYy());
-    ui->confMagYzBox->setValue(ui->magCal->getYz());
-
-    ui->confMagZxBox->setValue(ui->magCal->getZx());
-    ui->confMagZyBox->setValue(ui->magCal->getZy());
-    ui->confMagZzBox->setValue(ui->magCal->getZz());
 }
 
 void CarInterface::on_radarReadButton_clicked()

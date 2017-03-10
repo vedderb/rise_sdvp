@@ -51,6 +51,9 @@ public:
     double getZy();
     double getZz();
 
+    QVector<double> getCenter();
+    QVector<double> getComp();
+
 private slots:
     void timerSlot();
 

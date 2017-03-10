@@ -74,8 +74,19 @@ typedef struct {
 	float gps_ang_corr_y_last_gps;
 	float gps_ang_corr_x_last_car;
 	float gps_ang_corr_y_last_car;
-	float acc_roll_err;
-	float acc_pitch_err;
+
+	// Multirotor state
+	float tilt_roll_err;
+	float tilt_pitch_err;
+
+	float error_x_last;
+	float error_y_last;
+
+	float vel_corr_x_int;
+	float vel_corr_y_int;
+
+	float tilt_corr_x_int;
+	float tilt_corr_y_int;
 } POS_STATE;
 
 // Autopilot map point
@@ -166,6 +177,7 @@ typedef enum {
 
 typedef struct {
 	bool yaw_use_odometry; // Use odometry data for yaw angle correction.
+	float yaw_imu_gain; // Gain for yaw angle from IMU (vs odometry)
 	bool disable_motor; // Disable motor drive commands to make sure that the motor does not move.
 
 	float gear_ratio;
@@ -182,6 +194,39 @@ typedef struct {
 	float vel_decay_e;
 	float vel_decay_l;
 	float vel_max;
+	float map_min_x;
+	float map_max_x;
+	float map_min_y;
+	float map_max_y;
+
+	float vel_gain_p;
+	float vel_gain_i;
+	float vel_gain_d;
+
+	float tilt_gain_p;
+	float tilt_gain_i;
+	float tilt_gain_d;
+
+	float max_corr_error;
+	float max_tilt_error;
+
+	float ctrl_gain_roll_p;
+	float ctrl_gain_roll_i;
+	float ctrl_gain_roll_dp;
+	float ctrl_gain_roll_de;
+
+	float ctrl_gain_pitch_p;
+	float ctrl_gain_pitch_i;
+	float ctrl_gain_pitch_dp;
+	float ctrl_gain_pitch_de;
+
+	float ctrl_gain_yaw_p;
+	float ctrl_gain_yaw_i;
+	float ctrl_gain_yaw_dp;
+	float ctrl_gain_yaw_de;
+
+	float js_gain_tilt;
+	float js_gain_yaw;
 } MAIN_CONFIG_MULTIROTOR;
 
 // Car configuration
@@ -190,7 +235,6 @@ typedef struct {
 	bool mag_use; // Use the magnetometer
 	bool mag_comp; // Should be 0 when capturing samples for the calibration
 	float yaw_mag_gain; // Gain for yaw angle from magnetomer (vs gyro)
-	float yaw_imu_gain; // Gain for yaw angle from IMU (vs odometry)
 
 	// Magnetometer calibration
 	float mag_cal_cx;

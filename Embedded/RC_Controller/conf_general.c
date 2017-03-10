@@ -82,7 +82,6 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 	conf->mag_use = true;
 	conf->mag_comp = true;
 	conf->yaw_mag_gain = 0.01;
-	conf->yaw_imu_gain = 0.5;
 
 	conf->mag_cal_cx = 0.0;
 	conf->mag_cal_cy = 0.0;
@@ -119,6 +118,7 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 
 	// Default car settings
 	conf->car.yaw_use_odometry = false;
+	conf->car.yaw_imu_gain = 0.5;
 	conf->car.disable_motor = false;
 
 	conf->car.gear_ratio = (1.0 / 3.0) * (21.0 / 37.0);
@@ -135,7 +135,41 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 	conf->mr.vel_decay_l = 0.02;
 	conf->mr.vel_max = 80.0 / 3.6;
 
-	// Custom parameters based on car ID
+	conf->mr.map_min_x = -10.0;
+	conf->mr.map_max_x = 10.0;
+	conf->mr.map_min_y = -10.0;
+	conf->mr.map_max_y = 10.0;
+
+	conf->mr.vel_gain_p = 0.1;
+	conf->mr.vel_gain_i = 0.0;
+	conf->mr.vel_gain_d = 0.2;
+
+	conf->mr.tilt_gain_p = 0.2;
+	conf->mr.tilt_gain_i = 0.0;
+	conf->mr.tilt_gain_d = 0.05;
+
+	conf->mr.max_corr_error = 0.5;
+	conf->mr.max_tilt_error = 6.0;
+
+	conf->mr.ctrl_gain_roll_p = 0.8;
+	conf->mr.ctrl_gain_roll_i = 1.0;
+	conf->mr.ctrl_gain_roll_dp = 0.3;
+	conf->mr.ctrl_gain_roll_de = 0.2;
+
+	conf->mr.ctrl_gain_pitch_p = 0.8;
+	conf->mr.ctrl_gain_pitch_i = 1.0;
+	conf->mr.ctrl_gain_pitch_dp = 0.3;
+	conf->mr.ctrl_gain_pitch_de = 0.2;
+
+	conf->mr.ctrl_gain_yaw_p = 3.0;
+	conf->mr.ctrl_gain_yaw_i = 0.2;
+	conf->mr.ctrl_gain_yaw_dp = 0.4;
+	conf->mr.ctrl_gain_yaw_de = 0.2;
+
+	conf->mr.js_gain_tilt = 1.0;
+	conf->mr.js_gain_yaw = 0.6;
+
+	// Custom parameters based on ID
 	switch (main_id) {
 	case 0:
 		conf->mag_cal_cx = 13.8906;

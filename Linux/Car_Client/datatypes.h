@@ -1,7 +1,7 @@
 /*
-	Copyright 2016 Benjamin Vedder	benjamin@vedder.se
+    Copyright 2016 Benjamin Vedder	benjamin@vedder.se
 
-	This program is free software: you can redistribute it and/or modify
+    This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
@@ -31,15 +31,15 @@
 
 // Orientation data
 typedef struct {
-	float q0;
-	float q1;
-	float q2;
-	float q3;
-	float integralFBx;
-	float integralFBy;
-	float integralFBz;
-	float accMagP;
-	int initialUpdateDone;
+    float q0;
+    float q1;
+    float q2;
+    float q3;
+    float integralFBx;
+    float integralFBy;
+    float integralFBz;
+    float accMagP;
+    int initialUpdateDone;
 } ATTITUDE_INFO;
 
 typedef enum {
@@ -76,22 +76,72 @@ typedef struct {
 } CAR_STATE;
 
 typedef enum {
-	MOTE_PACKET_FILL_RX_BUFFER = 0,
-	MOTE_PACKET_FILL_RX_BUFFER_LONG,
-	MOTE_PACKET_PROCESS_RX_BUFFER,
-	MOTE_PACKET_PROCESS_SHORT_BUFFER,
+    MOTE_PACKET_FILL_RX_BUFFER = 0,
+    MOTE_PACKET_FILL_RX_BUFFER_LONG,
+    MOTE_PACKET_PROCESS_RX_BUFFER,
+    MOTE_PACKET_PROCESS_SHORT_BUFFER,
 } MOTE_PACKET;
+
+typedef struct {
+    bool yaw_use_odometry; // Use odometry data for yaw angle correction.
+    float yaw_imu_gain; // Gain for yaw angle from IMU (vs odometry)
+    bool disable_motor; // Disable motor drive commands to make sure that the motor does not move.
+
+    float gear_ratio;
+    float wheel_diam;
+    float motor_poles;
+    float steering_max_angle_rad; // = arctan(axist_distance / turn_radius_at_maximum_steering_angle)
+    float steering_center;
+    float steering_range;
+    float steering_ramp_time; // Ramp time constant for the steering servo in seconds
+    float axis_distance;
+} MAIN_CONFIG_CAR;
+
+typedef struct {
+    float vel_decay_e;
+    float vel_decay_l;
+    float vel_max;
+    float map_min_x;
+    float map_max_x;
+    float map_min_y;
+    float map_max_y;
+
+    float vel_gain_p;
+    float vel_gain_i;
+    float vel_gain_d;
+
+    float tilt_gain_p;
+    float tilt_gain_i;
+    float tilt_gain_d;
+
+    float max_corr_error;
+    float max_tilt_error;
+
+    float ctrl_gain_roll_p;
+    float ctrl_gain_roll_i;
+    float ctrl_gain_roll_dp;
+    float ctrl_gain_roll_de;
+
+    float ctrl_gain_pitch_p;
+    float ctrl_gain_pitch_i;
+    float ctrl_gain_pitch_dp;
+    float ctrl_gain_pitch_de;
+
+    float ctrl_gain_yaw_p;
+    float ctrl_gain_yaw_i;
+    float ctrl_gain_yaw_dp;
+    float ctrl_gain_yaw_de;
+
+    float js_gain_tilt;
+    float js_gain_yaw;
+} MAIN_CONFIG_MULTIROTOR;
 
 // Car configuration
 typedef struct {
-    // Settings
+    // Common vehicle settings
     bool mag_use; // Use the magnetometer
     bool mag_comp; // Should be 0 when capturing samples for the calibration
-    bool yaw_use_odometry; // Use odometry data for yaw angle correction.
     float yaw_mag_gain; // Gain for yaw angle from magnetomer (vs gyro)
-    float yaw_imu_gain; // Gain for yaw angle from IMU (vs odometry)
-
-    bool disable_motor; // Disable motor drive commands to make sure that the motor does not move.
 
     // Magnetometer calibration
     float mag_cal_cx;
@@ -106,16 +156,6 @@ typedef struct {
     float mag_cal_zx;
     float mag_cal_zy;
     float mag_cal_zz;
-
-    // Car parameters
-    float gear_ratio;
-    float wheel_diam;
-    float motor_poles;
-    float steering_max_angle_rad; // = arctan(axist_distance / turn_radius_at_maximum_steering_angle)
-    float steering_center;
-    float steering_range;
-    float steering_ramp_time; // Ramp time constant for the steering servo in seconds.
-    float axis_distance;
 
     // GPS parameters
     float gps_ant_x; // Antenna offset from vehicle center in X
@@ -139,17 +179,19 @@ typedef struct {
     // Logging
     bool log_en;
     char log_name[LOG_NAME_MAX_LEN + 1];
+
+    MAIN_CONFIG_CAR car;
+    MAIN_CONFIG_MULTIROTOR mr;
 } MAIN_CONFIG;
 
+// Commands
 typedef enum {
     // General commands
     CMD_PRINTF = 0,
     CMD_TERMINAL_CMD,
 
-    // Car commands
-    CMD_GET_STATE = 50,
-    CMD_VESC_FWD,
-    CMD_RC_CONTROL,
+    // Common vehicle commands
+    CMD_VESC_FWD = 50,
     CMD_SET_POS,
     CMD_SET_POS_ACK,
     CMD_SET_ENU_REF,
@@ -159,12 +201,8 @@ typedef enum {
     CMD_AP_CLEAR_POINTS,
     CMD_AP_SET_ACTIVE,
     CMD_AP_REPLACE_ROUTE,
-    CMD_SET_SERVO_DIRECT,
     CMD_SEND_RTCM_USB,
     CMD_SEND_NMEA_RADIO,
-    CMD_SET_MAIN_CONFIG,
-    CMD_GET_MAIN_CONFIG,
-    CMD_GET_MAIN_CONFIG_DEFAULT,
     CMD_SET_YAW_OFFSET,
     CMD_SET_YAW_OFFSET_ACK,
     CMD_LOG_LINE_USB,
@@ -179,6 +217,20 @@ typedef enum {
     CMD_RADAR_SETUP_GET,
     CMD_RADAR_SAMPLES,
     CMD_DW_SAMPLE,
+    CMD_EMERGENCY_STOP,
+    CMD_SET_MAIN_CONFIG,
+    CMD_GET_MAIN_CONFIG,
+    CMD_GET_MAIN_CONFIG_DEFAULT,
+
+    // Car commands
+    CMD_GET_STATE = 120,
+    CMD_RC_CONTROL,
+    CMD_SET_SERVO_DIRECT,
+
+    // Multirotor commands
+    CMD_MR_GET_STATE = 160,
+    CMD_MR_RC_CONTROL,
+    CMD_MR_OVERRIDE_POWER,
 
     // Mote commands
     CMD_MOTE_UBX_START_BASE = 200,
