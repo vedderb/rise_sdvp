@@ -495,7 +495,6 @@ void NetworkLogger::drawHistogram(int bins, const QList<NetworkLogger::LOGPOINT>
         volumePos->addData(min + step * i, binVec[i]);
     }
 
-    customPlot->addPlottable(volumePos);
     volumePos->setWidth(step * 0.9);
     volumePos->setPen(Qt::NoPen);
     volumePos->setBrush(QColor(100, 180, 110));

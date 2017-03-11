@@ -129,8 +129,7 @@ bool isLineSegmentWithinRect(const QPointF &p1, const QPointF &p2, double xStart
 }
 }
 
-MapWidget::MapWidget(QWidget *parent) :
-    MapWidgetType(parent)
+MapWidget::MapWidget(QWidget *parent) : QWidget(parent)
 {
     mScaleFactor = 0.1;
     mRotation = 0;
@@ -1087,10 +1086,11 @@ void MapWidget::paintEvent(QPaintEvent *event)
         painter.drawEllipse(QPointF(-275, 0), 130, 130);
 
         // Draw the acceleration vector
-        painter.setBrush(QBrush(Qt::green));
-        painter.setPen(QPen(Qt::green, 30));
-        painter.drawLine(QPointF(0.0, 0.0), QPointF(-pos.getPitch() * 800.0, -pos.getRoll() * 800.0));
-        painter.setPen(QPen(textColor));
+        if (fabs(pos.getRoll()) > 1e-5 || fabs(pos.getPitch()) > 1e-5) {
+            painter.setBrush(QBrush(Qt::green));
+            painter.setPen(QPen(Qt::green, 30));
+            painter.drawLine(QPointF(0.0, 0.0), QPointF(-pos.getPitch() * 800.0, -pos.getRoll() * 800.0));
+        }
 
         // Print data
         QTime t = QTime::fromMSecsSinceStartOfDay(copterInfo.getTime());
@@ -1106,6 +1106,7 @@ void MapWidget::paintEvent(QPaintEvent *event)
         pt_txt = drawTrans.map(pt_txt);
         rect_txt.setCoords(pt_txt.x(), pt_txt.y() - 20,
                            pt_txt.x() + 300, pt_txt.y() + 25);
+        painter.setPen(QPen(textColor));
         painter.drawText(rect_txt, txt);
 
         // Restore transform

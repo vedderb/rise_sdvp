@@ -537,12 +537,14 @@ void MagCal::updateMagPlots()
 
 void MagCal::clearMagPlots()
 {
-    ui->magSampXyPlot->graph(0)->clearData();
-    ui->magSampXzPlot->graph(0)->clearData();
-    ui->magSampYzPlot->graph(0)->clearData();
-    ui->magSampXyPlot->graph(1)->clearData();
-    ui->magSampXzPlot->graph(1)->clearData();
-    ui->magSampYzPlot->graph(1)->clearData();
+    QVector<double> x, y;
+
+    ui->magSampXyPlot->graph(0)->setData(x, y);
+    ui->magSampXzPlot->graph(0)->setData(x, y);
+    ui->magSampYzPlot->graph(0)->setData(x, y);
+    ui->magSampXyPlot->graph(1)->setData(x, y);
+    ui->magSampXzPlot->graph(1)->setData(x, y);
+    ui->magSampYzPlot->graph(1)->setData(x, y);
 
     ui->magSampXyPlot->replot();
     ui->magSampXzPlot->replot();

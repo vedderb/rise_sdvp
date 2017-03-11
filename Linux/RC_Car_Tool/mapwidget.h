@@ -35,15 +35,7 @@
 #include "perspectivepixmap.h"
 #include "osmclient.h"
 
-// QWidget or QGLWidget
-#ifdef HAS_OPENGL
-#include <QGLWidget>
-#define MapWidgetType QGLWidget
-#else
-#define MapWidgetType QWidget
-#endif
-
-class MapWidget : public MapWidgetType
+class MapWidget : public QWidget
 {
     Q_OBJECT
 
