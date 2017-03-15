@@ -1,12 +1,14 @@
 /*
 	Copyright 2016 Benjamin Vedder	benjamin@vedder.se
 
-	This program is free software: you can redistribute it and/or modify
+	This file is part of the VESC firmware.
+
+	The VESC firmware is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    This program is distributed in the hope that it will be useful,
+    The VESC firmware is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
@@ -61,17 +63,10 @@
 #define MCCONF_FOC_SL_OPENLOOP_HYST			0.5
 #define MCCONF_FOC_SL_OPENLOOP_TIME			0.3
 
-// Speed PID parameters (BLDC)
-#define MCCONF_S_PID_KP						0.0001	// Proportional gain
-#define MCCONF_S_PID_KI						0.01	// Integral gain
+// Speed PID parameters
+#define MCCONF_S_PID_KP						0.004	// Proportional gain
+#define MCCONF_S_PID_KI						0.004	// Integral gain
 #define MCCONF_S_PID_KD						0.0		// Derivative gain
 #define MCCONF_S_PID_MIN_RPM				400.0	// Minimum allowed RPM
 
-// Speed PID parameters (FOC)
-//#define MCCONF_S_PID_KP						0.004	// Proportional gain
-//#define MCCONF_S_PID_KI						0.004	// Integral gain
-//#define MCCONF_S_PID_KD						0.01	// Derivative gain
-//#define MCCONF_S_PID_MIN_RPM				400.0	// Minimum allowed RPM
-
 #endif /* MCCONF_SP_H_ */
-

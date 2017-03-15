@@ -805,6 +805,7 @@ typedef struct {
 	float hyst;
 	float voltage_start;
 	float voltage_end;
+	float voltage_center;
 	float voltage2_start;
 	float voltage2_end;
 	bool use_filter;

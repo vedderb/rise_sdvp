@@ -19,8 +19,9 @@
  * bldc_interface.c
  *
  * Compatible Firmware Versions
- * 3.17
- * 3.18
+ * 3.20
+ * 3.21
+ * 3.22
  *
  */
 
@@ -328,6 +329,7 @@ void bldc_interface_process_packet(unsigned char *data, unsigned int len) {
 		appconf.app_adc_conf.hyst = buffer_get_float32_auto(data, &ind);
 		appconf.app_adc_conf.voltage_start = buffer_get_float32_auto(data, &ind);
 		appconf.app_adc_conf.voltage_end = buffer_get_float32_auto(data, &ind);
+		appconf.app_adc_conf.voltage_center = buffer_get_float32_auto(data, &ind);
 		appconf.app_adc_conf.voltage2_start = buffer_get_float32_auto(data, &ind);
 		appconf.app_adc_conf.voltage2_end = buffer_get_float32_auto(data, &ind);
 		appconf.app_adc_conf.use_filter = data[ind++];
@@ -703,6 +705,7 @@ void bldc_interface_set_appconf(const app_configuration *appconf) {
 	buffer_append_float32_auto(send_buffer, appconf->app_adc_conf.hyst, &ind);
 	buffer_append_float32_auto(send_buffer, appconf->app_adc_conf.voltage_start, &ind);
 	buffer_append_float32_auto(send_buffer, appconf->app_adc_conf.voltage_end, &ind);
+	buffer_append_float32_auto(send_buffer, appconf->app_adc_conf.voltage_center, &ind);
 	buffer_append_float32_auto(send_buffer, appconf->app_adc_conf.voltage2_start, &ind);
 	buffer_append_float32_auto(send_buffer, appconf->app_adc_conf.voltage2_end, &ind);
 	send_buffer[ind++] = appconf->app_adc_conf.use_filter;
