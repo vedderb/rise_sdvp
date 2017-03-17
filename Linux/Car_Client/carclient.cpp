@@ -66,7 +66,7 @@ CarClient::CarClient(QObject *parent) : QObject(parent)
     connect(mSerialPort, SIGNAL(serial_data_available()),
             this, SLOT(serialDataAvailable()));
     connect(mSerialPort, SIGNAL(serial_port_error(int)),
-            this, SLOT(serialPortError(in)));
+            this, SLOT(serialPortError(int)));
     connect(mSerialPortRtcm, SIGNAL(readyRead()),
             this, SLOT(serialRtcmDataAvailable()));
     connect(mSerialPortRtcm, SIGNAL(error(QSerialPort::SerialPortError)),

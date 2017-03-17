@@ -47,7 +47,7 @@
 #endif
 
 // Ublox settings
-#define UBLOX_EN					1
+#define UBLOX_EN					0
 
 // Log configuration to enable. Choose one only.
 //#define LOG_EN_CARREL

@@ -96,7 +96,7 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 	conf->mag_cal_zy = 0.0;
 	conf->mag_cal_zz = 1.0;
 
-	conf->gps_ant_x = 0.42;
+	conf->gps_ant_x = 0.0;
 	conf->gps_ant_y = 0.0;
 	conf->gps_comp = true;
 	conf->gps_req_rtk = true;
@@ -172,23 +172,23 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 	// Custom parameters based on ID
 	switch (main_id) {
 	case 0:
-		conf->mag_cal_cx = 13.8906;
-		conf->mag_cal_cy = 41.6703;
-		conf->mag_cal_cz = -38.28;
+		conf->mag_cal_cx = -4.2740;
+		conf->mag_cal_cy = 23.1796;
+		conf->mag_cal_cz = 38.5340;
 
-		conf->mag_cal_xx = 0.813398;
-		conf->mag_cal_xy = 0.0421102;
-		conf->mag_cal_xz = 0.00674955;
+		conf->mag_cal_xx = 0.5854;
+		conf->mag_cal_xy = -0.0164;
+		conf->mag_cal_xz = 0.0789;
 
-		conf->mag_cal_yx = 0.0421102;
-		conf->mag_cal_yy = 0.835037;
-		conf->mag_cal_yz = -0.0759237;
+		conf->mag_cal_yx = -0.0164;
+		conf->mag_cal_yy = 0.6298;
+		conf->mag_cal_yz = 0.1206;
 
-		conf->mag_cal_zx = 0.00674955;
-		conf->mag_cal_zy = -0.0759237;
-		conf->mag_cal_zz = 0.964149;
+		conf->mag_cal_zx = 0.0789;
+		conf->mag_cal_zy = 0.1206;
+		conf->mag_cal_zz = 0.9477;
 
-		conf->car.steering_center = 0.53;
+		conf->car.steering_center = 0.5;
 		break;
 
 	case 1:
