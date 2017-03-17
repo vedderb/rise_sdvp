@@ -20,8 +20,10 @@
 #include <QDebug>
 #include <QMessageBox>
 #include <QIcon>
+#include <QSerialPortInfo>
 #include "nmeaserver.h"
 #include "utility.h"
+#include "rtcm3_simple.h"
 
 BaseStation::BaseStation(QWidget *parent) :
     QWidget(parent),
@@ -42,14 +44,27 @@ BaseStation::BaseStation(QWidget *parent) :
     mFixNowStr = "Solution...";
     mSatNowStr = "Sats...";
 
+    mUblox = new Ublox(this);
+    mTcpServer = new TcpBroadcast(this);
+
+    mTimer = new QTimer(this);
+    mTimer->start(20);
+
     connect(mTcpSocket, SIGNAL(readyRead()), this, SLOT(tcpInputDataAvailable()));
     connect(mTcpSocket, SIGNAL(connected()), this, SLOT(tcpInputConnected()));
     connect(mTcpSocket, SIGNAL(disconnected()),
             this, SLOT(tcpInputDisconnected()));
     connect(mTcpSocket, SIGNAL(error(QAbstractSocket::SocketError)),
             this, SLOT(tcpInputError(QAbstractSocket::SocketError)));
+    connect(mTimer, SIGNAL(timeout()),
+            this, SLOT(timerSlot()));
+    connect(mUblox, SIGNAL(rxGga(int,NmeaServer::nmea_gga_info_t)),
+            this, SLOT(rxGga(int,NmeaServer::nmea_gga_info_t)));
+    connect(mUblox, SIGNAL(rxRawx(ubx_rxm_rawx)),
+            this, SLOT(rxRawx(ubx_rxm_rawx)));
 
     updateNmeaText();
+    on_ubxSerialRefreshButton_clicked();
 }
 
 BaseStation::~BaseStation()
@@ -97,38 +112,8 @@ void BaseStation::tcpInputDataAvailable()
         QString str = msgs.readLine();
         QByteArray data = str.toLocal8Bit();
 
-        // Hack
-        if (str == "$GPGSA,A,1,,,,,,,,,,,,,,,*1E") {
-            mFixNowStr = "Solution: Invalid";
-            mSatNowStr = "Satellites: 0";
-        }
-
-        if (NmeaServer::decodeNmeaGGA(data, gga) >= 0) {
-            mSatNowStr.sprintf("Satellites: %d", gga.n_sat);
-
-            //qDebug() << data;
-            //qDebug() << QString().sprintf("%.9f", gga.lat);
-
-            switch (gga.fix_type) {
-            case 0: mFixNowStr = "Solution: Invalid"; break;
-            case 1: mFixNowStr = "Solution: SPP"; break;
-            case 2: mFixNowStr = "Solution: DGPS"; break;
-            case 3: mFixNowStr = "Solution: PPS"; break;
-            case 4: mFixNowStr = "Solution: RTK Fix"; break;
-            case 5: mFixNowStr = "Solution: RTK Float"; break;
-            default: mFixNowStr = "Solution: Unknown"; break;
-            }
-
-            if (gga.fix_type == 1 || gga.fix_type == 2 || gga.fix_type == 4 || gga.fix_type == 5) {
-                utility::llhToXyz(gga.lat, gga.lon, gga.height, &mXNow, &mYNow, &mZNow);
-                mXAvg += mXNow;
-                mYAvg += mYNow;
-                mZAvg += mZNow;
-                mAvgSamples += 1.0;
-            }
-        }
-
-        updateNmeaText();
+        int fields = NmeaServer::decodeNmeaGGA(data, gga);
+        rxGga(fields, gga);
     }
 }
 
@@ -147,6 +132,152 @@ void BaseStation::tcpInputError(QAbstractSocket::SocketError socketError)
     ui->nmeaConnectButton->setText("");
     ui->nmeaConnectButton->setIcon(QIcon(":/models/Icons/Connected-96.png"));
     mTcpConnected = false;
+}
+
+void BaseStation::timerSlot()
+{
+    // Update serial connected label
+    static bool wasSerialConnected = false;
+    if (wasSerialConnected != mUblox->isSerialConnected()) {
+        wasSerialConnected = mUblox->isSerialConnected();
+
+        if (wasSerialConnected) {
+            ui->ubxSerialConnectedLabel->setText("Connected");
+        } else {
+            ui->ubxSerialConnectedLabel->setText("Not connected");
+        }
+    }
+}
+
+void BaseStation::rxGga(int fields, NmeaServer::nmea_gga_info_t gga)
+{
+    if (fields >= 2) {
+        mSatNowStr.sprintf("Satellites: %d", gga.n_sat);
+
+        //qDebug() << data;
+        //qDebug() << QString().sprintf("%.9f", gga.lat);
+
+        switch (gga.fix_type) {
+        case 0: mFixNowStr = "Solution: Invalid"; break;
+        case 1: mFixNowStr = "Solution: SPP"; break;
+        case 2: mFixNowStr = "Solution: DGPS"; break;
+        case 3: mFixNowStr = "Solution: PPS"; break;
+        case 4: mFixNowStr = "Solution: RTK Fix"; break;
+        case 5: mFixNowStr = "Solution: RTK Float"; break;
+        default: mFixNowStr = "Solution: Unknown"; break;
+        }
+
+        if (gga.fix_type == 1 || gga.fix_type == 2 || gga.fix_type == 4 || gga.fix_type == 5) {
+            utility::llhToXyz(gga.lat, gga.lon, gga.height, &mXNow, &mYNow, &mZNow);
+            mXAvg += mXNow;
+            mYAvg += mYNow;
+            mZAvg += mZNow;
+            mAvgSamples += 1.0;
+        }
+    } else {
+        mFixNowStr = "Solution: Invalid";
+        mSatNowStr = "Satellites: 0";
+    }
+
+    updateNmeaText();
+}
+
+void BaseStation::rxRawx(ubx_rxm_rawx rawx)
+{
+    uint8_t data_gps[1024];
+    uint8_t data_glo[1024];
+    uint8_t data_ref[512];
+
+    int gps_len = 0;
+    int glo_len = 0;
+    int ref_len = 0;
+
+    rtcm_obs_header_t header;
+    rtcm_obs_t obs[rawx.num_meas];
+    rtcm_ref_sta_pos_t pos;
+
+    header.staid = 0;
+    header.sync = 1;
+    header.t_wn = rawx.week;
+    header.t_tow = rawx.rcv_tow;
+    header.t_tod = fmod(rawx.rcv_tow, 86400.0);
+
+    bool has_gps = false;
+    bool has_glo = false;
+
+    for (int i = 0;i < rawx.num_meas;i++) {
+        ubx_rxm_rawx_obs *raw_obs = &rawx.obs[i];
+
+        if (raw_obs->gnss_id == 0) {
+            has_gps = true;
+        } else if (raw_obs->gnss_id == 6) {
+            has_glo = true;
+        }
+    }
+
+    // GPS
+    if (has_gps) {
+        int obs_ind = 0;
+        for (int i = 0;i < rawx.num_meas;i++) {
+            ubx_rxm_rawx_obs *raw_obs = &rawx.obs[i];
+
+            if (raw_obs->gnss_id == 0) {
+                obs[obs_ind].P[0] = raw_obs->pr_mes;
+                obs[obs_ind].L[0] = raw_obs->cp_mes;
+                obs[obs_ind].cn0[0] = raw_obs->cno;
+                obs[obs_ind].lock[0] = raw_obs->locktime > 2000 ? 127 : 0;
+                obs[obs_ind].code[0] = CODE_L1C;
+                obs[obs_ind].prn = raw_obs->sv_id;
+                obs_ind++;
+            }
+        }
+        header.type = SYS_GPS;
+        header.sync = has_glo;
+        rtcm3_encode_1002(&header, obs, obs_ind, data_gps, &gps_len);
+    }
+
+    // GLONASS
+    if (has_gps) {
+        int obs_ind = 0;
+        for (int i = 0;i < rawx.num_meas;i++) {
+            ubx_rxm_rawx_obs *raw_obs = &rawx.obs[i];
+
+            if (raw_obs->gnss_id == 6) {
+                obs[obs_ind].P[0] = raw_obs->pr_mes;
+                obs[obs_ind].L[0] = raw_obs->cp_mes;
+                obs[obs_ind].cn0[0] = raw_obs->cno;
+                obs[obs_ind].lock[0] = raw_obs->locktime > 2000 ? 127 : 0;
+                obs[obs_ind].code[0] = CODE_L1C;
+                obs[obs_ind].prn = raw_obs->sv_id + 64;
+                obs[obs_ind].freq = raw_obs->freq_id;
+                obs_ind++;
+            }
+        }
+        header.type = SYS_GLO;
+        header.sync = 0;
+        rtcm3_encode_1010(&header, obs, obs_ind, data_glo, &glo_len);
+    }
+
+    // Base station position
+    pos.ant_height = ui->refSendAntHBox->value();
+    pos.height = ui->refSendHBox->value();
+    pos.lat = ui->refSendLatBox->value();
+    pos.lon = ui->refSendLonBox->value();
+    pos.staid = 0;
+    rtcm3_encode_1006(pos, data_ref, &ref_len);
+
+    QByteArray message;
+    if (has_gps) {
+        message.append((char*)data_gps, gps_len);
+    }
+
+    if (has_glo) {
+        message.append((char*)data_glo, glo_len);
+    }
+
+    message.append((char*)data_ref, ref_len);
+
+    mTcpServer->broadcastData(message);
 }
 
 void BaseStation::on_nmeaConnectButton_clicked()
@@ -203,4 +334,54 @@ void BaseStation::updateNmeaText()
     statStr += QString().sprintf("LLH Avg: %.8f, %.8f, %.3f", lat_avg, lon_avg, height_avg);
 
     ui->nmeaBrowser->setText(statStr);
+}
+
+void BaseStation::on_ubxSerialRefreshButton_clicked()
+{
+    ui->ubxSerialPortBox->clear();
+
+    QList<QSerialPortInfo> ports = QSerialPortInfo::availablePorts();
+    foreach(const QSerialPortInfo &port, ports) {
+        ui->ubxSerialPortBox->addItem(port.portName(), port.systemLocation());
+    }
+
+    ui->ubxSerialPortBox->setCurrentIndex(0);
+}
+
+void BaseStation::on_ubxSerialDisconnectButton_clicked()
+{
+    mUblox->disconnectSerial();
+}
+
+void BaseStation::on_ubxSerialConnectButton_clicked()
+{
+    mUblox->connectSerial(ui->ubxSerialPortBox->currentData().toString(),
+                         ui->ubxSerialBaudBox->value());
+}
+
+void BaseStation::on_refGetButton_clicked()
+{
+    double lat, lon, height;
+    if (getAvgPosLlh(lat, lon, height) > 0) {
+        ui->refSendLatBox->setValue(lat);
+        ui->refSendLonBox->setValue(lon);
+        ui->refSendHBox->setValue(height);
+    } else {
+        QMessageBox::warning(this, "Reference Position",
+                             "No samples collected yet.");
+    }
+}
+
+void BaseStation::on_tcpServerBox_toggled(bool checked)
+{
+    if (checked) {
+        if (!mTcpServer->startTcpServer(ui->tcpServerPortBox->value())) {
+            QMessageBox::warning(this, "TCP Server Error",
+                                 "Creating TCP server for RTCM data failed. Make sure that the port is not "
+                                 "already in use.");
+            ui->tcpServerBox->setChecked(false);
+        }
+    } else {
+        mTcpServer->stopServer();
+    }
 }

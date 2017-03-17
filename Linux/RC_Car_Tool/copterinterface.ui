@@ -194,6 +194,32 @@
          </item>
         </layout>
        </widget>
+       <widget class="QWidget" name="tab_5">
+        <attribute name="icon">
+         <iconset resource="resources.qrc">
+          <normaloff>:/models/Icons/Magnet-96.png</normaloff>:/models/Icons/Magnet-96.png</iconset>
+        </attribute>
+        <attribute name="title">
+         <string/>
+        </attribute>
+        <attribute name="toolTip">
+         <string>Calibration</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_7">
+         <item>
+          <widget class="QGroupBox" name="groupBox_2">
+           <property name="title">
+            <string>Magnetometer</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_4">
+            <item row="0" column="0">
+             <widget class="MagCal" name="magCal" native="true"/>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </widget>
        <widget class="QWidget" name="tab_4">
         <attribute name="icon">
          <iconset resource="resources.qrc">
@@ -208,6 +234,37 @@
         <layout class="QVBoxLayout" name="verticalLayout_6">
          <item>
           <widget class="NmeaWidget" name="nmeaWidget" native="true"/>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="tab_6">
+        <attribute name="icon">
+         <iconset resource="resources.qrc">
+          <normaloff>:/models/Icons/Settings-96.png</normaloff>:/models/Icons/Settings-96.png</iconset>
+        </attribute>
+        <attribute name="title">
+         <string/>
+        </attribute>
+        <attribute name="toolTip">
+         <string>Configuration</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_8">
+         <item>
+          <widget class="QGroupBox" name="groupBox">
+           <property name="title">
+            <string>Copter Parameters</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="ConfCommonWidget" name="confCommonWidget" native="true">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+          </widget>
          </item>
         </layout>
        </widget>
@@ -378,6 +435,18 @@
    <class>NmeaWidget</class>
    <extends>QWidget</extends>
    <header>nmeawidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>MagCal</class>
+   <extends>QWidget</extends>
+   <header>magcal.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ConfCommonWidget</class>
+   <extends>QWidget</extends>
+   <header>confcommonwidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

@@ -67,6 +67,7 @@ PacketInterface::PacketInterface(QObject *parent) :
     mRxDataPtr = 0;
     mCrcLow = 0;
     mCrcHigh = 0;
+    mWaitingAck = false;
 
     mTimer = new QTimer(this);
     mTimer->setInterval(10);
@@ -206,16 +207,15 @@ unsigned short PacketInterface::crc16(const unsigned char *buf, unsigned int len
 }
 
 bool PacketInterface::sendPacket(const unsigned char *data, unsigned int len_packet)
-{    
-    static unsigned char buffer[mMaxBufferLen];
+{
     unsigned int ind = 0;
 
     // If the IP is valid, send the packet over UDP
     if (QString::compare(mHostAddress.toString(), "0.0.0.0") != 0) {
-        memcpy(buffer + ind, data, len_packet);
+        memcpy(mSendBufferAck + ind, data, len_packet);
         ind += len_packet;
 
-        mUdpSocket->writeDatagram(QByteArray::fromRawData((const char*)buffer, ind), mHostAddress, mUdpPort);
+        mUdpSocket->writeDatagram(QByteArray::fromRawData((const char*)mSendBufferAck, ind), mHostAddress, mUdpPort);
         return true;
     }
 
@@ -223,25 +223,25 @@ bool PacketInterface::sendPacket(const unsigned char *data, unsigned int len_pac
     unsigned int data_offs = 0;
 
     if (len_tot <= 256) {
-        buffer[ind++] = 2;
-        buffer[ind++] = len_tot;
+        mSendBufferAck[ind++] = 2;
+        mSendBufferAck[ind++] = len_tot;
         data_offs = 2;
     } else {
-        buffer[ind++] = 3;
-        buffer[ind++] = len_tot >> 8;
-        buffer[ind++] = len_tot & 0xFF;
+        mSendBufferAck[ind++] = 3;
+        mSendBufferAck[ind++] = len_tot >> 8;
+        mSendBufferAck[ind++] = len_tot & 0xFF;
         data_offs = 3;
     }
 
-    memcpy(buffer + ind, data, len_packet);
+    memcpy(mSendBufferAck + ind, data, len_packet);
     ind += len_packet;
 
-    unsigned short crc = crc16(buffer + data_offs, len_tot);
-    buffer[ind++] = crc >> 8;
-    buffer[ind++] = crc;
-    buffer[ind++] = 3;
+    unsigned short crc = crc16(mSendBufferAck + data_offs, len_tot);
+    mSendBufferAck[ind++] = crc >> 8;
+    mSendBufferAck[ind++] = crc;
+    mSendBufferAck[ind++] = 3;
 
-    QByteArray sendData = QByteArray::fromRawData((char*)buffer, ind);
+    QByteArray sendData = QByteArray::fromRawData((char*)mSendBufferAck, ind);
 
     emit dataToSend(sendData);
 
@@ -275,14 +275,12 @@ bool PacketInterface::sendPacket(QByteArray data)
 bool PacketInterface::sendPacketAck(const unsigned char *data, unsigned int len_packet,
                                     int retries, int timeoutMs)
 {
-    static bool waiting = false;
-
-    if (waiting) {
+    if (mWaitingAck) {
         qDebug() << "Already waiting for packet";
         return false;
     }
 
-    waiting = true;
+    mWaitingAck = true;
 
     unsigned char *buffer = new unsigned char[mMaxBufferLen];
     bool ok = false;
@@ -307,7 +305,7 @@ bool PacketInterface::sendPacketAck(const unsigned char *data, unsigned int len_
         qDebug() << "Retrying to send packet...";
     }
 
-    waiting = false;
+    mWaitingAck = false;
     delete buffer;
     return ok;
 }

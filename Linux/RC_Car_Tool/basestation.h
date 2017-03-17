@@ -20,6 +20,9 @@
 
 #include <QWidget>
 #include <QTcpSocket>
+#include <QTimer>
+#include "ublox.h"
+#include "tcpbroadcast.h"
 
 namespace Ui {
 class BaseStation;
@@ -39,15 +42,25 @@ private slots:
     void tcpInputDisconnected();
     void tcpInputDataAvailable();
     void tcpInputError(QAbstractSocket::SocketError socketError);
+    void timerSlot();
+    void rxGga(int fields, NmeaServer::nmea_gga_info_t gga);
+    void rxRawx(ubx_rxm_rawx rawx);
 
     void on_nmeaConnectButton_clicked();
     void on_nmeaSampleClearButton_clicked();
-
+    void on_ubxSerialRefreshButton_clicked();
+    void on_ubxSerialDisconnectButton_clicked();
+    void on_ubxSerialConnectButton_clicked();
+    void on_refGetButton_clicked();
+    void on_tcpServerBox_toggled(bool checked);
 
 private:
     Ui::BaseStation *ui;
     QTcpSocket *mTcpSocket;
     bool mTcpConnected;
+    QTimer *mTimer;
+    Ublox *mUblox;
+    TcpBroadcast *mTcpServer;
 
     double mXNow;
     double mYNow;

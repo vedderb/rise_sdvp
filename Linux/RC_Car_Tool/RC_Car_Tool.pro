@@ -78,7 +78,8 @@ SOURCES += main.cpp\
     copterinfo.cpp \
     copterinterface.cpp \
     nmeawidget.cpp \
-    confcommonwidget.cpp
+    confcommonwidget.cpp \
+    ublox.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
@@ -109,7 +110,8 @@ HEADERS  += mainwindow.h \
     copterinfo.h \
     copterinterface.h \
     nmeawidget.h \
-    confcommonwidget.h
+    confcommonwidget.h \
+    ublox.h
 
 FORMS    += mainwindow.ui \
     carinterface.ui \

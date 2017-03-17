@@ -21,7 +21,7 @@
 #include <QWidget>
 #include <QTimer>
 #include "rtcmclient.h"
-#include <tcpbroadcast.h>
+#include "tcpbroadcast.h"
 
 namespace Ui {
 class RtcmWidget;

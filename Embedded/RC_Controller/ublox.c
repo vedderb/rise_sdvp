@@ -425,7 +425,7 @@ int ublox_cfg_tmode3(ubx_cfg_tmode3 *cfg) {
  * Set the msg output configuration.
  *
  * @param msg_class
- * The the message class.
+ * The message class.
  *
  * @param id
  * The message id

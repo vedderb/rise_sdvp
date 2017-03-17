@@ -140,7 +140,7 @@ void CopterInterface::setStateData(MULTIROTOR_STATE data)
         mMap->update();
     }
 
-    //ui->magCal->addSample(data.mag[0], data.mag[1], data.mag[2]);
+    ui->magCal->addSample(data.mag[0], data.mag[1], data.mag[2]);
 
     // Clock
     if (data.ms_today >= 0) {

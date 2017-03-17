@@ -373,4 +373,139 @@ typedef struct {
     void(*rx_rtcm)(uint8_t *data, int len, int type);
 } rtcm3_state;
 
+// ============== UBLOX Datatypes ================== //
+
+typedef struct {
+    uint16_t ref_station_id;
+    uint32_t i_tow; // GPS time of week of the navigation epoch
+    float pos_n; // Position north in meters
+    float pos_e; // Position east in meters
+    float pos_d; // Position down in meters
+    float acc_n; // Accuracy north in meters
+    float acc_e; // Accuracy east in meters
+    float acc_d; // Accuracy down in meters
+    bool fix_ok; // A valid fix
+    bool diff_soln; // Differential corrections are applied
+    bool rel_pos_valid; // Relative position components and accuracies valid
+    int carr_soln; // fix_type 0: no fix, 1: float, 2: fix
+} ubx_nav_relposned;
+
+typedef struct {
+    uint32_t i_tow; // GPS time of week of the navigation epoch
+    uint32_t dur; // Passed survey-in observation time (s)
+    double meanX; // Current survey-in mean position ECEF X coordinate
+    double meanY; // Current survey-in mean position ECEF Y coordinate
+    double meanZ; // Current survey-in mean position ECEF Z coordinate
+    float meanAcc; // Current survey-in mean position accuracy
+    uint32_t obs; // Number of position observations used during survey-in
+    bool valid; // Survey-in position validity flag, 1 = valid, otherwise 0
+    bool active; // Survey-in in progress flag, 1 = in-progress, otherwise 0
+} ubx_nav_svin;
+
+typedef struct {
+    double pr_mes;
+    double cp_mes;
+    float do_mes;
+    uint8_t gnss_id;
+    uint8_t sv_id;
+    uint8_t freq_id;
+    uint16_t locktime;
+    uint8_t cno;
+    uint8_t pr_stdev;
+    uint8_t cp_stdev;
+    uint8_t do_stdev;
+    bool pr_valid;
+    bool cp_valid;
+    bool half_cyc_valid;
+    bool half_cyc_sub;
+} ubx_rxm_rawx_obs;
+
+typedef struct {
+    double rcv_tow;
+    uint16_t week;
+    int8_t leaps;
+    uint8_t num_meas;
+    bool leap_sec;
+    bool clk_reset;
+    ubx_rxm_rawx_obs obs[64];
+} ubx_rxm_rawx;
+
+typedef struct {
+    uint32_t baudrate;
+    bool in_rtcm3;
+    bool in_rtcm2;
+    bool in_nmea;
+    bool in_ubx;
+    bool out_rtcm3;
+    bool out_nmea;
+    bool out_ubx;
+} ubx_cfg_prt_uart;
+
+typedef struct {
+    bool lla; // Use lla instead of ecef
+    int mode; // Mode. 0 = Disabled, 1 = Survey in, 2 = Fixed
+    double ecefx_lat;
+    double ecefy_lon;
+    double ecefz_alt;
+    float fixed_pos_acc; // Fixed position accuracy
+    uint32_t svin_min_dur; // SVIN minimum duration (s)
+    float svin_acc_limit; // SVIN accuracy limit
+} ubx_cfg_tmode3;
+
+typedef struct {
+    bool apply_dyn; // Apply dynamic model settings
+    bool apply_min_el; // Apply minimum elevation settings
+    bool apply_pos_fix_mode; // Apply fix mode settings
+    bool apply_pos_mask; // Apply position mask settings
+    bool apply_time_mask; // Apply time mask settings
+    bool apply_static_hold_mask; // Apply static hold settings
+    bool apply_dgps; // Apply DGPS settings.
+    bool apply_cno; // Apply CNO threshold settings (cnoThresh, cnoThreshNumSVs).
+    bool apply_utc; // Apply UTC settings
+
+    /*
+     * Dynamic platform model:
+     * 0: portable
+     * 2: stationary
+     * 3: pedestrian
+     * 4: automotive
+     * 5: sea
+     * 6: airborne with <1g acceleration
+     * 7: airborne with <2g acceleration
+     * 8: airborne with <4g acceleration
+     * 9: wrist worn watch
+     */
+    uint8_t dyn_model;
+
+    /*
+     * Position Fixing Mode:
+     * 1: 2D only
+     * 2: 3D only
+     * 3: auto 2D/3D
+     */
+    uint8_t fix_mode;
+
+    double fixed_alt; // Fixed altitude (mean sea level) for 2D fix mode. (m)
+    double fixed_alt_var; // Fixed altitude variance for 2D mode. (m^2)
+    int8_t min_elev; // Minimum Elevation for a GNSS satellite to be used in NAV (deg)
+    float p_dop; // Position DOP Mask to use
+    float t_dop; // Time DOP Mask to use
+    uint16_t p_acc; // Position Accuracy Mask (m)
+    uint16_t t_acc; // Time Accuracy Mask (m)
+    uint8_t static_hold_thres; // Static hold threshold (cm/s)
+    uint8_t dgnss_timeout; // DGNSS (RTK) timeout (s)
+    uint8_t cno_tres_num_sat; // Number of satellites required to have C/N0 above cnoThresh for a fix to be attempted
+    uint8_t cno_tres; // C/N0 threshold for deciding whether to attempt a fix (dBHz)
+    uint16_t static_hold_max_dist; // Static hold distance threshold (before quitting static hold) (m)
+
+    /*
+     * UTC standard to be used:
+     * 0: Automatic; receiver selects based on GNSS configuration (see GNSS time bases).
+     * 3: UTC as operated by the U.S. Naval Observatory (USNO); derived from GPS time
+     * 6: UTC as operated by the former Soviet Union; derived from GLONASS time
+     * 7: UTC as operated by the National Time Service Center, China; derived from BeiDou time
+     */
+    uint8_t utc_standard;
+} ubx_cfg_nav5;
+
 #endif /* DATATYPES_H_ */

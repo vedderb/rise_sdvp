@@ -116,6 +116,7 @@ private:
     QHostAddress mHostAddress;
     int mUdpPort;
     bool mUdpServer;
+    bool mWaitingAck;
 
     // Packet state machine variables
     static const unsigned int mMaxBufferLen = 4096;
@@ -123,6 +124,7 @@ private:
     int mRxState;
     unsigned int mPayloadLength;
     unsigned char mRxBuffer[mMaxBufferLen];
+    unsigned char mSendBufferAck[mMaxBufferLen];
     unsigned int mRxDataPtr;
     unsigned char mCrcLow;
     unsigned char mCrcHigh;

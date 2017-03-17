@@ -40,11 +40,6 @@
 #define SC2RAD          D(3.1415926535898)  // semi-circle to radian (IS-GPS)
 #define PRUNIT_GPS      D(299792.458)       // rtcm 3 unit of gps pseudorange (m)
 #define PRUNIT_GLO      D(599584.916)       // rtcm ver.3 unit of glonass pseudorange (m)
-#define CODE_L1C        1                   // obs code: L1C/A,G1C/A,E1C (GPS,GLO,GAL,QZS,SBS)
-#define CODE_L1P        2                   // obs code: L1P,G1P    (GPS,GLO)
-#define CODE_L2C        14                  // obs code: L2C/A,G1C/A (GPS,GLO)
-#define CODE_L2P        19                  // obs code: L2P,G2P    (GPS,GLO)
-#define CODE_L2W        20                  // obs code: L2 Z-track (GPS)
 #define FE_WGS84        (D(1.0)/D(298.257223563)) // earth flattening (WGS84)
 #define RE_WGS84        D(6378137.0)           // earth semimajor axis (WGS84) (m)
 
@@ -55,16 +50,6 @@
 #define P2_33       D(1.164153218269348E-10)   // 2^-33
 #define P2_43       D(1.136868377216160E-13)   // 2^-43
 #define P2_55       D(2.775557561562891E-17)   // 2^-55
-
-#define SYS_NONE    0x00                    // navigation system: none
-#define SYS_GPS     0x01                    // navigation system: GPS
-#define SYS_SBS     0x02                    // navigation system: SBAS
-#define SYS_GLO     0x04                    // navigation system: GLONASS
-#define SYS_GAL     0x08                    // navigation system: Galileo
-#define SYS_QZS     0x10                    // navigation system: QZSS
-#define SYS_CMP     0x20                    // navigation system: BeiDou
-#define SYS_LEO     0x40                    // navigation system: LEO
-#define SYS_ALL     0xFF                    // navigation system: all
 
 // Private variables
 const double lam_carr[] = { // carrier wave length (m)

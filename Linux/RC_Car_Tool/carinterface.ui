@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>795</width>
+    <width>858</width>
     <height>516</height>
    </rect>
   </property>
@@ -1522,18 +1522,6 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>QCustomPlot</class>
-   <extends>QWidget</extends>
-   <header>qcustomplot.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>MagCal</class>
-   <extends>QWidget</extends>
-   <header>magcal.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
    <class>ImuPlot</class>
    <extends>QWidget</extends>
    <header>imuplot.h</header>
@@ -1543,6 +1531,18 @@
    <class>NmeaWidget</class>
    <extends>QWidget</extends>
    <header>nmeawidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>QCustomPlot</class>
+   <extends>QWidget</extends>
+   <header>qcustomplot.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>MagCal</class>
+   <extends>QWidget</extends>
+   <header>magcal.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>

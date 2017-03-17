@@ -49,6 +49,7 @@ int ublox_cfg_nav5(ubx_cfg_nav5 *cfg);
 #define UBX_CLASS_LOG					0x21
 #define UBX_CLASS_SEC					0x27
 #define UBX_CLASS_HNR					0x28
+#define UBX_CLASS_NMEA					0xF0
 #define UBX_CLASS_RTCM3					0xF5
 
 // Navigation (NAV) messages
@@ -74,5 +75,8 @@ int ublox_cfg_nav5(ubx_cfg_nav5 *cfg);
 #define UBX_RTCM3_1077					0x4D
 #define UBX_RTCM3_1087					0x57
 #define UBX_RTCM3_1127					0x7F
+
+// NMEA messages
+#define UBX_NMEA_GGA					0x00
 
 #endif /* UBLOX_H_ */
