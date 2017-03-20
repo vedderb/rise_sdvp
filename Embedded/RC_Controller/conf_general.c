@@ -166,6 +166,14 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 	conf->mr.ctrl_gain_yaw_dp = 0.4;
 	conf->mr.ctrl_gain_yaw_de = 0.2;
 
+	conf->mr.ctrl_gain_pos_p = 0.8;
+	conf->mr.ctrl_gain_pos_i = 0.09;
+	conf->mr.ctrl_gain_pos_d = 0.6;
+
+	conf->mr.ctrl_gain_alt_p = 0.1;
+	conf->mr.ctrl_gain_alt_i = 0.1;
+	conf->mr.ctrl_gain_alt_d = 0.14;
+
 	conf->mr.js_gain_tilt = 1.0;
 	conf->mr.js_gain_yaw = 0.6;
 

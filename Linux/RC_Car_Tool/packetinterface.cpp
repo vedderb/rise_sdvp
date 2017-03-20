@@ -409,41 +409,49 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
 
         // Multirotor settings
         conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.vel_decay_l = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.vel_max = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.map_min_x = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.map_max_x = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.map_min_y = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.map_max_y = utility::buffer_get_double32_auto(data, &ind);
 
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.vel_gain_p = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.vel_gain_i = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.vel_gain_d = utility::buffer_get_double32_auto(data, &ind);
 
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.tilt_gain_p = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.tilt_gain_i = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.tilt_gain_d = utility::buffer_get_double32_auto(data, &ind);
 
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.max_corr_error = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.max_tilt_error = utility::buffer_get_double32_auto(data, &ind);
 
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_roll_p = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_roll_i = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_roll_dp = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_roll_de = utility::buffer_get_double32_auto(data, &ind);
 
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_pitch_p = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_pitch_i = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_pitch_dp = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_pitch_de = utility::buffer_get_double32_auto(data, &ind);
 
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_yaw_p = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_yaw_i = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_yaw_dp = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_yaw_de = utility::buffer_get_double32_auto(data, &ind);
 
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_pos_p = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_pos_i = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_pos_d = utility::buffer_get_double32_auto(data, &ind);
+
+        conf.mr.ctrl_gain_alt_p = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_alt_i = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_alt_d = utility::buffer_get_double32_auto(data, &ind);
+
+        conf.mr.js_gain_tilt = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.js_gain_yaw = utility::buffer_get_double32_auto(data, &ind);
 
         emit configurationReceived(id, conf);
     } break;
@@ -828,6 +836,14 @@ bool PacketInterface::setConfiguration(quint8 id, MAIN_CONFIG &conf, int retries
     utility::buffer_append_double32_auto(mSendBuffer, conf.mr.ctrl_gain_yaw_i, &send_index);
     utility::buffer_append_double32_auto(mSendBuffer, conf.mr.ctrl_gain_yaw_dp, &send_index);
     utility::buffer_append_double32_auto(mSendBuffer, conf.mr.ctrl_gain_yaw_de, &send_index);
+
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.ctrl_gain_pos_p, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.ctrl_gain_pos_i, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.ctrl_gain_pos_d, &send_index);
+
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.ctrl_gain_alt_p, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.ctrl_gain_alt_i, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.ctrl_gain_alt_d, &send_index);
 
     utility::buffer_append_double32_auto(mSendBuffer, conf.mr.js_gain_tilt, &send_index);
     utility::buffer_append_double32_auto(mSendBuffer, conf.mr.js_gain_yaw, &send_index);

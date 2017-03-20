@@ -1,0 +1,4 @@
+#!/bin/bash
+
+./rtkrcv -o rover_rtcm.conf -s
+

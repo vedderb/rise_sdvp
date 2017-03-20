@@ -197,10 +197,9 @@ void BaseStation::rxRawx(ubx_rxm_rawx rawx)
     rtcm_ref_sta_pos_t pos;
 
     header.staid = 0;
-    header.sync = 1;
     header.t_wn = rawx.week;
     header.t_tow = rawx.rcv_tow;
-    header.t_tod = fmod(rawx.rcv_tow, 86400.0);
+    header.t_tod = fmod(rawx.rcv_tow - (double)rawx.leaps + 10800.0, 86400.0);
 
     bool has_gps = false;
     bool has_glo = false;
@@ -231,13 +230,12 @@ void BaseStation::rxRawx(ubx_rxm_rawx rawx)
                 obs_ind++;
             }
         }
-        header.type = SYS_GPS;
         header.sync = has_glo;
         rtcm3_encode_1002(&header, obs, obs_ind, data_gps, &gps_len);
     }
 
     // GLONASS
-    if (has_gps) {
+    if (has_glo) {
         int obs_ind = 0;
         for (int i = 0;i < rawx.num_meas;i++) {
             ubx_rxm_rawx_obs *raw_obs = &rawx.obs[i];
@@ -248,12 +246,11 @@ void BaseStation::rxRawx(ubx_rxm_rawx rawx)
                 obs[obs_ind].cn0[0] = raw_obs->cno;
                 obs[obs_ind].lock[0] = raw_obs->locktime > 2000 ? 127 : 0;
                 obs[obs_ind].code[0] = CODE_L1C;
-                obs[obs_ind].prn = raw_obs->sv_id + 64;
+                obs[obs_ind].prn = raw_obs->sv_id;
                 obs[obs_ind].freq = raw_obs->freq_id;
                 obs_ind++;
             }
         }
-        header.type = SYS_GLO;
         header.sync = 0;
         rtcm3_encode_1010(&header, obs, obs_ind, data_glo, &glo_len);
     }
@@ -355,8 +352,36 @@ void BaseStation::on_ubxSerialDisconnectButton_clicked()
 
 void BaseStation::on_ubxSerialConnectButton_clicked()
 {
-    mUblox->connectSerial(ui->ubxSerialPortBox->currentData().toString(),
+    bool res = mUblox->connectSerial(ui->ubxSerialPortBox->currentData().toString(),
                          ui->ubxSerialBaudBox->value());
+
+    if (res) {
+        // Serial port baud rate
+        ubx_cfg_prt_uart uart;
+        uart.baudrate = 115200;
+        uart.in_ubx = true;
+        uart.in_nmea = true;
+        uart.in_rtcm2 = false;
+        uart.in_rtcm3 = true;
+        uart.out_ubx = true;
+        uart.out_nmea = true;
+        uart.out_rtcm3 = true;
+        mUblox->ubxCfgPrtUart(&uart);
+
+        // Set configuration
+        // Switch on RAWX and NMEA messages, set rate to 1 Hz and time reference to UTC
+        mUblox->ubxCfgRate(1000, 1, 0);
+        mUblox->ubxCfgMsg(UBX_CLASS_RXM, UBX_RXM_RAWX, 1); // Every second
+        mUblox->ubxCfgMsg(UBX_CLASS_RXM, UBX_RXM_SFRBX, 1); // Every second
+        mUblox->ubxCfgMsg(UBX_CLASS_NMEA, UBX_NMEA_GGA, 1); // Every second
+
+        // Stationary dynamic model
+        ubx_cfg_nav5 nav5;
+        memset(&nav5, 0, sizeof(ubx_cfg_nav5));
+        nav5.apply_dyn = true;
+        nav5.dyn_model = 2;
+        mUblox->ubxCfgNav5(&nav5);
+    }
 }
 
 void BaseStation::on_refGetButton_clicked()

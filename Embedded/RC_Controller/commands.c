@@ -562,6 +562,14 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			main_config.mr.ctrl_gain_yaw_dp = buffer_get_float32_auto(data, &ind);
 			main_config.mr.ctrl_gain_yaw_de = buffer_get_float32_auto(data, &ind);
 
+			main_config.mr.ctrl_gain_pos_p = buffer_get_float32_auto(data, &ind);
+			main_config.mr.ctrl_gain_pos_i = buffer_get_float32_auto(data, &ind);
+			main_config.mr.ctrl_gain_pos_d = buffer_get_float32_auto(data, &ind);
+
+			main_config.mr.ctrl_gain_alt_p = buffer_get_float32_auto(data, &ind);
+			main_config.mr.ctrl_gain_alt_i = buffer_get_float32_auto(data, &ind);
+			main_config.mr.ctrl_gain_alt_d = buffer_get_float32_auto(data, &ind);
+
 			main_config.mr.js_gain_tilt = buffer_get_float32_auto(data, &ind);
 			main_config.mr.js_gain_yaw = buffer_get_float32_auto(data, &ind);
 
@@ -680,6 +688,14 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.ctrl_gain_yaw_i, &send_index);
 			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.ctrl_gain_yaw_dp, &send_index);
 			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.ctrl_gain_yaw_de, &send_index);
+
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.ctrl_gain_pos_p, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.ctrl_gain_pos_i, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.ctrl_gain_pos_d, &send_index);
+
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.ctrl_gain_alt_p, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.ctrl_gain_alt_i, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.ctrl_gain_alt_d, &send_index);
 
 			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.js_gain_tilt, &send_index);
 			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.js_gain_yaw, &send_index);

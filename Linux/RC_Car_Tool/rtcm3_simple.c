@@ -346,7 +346,7 @@ int rtcm3_encode_1010(rtcm_obs_header_t *header, rtcm_obs_t *obs,
         double lam1, pr1c = 0.0, ppr;
         double P0, L0, freq1;
 
-        freq1 = FREQ1_GLO + DFRQ1_GLO * (obs[j].freq - 7);
+        freq1 = FREQ1_GLO + DFRQ1_GLO * ((double)(obs[j].freq) - D(7.0));
         lam1 = CLIGHT / freq1;
         pr1 = 0;
         amb = 0;

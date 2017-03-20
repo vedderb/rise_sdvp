@@ -255,19 +255,6 @@ bool Ublox::connectSerial(QString port, int baudrate)
     mSerialPort->setStopBits(QSerialPort::OneStop);
     mSerialPort->setFlowControl(QSerialPort::NoFlowControl);
 
-    // Set configuration
-    // Switch on RAWX and NMEA messages, set rate to 1 Hz and time reference to UTC
-    ubxCfgRate(1000, 1, 0);
-    ubxCfgMsg(UBX_CLASS_RXM, UBX_RXM_RAWX, 1); // Every second
-    ubxCfgMsg(UBX_CLASS_NMEA, UBX_NMEA_GGA, 1); // Every second
-
-    // Stationary dynamic model
-    ubx_cfg_nav5 nav5;
-    memset(&nav5, 0, sizeof(ubx_cfg_nav5));
-    nav5.apply_dyn = true;
-    nav5.dyn_model = 2;
-    ubxCfgNav5(&nav5);
-
     return true;
 }
 
@@ -323,16 +310,16 @@ bool Ublox::ubxCfgPrtUart(ubx_cfg_prt_uart *cfg)
     ubx_put_X2(buffer, &ind, in_proto);
 
     uint16_t out_proto = 0;
-    in_proto |= (cfg->out_ubx ? 1 : 0) << 0;
-    in_proto |= (cfg->out_nmea ? 1 : 0) << 1;
-    in_proto |= (cfg->out_rtcm3 ? 1 : 0) << 5;
+    out_proto |= (cfg->out_ubx ? 1 : 0) << 0;
+    out_proto |= (cfg->out_nmea ? 1 : 0) << 1;
+    out_proto |= (cfg->out_rtcm3 ? 1 : 0) << 5;
 
     ubx_put_X2(buffer, &ind, out_proto);
     ubx_put_X2(buffer, &ind, 0); // No extended timeout
     ubx_put_U1(buffer, &ind, 0);
     ubx_put_U1(buffer, &ind, 0);
 
-    return ubx_encode_send(UBX_CLASS_CFG, UBX_CFG_TMODE3, buffer, ind, 10);
+    return ubx_encode_send(UBX_CLASS_CFG, UBX_CFG_PRT, buffer, ind, 10);
 }
 
 /**
@@ -852,7 +839,7 @@ void Ublox::ubx_decode_rawx(uint8_t *msg, int len)
 
     raw.rcv_tow = ubx_get_R8(msg, &ind);
     raw.week = ubx_get_U2(msg, &ind);
-    raw.leap_sec = ubx_get_I1(msg, &ind);
+    raw.leaps = ubx_get_I1(msg, &ind);
     raw.num_meas = ubx_get_U1(msg, &ind);
     flags = ubx_get_X1(msg, &ind);
     raw.leap_sec = flags & 0x01;

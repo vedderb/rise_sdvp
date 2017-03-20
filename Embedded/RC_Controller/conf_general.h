@@ -27,7 +27,7 @@
 #define MAIN_MODE_MULTIROTOR		4
 
 // Main mode
-#define MAIN_MODE					MAIN_MODE_CAR
+#define MAIN_MODE					MAIN_MODE_MULTIROTOR
 
 // Mode macros
 #define MAIN_MODE_IS_MOTE			(MAIN_MODE == MAIN_MODE_MOTE_2400 || MAIN_MODE == MAIN_MODE_MOTE_400 || MAIN_MODE == MAIN_MODE_MOTE_HYBRID)
@@ -35,7 +35,7 @@
 
 // Firmware version
 #define FW_VERSION_MAJOR			8
-#define FW_VERSION_MINOR			4
+#define FW_VERSION_MINOR			5
 
 // Default car settings
 //#define CAR_TERO // Benjamins tero car
@@ -47,7 +47,7 @@
 #endif
 
 // Ublox settings
-#define UBLOX_EN					0
+#define UBLOX_EN					1
 
 // Log configuration to enable. Choose one only.
 //#define LOG_EN_CARREL

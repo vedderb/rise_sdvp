@@ -109,6 +109,7 @@ private:
 
 // Receiver Manager (RXM) messages
 #define UBX_RXM_RAWX					0x15
+#define UBX_RXM_SFRBX					0x13
 
 // Ack messages
 #define UBX_ACK_ACK						0x01

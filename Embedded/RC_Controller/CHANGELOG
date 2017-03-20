@@ -1,3 +1,9 @@
+=== FW 8.5 ===
+* Start of multirotor support.
+ - Configuration parameters.
+ - Dead reckoning.
+* Ublox bug fixes.
+
 === FW 8.4 ===
 * Working initial attitude measurement.
 * Usage of ublox info.

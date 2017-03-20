@@ -229,6 +229,16 @@ typedef struct {
 	float ctrl_gain_yaw_dp;
 	float ctrl_gain_yaw_de;
 
+	// Position controller
+	float ctrl_gain_pos_p;
+	float ctrl_gain_pos_i;
+	float ctrl_gain_pos_d;
+
+	// Altitude controller
+	float ctrl_gain_alt_p;
+	float ctrl_gain_alt_i;
+	float ctrl_gain_alt_d;
+
 	// Joystick gain
 	float js_gain_tilt;
 	float js_gain_yaw;
