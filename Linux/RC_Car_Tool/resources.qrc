@@ -58,5 +58,6 @@
         <file>Icons/Drone-96.png</file>
         <file>Models/quadrotor.blend</file>
         <file>Models/quadrotor.model</file>
+        <file>Icons/Airplane Front View-96.png</file>
     </qresource>
 </RCC>

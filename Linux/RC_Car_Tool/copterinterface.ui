@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>810</width>
-    <height>546</height>
+    <width>848</width>
+    <height>706</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -248,12 +248,561 @@
         <attribute name="toolTip">
          <string>Configuration</string>
         </attribute>
-        <layout class="QVBoxLayout" name="verticalLayout_8">
+        <layout class="QVBoxLayout" name="verticalLayout_9">
          <item>
           <widget class="QGroupBox" name="groupBox">
            <property name="title">
             <string>Copter Parameters</string>
            </property>
+           <layout class="QVBoxLayout" name="verticalLayout_8">
+            <item>
+             <widget class="QTabWidget" name="tabWidget_2">
+              <property name="tabShape">
+               <enum>QTabWidget::Triangular</enum>
+              </property>
+              <property name="currentIndex">
+               <number>0</number>
+              </property>
+              <widget class="QWidget" name="tab_7">
+               <attribute name="icon">
+                <iconset resource="resources.qrc">
+                 <normaloff>:/models/Icons/Settings-96.png</normaloff>:/models/Icons/Settings-96.png</iconset>
+               </attribute>
+               <attribute name="title">
+                <string/>
+               </attribute>
+               <attribute name="toolTip">
+                <string>General</string>
+               </attribute>
+               <layout class="QGridLayout" name="gridLayout">
+                <property name="spacing">
+                 <number>3</number>
+                </property>
+                <item row="0" column="1">
+                 <widget class="QDoubleSpinBox" name="confMapMaxXBox">
+                  <property name="prefix">
+                   <string>Max X: </string>
+                  </property>
+                  <property name="suffix">
+                   <string> m</string>
+                  </property>
+                  <property name="decimals">
+                   <number>1</number>
+                  </property>
+                  <property name="minimum">
+                   <double>-10000.000000000000000</double>
+                  </property>
+                  <property name="maximum">
+                   <double>10000.000000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="4" column="0">
+                 <spacer name="verticalSpacer_2">
+                  <property name="orientation">
+                   <enum>Qt::Vertical</enum>
+                  </property>
+                  <property name="sizeType">
+                   <enum>QSizePolicy::MinimumExpanding</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>20</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item row="1" column="1">
+                 <widget class="QDoubleSpinBox" name="confMapMaxYBox">
+                  <property name="prefix">
+                   <string>Max Y: </string>
+                  </property>
+                  <property name="suffix">
+                   <string> m</string>
+                  </property>
+                  <property name="decimals">
+                   <number>1</number>
+                  </property>
+                  <property name="minimum">
+                   <double>-10000.000000000000000</double>
+                  </property>
+                  <property name="maximum">
+                   <double>10000.000000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="0">
+                 <widget class="QDoubleSpinBox" name="confJsGainYawBox">
+                  <property name="prefix">
+                   <string>JS Gain Yaw: </string>
+                  </property>
+                  <property name="maximum">
+                   <double>10.000000000000000</double>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.010000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="0">
+                 <widget class="QDoubleSpinBox" name="confMapMinXBox">
+                  <property name="prefix">
+                   <string>Min X: </string>
+                  </property>
+                  <property name="suffix">
+                   <string> m</string>
+                  </property>
+                  <property name="decimals">
+                   <number>1</number>
+                  </property>
+                  <property name="minimum">
+                   <double>-10000.000000000000000</double>
+                  </property>
+                  <property name="maximum">
+                   <double>10000.000000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <widget class="QDoubleSpinBox" name="confMapMinYBox">
+                  <property name="prefix">
+                   <string>Min Y: </string>
+                  </property>
+                  <property name="suffix">
+                   <string> m</string>
+                  </property>
+                  <property name="decimals">
+                   <number>1</number>
+                  </property>
+                  <property name="minimum">
+                   <double>-10000.000000000000000</double>
+                  </property>
+                  <property name="maximum">
+                   <double>10000.000000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="0">
+                 <widget class="QDoubleSpinBox" name="confJsGainTiltBox">
+                  <property name="prefix">
+                   <string>JS Gain Tilt: </string>
+                  </property>
+                  <property name="maximum">
+                   <double>10.000000000000000</double>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.010000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="1">
+                 <widget class="QCheckBox" name="confJsModeRateBox">
+                  <property name="text">
+                   <string>Rate Mode</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+              <widget class="QWidget" name="tab_8">
+               <attribute name="icon">
+                <iconset resource="resources.qrc">
+                 <normaloff>:/models/Icons/Gyroscope-96.png</normaloff>:/models/Icons/Gyroscope-96.png</iconset>
+               </attribute>
+               <attribute name="title">
+                <string/>
+               </attribute>
+               <attribute name="toolTip">
+                <string>Dead Reckoning</string>
+               </attribute>
+               <layout class="QGridLayout" name="gridLayout_2">
+                <property name="spacing">
+                 <number>3</number>
+                </property>
+                <item row="3" column="1">
+                 <widget class="QDoubleSpinBox" name="confMaxTiltErrorBox">
+                  <property name="prefix">
+                   <string>Max Tilt Err: </string>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.010000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="1">
+                 <widget class="QDoubleSpinBox" name="confTiltGainIBox">
+                  <property name="prefix">
+                   <string>Tilt Gain I: </string>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.010000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="2">
+                 <widget class="QDoubleSpinBox" name="confTiltGainDBox">
+                  <property name="prefix">
+                   <string>Tilt Gain D: </string>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.010000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="0">
+                 <widget class="QDoubleSpinBox" name="confMaxCorrErrorBox">
+                  <property name="prefix">
+                   <string>Max Corr Err: </string>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.010000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="2">
+                 <widget class="QDoubleSpinBox" name="confVelGainDBox">
+                  <property name="prefix">
+                   <string>Vel Gain D: </string>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.010000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="0">
+                 <widget class="QDoubleSpinBox" name="confTiltGainPBox">
+                  <property name="prefix">
+                   <string>Tilt Gain P: </string>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.010000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <widget class="QDoubleSpinBox" name="confVelGainPBox">
+                  <property name="prefix">
+                   <string>Vel Gain P: </string>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.010000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1">
+                 <widget class="QDoubleSpinBox" name="confVelGainIBox">
+                  <property name="prefix">
+                   <string>Vel Gain I: </string>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.010000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <widget class="QDoubleSpinBox" name="confVelDecayLBox">
+                  <property name="prefix">
+                   <string>Vel Dec L: </string>
+                  </property>
+                  <property name="decimals">
+                   <number>3</number>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.010000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="2">
+                 <widget class="QDoubleSpinBox" name="confVelMaxBox">
+                  <property name="prefix">
+                   <string>Vel Max: </string>
+                  </property>
+                  <property name="suffix">
+                   <string> km/h</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="0">
+                 <widget class="QDoubleSpinBox" name="confVelDecayEBox">
+                  <property name="prefix">
+                   <string>Vel Dec E: </string>
+                  </property>
+                  <property name="decimals">
+                   <number>3</number>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.010000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="4" column="0">
+                 <spacer name="verticalSpacer_3">
+                  <property name="orientation">
+                   <enum>Qt::Vertical</enum>
+                  </property>
+                  <property name="sizeType">
+                   <enum>QSizePolicy::MinimumExpanding</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>20</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+               </layout>
+              </widget>
+              <widget class="QWidget" name="tab_9">
+               <attribute name="icon">
+                <iconset resource="resources.qrc">
+                 <normaloff>:/models/Icons/Airplane Front View-96.png</normaloff>:/models/Icons/Airplane Front View-96.png</iconset>
+               </attribute>
+               <attribute name="title">
+                <string/>
+               </attribute>
+               <attribute name="toolTip">
+                <string>Attitude Controller</string>
+               </attribute>
+               <layout class="QGridLayout" name="gridLayout_3">
+                <property name="spacing">
+                 <number>3</number>
+                </property>
+                <item row="2" column="2">
+                 <widget class="QDoubleSpinBox" name="confCtrlGainYawDPBox">
+                  <property name="prefix">
+                   <string>Ctrl Gain Yaw DP: </string>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.010000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <widget class="QDoubleSpinBox" name="confCtrlGainRollIBox">
+                  <property name="prefix">
+                   <string>Ctrl Gain Roll I: </string>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.010000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <widget class="QDoubleSpinBox" name="confCtrlGainPitchPBox">
+                  <property name="prefix">
+                   <string>Ctrl Gain Pitch P: </string>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.010000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="2">
+                 <widget class="QDoubleSpinBox" name="confCtrlGainYawPBox">
+                  <property name="prefix">
+                   <string>Ctrl Gain Yaw P: </string>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.010000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="2">
+                 <widget class="QDoubleSpinBox" name="confCtrlGainYawDEBox">
+                  <property name="prefix">
+                   <string>Ctrl Gain Yaw DE: </string>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.010000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="1">
+                 <widget class="QDoubleSpinBox" name="confCtrlGainPitchDPBox">
+                  <property name="prefix">
+                   <string>Ctrl Gain Pitch DP: </string>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.010000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="2">
+                 <widget class="QDoubleSpinBox" name="confCtrlGainYawIBox">
+                  <property name="prefix">
+                   <string>Ctrl Gain Yaw I: </string>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.010000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1">
+                 <widget class="QDoubleSpinBox" name="confCtrlGainPitchIBox">
+                  <property name="prefix">
+                   <string>Ctrl Gain Pitch I: </string>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.010000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="0">
+                 <widget class="QDoubleSpinBox" name="confCtrlGainRollDEBox">
+                  <property name="prefix">
+                   <string>Ctrl Gain Roll DE: </string>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.010000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="0">
+                 <widget class="QDoubleSpinBox" name="confCtrlGainRollDPBox">
+                  <property name="prefix">
+                   <string>Ctrl Gain Roll DP: </string>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.010000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="0">
+                 <widget class="QDoubleSpinBox" name="confCtrlGainRollPBox">
+                  <property name="prefix">
+                   <string>Ctrl Gain Roll P: </string>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.010000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="1">
+                 <widget class="QDoubleSpinBox" name="confCtrlGainPitchDEBox">
+                  <property name="prefix">
+                   <string>Ctrl Gain Pitch DE: </string>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.010000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="4" column="0">
+                 <spacer name="verticalSpacer_4">
+                  <property name="orientation">
+                   <enum>Qt::Vertical</enum>
+                  </property>
+                  <property name="sizeType">
+                   <enum>QSizePolicy::MinimumExpanding</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>20</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+               </layout>
+              </widget>
+              <widget class="QWidget" name="tab_10">
+               <attribute name="icon">
+                <iconset resource="resources.qrc">
+                 <normaloff>:/models/Icons/Waypoint Map-96.png</normaloff>:/models/Icons/Waypoint Map-96.png</iconset>
+               </attribute>
+               <attribute name="title">
+                <string/>
+               </attribute>
+               <attribute name="toolTip">
+                <string>Position Controller</string>
+               </attribute>
+               <layout class="QGridLayout" name="gridLayout_5">
+                <property name="spacing">
+                 <number>3</number>
+                </property>
+                <item row="1" column="0">
+                 <widget class="QDoubleSpinBox" name="confCtrlGainPosIBox">
+                  <property name="prefix">
+                   <string>Ctrl Gain Pos I: </string>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.010000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1">
+                 <widget class="QDoubleSpinBox" name="confCtrlGainAltIBox">
+                  <property name="prefix">
+                   <string>Ctrl Gain Alt I: </string>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.010000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="1">
+                 <widget class="QDoubleSpinBox" name="confCtrlGainAltDBox">
+                  <property name="prefix">
+                   <string>Ctrl Gain Alt D: </string>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.010000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <widget class="QDoubleSpinBox" name="confCtrlGainAltPBox">
+                  <property name="prefix">
+                   <string>Ctrl Gain Alt P: </string>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.010000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="0">
+                 <widget class="QDoubleSpinBox" name="confCtrlGainPosDBox">
+                  <property name="prefix">
+                   <string>Ctrl Gain Pos D: </string>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.010000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="0">
+                 <widget class="QDoubleSpinBox" name="confCtrlGainPosPBox">
+                  <property name="prefix">
+                   <string>Ctrl Gain Pos P: </string>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.010000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="0">
+                 <spacer name="verticalSpacer_5">
+                  <property name="orientation">
+                   <enum>Qt::Vertical</enum>
+                  </property>
+                  <property name="sizeType">
+                   <enum>QSizePolicy::MinimumExpanding</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>20</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+               </layout>
+              </widget>
+             </widget>
+            </item>
+           </layout>
           </widget>
          </item>
          <item>
@@ -265,6 +814,65 @@
             </sizepolicy>
            </property>
           </widget>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_7" stretch="0,0,0,0">
+           <item>
+            <spacer name="horizontalSpacer_3">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QPushButton" name="confReadButton">
+             <property name="toolTip">
+              <string>Read configuration from car</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="icon">
+              <iconset resource="resources.qrc">
+               <normaloff>:/models/Icons/Upload-96.png</normaloff>:/models/Icons/Upload-96.png</iconset>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="confReadDefaultButton">
+             <property name="toolTip">
+              <string>Read default configuration from car</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="icon">
+              <iconset resource="resources.qrc">
+               <normaloff>:/models/Icons/HDD-96.png</normaloff>:/models/Icons/HDD-96.png</iconset>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="confWriteButton">
+             <property name="toolTip">
+              <string>Write configuration to car</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="icon">
+              <iconset resource="resources.qrc">
+               <normaloff>:/models/Icons/Download-96.png</normaloff>:/models/Icons/Download-96.png</iconset>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </item>
         </layout>
        </widget>

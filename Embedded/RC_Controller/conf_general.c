@@ -176,6 +176,7 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 
 	conf->mr.js_gain_tilt = 1.0;
 	conf->mr.js_gain_yaw = 0.6;
+	conf->mr.js_mode_rate = false;
 
 	// Custom parameters based on ID
 	switch (main_id) {

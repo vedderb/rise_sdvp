@@ -452,6 +452,7 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
 
         conf.mr.js_gain_tilt = utility::buffer_get_double32_auto(data, &ind);
         conf.mr.js_gain_yaw = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.js_mode_rate = data[ind++];
 
         emit configurationReceived(id, conf);
     } break;
@@ -847,6 +848,7 @@ bool PacketInterface::setConfiguration(quint8 id, MAIN_CONFIG &conf, int retries
 
     utility::buffer_append_double32_auto(mSendBuffer, conf.mr.js_gain_tilt, &send_index);
     utility::buffer_append_double32_auto(mSendBuffer, conf.mr.js_gain_yaw, &send_index);
+    mSendBuffer[send_index++] = conf.mr.js_mode_rate;
 
     return sendPacketAck(mSendBuffer, send_index, retries, 500);
 }

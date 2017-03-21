@@ -572,6 +572,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 			main_config.mr.js_gain_tilt = buffer_get_float32_auto(data, &ind);
 			main_config.mr.js_gain_yaw = buffer_get_float32_auto(data, &ind);
+			main_config.mr.js_mode_rate = data[ind++];
 
 			conf_general_store_main_config(&main_config);
 
@@ -699,6 +700,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.js_gain_tilt, &send_index);
 			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.js_gain_yaw, &send_index);
+			m_send_buffer[send_index++] = main_cfg_tmp.mr.js_mode_rate;
 
 			commands_send_packet(m_send_buffer, send_index);
 		} break;

@@ -46,6 +46,7 @@ CopterInterface::CopterInterface(QWidget *parent) :
     mTimer->start(20);
 
     connect(mTimer, SIGNAL(timeout()), this, SLOT(timerSlot()));
+    connect(ui->confCommonWidget, SIGNAL(loadMagCal()), this, SLOT(loadMagCal()));
 }
 
 CopterInterface::~CopterInterface()
@@ -178,6 +179,8 @@ void CopterInterface::setPacketInterface(PacketInterface *packetInterface)
             this, SLOT(terminalPrint(quint8,QString)));
     connect(mPacketInterface, SIGNAL(nmeaRadioReceived(quint8,QByteArray)),
             this, SLOT(nmeaReceived(quint8,QByteArray)));
+    connect(mPacketInterface, SIGNAL(configurationReceived(quint8,MAIN_CONFIG)),
+            this, SLOT(configurationReceived(quint8,MAIN_CONFIG)));
 }
 
 void CopterInterface::setCtrlAp()
@@ -257,6 +260,30 @@ void CopterInterface::nmeaReceived(quint8 id, QByteArray nmea_msg)
     }
 }
 
+void CopterInterface::configurationReceived(quint8 id, MAIN_CONFIG config)
+{
+    if (id == mId) {
+        setConfGui(config);
+        QString str;
+        str.sprintf("Copter %d: Configuration Received", id);
+        emit showStatusInfo(str, true);
+    }
+}
+
+void CopterInterface::loadMagCal()
+{
+    if (!ui->magCal->calculateCompensation()) {
+        QMessageBox::warning(this, "Load Magnetometer Calibration",
+                             "Magnetometer calibration is not done. Please go to "
+                             "the calibration tab and collect "
+                             "samples, or load a file.");
+        return;
+    }
+
+    ui->confCommonWidget->setMagComp(ui->magCal->getComp());
+    ui->confCommonWidget->setMagCompCenter(ui->magCal->getCenter());
+}
+
 void CopterInterface::on_idBox_valueChanged(int arg1)
 {
     if (mMap) {
@@ -271,4 +298,138 @@ void CopterInterface::on_terminalSendButton_clicked()
 {
     emit terminalCmd(mId, ui->terminalEdit->text());
     ui->terminalEdit->clear();
+}
+
+void CopterInterface::on_confWriteButton_clicked()
+{
+    if (mPacketInterface) {
+        MAIN_CONFIG conf;
+        getConfGui(conf);
+        ui->confWriteButton->setEnabled(false);
+        bool ok = mPacketInterface->setConfiguration(mId, conf, 5);
+        ui->confWriteButton->setEnabled(true);
+
+        if (!ok) {
+            QMessageBox::warning(this, "Configuration",
+                                 "Could not write configuration.");
+        }
+    }
+}
+
+void CopterInterface::on_confReadDefaultButton_clicked()
+{
+    if (mPacketInterface) {
+        mPacketInterface->getDefaultConfiguration(mId);
+    }
+}
+
+void CopterInterface::on_confReadButton_clicked()
+{
+    if (mPacketInterface) {
+        mPacketInterface->getConfiguration(mId);
+    }
+}
+
+void CopterInterface::getConfGui(MAIN_CONFIG &conf)
+{
+    conf.mr.vel_decay_e = ui->confVelDecayEBox->value();
+    conf.mr.vel_decay_l = ui->confVelDecayLBox->value();
+    conf.mr.vel_max = ui->confVelMaxBox->value() / 3.6;
+
+    conf.mr.map_min_x = ui->confMapMinXBox->value();
+    conf.mr.map_max_x = ui->confMapMaxXBox->value();
+    conf.mr.map_min_y = ui->confMapMinYBox->value();
+    conf.mr.map_max_y = ui->confMapMaxYBox->value();
+
+    conf.mr.vel_gain_p = ui->confVelGainPBox->value();
+    conf.mr.vel_gain_i = ui->confVelGainIBox->value();
+    conf.mr.vel_gain_d = ui->confVelGainDBox->value();
+
+    conf.mr.tilt_gain_p = ui->confTiltGainPBox->value();
+    conf.mr.tilt_gain_i = ui->confTiltGainIBox->value();
+    conf.mr.tilt_gain_d = ui->confTiltGainDBox->value();
+
+    conf.mr.max_corr_error = ui->confMaxCorrErrorBox->value();
+    conf.mr.max_tilt_error = ui->confMaxTiltErrorBox->value();
+
+    conf.mr.ctrl_gain_roll_p = ui->confCtrlGainRollPBox->value();
+    conf.mr.ctrl_gain_roll_i = ui->confCtrlGainRollIBox->value();
+    conf.mr.ctrl_gain_roll_dp = ui->confCtrlGainRollDPBox->value();
+    conf.mr.ctrl_gain_roll_de = ui->confCtrlGainRollDEBox->value();
+
+    conf.mr.ctrl_gain_pitch_p = ui->confCtrlGainPitchPBox->value();
+    conf.mr.ctrl_gain_pitch_i = ui->confCtrlGainPitchIBox->value();
+    conf.mr.ctrl_gain_pitch_dp = ui->confCtrlGainPitchDPBox->value();
+    conf.mr.ctrl_gain_pitch_de = ui->confCtrlGainPitchDEBox->value();
+
+    conf.mr.ctrl_gain_yaw_p = ui->confCtrlGainYawPBox->value();
+    conf.mr.ctrl_gain_yaw_i = ui->confCtrlGainYawIBox->value();
+    conf.mr.ctrl_gain_yaw_dp = ui->confCtrlGainYawDPBox->value();
+    conf.mr.ctrl_gain_yaw_de = ui->confCtrlGainYawDEBox->value();
+
+    conf.mr.ctrl_gain_pos_p = ui->confCtrlGainPosPBox->value();
+    conf.mr.ctrl_gain_pos_i = ui->confCtrlGainPosIBox->value();
+    conf.mr.ctrl_gain_pos_d = ui->confCtrlGainPosDBox->value();
+
+    conf.mr.ctrl_gain_alt_p = ui->confCtrlGainAltPBox->value();
+    conf.mr.ctrl_gain_alt_i = ui->confCtrlGainAltIBox->value();
+    conf.mr.ctrl_gain_alt_d = ui->confCtrlGainAltDBox->value();
+
+    conf.mr.js_gain_tilt = ui->confJsGainTiltBox->value();
+    conf.mr.js_gain_yaw = ui->confJsGainYawBox->value();
+    conf.mr.js_mode_rate = ui->confJsModeRateBox->isChecked();
+
+    ui->confCommonWidget->getConfGui(conf);
+}
+
+void CopterInterface::setConfGui(MAIN_CONFIG &conf)
+{
+    ui->confVelDecayEBox->setValue(conf.mr.vel_decay_e);
+    ui->confVelDecayLBox->setValue(conf.mr.vel_decay_l);
+    ui->confVelMaxBox->setValue(conf.mr.vel_max * 3.6);
+
+    ui->confMapMinXBox->setValue(conf.mr.map_min_x);
+    ui->confMapMaxXBox->setValue(conf.mr.map_max_x);
+    ui->confMapMinYBox->setValue(conf.mr.map_min_y);
+    ui->confMapMaxYBox->setValue(conf.mr.map_max_y);
+
+    ui->confVelGainPBox->setValue(conf.mr.vel_gain_p);
+    ui->confVelGainIBox->setValue(conf.mr.vel_gain_i);
+    ui->confVelGainDBox->setValue(conf.mr.vel_gain_d);
+
+    ui->confTiltGainPBox->setValue(conf.mr.tilt_gain_p);
+    ui->confTiltGainIBox->setValue(conf.mr.tilt_gain_i);
+    ui->confTiltGainDBox->setValue(conf.mr.tilt_gain_d);
+
+    ui->confMaxCorrErrorBox->setValue(conf.mr.max_corr_error);
+    ui->confMaxTiltErrorBox->setValue(conf.mr.max_tilt_error);
+
+    ui->confCtrlGainRollPBox->setValue(conf.mr.ctrl_gain_roll_p);
+    ui->confCtrlGainRollIBox->setValue(conf.mr.ctrl_gain_roll_i);
+    ui->confCtrlGainRollDPBox->setValue(conf.mr.ctrl_gain_roll_dp);
+    ui->confCtrlGainRollDEBox->setValue(conf.mr.ctrl_gain_roll_de);
+
+    ui->confCtrlGainPitchPBox->setValue(conf.mr.ctrl_gain_pitch_p);
+    ui->confCtrlGainPitchIBox->setValue(conf.mr.ctrl_gain_pitch_i);
+    ui->confCtrlGainPitchDPBox->setValue(conf.mr.ctrl_gain_pitch_dp);
+    ui->confCtrlGainPitchDEBox->setValue(conf.mr.ctrl_gain_pitch_de);
+
+    ui->confCtrlGainYawPBox->setValue(conf.mr.ctrl_gain_yaw_p);
+    ui->confCtrlGainYawIBox->setValue(conf.mr.ctrl_gain_yaw_i);
+    ui->confCtrlGainYawDPBox->setValue(conf.mr.ctrl_gain_yaw_dp);
+    ui->confCtrlGainYawDEBox->setValue(conf.mr.ctrl_gain_yaw_de);
+
+    ui->confCtrlGainPosPBox->setValue(conf.mr.ctrl_gain_pos_p);
+    ui->confCtrlGainPosIBox->setValue(conf.mr.ctrl_gain_pos_i);
+    ui->confCtrlGainPosDBox->setValue(conf.mr.ctrl_gain_pos_d);
+
+    ui->confCtrlGainAltPBox->setValue(conf.mr.ctrl_gain_alt_p);
+    ui->confCtrlGainAltIBox->setValue(conf.mr.ctrl_gain_alt_i);
+    ui->confCtrlGainAltDBox->setValue(conf.mr.ctrl_gain_alt_d);
+
+    ui->confJsGainTiltBox->setValue(conf.mr.js_gain_tilt);
+    ui->confJsGainYawBox->setValue(conf.mr.js_gain_yaw);
+    ui->confJsModeRateBox->setChecked(conf.mr.js_mode_rate);
+
+    ui->confCommonWidget->setConfGui(conf);
 }

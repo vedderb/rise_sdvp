@@ -60,10 +60,14 @@ private slots:
     void routePointSet(LocPoint pos);
     void lastRoutePointRemoved();
     void nmeaReceived(quint8 id, QByteArray nmea_msg);
+    void configurationReceived(quint8 id, MAIN_CONFIG config);
+    void loadMagCal();
 
     void on_idBox_valueChanged(int arg1);
-
     void on_terminalSendButton_clicked();
+    void on_confWriteButton_clicked();
+    void on_confReadDefaultButton_clicked();
+    void on_confReadButton_clicked();
 
 private:
     Ui::CopterInterface *ui;
@@ -76,6 +80,9 @@ private:
 
     int mId;
     QTimer *mTimer;
+
+    void getConfGui(MAIN_CONFIG &conf);
+    void setConfGui(MAIN_CONFIG &conf);
 
 };
 

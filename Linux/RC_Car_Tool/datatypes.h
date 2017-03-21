@@ -169,6 +169,7 @@ typedef struct {
     // Joystick gain
     float js_gain_tilt;
     float js_gain_yaw;
+    bool js_mode_rate;
 } MAIN_CONFIG_MULTIROTOR;
 
 // Car configuration
