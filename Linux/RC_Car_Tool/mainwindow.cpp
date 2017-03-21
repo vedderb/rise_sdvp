@@ -113,8 +113,10 @@ MainWindow::MainWindow(QWidget *parent) :
             this, SLOT(mapPosSet(quint8,LocPoint)));
     connect(mPacketInterface, SIGNAL(ackReceived(quint8,CMD_PACKET,QString)),
             this, SLOT(ackReceived(quint8,CMD_PACKET,QString)));
-    connect(ui->rtcmWidget, SIGNAL(rtcmReceived(QByteArray,int)),
-            this, SLOT(rtcmReceived(QByteArray,int)));
+    connect(ui->rtcmWidget, SIGNAL(rtcmReceived(QByteArray)),
+            this, SLOT(rtcmReceived(QByteArray)));
+    connect(ui->baseStationWidget, SIGNAL(rtcmOut(QByteArray)),
+            this, SLOT(rtcmReceived(QByteArray)));
     connect(ui->rtcmWidget, SIGNAL(refPosGet()), this, SLOT(rtcmRefPosGet()));
     connect(mPing, SIGNAL(pingRx(int,QString)), this, SLOT(pingRx(int,QString)));
     connect(mPing, SIGNAL(pingError(QString,QString)), this, SLOT(pingError(QString,QString)));
@@ -434,28 +436,9 @@ void MainWindow::ackReceived(quint8 id, CMD_PACKET cmd, QString msg)
     showStatusInfo(str, true);
 }
 
-void MainWindow::rtcmReceived(QByteArray data, int type)
+void MainWindow::rtcmReceived(QByteArray data)
 {
-    // Only send GPS observations and base station position
-    // to save bandwidth. This requires that sync is 0 for
-    // RTKLIB. This is done by rtcmclient for now. Also, rtcmclient
-    // will re-encode 1004 to 1002 to save some bandwidth.
-    switch (type) {
-    case 1001:
-    case 1002:
-    case 1003:
-    case 1004:
-    case 1005:
-    case 1006:
-    case 1010:
-    case 1012:
-    case 1019:
-    case 1020:
-        mPacketInterface->sendRtcmUsb(255, data);
-        break;
-    default:
-        break;
-    }
+    mPacketInterface->sendRtcmUsb(255, data);
 }
 
 void MainWindow::rtcmRefPosGet()

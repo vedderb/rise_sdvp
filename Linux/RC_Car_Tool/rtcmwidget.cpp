@@ -31,8 +31,8 @@ RtcmWidget::RtcmWidget(QWidget *parent) :
     mTimer->start(20);
     mTcpServer = new TcpBroadcast(this);
 
-    connect(mRtcm, SIGNAL(rtcmReceived(QByteArray,int)),
-            this, SLOT(rtcmRx(QByteArray,int)));
+    connect(mRtcm, SIGNAL(rtcmReceived(QByteArray,int,bool)),
+            this, SLOT(rtcmRx(QByteArray,int,bool)));
     connect(mRtcm, SIGNAL(refPosReceived(double,double,double,double)),
             this, SLOT(refPosRx(double,double,double,double)));
     connect(mTimer, SIGNAL(timeout()),
@@ -66,11 +66,12 @@ RtcmWidget::~RtcmWidget()
     delete ui;
 }
 
-void RtcmWidget::setRefPos(double lat, double lon, double height)
+void RtcmWidget::setRefPos(double lat, double lon, double height, double antenna_height)
 {
     ui->refSendLatBox->setValue(lat);
     ui->refSendLonBox->setValue(lon);
     ui->refSendHBox->setValue(height);
+    ui->refSendAntHBox->setValue(antenna_height);
 }
 
 void RtcmWidget::timerSlot()
@@ -111,13 +112,13 @@ void RtcmWidget::timerSlot()
                         ui->refSendHBox->value(),
                         ui->refSendAntHBox->value());
 
-            emit rtcmReceived(data, 1006);
+            emit rtcmReceived(data);
             mTcpServer->broadcastData(data);
         }
     }
 }
 
-void RtcmWidget::rtcmRx(QByteArray data, int type)
+void RtcmWidget::rtcmRx(QByteArray data, int type, bool sync)
 {
     switch (type) {
     case 1001: ui->rtcm1001Number->display(ui->rtcm1001Number->value() + 1); break;
@@ -139,9 +140,30 @@ void RtcmWidget::rtcmRx(QByteArray data, int type)
         break;
     }
 
-    if (!ui->sendRefPosBox->isChecked() || (type != 1006 && type != 1007)) {
-        emit rtcmReceived(data, type);
-        mTcpServer->broadcastData(data);
+    // Put messages from the same epoch together unless they are too large. This is
+    // because packets can get lost and rtklib seems to behave better when not only
+    // getting half of the observations from the same epoch. Also make sure to not
+    // send too large packets.
+
+    bool tooLarge = false;
+
+    if ((mRtcmBuffer.size() + data.size()) < 1000) {
+        mRtcmBuffer.append(data);
+    } else {
+        tooLarge = true;
+    }
+
+    if (!sync || tooLarge) {
+        if (!ui->sendRefPosBox->isChecked() || (type != 1005 && type != 1006)) {
+            emit rtcmReceived(mRtcmBuffer);
+            mTcpServer->broadcastData(mRtcmBuffer);
+            mRtcmBuffer.clear();
+
+            if (tooLarge) {
+                emit rtcmReceived(data);
+                mTcpServer->broadcastData(data);
+            }
+        }
     }
 }
 

@@ -56,7 +56,7 @@ private slots:
     void mrStateReceived(quint8 id, MULTIROTOR_STATE state);
     void mapPosSet(quint8 id, LocPoint pos);
     void ackReceived(quint8 id, CMD_PACKET cmd, QString msg);
-    void rtcmReceived(QByteArray data, int type);
+    void rtcmReceived(QByteArray data);
     void rtcmRefPosGet();
     void pingRx(int time, QString msg);
     void pingError(QString msg, QString error);

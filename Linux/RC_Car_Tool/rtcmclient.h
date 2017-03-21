@@ -41,13 +41,13 @@ public:
     void disconnectSerial();
     void setGpsOnly(bool isGpsOnly);
 
-    void emitRtcmReceived(QByteArray data, int type);
+    void emitRtcmReceived(QByteArray data, int type, bool sync = false);
     void emitRefPosReceived(double lat, double lon, double height, double antenna_height);
 
     static QByteArray encodeBasePos(double lat, double lon, double height, double antenna_height = 0);
 
 signals:
-    void rtcmReceived(QByteArray data, int type);
+    void rtcmReceived(QByteArray data, int type, bool sync = false);
     void refPosReceived(double lat, double lon, double height, double antenna_height);
 
 private slots:

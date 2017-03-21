@@ -37,6 +37,9 @@ public:
     ~BaseStation();
     int getAvgPosLlh(double &lat, double &lon, double &height);
 
+signals:
+    void rtcmOut(QByteArray data);
+
 private slots:
     void tcpInputConnected();
     void tcpInputDisconnected();
@@ -61,6 +64,7 @@ private:
     QTimer *mTimer;
     Ublox *mUblox;
     TcpBroadcast *mTcpServer;
+    int mBasePosCnt;
 
     double mXNow;
     double mYNow;

@@ -40,6 +40,7 @@ BaseStation::BaseStation(QWidget *parent) :
     mYAvg = 0.0;
     mZAvg = 0.0;
     mAvgSamples = 0.0;
+    mBasePosCnt = 0;
 
     mFixNowStr = "Solution...";
     mSatNowStr = "Sats...";
@@ -194,7 +195,6 @@ void BaseStation::rxRawx(ubx_rxm_rawx rawx)
 
     rtcm_obs_header_t header;
     rtcm_obs_t obs[rawx.num_meas];
-    rtcm_ref_sta_pos_t pos;
 
     header.staid = 0;
     header.t_wn = rawx.week;
@@ -203,6 +203,7 @@ void BaseStation::rxRawx(ubx_rxm_rawx rawx)
 
     bool has_gps = false;
     bool has_glo = false;
+    bool has_ref = false;
 
     for (int i = 0;i < rawx.num_meas;i++) {
         ubx_rxm_rawx_obs *raw_obs = &rawx.obs[i];
@@ -256,25 +257,60 @@ void BaseStation::rxRawx(ubx_rxm_rawx rawx)
     }
 
     // Base station position
-    pos.ant_height = ui->refSendAntHBox->value();
-    pos.height = ui->refSendHBox->value();
-    pos.lat = ui->refSendLatBox->value();
-    pos.lon = ui->refSendLonBox->value();
-    pos.staid = 0;
-    rtcm3_encode_1006(pos, data_ref, &ref_len);
-
-    QByteArray message;
-    if (has_gps) {
-        message.append((char*)data_gps, gps_len);
+    if (ui->sendBaseBox->isChecked()) {
+        rtcm_ref_sta_pos_t pos;
+        pos.ant_height = ui->refSendAntHBox->value();
+        pos.height = ui->refSendHBox->value();
+        pos.lat = ui->refSendLatBox->value();
+        pos.lon = ui->refSendLonBox->value();
+        pos.staid = 0;
+        rtcm3_encode_1006(pos, data_ref, &ref_len);
+        has_ref = true;
     }
 
-    if (has_glo) {
-        message.append((char*)data_glo, glo_len);
+    if (ui->tcpServerBox->isChecked()) {
+        QByteArray message;
+        if (has_gps) {
+            message.append((char*)data_gps, gps_len);
+        }
+
+        if (has_glo) {
+            message.append((char*)data_glo, glo_len);
+        }
+
+        if (has_ref) {
+            message.append((char*)data_ref, ref_len);
+        }
+
+        mTcpServer->broadcastData(message);
     }
 
-    message.append((char*)data_ref, ref_len);
+    if (ui->sendVehiclesBox->isChecked()) {
+        if (has_gps && has_glo && ((gps_len + glo_len) < 1000)) {
+            QByteArray message;
+            message.append((char*)data_gps, gps_len);
+            message.append((char*)data_glo, glo_len);
+            emit rtcmOut(message);
+        } else {
+            if (has_gps) {
+                emit rtcmOut(QByteArray((char*)data_gps, gps_len));
+            }
 
-    mTcpServer->broadcastData(message);
+            if (has_glo) {
+                emit rtcmOut(QByteArray((char*)data_glo, glo_len));
+            }
+        }
+
+        // Send base station position every 5 cycles to save bandwidth.
+        mBasePosCnt++;
+        if (mBasePosCnt >= 5) {
+            mBasePosCnt = 0;
+
+            if (has_ref) {
+                emit rtcmOut(QByteArray((char*)data_ref, ref_len));
+            }
+        }
+    }
 }
 
 void BaseStation::on_nmeaConnectButton_clicked()
@@ -357,6 +393,7 @@ void BaseStation::on_ubxSerialConnectButton_clicked()
 
     if (res) {
         // Serial port baud rate
+        // if it is too low the buffer will overfill and it won't work properly.
         ubx_cfg_prt_uart uart;
         uart.baudrate = 115200;
         uart.in_ubx = true;

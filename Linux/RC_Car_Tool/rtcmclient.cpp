@@ -54,7 +54,7 @@ void rtcm_rx_obs(rtcm_obs_header_t *header, rtcm_obs_t *obs, int obs_num) {
             rtcm3_encode_1002(header, obs, obs_num, data, &len);
 
             QByteArray rtcm_data((const char*)data, len);
-            RtcmClient::currentMsgHandler->emitRtcmReceived(rtcm_data, type);
+            RtcmClient::currentMsgHandler->emitRtcmReceived(rtcm_data, type, header->sync);
         } if ((header->type == 1010 || header->type == 1012) && !RtcmClient::gpsOnly) {
             // Re-encode to 1010 since we don't care about L2 for now.
             static uint8_t data[2048];
@@ -64,7 +64,7 @@ void rtcm_rx_obs(rtcm_obs_header_t *header, rtcm_obs_t *obs, int obs_num) {
             rtcm3_encode_1010(header, obs, obs_num, data, &len);
 
             QByteArray rtcm_data((const char*)data, len);
-            RtcmClient::currentMsgHandler->emitRtcmReceived(rtcm_data, type);
+            RtcmClient::currentMsgHandler->emitRtcmReceived(rtcm_data, type, header->sync);
         }
     }
 
@@ -178,9 +178,9 @@ void RtcmClient::setGpsOnly(bool isGpsOnly)
     gpsOnly = isGpsOnly;
 }
 
-void RtcmClient::emitRtcmReceived(QByteArray data, int type)
+void RtcmClient::emitRtcmReceived(QByteArray data, int type, bool sync)
 {
-    emit rtcmReceived(data, type);
+    emit rtcmReceived(data, type, sync);
 }
 
 void RtcmClient::emitRefPosReceived(double lat, double lon, double height, double antenna_height)

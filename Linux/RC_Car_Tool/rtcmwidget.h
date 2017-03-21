@@ -34,15 +34,15 @@ class RtcmWidget : public QWidget
 public:
     explicit RtcmWidget(QWidget *parent = 0);
     ~RtcmWidget();
-    void setRefPos(double lat, double lon, double height);
+    void setRefPos(double lat, double lon, double height, double antenna_height = 0.0);
 
 signals:
-    void rtcmReceived(QByteArray data, int type);
+    void rtcmReceived(QByteArray data);
     void refPosGet();
 
 private slots:
     void timerSlot();
-    void rtcmRx(QByteArray data, int type);
+    void rtcmRx(QByteArray data, int type, bool sync);
     void refPosRx(double lat, double lon, double height, double antenna_height);
 
     void on_ntripConnectButton_clicked();
@@ -61,6 +61,7 @@ private:
     RtcmClient *mRtcm;
     QTimer *mTimer;
     TcpBroadcast *mTcpServer;
+    QByteArray mRtcmBuffer;
 };
 
 #endif // RTCMWIDGET_H
