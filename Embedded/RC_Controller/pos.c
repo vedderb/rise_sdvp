@@ -29,6 +29,7 @@
 #include "servo_simple.h"
 #include "commands.h"
 #include "ublox.h"
+#include "mr_control.h"
 
 // Defines
 #define ITERATION_TIMER_FREQ			50000
@@ -472,6 +473,10 @@ static void mpu9150_read(void) {
 			m_ms_today -= MS_PER_DAY;
 		}
 	}
+
+#if MAIN_MODE == MAIN_MODE_MULTIROTOR
+	mr_control_run_iteration(dt);
+#endif
 }
 
 static void update_orientation_angles(float *accel, float *gyro, float *mag, float dt) {

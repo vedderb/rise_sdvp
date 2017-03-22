@@ -180,6 +180,34 @@ float utils_angle_difference_rad(float angle1, float angle2) {
 }
 
 /**
+ * Run a "complementary filter" on two angles
+ * @param angle1
+ * The first angle
+ * @param angle2
+ * The second angle
+ * @param ratio
+ * The ratio between the first and second angle.
+ * @return
+ */
+float utils_weight_angle(float angle1, float angle2, float ratio) {
+	utils_norm_angle(&angle1);
+	utils_norm_angle(&angle2);
+
+	if (fabsf(angle1 - angle2) > 180.0) {
+		if (angle1 < angle2) {
+			angle1 += 360.0;
+		} else {
+			angle2 += 360.0;
+		}
+	}
+
+	float angle_weighted = angle1 * ratio + angle2 * (1 - ratio);
+	utils_norm_angle(&angle_weighted);
+
+	return angle_weighted;
+}
+
+/**
  * Takes the average of a number of angles.
  *
  * @param angles

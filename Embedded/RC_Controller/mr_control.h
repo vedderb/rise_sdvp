@@ -19,8 +19,13 @@
 #define MR_CONTROL_H_
 
 #include "conf_general.h"
+#include "ch.h"
+#include "hal.h"
 
 // Functions
 void mr_control_init(void);
+systime_t mr_control_time_since_input_update(void);
+void mr_control_set_input(float roll, float pitch, float yaw, float throttle);
+void mr_control_run_iteration(float dt);
 
 #endif /* MR_CONTROL_H_ */

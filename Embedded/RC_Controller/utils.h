@@ -33,6 +33,7 @@ int utils_map_int(int x, int in_min, int in_max, int out_min, int out_max);
 void utils_deadband(float *value, float tres, float max);
 float utils_angle_difference(float angle1, float angle2);
 float utils_angle_difference_rad(float angle1, float angle2);
+float utils_weight_angle(float angle1, float angle2, float ratio);
 float utils_avg_angles_rad_fast(float *angles, float *weights, int angles_num);
 float utils_middle_of_3(float a, float b, float c);
 int utils_middle_of_3_int(int a, int b, int c);
