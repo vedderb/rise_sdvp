@@ -452,9 +452,11 @@ static void mpu9150_read(void) {
 #endif
 
 #if MAIN_MODE == MAIN_MODE_MULTIROTOR
-	chMtxLock(&m_mutex_pos);
-	mr_update_pos(&m_pos, dt);
-	chMtxUnlock(&m_mutex_pos);
+	if (mr_control_is_throttle_over_tres()) {
+		chMtxLock(&m_mutex_pos);
+		mr_update_pos(&m_pos, dt);
+		chMtxUnlock(&m_mutex_pos);
+	}
 #endif
 
 	// Update time today

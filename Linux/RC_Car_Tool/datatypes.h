@@ -170,6 +170,14 @@ typedef struct {
     float js_gain_tilt;
     float js_gain_yaw;
     bool js_mode_rate;
+
+    // Motor mapping and configuration
+    int8_t motor_fl_f; // x: Front Left  +: Front
+    int8_t motor_bl_l; // x: Back Left   +: Left
+    int8_t motor_fr_r; // x: Front Right +: Right
+    int8_t motor_br_b; // x: Back Right  +: Back
+    bool motors_x; // Use x motor configuration (use + if false)
+    bool motors_cw; // Front left (or front in + mode) runs in the clockwise direction (ccw if false)
 } MAIN_CONFIG_MULTIROTOR;
 
 // Car configuration

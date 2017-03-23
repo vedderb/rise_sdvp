@@ -178,6 +178,13 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 	conf->mr.js_gain_yaw = 0.6;
 	conf->mr.js_mode_rate = false;
 
+	conf->mr.motor_fl_f = 0;
+	conf->mr.motor_bl_l = 1;
+	conf->mr.motor_fr_r = 2;
+	conf->mr.motor_br_b = 3;
+	conf->mr.motors_x = true;
+	conf->mr.motors_cw = true;
+
 	// Custom parameters based on ID
 	switch (main_id) {
 	case 0:

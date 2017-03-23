@@ -43,7 +43,7 @@ CopterInterface::CopterInterface(QWidget *parent) :
     mId = 0;
 
     mTimer = new QTimer(this);
-    mTimer->start(20);
+    mTimer->start(40);
 
     connect(mTimer, SIGNAL(timeout()), this, SLOT(timerSlot()));
     connect(ui->confCommonWidget, SIGNAL(loadMagCal()), this, SLOT(loadMagCal()));
@@ -212,7 +212,13 @@ bool CopterInterface::setAp(bool on)
 
 void CopterInterface::timerSlot()
 {
-
+    if (ui->overrideActiveBox->isChecked() && mPacketInterface) {
+        mPacketInterface->mrOverridePower(mId,
+                                          ui->overriderMotorFlFBox->value(),
+                                          ui->overriderMotorBlLBox->value(),
+                                          ui->overriderMotorFrRBox->value(),
+                                          ui->overriderMotorBrBBox->value());
+    }
 }
 
 void CopterInterface::terminalPrint(quint8 id, QString str)
@@ -379,6 +385,13 @@ void CopterInterface::getConfGui(MAIN_CONFIG &conf)
     conf.mr.js_gain_yaw = ui->confJsGainYawBox->value();
     conf.mr.js_mode_rate = ui->confJsModeRateBox->isChecked();
 
+    conf.mr.motor_fl_f = ui->confMotorFlFBox->value();
+    conf.mr.motor_bl_l = ui->confMotorBlLBox->value();
+    conf.mr.motor_fr_r = ui->confMotorFrRBox->value();
+    conf.mr.motor_br_b = ui->confMotorBrBBox->value();
+    conf.mr.motors_x = ui->confMotorsXBox->isChecked();
+    conf.mr.motors_cw = ui->confMotorsCwBox->isChecked();
+
     ui->confCommonWidget->getConfGui(conf);
 }
 
@@ -430,6 +443,13 @@ void CopterInterface::setConfGui(MAIN_CONFIG &conf)
     ui->confJsGainTiltBox->setValue(conf.mr.js_gain_tilt);
     ui->confJsGainYawBox->setValue(conf.mr.js_gain_yaw);
     ui->confJsModeRateBox->setChecked(conf.mr.js_mode_rate);
+
+    ui->confMotorFlFBox->setValue(conf.mr.motor_fl_f);
+    ui->confMotorBlLBox->setValue(conf.mr.motor_bl_l);
+    ui->confMotorFrRBox->setValue(conf.mr.motor_fr_r);
+    ui->confMotorBrBBox->setValue(conf.mr.motor_br_b);
+    ui->confMotorsXBox->setChecked(conf.mr.motors_x);
+    ui->confMotorsCwBox->setChecked(conf.mr.motors_cw);
 
     ui->confCommonWidget->setConfGui(conf);
 }

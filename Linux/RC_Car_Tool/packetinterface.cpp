@@ -454,6 +454,13 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         conf.mr.js_gain_yaw = utility::buffer_get_double32_auto(data, &ind);
         conf.mr.js_mode_rate = data[ind++];
 
+        conf.mr.motor_fl_f = data[ind++];
+        conf.mr.motor_bl_l = data[ind++];
+        conf.mr.motor_fr_r = data[ind++];
+        conf.mr.motor_br_b = data[ind++];
+        conf.mr.motors_x = data[ind++];
+        conf.mr.motors_cw = data[ind++];
+
         emit configurationReceived(id, conf);
     } break;
 
@@ -850,6 +857,13 @@ bool PacketInterface::setConfiguration(quint8 id, MAIN_CONFIG &conf, int retries
     utility::buffer_append_double32_auto(mSendBuffer, conf.mr.js_gain_yaw, &send_index);
     mSendBuffer[send_index++] = conf.mr.js_mode_rate;
 
+    mSendBuffer[send_index++] = conf.mr.motor_fl_f;
+    mSendBuffer[send_index++] = conf.mr.motor_bl_l;
+    mSendBuffer[send_index++] = conf.mr.motor_fr_r;
+    mSendBuffer[send_index++] = conf.mr.motor_br_b;
+    mSendBuffer[send_index++] = conf.mr.motors_x;
+    mSendBuffer[send_index++] = conf.mr.motors_cw;
+
     return sendPacketAck(mSendBuffer, send_index, retries, 500);
 }
 
@@ -1114,4 +1128,28 @@ void PacketInterface::radarSetupGet(quint8 id)
     packet.append(id);
     packet.append((char)CMD_RADAR_SETUP_GET);
     sendPacket(packet);
+}
+
+void PacketInterface::mrRcControl(quint8 id, double throttle, double roll, double pitch, double yaw)
+{
+    qint32 send_index = 0;
+    mSendBuffer[send_index++] = id;
+    mSendBuffer[send_index++] = CMD_MR_RC_CONTROL;
+    utility::buffer_append_double32_auto(mSendBuffer, throttle, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, roll, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, pitch, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, yaw, &send_index);
+    sendPacket(mSendBuffer, send_index);
+}
+
+void PacketInterface::mrOverridePower(quint8 id, double fl_f, double bl_l, double fr_r, double br_b)
+{
+    qint32 send_index = 0;
+    mSendBuffer[send_index++] = id;
+    mSendBuffer[send_index++] = CMD_MR_OVERRIDE_POWER;
+    utility::buffer_append_double32_auto(mSendBuffer, fl_f, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, bl_l, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, fr_r, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, br_b, &send_index);
+    sendPacket(mSendBuffer, send_index);
 }

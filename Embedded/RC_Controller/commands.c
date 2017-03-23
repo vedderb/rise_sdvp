@@ -41,6 +41,7 @@
 #include "ublox.h"
 #include "rtcm3_simple.h"
 #include "comm_cc1120.h"
+#include "mr_control.h"
 
 #include <math.h>
 #include <string.h>
@@ -574,6 +575,13 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			main_config.mr.js_gain_yaw = buffer_get_float32_auto(data, &ind);
 			main_config.mr.js_mode_rate = data[ind++];
 
+			main_config.mr.motor_fl_f = data[ind++];
+			main_config.mr.motor_bl_l = data[ind++];
+			main_config.mr.motor_fr_r = data[ind++];
+			main_config.mr.motor_br_b = data[ind++];
+			main_config.mr.motors_x = data[ind++];
+			main_config.mr.motors_cw = data[ind++];
+
 			conf_general_store_main_config(&main_config);
 
 			// Doing this while driving will get wrong as there is so much accelerometer noise then.
@@ -701,6 +709,13 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.js_gain_tilt, &send_index);
 			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.mr.js_gain_yaw, &send_index);
 			m_send_buffer[send_index++] = main_cfg_tmp.mr.js_mode_rate;
+
+			m_send_buffer[send_index++] = main_cfg_tmp.mr.motor_fl_f;
+			m_send_buffer[send_index++] = main_cfg_tmp.mr.motor_bl_l;
+			m_send_buffer[send_index++] = main_cfg_tmp.mr.motor_fr_r;
+			m_send_buffer[send_index++] = main_cfg_tmp.mr.motor_br_b;
+			m_send_buffer[send_index++] = main_cfg_tmp.mr.motors_x;
+			m_send_buffer[send_index++] = main_cfg_tmp.mr.motors_cw;
 
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
@@ -866,6 +881,23 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			buffer_append_float32_auto(m_send_buffer, rp_goal.py, &send_index); // 88
 			buffer_append_int32(m_send_buffer, pos_get_ms_today(), &send_index); // 92
 			commands_send_packet(m_send_buffer, send_index);
+		} break;
+
+		case CMD_MR_RC_CONTROL: {
+			int32_t ind = 0;
+			float throttle = buffer_get_float32_auto(data, &ind);
+			float roll = buffer_get_float32_auto(data, &ind);
+			float pitch = buffer_get_float32_auto(data, &ind);
+			float yaw = buffer_get_float32_auto(data, &ind);
+			mr_control_set_input(throttle, roll, pitch, yaw);
+		} break;
+
+		case CMD_MR_OVERRIDE_POWER: {
+			int32_t ind = 0;
+			mr_control_set_motor_override(0, buffer_get_float32_auto(data, &ind));
+			mr_control_set_motor_override(1, buffer_get_float32_auto(data, &ind));
+			mr_control_set_motor_override(2, buffer_get_float32_auto(data, &ind));
+			mr_control_set_motor_override(3, buffer_get_float32_auto(data, &ind));
 		} break;
 #endif
 #endif

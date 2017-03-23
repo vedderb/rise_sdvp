@@ -15,19 +15,10 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MR_CONTROL_H_
-#define MR_CONTROL_H_
+#ifndef ACTUATOR_H_
+#define ACTUATOR_H_
 
-#include "conf_general.h"
-#include "ch.h"
-#include "hal.h"
+void actuator_set_output(float throttle, float roll, float pitch, float yaw);
+void actuator_set_motor(int motor, float throttle);
 
-// Functions
-void mr_control_init(void);
-systime_t mr_control_time_since_input_update(void);
-void mr_control_set_input(float throttle, float roll, float pitch, float yaw);
-void mr_control_set_motor_override(int motor, float power);
-bool mr_control_is_throttle_over_tres(void);
-void mr_control_run_iteration(float dt);
-
-#endif /* MR_CONTROL_H_ */
+#endif /* ACTUATOR_H_ */
