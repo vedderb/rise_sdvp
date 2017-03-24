@@ -129,8 +129,8 @@ void pwm_esc_set(uint8_t channel, uint8_t pulse_width) {
 	case ALL_CHANNELS:
 		pwmEnableChannel(&PWMD3, 2, cnt_val);
 		pwmEnableChannel(&PWMD3, 3, cnt_val);
+		pwmEnableChannel(&PWMD9, 0, cnt_val);
 		pwmEnableChannel(&PWMD9, 1, cnt_val);
-		pwmEnableChannel(&PWMD9, 2, cnt_val);
 		break;
 
 	default:

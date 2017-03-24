@@ -242,6 +242,10 @@ void MainWindow::serialPortError(QSerialPort::SerialPortError error)
 void MainWindow::timerSlot()
 {
     bool js_connected = false;
+    double js_mr_thr = 0.0;
+    double js_mr_roll = 0.0;
+    double js_mr_pitch = 0.0;
+    double js_mr_yaw = 0.0;
 
 #ifdef HAS_JOYSTICK
     js_connected = mJoystick->isConnected();
@@ -254,6 +258,15 @@ void MainWindow::timerSlot()
             mThrottle = -(double)mJoystick->getAxis(4) / 32768.0;
             deadband(mThrottle,0.1, 1.0);
             mSteering = -(double)mJoystick->getAxis(0) / 32768.0;
+
+            js_mr_thr = (((double)mJoystick->getAxis(2) / 32768.0) + 0.85) / 1.7;
+            js_mr_roll = -(double)mJoystick->getAxis(0) / 32768.0;
+            js_mr_pitch = -(double)mJoystick->getAxis(1) / 32768.0;
+            js_mr_yaw = -(double)mJoystick->getAxis(4) / 32768.0;
+            utility::truncate_number(&js_mr_thr, 0.0, 1.0);
+            utility::truncate_number_abs(&js_mr_roll, 1.0);
+            utility::truncate_number_abs(&js_mr_pitch, 1.0);
+            utility::truncate_number_abs(&js_mr_yaw, 1.0);
         } else if (mJsType == JS_TYPE_PS4) {
             mThrottle = -(double)mJoystick->getAxis(1) / 32768.0;
             deadband(mThrottle,0.1, 1.0);
@@ -280,6 +293,11 @@ void MainWindow::timerSlot()
         }
     }
 
+    ui->mrThrottleBar->setValue(js_mr_thr * 100.0);
+    ui->mrRollBar->setValue(js_mr_roll * 100.0);
+    ui->mrPitchBar->setValue(js_mr_pitch * 100.0);
+    ui->mrYawBar->setValue(js_mr_yaw * 100.0);
+
     ui->throttleBar->setValue(mThrottle * 100.0);
     ui->steeringBar->setValue(mSteering * 100.0);
 
@@ -287,6 +305,12 @@ void MainWindow::timerSlot()
     for(QList<CarInterface*>::Iterator it_car = mCars.begin();it_car < mCars.end();it_car++) {
         CarInterface *car = *it_car;
         car->setControlValues(mThrottle, mSteering, ui->throttleMaxBox->value(), ui->throttleCurrentButton->isChecked());
+    }
+
+    // Notify about joystick events
+    for(QList<CopterInterface*>::Iterator it_copter = mCopters.begin();it_copter < mCopters.end();it_copter++) {
+        CopterInterface *copter = *it_copter;
+        copter->setControlValues(js_mr_thr, js_mr_roll, js_mr_pitch, js_mr_yaw);
     }
 
     // Update status label

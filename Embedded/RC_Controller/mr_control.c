@@ -131,9 +131,30 @@ void mr_control_run_iteration(float dt) {
 	memset(&m_output, 0, sizeof(MR_OUTPUT));
 
 	if (!lost_signal) {
+		// Set roll, pitch and yaw goals to the current value if the throttle
+		// just got above the threshold.
+		static int was_below_tres = 0;
+		if (m_rc.throttle < MIN_THROTTLE) {
+			was_below_tres = 1;
+			actuator_set_motor(-1, 0.0);
+			return;
+		} else {
+			if (was_below_tres) {
+				m_ctrl.roll_goal = m_pos_last.roll;
+				m_ctrl.pitch_goal = m_pos_last.pitch;
+				m_ctrl.yaw_goal = m_pos_last.yaw;
+				m_ctrl.roll_integrator = 0.0;
+				m_ctrl.pitch_integrator = 0.0;
+				m_ctrl.yaw_integrator = 0.0;
+			}
+
+			was_below_tres = 0;
+		}
+
 		if (m_rc.throttle < THROTTLE_OVERRIDE_LIM) {
 			// Manual control
 			update_rc_control(&m_ctrl, &m_rc, &m_pos_last, dt);
+			m_output.throttle = m_rc.throttle;
 		} else {
 			// TODO: autopilot
 		}

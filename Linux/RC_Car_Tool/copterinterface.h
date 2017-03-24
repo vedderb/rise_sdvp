@@ -46,6 +46,7 @@ public:
     void setStateData(MULTIROTOR_STATE data);
     void setMap(MapWidget *map);
     void setPacketInterface(PacketInterface *packetInterface);
+    void setControlValues(double throttle, double roll, double pitch, double yaw);
     void setCtrlAp();
     void setCtrlJs();
     bool setAp(bool on);

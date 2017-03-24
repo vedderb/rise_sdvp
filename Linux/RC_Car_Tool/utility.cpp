@@ -179,6 +179,27 @@ double buffer_get_double64(const uint8_t *buffer, double scale, int32_t *index) 
     return (double)buffer_get_int64(buffer, index) / scale;
 }
 
+double buffer_get_double32_auto(const uint8_t *buffer, int32_t *index)
+{
+    uint32_t res = buffer_get_uint32(buffer, index);
+
+    int e = (res >> 23) & 0xFF;
+    uint32_t sig_i = res & 0x7FFFFF;
+    bool neg = res & (1 << 31);
+
+    float sig = 0.0;
+    if (e != 0 || sig_i != 0) {
+        sig = (float)sig_i / (8388608.0 * 2.0) + 0.5;
+        e -= 126;
+    }
+
+    if (neg) {
+        sig = -sig;
+    }
+
+    return ldexpf(sig, e);
+}
+
 double map(double x, double in_min, double in_max, double out_min, double out_max) {
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
@@ -292,24 +313,34 @@ double logn(double base, double number)
     return log(number) / log(base);
 }
 
-double buffer_get_double32_auto(const uint8_t *buffer, int32_t *index)
+bool truncate_number(double *number, double min, double max)
 {
-    uint32_t res = buffer_get_uint32(buffer, index);
+    bool did_trunc = 0;
 
-    int e = (res >> 23) & 0xFF;
-    uint32_t sig_i = res & 0x7FFFFF;
-    bool neg = res & (1 << 31);
-
-    float sig = 0.0;
-    if (e != 0 || sig_i != 0) {
-        sig = (float)sig_i / (8388608.0 * 2.0) + 0.5;
-        e -= 126;
+    if (*number > max) {
+        *number = max;
+        did_trunc = 1;
+    } else if (*number < min) {
+        *number = min;
+        did_trunc = 1;
     }
 
-    if (neg) {
-        sig = -sig;
-    }
-
-    return ldexpf(sig, e);
+    return did_trunc;
 }
+
+bool truncate_number_abs(double *number, double max)
+{
+    bool did_trunc = 0;
+
+    if (*number > max) {
+        *number = max;
+        did_trunc = 1;
+    } else if (*number < -max) {
+        *number = -max;
+        did_trunc = 1;
+    }
+
+    return did_trunc;
+}
+
 }

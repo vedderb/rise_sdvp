@@ -49,6 +49,8 @@ void createEnuMatrix(double lat, double lon, double *enuMat);
 void llhToEnu(const double *iLlh, const double *llh, double *xyz);
 void enuToLlh(const double *iLlh, const double *xyz, double *llh);
 double logn(double base, double number);
+bool truncate_number(double *number, double min, double max);
+bool truncate_number_abs(double *number, double max);
 
 }
 

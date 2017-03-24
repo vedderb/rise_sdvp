@@ -183,6 +183,13 @@ void CopterInterface::setPacketInterface(PacketInterface *packetInterface)
             this, SLOT(configurationReceived(quint8,MAIN_CONFIG)));
 }
 
+void CopterInterface::setControlValues(double throttle, double roll, double pitch, double yaw)
+{
+    if (ui->joystickControlBox->isChecked() && mPacketInterface) {
+        mPacketInterface->mrRcControl(mId, throttle, roll, pitch, yaw);
+    }
+}
+
 void CopterInterface::setCtrlAp()
 {
     ui->autopilotBox->setChecked(true);

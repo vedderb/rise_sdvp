@@ -70,6 +70,7 @@ void actuator_set_output(float throttle, float roll, float pitch, float yaw) {
  * 1: x: Back Left   +: Left
  * 2: x: Front Right +: Right
  * 3: x: Back Right  +: Back
+ * -1: All motors
  *
  * @param throttle
  * The throttle value, range [0.0 1.0]
@@ -82,6 +83,7 @@ void actuator_set_motor(int motor, float throttle) {
 	case 1: pwm_esc_set(main_config.mr.motor_bl_l, (uint8_t)(throttle * 255.0)); break;
 	case 2: pwm_esc_set(main_config.mr.motor_fr_r, (uint8_t)(throttle * 255.0)); break;
 	case 3: pwm_esc_set(main_config.mr.motor_br_b, (uint8_t)(throttle * 255.0)); break;
+	case -1: pwm_esc_set(255, (uint8_t)(throttle * 255.0)); break;
 	default: break;
 	}
 }
