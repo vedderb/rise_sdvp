@@ -831,7 +831,7 @@
                 <item row="0" column="1">
                  <widget class="QCheckBox" name="confMotorsCwBox">
                   <property name="text">
-                   <string>FR or F Clockwise</string>
+                   <string>FL or F Clockwise</string>
                   </property>
                  </widget>
                 </item>
@@ -893,6 +893,32 @@
                    </size>
                   </property>
                  </spacer>
+                </item>
+                <item row="2" column="1">
+                 <widget class="QSpinBox" name="confMotorMinPulseBox">
+                  <property name="suffix">
+                   <string> µS</string>
+                  </property>
+                  <property name="minimum">
+                   <number>50</number>
+                  </property>
+                  <property name="maximum">
+                   <number>1500</number>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="1">
+                 <widget class="QSpinBox" name="confMotorMaxPulseBox">
+                  <property name="suffix">
+                   <string> µS</string>
+                  </property>
+                  <property name="minimum">
+                   <number>50</number>
+                  </property>
+                  <property name="maximum">
+                   <number>2400</number>
+                  </property>
+                 </widget>
                 </item>
                </layout>
               </widget>

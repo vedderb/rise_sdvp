@@ -57,7 +57,7 @@ void actuator_set_output(float throttle, float roll, float pitch, float yaw) {
 		//motors[i] *= (10.5 / adconv_get_vin());
 
 		utils_truncate_number(&motors[i], 0.0, 1.0);
-		pwm_esc_set(i, (uint8_t)(motors[i] * 255.0));
+		pwm_esc_set(i, motors[i]);
 	}
 }
 
@@ -79,11 +79,11 @@ void actuator_set_motor(int motor, float throttle) {
 	utils_truncate_number(&throttle, 0.0, 1.0);
 
 	switch (motor) {
-	case 0: pwm_esc_set(main_config.mr.motor_fl_f, (uint8_t)(throttle * 255.0)); break;
-	case 1: pwm_esc_set(main_config.mr.motor_bl_l, (uint8_t)(throttle * 255.0)); break;
-	case 2: pwm_esc_set(main_config.mr.motor_fr_r, (uint8_t)(throttle * 255.0)); break;
-	case 3: pwm_esc_set(main_config.mr.motor_br_b, (uint8_t)(throttle * 255.0)); break;
-	case -1: pwm_esc_set(255, (uint8_t)(throttle * 255.0)); break;
+	case 0: pwm_esc_set(main_config.mr.motor_fl_f, throttle); break;
+	case 1: pwm_esc_set(main_config.mr.motor_bl_l, throttle); break;
+	case 2: pwm_esc_set(main_config.mr.motor_fr_r, throttle); break;
+	case 3: pwm_esc_set(main_config.mr.motor_br_b, throttle); break;
+	case -1: pwm_esc_set_all(throttle); break;
 	default: break;
 	}
 }

@@ -460,6 +460,8 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         conf.mr.motor_br_b = data[ind++];
         conf.mr.motors_x = data[ind++];
         conf.mr.motors_cw = data[ind++];
+        conf.mr.motor_pwm_min_us = utility::buffer_get_uint16(data, &ind);
+        conf.mr.motor_pwm_max_us = utility::buffer_get_uint16(data, &ind);
 
         emit configurationReceived(id, conf);
     } break;
@@ -863,6 +865,8 @@ bool PacketInterface::setConfiguration(quint8 id, MAIN_CONFIG &conf, int retries
     mSendBuffer[send_index++] = conf.mr.motor_br_b;
     mSendBuffer[send_index++] = conf.mr.motors_x;
     mSendBuffer[send_index++] = conf.mr.motors_cw;
+    utility::buffer_append_uint16(mSendBuffer, conf.mr.motor_pwm_min_us, &send_index);
+    utility::buffer_append_uint16(mSendBuffer, conf.mr.motor_pwm_max_us, &send_index);
 
     return sendPacketAck(mSendBuffer, send_index, retries, 500);
 }

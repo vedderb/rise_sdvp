@@ -151,7 +151,7 @@ void mr_control_run_iteration(float dt) {
 			was_below_tres = 0;
 		}
 
-		if (m_rc.throttle < THROTTLE_OVERRIDE_LIM) {
+		if (m_rc.throttle < THROTTLE_OVERRIDE_LIM || 1) {
 			// Manual control
 			update_rc_control(&m_ctrl, &m_rc, &m_pos_last, dt);
 			m_output.throttle = m_rc.throttle;

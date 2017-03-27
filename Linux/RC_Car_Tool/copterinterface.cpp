@@ -398,6 +398,8 @@ void CopterInterface::getConfGui(MAIN_CONFIG &conf)
     conf.mr.motor_br_b = ui->confMotorBrBBox->value();
     conf.mr.motors_x = ui->confMotorsXBox->isChecked();
     conf.mr.motors_cw = ui->confMotorsCwBox->isChecked();
+    conf.mr.motor_pwm_min_us = ui->confMotorMinPulseBox->value();
+    conf.mr.motor_pwm_max_us = ui->confMotorMaxPulseBox->value();
 
     ui->confCommonWidget->getConfGui(conf);
 }
@@ -457,6 +459,8 @@ void CopterInterface::setConfGui(MAIN_CONFIG &conf)
     ui->confMotorBrBBox->setValue(conf.mr.motor_br_b);
     ui->confMotorsXBox->setChecked(conf.mr.motors_x);
     ui->confMotorsCwBox->setChecked(conf.mr.motors_cw);
+    ui->confMotorMinPulseBox->setValue(conf.mr.motor_pwm_min_us);
+    ui->confMotorMaxPulseBox->setValue(conf.mr.motor_pwm_max_us);
 
     ui->confCommonWidget->setConfGui(conf);
 }

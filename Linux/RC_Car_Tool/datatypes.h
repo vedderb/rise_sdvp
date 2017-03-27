@@ -178,6 +178,8 @@ typedef struct {
     int8_t motor_br_b; // x: Back Right  +: Back
     bool motors_x; // Use x motor configuration (use + if false)
     bool motors_cw; // Front left (or front in + mode) runs in the clockwise direction (ccw if false)
+    uint16_t motor_pwm_min_us; // Minimum servo pulse length for motor in microseconds
+    uint16_t motor_pwm_max_us; // Maximum servo pulse length for motor in microseconds
 } MAIN_CONFIG_MULTIROTOR;
 
 // Car configuration

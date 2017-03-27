@@ -95,18 +95,21 @@ void pwm_esc_init(void) {
 	pwm_esc_set_all(0);
 }
 
-void pwm_esc_set_all(uint8_t pulse_width) {
+void pwm_esc_set_all(float pulse_width) {
 	pwm_esc_set(ALL_CHANNELS, pulse_width);
 }
 
-void pwm_esc_set(uint8_t channel, uint8_t pulse_width) {
+void pwm_esc_set(uint8_t channel, float pulse_width) {
 	uint32_t cnt_val;
 
-	// Always set zero if emergency stop is set.
 	if (0) {
-		cnt_val = (uint32_t)TIM_CLOCK / 1000L + (uint32_t)TIM_CLOCK * 0 / (1000 * 255);
+		// Always set zero if emergency stop is set.
+		// TODO: Implement this
+		cnt_val = ((TIM_CLOCK / 1e3) * (uint32_t)main_config.mr.motor_pwm_min_us) / 1e3;
 	} else {
-		cnt_val = (uint32_t)TIM_CLOCK / 1000L + (uint32_t)TIM_CLOCK * pulse_width / (1000 * 255);
+		cnt_val = ((TIM_CLOCK / 1e3) * (uint32_t)main_config.mr.motor_pwm_min_us) / 1e3 +
+				((TIM_CLOCK / 1e3) * (uint32_t)(pulse_width * (float)(main_config.mr.motor_pwm_max_us -
+						main_config.mr.motor_pwm_min_us))) / 1e3;
 	}
 
 	switch(channel) {

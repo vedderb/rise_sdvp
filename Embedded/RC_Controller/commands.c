@@ -581,6 +581,8 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			main_config.mr.motor_br_b = data[ind++];
 			main_config.mr.motors_x = data[ind++];
 			main_config.mr.motors_cw = data[ind++];
+			main_config.mr.motor_pwm_min_us = buffer_get_uint16(data, &ind);
+			main_config.mr.motor_pwm_max_us = buffer_get_uint16(data, &ind);
 
 			conf_general_store_main_config(&main_config);
 
@@ -716,6 +718,8 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			m_send_buffer[send_index++] = main_cfg_tmp.mr.motor_br_b;
 			m_send_buffer[send_index++] = main_cfg_tmp.mr.motors_x;
 			m_send_buffer[send_index++] = main_cfg_tmp.mr.motors_cw;
+			buffer_append_uint16(m_send_buffer, main_cfg_tmp.mr.motor_pwm_min_us, &send_index);
+			buffer_append_uint16(m_send_buffer, main_cfg_tmp.mr.motor_pwm_max_us, &send_index);
 
 			commands_send_packet(m_send_buffer, send_index);
 		} break;

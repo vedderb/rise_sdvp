@@ -135,10 +135,10 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 	conf->mr.vel_decay_l = 0.02;
 	conf->mr.vel_max = 80.0 / 3.6;
 
-	conf->mr.map_min_x = -10.0;
-	conf->mr.map_max_x = 10.0;
-	conf->mr.map_min_y = -10.0;
-	conf->mr.map_max_y = 10.0;
+	conf->mr.map_min_x = -500.0;
+	conf->mr.map_max_x = 500.0;
+	conf->mr.map_min_y = -500.0;
+	conf->mr.map_max_y = 500.0;
 
 	conf->mr.vel_gain_p = 0.1;
 	conf->mr.vel_gain_i = 0.0;
@@ -184,6 +184,8 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 	conf->mr.motor_br_b = 3;
 	conf->mr.motors_x = true;
 	conf->mr.motors_cw = true;
+	conf->mr.motor_pwm_min_us = 1200;
+	conf->mr.motor_pwm_max_us = 2000;
 
 	// Custom parameters based on ID
 	switch (main_id) {

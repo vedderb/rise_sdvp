@@ -22,7 +22,7 @@
 
 // Functions
 void pwm_esc_init(void);
-void pwm_esc_set(uint8_t id, uint8_t pulse_width);
-void pwm_esc_set_all(uint8_t pulse_width);
+void pwm_esc_set(uint8_t id, float pulse_width);
+void pwm_esc_set_all(float pulse_width);
 
 #endif /* PWM_ESC_H_ */
