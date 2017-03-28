@@ -108,7 +108,7 @@ void CopterInterface::setStateData(MULTIROTOR_STATE data)
     ui->speedBar->setFormat(speedTxt);
 
     // Battery bar
-    double battp = utility::map(data.vin, 34.0, 42.0, 0.0, 100.0);
+    double battp = utility::map(data.vin, 10.2, 12.6, 0.0, 100.0);
     if (battp < 0.0) {
         battp = 0.0;
     }
@@ -463,4 +463,50 @@ void CopterInterface::setConfGui(MAIN_CONFIG &conf)
     ui->confMotorMaxPulseBox->setValue(conf.mr.motor_pwm_max_us);
 
     ui->confCommonWidget->setConfGui(conf);
+}
+
+void CopterInterface::on_setClockButton_clicked()
+{
+    if (mPacketInterface) {
+        QDateTime date = QDateTime::currentDateTime();
+        QTime current = QTime::currentTime().addSecs(-date.offsetFromUtc());
+        mPacketInterface->setMsToday(mId, current.msecsSinceStartOfDay());
+    }
+}
+
+void CopterInterface::on_setClockPiButton_clicked()
+{
+    if (mPacketInterface) {
+        QDateTime date = QDateTime::currentDateTime();
+        bool res = mPacketInterface->setSystemTime(mId, date.toTime_t(), date.time().msec() * 1000.0);
+        if (!res) {
+            QMessageBox::warning(this, "Set time on Raspberry Pi",
+                                 "Could not set time, no ack received. Make sure that the "
+                                 "connection works.");
+        }
+    }
+}
+
+void CopterInterface::on_rebootPiButton_clicked()
+{
+    if (mPacketInterface) {
+        bool res = mPacketInterface->sendReboot(mId, false);
+        if (!res) {
+            QMessageBox::warning(this, "Reboot Raspberry Pi",
+                                 "Could not reboot the Raspberry Pi, no ack received. Make sure that the "
+                                 "connection works.");
+        }
+    }
+}
+
+void CopterInterface::on_shutdownPiButton_clicked()
+{
+    if (mPacketInterface) {
+        bool res = mPacketInterface->sendReboot(mId, true);
+        if (!res) {
+            QMessageBox::warning(this, "Shutdown Raspberry Pi",
+                                 "Could not shut down the Raspberry Pi, no ack received. Make sure that the "
+                                 "connection works.");
+        }
+    }
 }

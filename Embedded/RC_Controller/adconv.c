@@ -16,24 +16,29 @@
  */
 
 #include "adconv.h"
+#include "utils.h"
 
 // Settings
-#define V_REG					3.3
 #define VIN_R1					10000.0
-#define VIN_R2					2200.0
+#define VIN_R2					1500.0
 #define VREFINT					1.21
 
 #define ADC_GRP_NUM_CHANNELS	8
 #define ADC_GRP_BUF_DEPTH		1
 
 static adcsample_t samples[ADC_GRP_NUM_CHANNELS * ADC_GRP_BUF_DEPTH];
+static float vin_filter = 0.0;
 
-//static void adccallback(ADCDriver *adcp, adcsample_t *buffer, size_t n) {
-//	(void)adcp;
-//	(void)buffer;
-//	(void)n;
-//}
-//
+static void adccallback(ADCDriver *adcp, adcsample_t *buffer, size_t n) {
+	(void)adcp;
+	(void)buffer;
+	(void)n;
+
+	const float v_reg = (VREFINT * 4095.0) / (float)samples[6];
+	float sample = (samples[0] / 4095.0 * v_reg) * ((VIN_R1 + VIN_R2) / VIN_R2);
+	UTILS_LP_FAST(vin_filter, sample, 0.02);
+}
+
 //static void adcerrorcallback(ADCDriver *adcp, adcerror_t err) {
 //	(void)adcp;
 //	(void)err;
@@ -42,12 +47,11 @@ static adcsample_t samples[ADC_GRP_NUM_CHANNELS * ADC_GRP_BUF_DEPTH];
 /*
  * ADC conversion group.
  * Mode:        Continuous, 16 samples of 8 channels, SW triggered.
- * Channels:    IN11, IN12, IN11, IN12, IN11, IN12, Sensor, VRef.
  */
 static const ADCConversionGroup adcgrpcfg = {
 		TRUE,
 		ADC_GRP_NUM_CHANNELS,
-		0,//adccallback,
+		adccallback,
 		0,//adcerrorcallback,
 		0,                        /* CR1 */
 		ADC_CR2_SWSTART,          /* CR2 */
@@ -60,13 +64,12 @@ static const ADCConversionGroup adcgrpcfg = {
 		ADC_SMPR2_SMP_AN4(ADC_SAMPLE_56), /* SMPR2 */
 		ADC_SQR1_NUM_CH(ADC_GRP_NUM_CHANNELS),
 		ADC_SQR2_SQ8_N(ADC_CHANNEL_SENSOR) | ADC_SQR2_SQ7_N(ADC_CHANNEL_VREFINT),
-		ADC_SQR3_SQ6_N(ADC_CHANNEL_IN4)  | ADC_SQR3_SQ5_N(ADC_CHANNEL_IN13) |
-		ADC_SQR3_SQ4_N(ADC_CHANNEL_IN12) | ADC_SQR3_SQ3_N(ADC_CHANNEL_IN11) |
-		ADC_SQR3_SQ2_N(ADC_CHANNEL_IN10) | ADC_SQR3_SQ1_N(ADC_CHANNEL_IN4)
+		ADC_SQR3_SQ6_N(ADC_CHANNEL_IN11)  | ADC_SQR3_SQ5_N(ADC_CHANNEL_IN10) |
+		ADC_SQR3_SQ4_N(ADC_CHANNEL_IN13) | ADC_SQR3_SQ3_N(ADC_CHANNEL_IN12) |
+		ADC_SQR3_SQ2_N(ADC_CHANNEL_IN11) | ADC_SQR3_SQ1_N(ADC_CHANNEL_IN10)
 };
 
 void adconv_init(void) {
-	palSetPadMode(GPIOA, 4, PAL_MODE_INPUT_ANALOG);
 	palSetPadMode(GPIOC, 0, PAL_MODE_INPUT_ANALOG);
 	palSetPadMode(GPIOC, 1, PAL_MODE_INPUT_ANALOG);
 	palSetPadMode(GPIOC, 2, PAL_MODE_INPUT_ANALOG);
@@ -86,5 +89,29 @@ uint16_t adconv_get_pin(int pin) {
 		return 0;
 	}
 
-	return samples[pin + 1];
+	return samples[pin];
+}
+
+/**
+ * Read the voltage on ADC input pin.
+ *
+ * @param pin
+ * The pin to read from.
+ *
+ * @return
+ * The voltage in volts.
+ */
+float adconv_get_volts(int pin) {
+	const float v_reg = (VREFINT * 4095.0) / (float)samples[6];
+	return (float)adconv_get_pin(pin) / 4095.0 * v_reg;
+}
+
+/**
+ * Get the filtered input voltage.
+ *
+ * @return
+ * The input voltage to the PCB in volts.
+ */
+float adconv_get_vin(void) {
+	return vin_filter;
 }

@@ -643,7 +643,7 @@ static THD_FUNCTION(process_thread, arg) {
 					m_decoder_state.line[m_decoder_state.line_pos] = '\0';
 					m_decoder_state.line_pos = 0;
 
-#if MAIN_MODE == MAIN_MODE_CAR
+#if MAIN_MODE_IS_VEHICLE
 					bool found = pos_input_nmea((const char*)m_decoder_state.line);
 
 					// Only send the lines that pos decoded

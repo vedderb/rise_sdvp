@@ -69,6 +69,10 @@ private slots:
     void on_confWriteButton_clicked();
     void on_confReadDefaultButton_clicked();
     void on_confReadButton_clicked();
+    void on_setClockButton_clicked();
+    void on_setClockPiButton_clicked();
+    void on_rebootPiButton_clicked();
+    void on_shutdownPiButton_clicked();
 
 private:
     Ui::CopterInterface *ui;

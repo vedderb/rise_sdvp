@@ -25,5 +25,7 @@
 // Functions
 void adconv_init(void);
 uint16_t adconv_get_pin(int pin);
+float adconv_get_volts(int pin);
+float adconv_get_vin(void);
 
 #endif /* ADCONV_H_ */

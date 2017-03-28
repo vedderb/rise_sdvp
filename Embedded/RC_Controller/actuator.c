@@ -21,6 +21,7 @@
 #include "pwm_esc.h"
 #include "utils.h"
 #include "conf_general.h"
+#include "adconv.h"
 
 void actuator_set_output(float throttle, float roll, float pitch, float yaw) {
 	float motors[4];
@@ -52,9 +53,11 @@ void actuator_set_output(float throttle, float roll, float pitch, float yaw) {
 	}
 
 	for (int i = 0;i < 4;i++) {
-		// TODO: Input voltage sensing
 		// Charge-based throttle scaling
-		//motors[i] *= (10.5 / adconv_get_vin());
+		const float v_in = adconv_get_vin();
+		if (v_in > 6.0 && v_in < 20.0) {
+			motors[i] *= (10.5 / v_in);
+		}
 
 		utils_truncate_number(&motors[i], 0.0, 1.0);
 		pwm_esc_set(i, motors[i]);

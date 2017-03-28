@@ -42,6 +42,7 @@
 #include "rtcm3_simple.h"
 #include "comm_cc1120.h"
 #include "mr_control.h"
+#include "adconv.h"
 
 #include <math.h>
 #include <string.h>
@@ -878,7 +879,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			buffer_append_float32_auto(m_send_buffer, pos.py, &send_index); // 60
 			buffer_append_float32_auto(m_send_buffer, pos.pz, &send_index); // 64
 			buffer_append_float32_auto(m_send_buffer, pos.speed, &send_index); // 68
-			buffer_append_float32_auto(m_send_buffer, 0.0, &send_index); // 72 TODO
+			buffer_append_float32_auto(m_send_buffer, adconv_get_vin(), &send_index); // 72
 			buffer_append_float32_auto(m_send_buffer, pos.px_gps, &send_index); // 76
 			buffer_append_float32_auto(m_send_buffer, pos.py_gps, &send_index); // 80
 			buffer_append_float32_auto(m_send_buffer, rp_goal.px, &send_index); // 84
