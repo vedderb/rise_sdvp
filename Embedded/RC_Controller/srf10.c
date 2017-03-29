@@ -214,16 +214,18 @@ static THD_FUNCTION(sampling_thread, arg) {
 		}
 
 		if (srf10_read_range(&range) == MSG_OK) {
-			if (fabsf(ultrasonic_range - range) < SAMPLE_MAX_DIFF ||
-					wrong_sample_cnt >= MAX_WRONG_SAMPLES) {
-				ultrasonic_range = range;
-				wrong_sample_cnt = 0;
+			if (range > 0.01 && range < 2.5) { // Only trust the sensor up to 2.5 meters
+				if (fabsf(ultrasonic_range - range) < SAMPLE_MAX_DIFF ||
+						wrong_sample_cnt >= MAX_WRONG_SAMPLES) {
+					ultrasonic_range = range;
+					wrong_sample_cnt = 0;
 
-				if (sample_callback) {
-					sample_callback(range);
+					if (sample_callback) {
+						sample_callback(range);
+					}
+				} else {
+					wrong_sample_cnt++;
 				}
-			} else {
-				wrong_sample_cnt++;
 			}
 		} else {
 			srf10_reset_i2c();

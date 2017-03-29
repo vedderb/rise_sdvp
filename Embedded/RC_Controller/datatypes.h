@@ -74,6 +74,10 @@ typedef struct {
 	float gps_ang_corr_y_last_gps;
 	float gps_ang_corr_x_last_car;
 	float gps_ang_corr_y_last_car;
+	float gps_ground_level;
+
+	uint32_t gps_corr_time;
+	uint32_t ultra_update_time;
 
 	// Multirotor state
 	float tilt_roll_err;
@@ -314,7 +318,7 @@ typedef struct {
 	int fix_type; // 0=Invalid, 1=SPP, 4=RTK fix, 5=RTK float
 	int sats;
 	int32_t ms; // Milliseconds today
-	unsigned int update_time;
+	uint32_t update_time;
 	// Local position (ENU frame)
 	bool local_init_done;
 	float lx;

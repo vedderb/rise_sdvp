@@ -42,6 +42,25 @@ CopterInterface::CopterInterface(QWidget *parent) :
     mPacketInterface = 0;
     mId = 0;
 
+    mAltitudeData.resize(1000);
+    mAltitudeXAxis.resize(1000);
+    for(int i = 0;i < mAltitudeXAxis.size();i++) {
+        mAltitudeXAxis[mAltitudeXAxis.size() - i - 1] = (40.0 / 1000.0 * i);
+    }
+
+    ui->altitudePlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
+    ui->altitudePlot->clearGraphs();
+    ui->altitudePlot->addGraph();
+    ui->altitudePlot->xAxis->setRangeReversed(true);
+    ui->altitudePlot->graph()->setPen(QPen(Qt::black));
+    ui->altitudePlot->graph()->setData(mAltitudeXAxis, mAltitudeData);
+    ui->altitudePlot->graph()->setName(tr("Altitude"));
+    ui->altitudePlot->rescaleAxes();
+    ui->altitudePlot->xAxis->setLabel("Seconds");
+    ui->altitudePlot->yAxis->setLabel("Meters");
+    ui->altitudePlot->legend->setVisible(true);
+    ui->altitudePlot->replot();
+
     mTimer = new QTimer(this);
     mTimer->start(40);
 
@@ -122,6 +141,13 @@ void CopterInterface::setStateData(MULTIROTOR_STATE data)
 
     // Orientation
     setOrientation(data.roll, data.pitch, data.yaw);
+
+    // Height
+    mAltitudeData.append(data.pz);
+    mAltitudeData.remove(0, 1);
+    ui->altitudePlot->graph(0)->setData(mAltitudeXAxis, mAltitudeData);
+    ui->altitudePlot->rescaleAxes();
+    ui->altitudePlot->replot();
 
     if (mMap) {
         CopterInfo *copter = mMap->getCopterInfo(mId);

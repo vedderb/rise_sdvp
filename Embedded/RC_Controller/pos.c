@@ -30,6 +30,7 @@
 #include "commands.h"
 #include "ublox.h"
 #include "mr_control.h"
+#include "srf10.h"
 
 // Defines
 #define ITERATION_TIMER_FREQ			50000
@@ -60,6 +61,8 @@ static void correct_pos_gps(POS_STATE *pos);
 
 #if MAIN_MODE == MAIN_MODE_CAR
 static void mc_values_received(mc_values *val);
+#elif MAIN_MODE == MAIN_MODE_MULTIROTOR
+static void srf_distance_received(float distance);
 #endif
 
 #if MAIN_MODE == MAIN_MODE_MULTIROTOR
@@ -107,6 +110,8 @@ void pos_init(void) {
 
 #if MAIN_MODE == MAIN_MODE_CAR
 	bldc_interface_set_rx_value_func(mc_values_received);
+#elif MAIN_MODE == MAIN_MODE_MULTIROTOR
+	srf10_set_sample_callback(srf_distance_received);
 #endif
 }
 
@@ -407,6 +412,16 @@ bool pos_input_nmea(const char *data) {
 					(!main_config.gps_use_ubx_info || m_ubx_pos_valid)) {
 
 				correct_pos_gps(&m_pos);
+				m_pos.gps_corr_time = chVTGetSystemTimeX();
+
+#if MAIN_MODE == MAIN_MODE_CAR
+				m_pos.pz = m_pos.pz_gps - m_pos.gps_ground_level;
+#elif MAIN_MODE == MAIN_MODE_MULTIROTOR
+				// Update height from GPS if ultrasound measurements haven't been received for a while
+				if (ST2MS(chVTTimeElapsedSinceX(m_pos.ultra_update_time)) > 250) {
+					m_pos.pz = m_pos.pz_gps - m_pos.gps_ground_level;
+				}
+#endif
 			}
 
 			m_pos.gps_corr_cnt = 0.0;
@@ -427,6 +442,16 @@ bool pos_input_nmea(const char *data) {
 
 void pos_reset_attitude(void) {
 	m_attitude_init_done = false;
+}
+
+/**
+ * Get time since GPS correction was applied.
+ *
+ * @return
+ * The time since GPS correction was applied in milliseconds.
+ */
+int pos_time_since_gps_corr(void) {
+	return ST2MS(chVTTimeElapsedSinceX(m_pos.gps_corr_time));
 }
 
 static void mpu9150_read(void) {
@@ -826,6 +851,18 @@ static void mc_values_received(mc_values *val) {
 #endif
 
 #if MAIN_MODE == MAIN_MODE_MULTIROTOR
+static void srf_distance_received(float distance) {
+	chMtxLock(&m_mutex_pos);
+	m_pos.pz = distance;
+	m_pos.ultra_update_time = chVTGetSystemTimeX();
+
+	if (!mr_control_is_throttle_over_tres()) {
+		m_pos.gps_ground_level = m_pos.pz_gps - m_pos.pz;
+	}
+
+	chMtxUnlock(&m_mutex_pos);
+}
+
 static void mr_update_pos(POS_STATE *pos, float dt) {
 	float roll = pos->roll + pos->tilt_roll_err;
 	float pitch = pos->pitch + pos->tilt_pitch_err;

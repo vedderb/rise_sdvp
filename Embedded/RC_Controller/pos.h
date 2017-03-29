@@ -37,5 +37,6 @@ int32_t pos_get_ms_today(void);
 void pos_set_ms_today(int32_t ms);
 bool pos_input_nmea(const char *data);
 void pos_reset_attitude(void);
+int pos_time_since_gps_corr(void);
 
 #endif /* POS_H_ */

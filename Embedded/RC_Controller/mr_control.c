@@ -89,7 +89,7 @@ void mr_control_set_input(float throttle, float roll, float pitch, float yaw) {
 	m_rc.pitch = pitch;
 	m_rc.yaw = yaw;
 	m_rc.throttle = throttle;
-	m_rc.last_update_time = chVTGetSystemTime();
+	m_rc.last_update_time = chVTGetSystemTimeX();
 }
 
 void mr_control_set_motor_override(int motor, float power) {

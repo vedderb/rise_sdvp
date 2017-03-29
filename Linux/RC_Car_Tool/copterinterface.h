@@ -86,6 +86,9 @@ private:
     int mId;
     QTimer *mTimer;
 
+    QVector<double> mAltitudeData;
+    QVector<double> mAltitudeXAxis;
+
     void getConfGui(MAIN_CONFIG &conf);
     void setConfGui(MAIN_CONFIG &conf);
 
