@@ -53,6 +53,10 @@ void terminal_process_string(char *str) {
 	int argc = 0;
 	char *argv[kMaxArgs];
 
+#if MAIN_MODE == MAIN_MODE_CAR
+	static char buffer[256];
+#endif
+
 	char *p2 = strtok(str, " ");
 	while (p2 && argc < kMaxArgs) {
 		argv[argc++] = p2;
@@ -90,7 +94,6 @@ void terminal_process_string(char *str) {
 
 #if MAIN_MODE == MAIN_MODE_CAR
 	else if (strcmp(argv[0], "vesc") == 0) {
-		static char buffer[256];
 		buffer[0] = '\0';
 		int ind = 0;
 		for (int i = 1;i < argc;i++) {

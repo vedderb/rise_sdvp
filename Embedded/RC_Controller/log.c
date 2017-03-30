@@ -87,9 +87,9 @@ static THD_FUNCTION(log_thread, arg) {
 			float mag[3];
 
 			float steering_angle = (servo_simple_get_pos_now()
-									- main_config.steering_center)
-											* ((2.0 * main_config.steering_max_angle_rad)
-													/ main_config.steering_range);
+					- main_config.car.steering_center)
+					* ((2.0 * main_config.car.steering_max_angle_rad)
+							/ main_config.car.steering_range);
 
 			pos_get_mc_val(&val);
 			pos_get_pos(&pos);

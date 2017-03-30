@@ -27,7 +27,7 @@
 #define MAIN_MODE_MULTIROTOR		4
 
 // Main mode
-#define MAIN_MODE					MAIN_MODE_MULTIROTOR
+#define MAIN_MODE					MAIN_MODE_CAR
 
 // Mode macros
 #define MAIN_MODE_IS_MOTE			(MAIN_MODE == MAIN_MODE_MOTE_2400 || MAIN_MODE == MAIN_MODE_MOTE_400 || MAIN_MODE == MAIN_MODE_MOTE_HYBRID)
@@ -50,9 +50,9 @@
 #define UBLOX_EN					1
 
 // Log configuration to enable. Choose one only.
-//#define LOG_EN_CARREL
+#define LOG_EN_CARREL
 //#define LOG_EN_ITRANSIT
-#define LOG_EN_DW
+//#define LOG_EN_DW
 
 // Logging time interval
 #define LOG_INTERVAL_MS				50
