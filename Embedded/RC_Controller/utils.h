@@ -61,7 +61,12 @@ void utils_sys_unlock_cnt(void);
 
 // Return the sign of the argument. -1 if negative, 1 if zero or positive.
 #define SIGN(x)				((x < 0) ? -1 : 1)
+
+// Minimum of two values
 #define MIN(a, b)			((a < b) ? a : b)
+
+// Squared
+#define SQ(x)				((x) * (x))
 
 // Return the age of a timestamp in seconds
 #define UTILS_AGE_S(x)		((float)chVTTimeElapsedSinceX(x) / (float)CH_CFG_ST_FREQUENCY)

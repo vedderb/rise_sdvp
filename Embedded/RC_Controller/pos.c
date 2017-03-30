@@ -401,9 +401,16 @@ bool pos_input_nmea(const char *data) {
 			py -= s_yaw * main_config.gps_ant_x + c_yaw * main_config.gps_ant_y;
 
 			chMtxLock(&m_mutex_pos);
+
+			m_pos.px_gps_last = m_pos.px_gps;
+			m_pos.py_gps_last = m_pos.py_gps;
+			m_pos.pz_gps_last = m_pos.pz_gps;
+			m_pos.gps_ms_last = m_pos.gps_ms;
+
 			m_pos.px_gps = px;
 			m_pos.py_gps = py;
 			m_pos.pz_gps = m_gps.lz;
+			m_pos.gps_ms = m_gps.ms;
 
 			// Correct position
 			// Optionally require RTK and good ublox quality indication.
@@ -698,8 +705,8 @@ static void ublox_relposned_rx(ubx_nav_relposned *pos) {
 
 static void correct_pos_gps(POS_STATE *pos) {
 #if MAIN_MODE == MAIN_MODE_MULTIROTOR
-	float error_x = pos->px - pos->px_gps;
-	float error_y = pos->py - pos->py_gps;
+	pos->gps_corr_cnt = sqrtf(SQ(pos->px_gps - pos->px_gps_last) +
+			SQ(pos->py_gps - pos->py_gps_last));
 #endif
 
 	float gain = main_config.gps_corr_gain_stat +
@@ -737,25 +744,31 @@ static void correct_pos_gps(POS_STATE *pos) {
 		return;
 	}
 
-	utils_truncate_number_abs(&error_x, main_config.mr.max_corr_error);
-	utils_truncate_number_abs(&error_y, main_config.mr.max_corr_error);
-
-	const float error_x_diff = (error_x - pos->error_x_last);
-	const float error_y_diff = (error_y - pos->error_y_last);
-	pos->error_x_last = error_x;
-	pos->error_y_last = error_y;
-
 	// Velocity
-	const float vcx_p = error_x * main_config.mr.vel_gain_p;
-	const float vcy_p = error_y * main_config.mr.vel_gain_p;
+	const float dt_gps = (pos->gps_ms - pos->gps_ms_last) / 1000.0;
+	const float vx_gps = (pos->px_gps - pos->px_gps_last) / dt_gps;
+	const float vy_gps = (pos->py_gps - pos->py_gps_last) / dt_gps;
+	float error_vx = pos->vx - vx_gps;
+	float error_vy = pos->vy - vy_gps;
 
-	pos->vel_corr_x_int += error_x * main_config.mr.vel_gain_i * dt;
-	pos->vel_corr_y_int += error_y * main_config.mr.vel_gain_i * dt;
+	utils_truncate_number_abs(&error_vx, main_config.mr.max_corr_error);
+	utils_truncate_number_abs(&error_vy, main_config.mr.max_corr_error);
+
+	const float error_vx_diff = (error_vx - pos->error_vx_last);
+	const float error_vy_diff = (error_vy - pos->error_vy_last);
+	pos->error_vx_last = error_vx;
+	pos->error_vy_last = error_vy;
+
+	const float vcx_p = error_vx * main_config.mr.vel_gain_p;
+	const float vcy_p = error_vy * main_config.mr.vel_gain_p;
+
+	pos->vel_corr_x_int += error_vx * main_config.mr.vel_gain_i * dt;
+	pos->vel_corr_y_int += error_vy * main_config.mr.vel_gain_i * dt;
 	utils_truncate_number(&pos->vel_corr_x_int, -1.0, 1.0);
 	utils_truncate_number(&pos->vel_corr_y_int, -1.0, 1.0);
 
-	const float vcx_d = error_x_diff * main_config.mr.vel_gain_d / dt;
-	const float vcy_d = error_y_diff * main_config.mr.vel_gain_d / dt;
+	const float vcx_d = error_vx_diff * main_config.mr.vel_gain_d / dt;
+	const float vcy_d = error_vy_diff * main_config.mr.vel_gain_d / dt;
 
 	const float vcx_out = vcx_p + pos->vel_corr_x_int + vcx_d;
 	const float vcy_out = vcy_p + pos->vel_corr_y_int + vcy_d;
@@ -764,16 +777,16 @@ static void correct_pos_gps(POS_STATE *pos) {
 	pos->vy -= vcy_out;
 
 	// Tilt
-	const float acx_p = error_x * main_config.mr.tilt_gain_p;
-	const float acy_p = error_y * main_config.mr.tilt_gain_p;
+	const float acx_p = error_vx * main_config.mr.tilt_gain_p;
+	const float acy_p = error_vy * main_config.mr.tilt_gain_p;
 
-	pos->tilt_corr_x_int += error_x * main_config.mr.tilt_gain_i * dt;
-	pos->tilt_corr_y_int += error_y * main_config.mr.tilt_gain_i * dt;
+	pos->tilt_corr_x_int += error_vx * main_config.mr.tilt_gain_i * dt;
+	pos->tilt_corr_y_int += error_vy * main_config.mr.tilt_gain_i * dt;
 	utils_truncate_number(&pos->tilt_corr_x_int, -1.0, 1.0);
 	utils_truncate_number(&pos->tilt_corr_y_int, -1.0, 1.0);
 
-	const float acx_d = error_x_diff * main_config.mr.tilt_gain_d / dt;
-	const float acy_d = error_y_diff * main_config.mr.tilt_gain_d / dt;
+	const float acx_d = error_vx_diff * main_config.mr.tilt_gain_d / dt;
+	const float acy_d = error_vy_diff * main_config.mr.tilt_gain_d / dt;
 
 	const float acx_out = acx_p + pos->tilt_corr_x_int + acx_d;
 	const float acy_out = acy_p + pos->tilt_corr_y_int + acy_d;
@@ -914,6 +927,6 @@ static void mr_update_pos(POS_STATE *pos, float dt) {
 	utils_step_towards(&pos->vy, 0.0, main_config.mr.vel_decay_l * dt);
 
 	// Update speed sum
-	pos->speed = sqrtf(pos->vx * pos->vx + pos->vy * pos->vy);
+	pos->speed = sqrtf(SQ(pos->vx) + SQ(pos->vy));
 }
 #endif

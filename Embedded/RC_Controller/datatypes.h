@@ -66,9 +66,19 @@ typedef struct {
 	float q1;
 	float q2;
 	float q3;
+
+	// Current gps position and time stamp
 	float px_gps;
 	float py_gps;
 	float pz_gps;
+	int32_t gps_ms;
+
+	// Previous GPS position and time stamp
+	float px_gps_last;
+	float py_gps_last;
+	float pz_gps_last;
+	int32_t gps_ms_last;
+
 	float gps_corr_cnt;
 	float gps_ang_corr_x_last_gps;
 	float gps_ang_corr_y_last_gps;
@@ -83,8 +93,8 @@ typedef struct {
 	float tilt_roll_err;
 	float tilt_pitch_err;
 
-	float error_x_last;
-	float error_y_last;
+	float error_vx_last;
+	float error_vy_last;
 
 	float vel_corr_x_int;
 	float vel_corr_y_int;
