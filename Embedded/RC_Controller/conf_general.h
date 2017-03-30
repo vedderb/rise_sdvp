@@ -50,7 +50,7 @@
 #define UBLOX_EN					1
 
 // Log configuration to enable. Choose one only.
-#define LOG_EN_CARREL
+//#define LOG_EN_CARREL
 //#define LOG_EN_ITRANSIT
 //#define LOG_EN_DW
 
@@ -80,7 +80,7 @@
 #endif
 
 // Radar settings
-#define RADAR_EN					0
+#define RADAR_EN					1
 #define RADAR_CENTER_FREQ			76.5e9
 #define RADAR_FREQ_SPAN				1.0e9
 #define RADAR_FREQ_PONTS			1024

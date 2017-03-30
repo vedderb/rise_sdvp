@@ -91,6 +91,20 @@
          </property>
         </widget>
        </item>
+       <item>
+        <widget class="QPushButton" name="magCodeButton">
+         <property name="toolTip">
+          <string>Show C code</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="resources.qrc">
+           <normaloff>:/models/Icons/Code-96.png</normaloff>:/models/Icons/Code-96.png</iconset>
+         </property>
+        </widget>
+       </item>
       </layout>
      </item>
      <item>

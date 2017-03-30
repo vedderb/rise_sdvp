@@ -62,6 +62,7 @@ private slots:
     void on_magCalcCompButton_clicked();
     void on_magOpenFileButton_clicked();
     void on_magSampleSaveButton_clicked();
+    void on_magCodeButton_clicked();
 
 private:
     Ui::MagCal *ui;

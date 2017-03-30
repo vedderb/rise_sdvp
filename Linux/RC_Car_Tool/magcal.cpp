@@ -550,3 +550,34 @@ void MagCal::clearMagPlots()
     ui->magSampXzPlot->replot();
     ui->magSampYzPlot->replot();
 }
+
+void MagCal::on_magCodeButton_clicked()
+{
+    if (calculateCompensation()) {
+        QString str;
+        str.sprintf("conf->mag_cal_cx = %.4f;\n"
+                    "conf->mag_cal_cy = %.4f;\n"
+                    "conf->mag_cal_cz = %.4f;\n"
+                    "\n"
+                    "conf->mag_cal_xx = %.4f;\n"
+                    "conf->mag_cal_xy = %.4f;\n"
+                    "conf->mag_cal_xz = %.4f;\n"
+                    "\n"
+                    "conf->mag_cal_yx = %.4f;\n"
+                    "conf->mag_cal_yy = %.4f;\n"
+                    "conf->mag_cal_yz = %.4f;\n"
+                    "\n"
+                    "conf->mag_cal_zx = %.4f;\n"
+                    "conf->mag_cal_zy = %.4f;\n"
+                    "conf->mag_cal_zz = %.4f;\n",
+                    mMagCompCenter.at(0), mMagCompCenter.at(1), mMagCompCenter.at(2),
+                    mMagComp.at(0), mMagComp.at(1), mMagComp.at(2),
+                    mMagComp.at(3), mMagComp.at(4), mMagComp.at(5),
+                    mMagComp.at(6), mMagComp.at(7), mMagComp.at(8));
+
+        QMessageBox::information(this, "Compensation Code", str);
+    } else {
+        QMessageBox::warning(this, "Show Code",
+                             "Not enough samples to calculate compensation.");
+    }
+}

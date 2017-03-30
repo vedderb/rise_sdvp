@@ -59,5 +59,6 @@
         <file>Models/quadrotor.blend</file>
         <file>Models/quadrotor.model</file>
         <file>Icons/Airplane Front View-96.png</file>
+        <file>Icons/Code-96.png</file>
     </qresource>
 </RCC>
