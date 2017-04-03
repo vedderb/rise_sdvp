@@ -814,6 +814,27 @@ bool utils_time_before(int32_t t1, int32_t t2) {
 }
 
 /**
+ * Convert milliseconds to hours, minutes, seconds
+ *
+ * @param ms
+ * Milliseconds today
+ *
+ * @param hh
+ * Pointer to store hours at
+ *
+ * @param mm
+ * Pointer to store minutes at
+ *
+ * @param ss
+ * Pointer to store seconds at
+ */
+void utils_ms_to_hhmmss(int ms, int *hh, int *mm, int *ss) {
+	*ss = (int) (ms / 1000) % 60;
+	*mm = (int) ((ms / (1000 * 60)) % 60);
+	*hh   = (int) ((ms / (1000 * 60 * 60)) % 24);
+}
+
+/**
  * A system locking function with a counter. For every lock, a corresponding unlock must
  * exist to unlock the system. That means, if lock is called five times, unlock has to
  * be called five times as well. Note that chSysLock and chSysLockFromIsr are the same

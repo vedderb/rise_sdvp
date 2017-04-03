@@ -15,12 +15,14 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "radar.h"
 #include "conf_general.h"
 #include "commands.h"
 #include "ch.h"
 #include "hal.h"
 #include "digital_filter.h"
 #include "pos.h"
+#include "utils.h"
 
 #include <math.h>
 #include <string.h>
@@ -30,7 +32,6 @@
 // Settings
 #define UART_DEV		UARTD1
 #define DATA_RAW		1
-#define PLOT_MODE		0 // 0 = off, 1 = sample, 2 = fft
 
 #if RADAR_EN
 
@@ -44,6 +45,7 @@ static unsigned int m_print_buf_r = 0;
 static bool m_wait_radar = false;
 static bool m_sampling_done = false;
 static bool m_print_enabled = true;
+static mutex_t m_mutex_radar;
 
 // Private functions
 static void write_blocking(unsigned char *data, unsigned int len);
@@ -130,10 +132,17 @@ void radar_init(void) {
 	palSetPadMode(GPIOB, 6, PAL_MODE_ALTERNATE(7));
 	palSetPadMode(GPIOB, 7, PAL_MODE_ALTERNATE(7));
 
+	chMtxObjectInit(&m_mutex_radar);
+
 	m_settings.f_center = RADAR_CENTER_FREQ;
 	m_settings.f_span = RADAR_FREQ_SPAN;
 	m_settings.points = RADAR_FREQ_PONTS;
 	m_settings.t_sweep = RADAR_SWEEP_TIME;
+	m_settings.map_plot_avg_factor = RADAR_MAP_PLOT_AVG_FACTOR;
+	m_settings.map_plot_max_div = RADAR_MAP_PLOT_MAX_DIV;
+	m_settings.plot_mode = RADAR_PLOT_MODE;
+	m_settings.map_plot_start = RADAR_MAP_PLOT_START;
+	m_settings.map_plot_end = RADAR_MAP_PLOT_END;
 	m_settings.cc_x = 0.0;
 	m_settings.cc_y = 0.0;
 	m_settings.cc_rad = 10.0;
@@ -150,8 +159,35 @@ void radar_setup_measurement(radar_settings_t *settings) {
 	}
 
 	m_settings = *settings;
-	commands_printf_log_usb("// Radius %.3f m\n", (double)m_settings.cc_rad);
 
+	int hh, mm, ss;
+	utils_ms_to_hhmmss(pos_get_ms_today(), &hh, &mm, &ss);
+
+	commands_printf_log_usb("RcCar. UTC Time:  %02d:%02d:%02d\n", hh, mm, ss);
+	commands_printf_log_usb("//FreqPoints: %d\n", m_settings.points);
+	commands_printf_log_usb("//FreqSpan: %.1f\n", (double)m_settings.f_span);
+	commands_printf_log_usb("//CenterFreq: %.1f\n", (double)m_settings.f_center);
+	commands_printf_log_usb("//SweepNumbers: %d\n", 1);
+	commands_printf_log_usb("//SweepTime: %.3f\n", (double)m_settings.t_sweep);
+	commands_printf_log_usb("//SweepType: circular\n");
+	commands_printf_log_usb("//StartAngle: 0.0\n");
+	commands_printf_log_usb("//StopAngle: 360.0\n");
+	commands_printf_log_usb("//StartRadius %.3f m\n", (double)m_settings.cc_rad);
+	commands_printf_log_usb("//StopRadius %.3f m\n", (double)m_settings.cc_rad);
+	commands_printf_log_usb("//RadarHeight: 1.1\n");
+	commands_printf_log_usb("//RadarElevationAngle: 0.0\n");
+	commands_printf_log_usb("//RadarAngle: 0.0\n");
+	commands_printf_log_usb("//RadarPolarization: v\n");
+	commands_printf_log_usb("//Comment: RcCar\n");
+	commands_printf_log_usb(" --------------------------------- \n");
+	commands_printf_log_usb("//utc_time_today_ms cc_x cc_y c_rad px py yaw RawData \n");
+	commands_printf_log_usb(" --------------------------------- \n");
+
+	radar_reset_setup();
+}
+
+void radar_reset_setup(void) {
+	chMtxLock(&m_mutex_radar);
 	uartStopReceive(&UART_DEV);
 	printf_blocking("\r");
 	radar_wait();
@@ -173,6 +209,10 @@ void radar_setup_measurement(radar_settings_t *settings) {
 	radar_wait();
 	printf_blocking("SWEEP:TIME %e\r", (double)m_settings.t_sweep);
 	radar_wait();
+
+	chThdSleepMilliseconds(1000);
+
+	chMtxUnlock(&m_mutex_radar);
 }
 
 const radar_settings_t *radar_get_settings(void) {
@@ -237,7 +277,7 @@ static void printf_blocking(char* format, ...) {
 	}
 
 	if (m_print_enabled) {
-		commands_printf("To radar:%s", print_buffer);
+		commands_printf("%d To radar:%s", ST2MS(chVTGetSystemTimeX()), print_buffer);
 	}
 }
 
@@ -300,12 +340,13 @@ static THD_FUNCTION(radar_thread, arg) {
 			}
 
 			// Range of interest
-			const int sample_first = 100;
-			const int sample_last = 900;
+			const int sample_first = m_settings.map_plot_start;
+			const int sample_last = m_settings.map_plot_end;
 
 			// Look for maximum and minimum values in range of interest
 			float max = 0;
 			float min = 1e20;
+			float avg_fft = 0.0;
 			for (int i = sample_first;i < sample_last;i++) {
 				if (samples_fft[i] > max) {
 					max = samples_fft[i];
@@ -314,19 +355,25 @@ static THD_FUNCTION(radar_thread, arg) {
 				if (samples_fft[i] < min) {
 					min = samples_fft[i];
 				}
+
+				avg_fft += samples_fft[i];
 			}
+
+			avg_fft /= (float)(sample_last - sample_first);
+
+//			commands_printf("Max: %f Min: %f Avg: %f\n", (double)max, (double)min, (double)avg_fft);
 
 			// Send samples that are over threshold if there is a significant
 			// difference between max and min.
 			// TODO: Look for absolute threshold
-			if (max > (min * 10.0)) {
+			if (max > (avg_fft * m_settings.map_plot_avg_factor)) {
 				float vec[24];
 				int vec_ind = 0;
 				for (int i = sample_first;i < sample_last;i++) {
 					const float val = samples_fft[i];
 
-					if (val > (max / 4)) {
-						const float c = 3e8;
+					if (val > (max / m_settings.map_plot_max_div)) {
+						const float c = 299792458.0;
 						const float deltaD = c / (2.0 * m_settings.f_span);
 						const float dist = (float)i * deltaD;
 
@@ -344,31 +391,33 @@ static THD_FUNCTION(radar_thread, arg) {
 				}
 			}
 
-#if PLOT_MODE == 1
-			commands_init_plot("Sample", "Amplitude");
-			for (int i = 0;i < m_settings.points;i++) {
-				commands_send_plot_points(i, samples[i]);
-				chThdSleepMilliseconds(1);
+			if (m_settings.plot_mode == 1) {
+				commands_init_plot("Sample", "Amplitude");
+				for (int i = 0;i < m_settings.points;i++) {
+					commands_send_plot_points(i, samples[i]);
+					chThdSleepMilliseconds(1);
+				}
+			} else if (m_settings.plot_mode == 2) {
+				commands_init_plot("Distance [m]", "Power");
+				for (int i = 0;i < 512;i++) {
+					const float c = 3e8; // Speed of light
+					const float deltaD = c / (2.0 * m_settings.f_span); // Resolution of FFT
+					commands_send_plot_points((float)i * deltaD, samples_fft[i]);
+					//				commands_send_plot_points((float)i * deltaD, 20.0 * log10f(samples_fft[i]));
+					chThdSleepMilliseconds(1);
+				}
 			}
-#elif PLOT_MODE == 2
-			commands_init_plot("Distance [m]", "Power");
-			for (int i = 0;i < 512;i++) {
-				const float c = 3e8; // Speed of light
-				const float deltaD = c / (2.0 * m_settings.f_span); // Resolution of FFT
-				commands_send_plot_points((float)i * deltaD, samples_fft[i]);
-//				commands_send_plot_points((float)i * deltaD, 20.0 * log10f(samples_fft[i]));
-				chThdSleepMilliseconds(1);
-			}
-#endif
 
 			if (m_settings.log_en) {
 				commands_printf_log_usb(
+						"%d " // utc_time_today_ms
 						"%.3f " // cc_x
 						"%.3f " // cc_y
 						"%.3f " // c_rad
 						"%.3f " // px
 						"%.3f " // py
 						"%.2f", // yaw
+						pos_get_ms_today(),
 						(double)m_settings.cc_x,
 						(double)m_settings.cc_y,
 						(double)m_settings.cc_rad,
@@ -383,7 +432,7 @@ static THD_FUNCTION(radar_thread, arg) {
 			}
 
 			if (m_print_enabled) {
-				commands_printf("RX Done!");
+				commands_printf("%d RX Done!\n", ST2MS(chVTGetSystemTimeX()));
 			}
 
 			continue;
@@ -409,7 +458,7 @@ static THD_FUNCTION(radar_thread, arg) {
 
 		if (m_print_enabled) {
 			buf[ptr] = '\0';
-			commands_printf("From radar:%s", buf);
+			commands_printf("%d From radar:%s", ST2MS(chVTGetSystemTimeX()), buf);
 		}
 
 		m_wait_radar = false;
@@ -425,7 +474,9 @@ static THD_FUNCTION(radar_log_thread, arg) {
 
 	for (;;) {
 		if (m_settings.log_en) {
+			chMtxLock(&m_mutex_radar);
 			radar_sample();
+			chMtxUnlock(&m_mutex_radar);
 		}
 
 		time_p += MS2ST(m_settings.log_rate_ms);
@@ -434,7 +485,8 @@ static THD_FUNCTION(radar_log_thread, arg) {
 		if (time_p >= time + 5) {
 			chThdSleepUntil(time_p);
 		} else {
-			chThdSleepMilliseconds(1);
+			chThdSleepMilliseconds(m_settings.log_rate_ms);
+			time_p = chVTGetSystemTimeX();
 		}
 	}
 }

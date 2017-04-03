@@ -498,6 +498,11 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         s.cc_rad = utility::buffer_get_double32_auto(data, &ind);
         s.log_rate_ms = utility::buffer_get_int32(data, &ind);
         s.log_en = data[ind++];
+        s.map_plot_avg_factor = utility::buffer_get_double32_auto(data, &ind);
+        s.map_plot_max_div = utility::buffer_get_double32_auto(data, &ind);
+        s.plot_mode = data[ind++];
+        s.map_plot_start = utility::buffer_get_uint16(data, &ind);
+        s.map_plot_end = utility::buffer_get_uint16(data, &ind);
 
         emit radarSetupReceived(id, s);
     } break;
@@ -916,6 +921,11 @@ bool PacketInterface::radarSetupSet(quint8 id, radar_settings_t *s, int retries)
     utility::buffer_append_double32_auto(mSendBuffer, s->cc_rad, &send_index);
     utility::buffer_append_int32(mSendBuffer, s->log_rate_ms, &send_index);
     mSendBuffer[send_index++] = s->log_en;
+    utility::buffer_append_double32_auto(mSendBuffer, s->map_plot_avg_factor, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, s->map_plot_max_div, &send_index);
+    mSendBuffer[send_index++] = s->plot_mode;
+    utility::buffer_append_uint16(mSendBuffer, s->map_plot_start, &send_index);
+    utility::buffer_append_uint16(mSendBuffer, s->map_plot_end, &send_index);
     return sendPacketAck(mSendBuffer, send_index, retries);
 }
 

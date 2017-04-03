@@ -56,6 +56,7 @@ void utils_llh_to_enu(const double *iLlh, const double *llh, double *xyz);
 void utils_enu_to_llh(const double *iLlh, const double *xyz, double *llh);
 void utils_byte_to_binary(int x, char *b);
 bool utils_time_before(int32_t t1, int32_t t2);
+void utils_ms_to_hhmmss(int ms, int *hh, int *mm, int *ss);
 void utils_sys_lock_cnt(void);
 void utils_sys_unlock_cnt(void);
 

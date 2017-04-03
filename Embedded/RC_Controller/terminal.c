@@ -121,6 +121,9 @@ void terminal_process_string(char *str) {
 			}
 		}
 		radar_cmd(buffer);
+	} else if (strcmp(argv[0], "radar_reset") == 0) {
+		commands_printf("Resetting radar...");
+		radar_reset_setup();
 	}
 #endif
 #endif
@@ -186,6 +189,9 @@ void terminal_process_string(char *str) {
 
 		commands_printf("radar_cmd");
 		commands_printf("  Forward command to radar");
+
+		commands_printf("radar_reset");
+		commands_printf("  Reset and setup the radar");
 #endif
 #endif
 

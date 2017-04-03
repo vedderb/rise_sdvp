@@ -580,6 +580,11 @@ typedef struct {
 	float cc_y;
 	float cc_rad;
 	int log_rate_ms;
+	float map_plot_avg_factor;
+	float map_plot_max_div;
+	int plot_mode; // 0 = off, 1 = sample, 2 = fft
+	int map_plot_start;
+	int map_plot_end;
 } radar_settings_t;
 
 // ============== VESC Datatypes ================== //

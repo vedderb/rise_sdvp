@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>858</width>
-    <height>516</height>
+    <height>568</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -682,7 +682,7 @@
         <attribute name="toolTip">
          <string>Radar</string>
         </attribute>
-        <layout class="QVBoxLayout" name="verticalLayout_16">
+        <layout class="QVBoxLayout" name="verticalLayout_10">
          <item>
           <widget class="QCheckBox" name="radarLogEnBox">
            <property name="text">
@@ -761,36 +761,40 @@
           </widget>
          </item>
          <item>
-          <widget class="QDoubleSpinBox" name="radarCcXBox">
-           <property name="prefix">
-            <string>CC X: </string>
-           </property>
-           <property name="decimals">
-            <number>3</number>
-           </property>
-           <property name="minimum">
-            <double>-999.000000000000000</double>
-           </property>
-           <property name="maximum">
-            <double>999.000000000000000</double>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QDoubleSpinBox" name="radarCcYBox">
-           <property name="prefix">
-            <string>CC Y: </string>
-           </property>
-           <property name="decimals">
-            <number>3</number>
-           </property>
-           <property name="minimum">
-            <double>-999.000000000000000</double>
-           </property>
-           <property name="maximum">
-            <double>999.000000000000000</double>
-           </property>
-          </widget>
+          <layout class="QHBoxLayout" name="horizontalLayout_3">
+           <item>
+            <widget class="QDoubleSpinBox" name="radarCcXBox">
+             <property name="prefix">
+              <string>CC X: </string>
+             </property>
+             <property name="decimals">
+              <number>3</number>
+             </property>
+             <property name="minimum">
+              <double>-999.000000000000000</double>
+             </property>
+             <property name="maximum">
+              <double>999.000000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QDoubleSpinBox" name="radarCcYBox">
+             <property name="prefix">
+              <string>CC Y: </string>
+             </property>
+             <property name="decimals">
+              <number>3</number>
+             </property>
+             <property name="minimum">
+              <double>-999.000000000000000</double>
+             </property>
+             <property name="maximum">
+              <double>999.000000000000000</double>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </item>
          <item>
           <widget class="QDoubleSpinBox" name="radarCRadBox">
@@ -826,6 +830,67 @@
             <double>1.000000000000000</double>
            </property>
           </widget>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_4">
+           <item>
+            <widget class="QDoubleSpinBox" name="radarMapPlotAvgFactorBox">
+             <property name="prefix">
+              <string>Plot Avg Factor: </string>
+             </property>
+             <property name="value">
+              <double>3.000000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QDoubleSpinBox" name="radarMapPlotMaxDivBox">
+             <property name="prefix">
+              <string>Plot Max Division: </string>
+             </property>
+             <property name="value">
+              <double>6.000000000000000</double>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="QSpinBox" name="radarPlotModeBox">
+           <property name="prefix">
+            <string>Plot Mode: </string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_6">
+           <item>
+            <widget class="QSpinBox" name="radarMapPlotStartBox">
+             <property name="prefix">
+              <string>Map Plot Start: </string>
+             </property>
+             <property name="maximum">
+              <number>512</number>
+             </property>
+             <property name="value">
+              <number>20</number>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QSpinBox" name="radarMapPlotEndBox">
+             <property name="prefix">
+              <string>Map Plot End: </string>
+             </property>
+             <property name="maximum">
+              <number>512</number>
+             </property>
+             <property name="value">
+              <number>300</number>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </item>
          <item>
           <spacer name="verticalSpacer_7">

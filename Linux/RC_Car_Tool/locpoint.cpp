@@ -19,9 +19,9 @@
 #include <cmath>
 
 LocPoint::LocPoint(double x, double y, double roll, double pitch, double yaw, double speed,
-                   double radius, double sigma, QColor color, qint32 time, int id) :
+                   double radius, double sigma, QColor color, qint32 time, int id, bool drawLine) :
     mX(x), mY(y), mRoll(roll), mPitch(pitch), mYaw(yaw), mSpeed(speed),
-    mRadius(radius), mSigma(sigma), mColor(color), mTime(time), mId(id)
+    mRadius(radius), mSigma(sigma), mColor(color), mTime(time), mId(id), mDrawLine(drawLine)
 {
 
 }
@@ -141,7 +141,13 @@ LocPoint &LocPoint::operator =(const LocPoint &point)
     mColor = point.mColor;
     mTime = point.mTime;
     mId = point.mId;
+    mDrawLine = point.mDrawLine;
     return *this;
+}
+
+bool LocPoint::getDrawLine() const
+{
+    return mDrawLine;
 }
 
 bool LocPoint::operator ==(const LocPoint &point)
@@ -157,7 +163,8 @@ bool LocPoint::operator ==(const LocPoint &point)
             mInfo == point.mInfo &&
             mColor == point.mColor &&
             mTime == point.mTime &&
-            mId == point.mId) {
+            mId == point.mId &&
+            mDrawLine == point.mDrawLine) {
         return true;
     } else {
         return false;
@@ -207,6 +214,11 @@ void LocPoint::setSigma(double sigma)
 void LocPoint::setColor(const QColor &color)
 {
     mColor = color;
+}
+
+void LocPoint::setDrawLine(bool drawLine)
+{
+    mDrawLine = drawLine;
 }
 
 double LocPoint::getDistanceTo(const LocPoint &point) const

@@ -500,6 +500,11 @@ void CarInterface::radarSetupReceived(quint8 id, radar_settings_t s)
         ui->radarCRadBox->setValue(s.cc_rad);
         ui->radarLogRateBox->setValue((double)s.log_rate_ms / 1000.0);
         ui->radarLogEnBox->setChecked(s.log_en);
+        ui->radarMapPlotAvgFactorBox->setValue(s.map_plot_avg_factor);
+        ui->radarMapPlotMaxDivBox->setValue(s.map_plot_max_div);
+        ui->radarPlotModeBox->setValue(s.plot_mode);
+        ui->radarMapPlotStartBox->setValue(s.map_plot_start);
+        ui->radarMapPlotEndBox->setValue(s.map_plot_end);
 
         QString str;
         str.sprintf("Car %d: Radar Setup Received", id);
@@ -522,9 +527,15 @@ void CarInterface::radarSamplesReceived(quint8 id, QVector<QPair<double, double>
                 cx = p_car.getX() + samples[i].first * sin(p_car.getYaw());
                 cy = p_car.getY() + samples[i].first * cos(p_car.getYaw());
                 p.setXY(cx, cy);
+                p.setDrawLine(false);
 
                 QString info;
-                info.sprintf("%.1f", samples[i].second);
+                QTime t = QTime::currentTime();
+
+                info.sprintf("%02d:%02d:%02d:%03d\n"
+                             "%.1f m (%.0f)",
+                             t.hour(), t.minute(), t.second(), t.msec(),
+                             samples[i].first, samples[i].second);
 
                 p.setInfo(info);
                 mMap->addInfoPoint(p);
@@ -875,8 +886,13 @@ void CarInterface::on_radarWriteButton_clicked()
     s.cc_x = ui->radarCcXBox->value();
     s.cc_y = ui->radarCcYBox->value();
     s.cc_rad = ui->radarCRadBox->value();
-    s.log_rate_ms = (int)ui->radarLogRateBox->value() * 1000;
+    s.log_rate_ms = (int)(ui->radarLogRateBox->value() * 1000.0);
     s.log_en = ui->radarLogEnBox->isChecked();
+    s.map_plot_avg_factor = ui->radarMapPlotAvgFactorBox->value();
+    s.map_plot_max_div = ui->radarMapPlotMaxDivBox->value();
+    s.plot_mode = ui->radarPlotModeBox->value();
+    s.map_plot_start = ui->radarMapPlotStartBox->value();
+    s.map_plot_end = ui->radarMapPlotEndBox->value();
 
     if (mPacketInterface) {
         ui->radarWriteButton->setEnabled(false);

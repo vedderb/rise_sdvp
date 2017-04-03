@@ -389,6 +389,11 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			s.cc_rad = buffer_get_float32_auto(data, &ind);
 			s.log_rate_ms = buffer_get_int32(data, &ind);
 			s.log_en = data[ind++];
+			s.map_plot_avg_factor = buffer_get_float32_auto(data, &ind);
+			s.map_plot_max_div = buffer_get_float32_auto(data, &ind);
+			s.plot_mode = data[ind++];
+			s.map_plot_start = buffer_get_uint16(data, &ind);
+			s.map_plot_end = buffer_get_uint16(data, &ind);
 
 			// Send ack
 			int32_t send_index = 0;
@@ -421,6 +426,11 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			buffer_append_float32_auto(m_send_buffer, s->cc_rad, &send_index);
 			buffer_append_int32(m_send_buffer, s->log_rate_ms, &send_index);
 			m_send_buffer[send_index++] = s->log_en;
+			buffer_append_float32_auto(m_send_buffer, s->map_plot_avg_factor, &send_index);
+			buffer_append_float32_auto(m_send_buffer, s->map_plot_max_div, &send_index);
+			m_send_buffer[send_index++] = s->plot_mode;
+			buffer_append_uint16(m_send_buffer, s->map_plot_start, &send_index);
+			buffer_append_uint16(m_send_buffer, s->map_plot_end, &send_index);
 
 			commands_send_packet(m_send_buffer, send_index);
 #endif

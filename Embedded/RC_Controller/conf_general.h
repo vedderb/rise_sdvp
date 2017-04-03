@@ -85,6 +85,11 @@
 #define RADAR_FREQ_SPAN				1.0e9
 #define RADAR_FREQ_PONTS			1024
 #define RADAR_SWEEP_TIME			0.075
+#define RADAR_MAP_PLOT_AVG_FACTOR	3.0
+#define RADAR_MAP_PLOT_MAX_DIV		6.0
+#define RADAR_PLOT_MODE				0
+#define RADAR_MAP_PLOT_START		20
+#define RADAR_MAP_PLOT_END			300
 
 // Servo settings
 #define SERVO_OUT_RATE_HZ			50

@@ -815,7 +815,7 @@ void MapWidget::paintEvent(QPaintEvent *event)
                                                xStart2, xEnd2, yStart2, yEnd2);
             }
 
-            if (draw) {
+            if (draw && itNow[i].getDrawLine()) {
                 QPointF p1 = drawTrans.map(itNow[last_visible].getPointMm());
                 QPointF p2 = drawTrans.map(itNow[i].getPointMm());
 

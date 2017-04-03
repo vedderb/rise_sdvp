@@ -27,7 +27,7 @@ class LocPoint
 public:
     LocPoint(double x = 0, double y = 0, double roll = 0, double pitch = 0, double yaw = 0,
              double speed = 0.5, double radius = 5.0, double sigma = 0.0,
-             QColor color = Qt::darkGreen, qint32 time = 0, int id = 0);
+             QColor color = Qt::darkGreen, qint32 time = 0, int id = 0, bool drawLine = true);
     LocPoint(const LocPoint &point);
 
     double getX() const;
@@ -44,6 +44,7 @@ public:
     QColor getColor() const;
     qint32 getTime() const;
     int getId() const;
+    bool getDrawLine() const;
 
     void setX(double x);
     void setY(double y);
@@ -60,6 +61,7 @@ public:
     void setColor(const QColor &color);
     void setTime(const qint32 &time);
     void setId(int id);
+    void setDrawLine(bool drawLine);
 
     // Operators
     LocPoint& operator=(const LocPoint& point);
@@ -79,6 +81,7 @@ private:
     QColor mColor;
     qint32 mTime;
     int mId;
+    bool mDrawLine;
 
 };
 
