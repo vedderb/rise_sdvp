@@ -15,13 +15,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
     */
 
-/*
- * crc.h
- *
- *  Created on: 26 feb 2012
- *      Author: benjamin
- */
-
 #ifndef CRC_H_
 #define CRC_H_
 

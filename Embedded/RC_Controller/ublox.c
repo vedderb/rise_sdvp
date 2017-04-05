@@ -247,6 +247,7 @@ void ublox_init(void) {
 		reset_decoder_state();
 		ublox_cfg_prt_uart(&uart);
 		set_baudrate(BAUDRATE);
+		ublox_cfg_rate(200, 1, 0);
 	}
 
 	// Disable survey in

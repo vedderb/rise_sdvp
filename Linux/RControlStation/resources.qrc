@@ -1,0 +1,65 @@
+<RCC>
+    <qresource prefix="/models">
+        <file>Models/car.model</file>
+        <file>Models/car.3ds</file>
+        <file>Icons/Add Image-96.png</file>
+        <file>Icons/Available Updates-96.png</file>
+        <file>Icons/Car-96.png</file>
+        <file>Icons/Connected-96.png</file>
+        <file>Icons/Delete-96.png</file>
+        <file>Icons/Disconnected-96.png</file>
+        <file>Icons/Download-96.png</file>
+        <file>Icons/GPS Receiving-96.png</file>
+        <file>Icons/Import-96.png</file>
+        <file>Icons/Pencil-96.png</file>
+        <file>Icons/Ping Pong-96.png</file>
+        <file>Icons/Plus-96.png</file>
+        <file>Icons/Radio Tower-96.png</file>
+        <file>Icons/Refresh-96.png</file>
+        <file>Icons/Remove Image-96.png</file>
+        <file>Icons/Sedan-96.png</file>
+        <file>Icons/Stop Sign-96.png</file>
+        <file>Icons/Upload-96.png</file>
+        <file>Icons/Visible-96.png</file>
+        <file>Icons/Waypoint Map-96.png</file>
+        <file>Icons/Wi-Fi-96.png</file>
+        <file>Icons/BW_Stop Sign-96.png</file>
+        <file>Icons/Computer-96.png</file>
+        <file>Icons/Controller-96.png</file>
+        <file>Icons/Process-96.png</file>
+        <file>Icons/Bar Chart-96.png</file>
+        <file>Icons/Open Folder-96.png</file>
+        <file>Icons/Polygon-96.png</file>
+        <file>Icons/Polyline-96.png</file>
+        <file>Icons/Settings-96.png</file>
+        <file>Icons/Point Objects-96.png</file>
+        <file>Icons/Delete2-96.png</file>
+        <file>Icons/Google Images-96.png</file>
+        <file>Icons/Center Direction-96.png</file>
+        <file>Icons/Orthogonal View-96.png</file>
+        <file>Icons/Gyroscope-96.png</file>
+        <file>Icons/Console-96.png</file>
+        <file>Icons/Magnet-96.png</file>
+        <file>Icons/Save as-96.png</file>
+        <file>Icons/Help-96.png</file>
+        <file>Icons/Align Justify-96.png</file>
+        <file>Icons/NMEA-96.png</file>
+        <file>Icons/Hashtag-96.png</file>
+        <file>Icons/HDD-96.png</file>
+        <file>Icons/Send File-96.png</file>
+        <file>Icons/Clock-96.png</file>
+        <file>Icons/VPN-96.png</file>
+        <file>Icons/Restart-96.png</file>
+        <file>Icons/Shutdown-96.png</file>
+        <file>Icons/Bicycle-100.png</file>
+        <file>Icons/Electrical Sensor-96.png</file>
+        <file>Icons/Satellite-96.png</file>
+        <file>Icons/Radar-96.png</file>
+        <file>Icons/Drone-96.png</file>
+        <file>Models/quadrotor.blend</file>
+        <file>Models/quadrotor.model</file>
+        <file>Icons/Airplane Front View-96.png</file>
+        <file>Icons/Code-96.png</file>
+        <file>Icons/About-96.png</file>
+    </qresource>
+</RCC>

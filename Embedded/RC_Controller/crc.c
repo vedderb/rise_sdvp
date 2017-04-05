@@ -15,12 +15,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
     */
 
-/*
- * crc.c
- *
- *  Created on: 26 feb 2012
- *      Author: benjamin
- */
 #include "crc.h"
 
 // CRC Table

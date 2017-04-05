@@ -1,0 +1,9 @@
+#!/bin/bash
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+rm -Rf $DIR"/Documentation/PDF/"*
+
+# Readme
+pandoc -f markdown README.md -o $DIR"/Documentation/PDF/readme.pdf"
+
