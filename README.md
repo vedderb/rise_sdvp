@@ -8,5 +8,9 @@ Figure 1 shows a screenshot of RControlStation, which is a GUI where model vehic
 
 ![RControlStation](Documentation/Pictures/GUI/map.png)
 
+Here is a video with a short test of the SDVP on a Tero RC car:
+
+[![RC Car Test](http://img.youtube.com/vi/4wPVpvPP-8w/0.jpg)](http://www.youtube.com/watch?v=4wPVpvPP-8w "Tero RC car with autopilot and RTK-GPS")
+
 Currently a lot of documentation is missing, but this will be added over time along with tutorials on how to use this platform. The content of the documentation directory is incomplete and out of date, so don't rely on it too much.
 
