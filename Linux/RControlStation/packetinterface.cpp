@@ -555,6 +555,10 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         CAR_STATE state;
         int32_t ind = 0;
 
+        if (len <= 1) {
+            break;
+        }
+
         state.fw_major = data[ind++];
         state.fw_minor = data[ind++];
         state.roll = utility::buffer_get_double32(data, 1e6, &ind);
@@ -592,6 +596,10 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
     case CMD_MR_GET_STATE: {
         MULTIROTOR_STATE state;
         int32_t ind = 0;
+
+        if (len <= 1) {
+            break;
+        }
 
         state.fw_major = data[ind++];
         state.fw_minor = data[ind++];
