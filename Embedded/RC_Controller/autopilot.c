@@ -54,6 +54,7 @@ static void steering_angle_to_point(
 		float *steering_angle,
 		float *distance);
 static bool add_point(ROUTE_POINT *p, bool first);
+static void clear_route(void);
 
 void autopilot_init(void) {
 	memset(m_route, 0, sizeof(m_route));
@@ -111,11 +112,7 @@ void autopilot_remove_last_point(void) {
 void autopilot_clear_route(void) {
 	chMtxLock(&m_ap_lock);
 
-	m_is_active = false;
-	m_has_prev_point = false;
-	m_point_now = 0;
-	m_point_last = 0;
-	m_point_rx_prev_set = false;
+	clear_route();
 
 	chMtxUnlock(&m_ap_lock);
 }
@@ -124,7 +121,7 @@ void autopilot_replace_route(ROUTE_POINT *p) {
 	chMtxLock(&m_ap_lock);
 
 	if (!m_is_active) {
-		autopilot_clear_route();
+		clear_route();
 		add_point(p, true);
 	} else {
 		while (m_point_last != m_point_now) {
@@ -593,4 +590,12 @@ static bool add_point(ROUTE_POINT *p, bool first) {
 	}
 
 	return true;
+}
+
+static void clear_route(void) {
+	m_is_active = false;
+	m_has_prev_point = false;
+	m_point_now = 0;
+	m_point_last = 0;
+	m_point_rx_prev_set = false;
 }
