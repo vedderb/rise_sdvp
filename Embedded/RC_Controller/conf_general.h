@@ -50,12 +50,12 @@
 #define UBLOX_EN					1
 
 // Log configuration to enable. Choose one only.
-//#define LOG_EN_CARREL
+#define LOG_EN_CARREL
 //#define LOG_EN_ITRANSIT
 //#define LOG_EN_DW
 
 // Logging time interval
-#define LOG_INTERVAL_MS				50
+#define LOG_INTERVAL_MS				10
 
 // Anchor IDs to range against in DW logging mode. -1 to disable.
 #define LOG_DW_ANCHOR0				122
@@ -80,7 +80,7 @@
 #endif
 
 // Radar settings
-#define RADAR_EN					1
+#define RADAR_EN					0
 #define RADAR_CENTER_FREQ			76.5e9
 #define RADAR_FREQ_SPAN				1.0e9
 #define RADAR_FREQ_PONTS			1024
