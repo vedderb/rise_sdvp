@@ -3,12 +3,12 @@
 # Exit on error
 set -e
 
-if [[ $1 == @(vcc|tero|rise) ]]; then
+if [[ $1 == @(vcc|tero|rise_ubx) ]]; then
     FW=fw_$1.bin
 else
     echo No valid firmware specified. Please use
     echo ./upload_fw [fw]
-    echo where [fw] can be vcc, tero or rise
+    echo where [fw] can be vcc, tero or rise_ubx
     exit 1
 fi
 
