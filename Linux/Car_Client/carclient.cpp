@@ -234,7 +234,7 @@ void CarClient::restartRtklib()
     process2.setEnvironment(QProcess::systemEnvironment());
     process2.start("screen", QStringList() <<
                    "-d" << "-m" << "-S" << "rtklib" << "bash" << "-c" <<
-                   QString("cd /home/%1/rise_sdvp/Linux/rtkrcv_arm && ./start_ublox ; bash").arg(user));
+                   QString("cd /home/%1/rise_sdvp/Linux/RTK/rtkrcv_arm && ./start_ublox ; bash").arg(user));
     waitProcess(process2);
 }
 
