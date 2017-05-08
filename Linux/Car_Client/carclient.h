@@ -24,6 +24,7 @@
 #include <QTimer>
 #include <QUdpSocket>
 #include <QFile>
+#include <QProcess>
 #include "packetinterface.h"
 #include "tcpbroadcast.h"
 #include "serialport.h"
@@ -57,6 +58,7 @@ public:
     bool enableLogging(QString directory);
     void logStop();
     void rtcmRx(QByteArray data, int type);
+    void restartRtklib();
 
 signals:
 
@@ -95,6 +97,7 @@ private:
     QFile mLog;
 
     void printTerminal(QString str);
+    bool waitProcess(QProcess &process, int timeoutMs = 300000);
 
 };
 

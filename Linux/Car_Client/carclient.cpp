@@ -22,6 +22,7 @@
 #include <sys/time.h>
 #include <sys/reboot.h>
 #include <unistd.h>
+#include <QEventLoop>
 #include "rtcm3_simple.h"
 
 namespace {
@@ -211,6 +212,32 @@ void CarClient::rtcmRx(QByteArray data, int type)
     printTerminal(str);
 }
 
+void CarClient::restartRtklib()
+{
+    QFile ublox("/dev/ublox");
+    if (!ublox.exists()) {
+        return;
+    }
+
+    QString user = qgetenv("USER");
+    if (user.isEmpty()) {
+        user = qgetenv("USERNAME");
+    }
+
+    QProcess process;
+    process.setEnvironment(QProcess::systemEnvironment());
+    process.start("screen", QStringList() <<
+                  "-X" << "-S" << "rtklib" << "quit");
+    waitProcess(process);
+
+    QProcess process2;
+    process2.setEnvironment(QProcess::systemEnvironment());
+    process2.start("screen", QStringList() <<
+                   "-d" << "-m" << "-S" << "rtklib" << "bash" << "-c" <<
+                   QString("cd /home/%1/rise_sdvp/Linux/rtkrcv_arm && ./start_ublox ; bash").arg(user));
+    waitProcess(process2);
+}
+
 void CarClient::serialDataAvailable()
 {
     while (mSerialPort->bytesAvailable() > 0) {
@@ -383,6 +410,7 @@ void CarClient::systemTimeReceived(quint8 id, qint32 sec, qint32 usec)
 
     if(rc == 0) {
         qDebug() << "Sucessfully set system time";
+        restartRtklib();
     } else {
         qDebug() << "Setting system time failed";
     }
@@ -410,4 +438,27 @@ void CarClient::printTerminal(QString str)
     packet.append((char)CMD_PRINTF);
     packet.append(str.toLocal8Bit());
     carPacketRx(mCarId, CMD_PRINTF, packet);
+}
+
+bool CarClient::waitProcess(QProcess &process, int timeoutMs)
+{
+    bool killed = false;
+
+    process.waitForStarted();
+
+    QEventLoop loop;
+    QTimer timeoutTimer;
+    timeoutTimer.setSingleShot(true);
+    timeoutTimer.start(timeoutMs);
+    connect(&process, SIGNAL(finished(int)), &loop, SLOT(quit()));
+    connect(&timeoutTimer, SIGNAL(timeout()), &loop, SLOT(quit()));
+    loop.exec();
+
+    if (process.state() == QProcess::Running) {
+        process.kill();
+        process.waitForFinished();
+        killed = true;
+    }
+
+    return !killed;
 }

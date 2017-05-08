@@ -204,6 +204,7 @@ int main(int argc, char *argv[])
     }
 
     CarClient car;
+    car.restartRtklib();
     car.connectSerial(ttyPort, baudrate);
     car.connectNmea(tcpNmeaServer, tcpNmeaPort);
     car.startRtcmServer(tcpRtcmPort);
