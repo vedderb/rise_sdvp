@@ -1,9 +1,0 @@
-#!/bin/bash
-
-# Exit on error
-set -e
-
-DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-
-$DIR/build_upload_fw "-DCAR_TERO -DUBLOX_EN=0"
-

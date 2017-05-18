@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# Exit on error
+set -e
+
+if [[ $1 == @(vcc|tero|rise) ]]; then
+    FW=fw_$1.bin
+else
+    echo No valid firmware specified. Please use
+    echo ./upload_fw [fw]
+    echo where [fw] can be vcc, tero or rise
+    exit 1
+fi
+
+DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+FWPATH="Embedded/RC_Controller/precompiled"
+
+openocd -f interface/raspberrypi2-native.cfg -c "transport select swd" -c "set CHIPNAME stm32f4x" -c "target/stm32f4x.cfg" -c "reset_config  srst_nogate" -c "adapter_nsrst_delay 100" -c "adapter_nsrst_assert_width 100" -c "program $FW verify reset exit 0x08000000"
+
