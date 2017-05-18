@@ -3,6 +3,8 @@ QT -= gui
 QT += network
 QT += serialport
 
+CONFIG += c++11
+
 TARGET = Car_Client
 CONFIG += console
 CONFIG -= app_bundle
@@ -16,7 +18,9 @@ SOURCES += main.cpp \
     carclient.cpp \
     locpoint.cpp \
     rtcm3_simple.c \
-    serialport.cpp
+    serialport.cpp \
+    ublox.cpp \
+    nmeaserver.cpp
 
 HEADERS += \
     packetinterface.h \
@@ -26,5 +30,7 @@ HEADERS += \
     datatypes.h \
     locpoint.h \
     rtcm3_simple.h \
-    serialport.h
+    serialport.h \
+    ublox.h \
+    nmeaserver.h
 

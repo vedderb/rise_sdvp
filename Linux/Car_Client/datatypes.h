@@ -1,5 +1,5 @@
 /*
-    Copyright 2016 Benjamin Vedder	benjamin@vedder.se
+    Copyright 2016-2017 Benjamin Vedder	benjamin@vedder.se
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -119,6 +119,7 @@ typedef struct {
 } MAIN_CONFIG_CAR;
 
 typedef struct {
+    // Dead reckoning
     float vel_decay_e;
     float vel_decay_l;
     float vel_max;
@@ -127,6 +128,7 @@ typedef struct {
     float map_min_y;
     float map_max_y;
 
+    // State correction for dead reckoning
     float vel_gain_p;
     float vel_gain_i;
     float vel_gain_d;
@@ -138,6 +140,7 @@ typedef struct {
     float max_corr_error;
     float max_tilt_error;
 
+    // Attitude controller
     float ctrl_gain_roll_p;
     float ctrl_gain_roll_i;
     float ctrl_gain_roll_dp;
@@ -153,8 +156,30 @@ typedef struct {
     float ctrl_gain_yaw_dp;
     float ctrl_gain_yaw_de;
 
+    // Position controller
+    float ctrl_gain_pos_p;
+    float ctrl_gain_pos_i;
+    float ctrl_gain_pos_d;
+
+    // Altitude controller
+    float ctrl_gain_alt_p;
+    float ctrl_gain_alt_i;
+    float ctrl_gain_alt_d;
+
+    // Joystick gain
     float js_gain_tilt;
     float js_gain_yaw;
+    bool js_mode_rate;
+
+    // Motor mapping and configuration
+    int8_t motor_fl_f; // x: Front Left  +: Front
+    int8_t motor_bl_l; // x: Back Left   +: Left
+    int8_t motor_fr_r; // x: Front Right +: Right
+    int8_t motor_br_b; // x: Back Right  +: Back
+    bool motors_x; // Use x motor configuration (use + if false)
+    bool motors_cw; // Front left (or front in + mode) runs in the clockwise direction (ccw if false)
+    uint16_t motor_pwm_min_us; // Minimum servo pulse length for motor in microseconds
+    uint16_t motor_pwm_max_us; // Maximum servo pulse length for motor in microseconds
 } MAIN_CONFIG_MULTIROTOR;
 
 // Car configuration
@@ -277,6 +302,11 @@ typedef struct {
     float cc_y;
     float cc_rad;
     int log_rate_ms;
+    float map_plot_avg_factor;
+    float map_plot_max_div;
+    int plot_mode; // 0 = off, 1 = sample, 2 = fft
+    int map_plot_start;
+    int map_plot_end;
 } radar_settings_t;
 
 // DW Logging Info

@@ -11,6 +11,8 @@ QT       += serialport
 QT       += network
 QT       += opengl
 
+CONFIG   += c++11
+
 # Ubuntu
 # sudo apt-get install libassimp-dev
 #DEFINES += HAS_ASSIMP

@@ -38,6 +38,23 @@ bool TcpBroadcast::startTcpServer(int port)
     return true;
 }
 
+QString TcpBroadcast::getLastError()
+{
+    return mTcpServer->errorString();
+}
+
+void TcpBroadcast::stopServer()
+{
+    mTcpServer->close();
+    QMutableListIterator<QTcpSocket*> itr(mSockets);
+
+    while(itr.hasNext()) {
+        QTcpSocket *socket = itr.next();
+        socket->deleteLater();
+        itr.remove();
+    }
+}
+
 void TcpBroadcast::broadcastData(QByteArray data)
 {
     QMutableListIterator<QTcpSocket*> itr(mSockets);
@@ -72,8 +89,6 @@ void TcpBroadcast::logStop()
     if (mLog.isOpen()) {
         qDebug() << "Closing log:" << mLog.fileName();
         mLog.close();
-    } else {
-        qDebug() << "TCP log not open";
     }
 }
 
@@ -82,3 +97,4 @@ void TcpBroadcast::newTcpConnection()
     mSockets.append(mTcpServer->nextPendingConnection());
     qDebug() << "TCP connection accepted:" << mSockets[mSockets.size() - 1]->peerAddress();
 }
+

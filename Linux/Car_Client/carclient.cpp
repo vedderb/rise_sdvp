@@ -24,6 +24,7 @@
 #include <unistd.h>
 #include <QEventLoop>
 #include "rtcm3_simple.h"
+#include "ublox.h"
 
 namespace {
 void rtcm_rx(uint8_t *data, int len, int type) {
@@ -217,6 +218,38 @@ void CarClient::restartRtklib()
     QFile ublox("/dev/ublox");
     if (!ublox.exists()) {
         return;
+    }
+
+    // Set up ublox before starting RTKLib
+    Ublox ubx;
+    if (ubx.connectSerial(ublox.fileName())) {
+        // Serial port baud rate
+        // if it is too low the buffer will overfill and it won't work properly.
+        ubx_cfg_prt_uart uart;
+        uart.baudrate = 115200;
+        uart.in_ubx = true;
+        uart.in_nmea = true;
+        uart.in_rtcm2 = false;
+        uart.in_rtcm3 = true;
+        uart.out_ubx = true;
+        uart.out_nmea = true;
+        uart.out_rtcm3 = true;
+        ubx.ubxCfgPrtUart(&uart);
+
+        // Set configuration
+        // Switch on RAWX messages, set rate to 5 Hz and time reference to UTC
+        ubx.ubxCfgRate(200, 1, 0);
+        ubx.ubxCfgMsg(UBX_CLASS_RXM, UBX_RXM_RAWX, 1); // Every second
+        ubx.ubxCfgMsg(UBX_CLASS_RXM, UBX_RXM_SFRBX, 1); // Every second
+
+        // Automotive dynamic model
+        ubx_cfg_nav5 nav5;
+        memset(&nav5, 0, sizeof(ubx_cfg_nav5));
+        nav5.apply_dyn = true;
+        nav5.dyn_model = 4;
+        ubx.ubxCfgNav5(&nav5);
+
+        ubx.disconnectSerial();
     }
 
     QString user = qgetenv("USER");
