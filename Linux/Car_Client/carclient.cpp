@@ -230,6 +230,7 @@ void CarClient::restartRtklib()
         process.start("whoami");
         waitProcess(process);
         user = QString(process.readAllStandardOutput());
+        user.replace("\n", "");
     }
 
     QProcess process;
