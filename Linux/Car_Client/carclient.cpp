@@ -224,6 +224,14 @@ void CarClient::restartRtklib()
         user = qgetenv("USERNAME");
     }
 
+    if (user.isEmpty()) {
+        QProcess process;
+        process.setEnvironment(QProcess::systemEnvironment());
+        process.start("whoami");
+        waitProcess(process);
+        user = QString(process.readAllStandardOutput());
+    }
+
     QProcess process;
     process.setEnvironment(QProcess::systemEnvironment());
     process.start("screen", QStringList() <<

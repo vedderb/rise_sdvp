@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# Exit on error
+set -e
+
+DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+
+$DIR/build_upload_fw "-DMAIN_MODE=MAIN_MODE_CAR -DUBLOX_EN=0"
+

@@ -27,7 +27,9 @@
 #define MAIN_MODE_MULTIROTOR		4
 
 // Main mode
+#ifndef MAIN_MODE
 #define MAIN_MODE					MAIN_MODE_CAR
+#endif
 
 // Mode macros
 #define MAIN_MODE_IS_MOTE			(MAIN_MODE == MAIN_MODE_MOTE_2400 || MAIN_MODE == MAIN_MODE_MOTE_400 || MAIN_MODE == MAIN_MODE_MOTE_HYBRID)
@@ -47,7 +49,9 @@
 #endif
 
 // Ublox settings
+#ifndef UBLOX_EN
 #define UBLOX_EN					1
+#endif
 
 // Log configuration to enable. Choose one only.
 #define LOG_EN_CARREL
@@ -80,7 +84,9 @@
 #endif
 
 // Radar settings
+#ifndef RADAR_EN
 #define RADAR_EN					0
+#endif
 #define RADAR_CENTER_FREQ			76.5e9
 #define RADAR_FREQ_SPAN				1.0e9
 #define RADAR_FREQ_PONTS			1024
