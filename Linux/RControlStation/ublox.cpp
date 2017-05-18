@@ -685,12 +685,15 @@ bool Ublox::ubx_encode_send(uint8_t msg_class, uint8_t id, uint8_t *msg, int len
             QTimer timeoutTimer;
             timeoutTimer.setSingleShot(true);
             timeoutTimer.start(timeoutMs);
-            connect(this, &Ublox::rxAck, [&loop, &retVal](uint8_t, uint8_t){retVal = true; loop.quit();});
+            auto conn = connect(this, &Ublox::rxAck,
+                                [&loop, &retVal](uint8_t, uint8_t){retVal = true; loop.quit();});
             connect(this, SIGNAL(rxNak(uint8_t,uint8_t)), &loop, SLOT(quit()));
             connect(&timeoutTimer, SIGNAL(timeout()), &loop, SLOT(quit()));
 
             ubx_send(ubx, ind);
             loop.exec();
+
+            disconnect(conn);
 
             mWaitingAck = false;
         }
