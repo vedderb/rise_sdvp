@@ -274,10 +274,15 @@ void CarClient::restartRtklib()
 
     QProcess process2;
     process2.setEnvironment(QProcess::systemEnvironment());
-    process2.start("screen", QStringList() <<
+    process2.start("killall", QStringList() << "rtkrcv");
+    waitProcess(process2);
+
+    QProcess process3;
+    process3.setEnvironment(QProcess::systemEnvironment());
+    process3.start("screen", QStringList() <<
                    "-d" << "-m" << "-S" << "rtklib" << "bash" << "-c" <<
                    QString("cd /home/%1/rise_sdvp/Linux/RTK/rtkrcv_arm && ./start_ublox ; bash").arg(user));
-    waitProcess(process2);
+    waitProcess(process3);
 }
 
 void CarClient::serialDataAvailable()
