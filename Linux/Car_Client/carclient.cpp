@@ -23,6 +23,7 @@
 #include <sys/reboot.h>
 #include <unistd.h>
 #include <QEventLoop>
+#include <QCoreApplication>
 #include "rtcm3_simple.h"
 
 namespace {
@@ -454,15 +455,15 @@ void CarClient::logLineUsbReceived(quint8 id, QString str)
 void CarClient::systemTimeReceived(quint8 id, qint32 sec, qint32 usec)
 {
     (void)id;
+    (void)usec;
 
-    struct timeval now;
-    int rc;
+//    struct timeval now;
+//    int rc;
+//    now.tv_sec = sec;
+//    now.tv_usec = usec;
+//    rc = settimeofday(&now, NULL);
 
-    now.tv_sec = sec;
-    now.tv_usec = usec;
-    rc = settimeofday(&now, NULL);
-
-    if(rc == 0) {
+    if(setUnixTime(sec)) {
         qDebug() << "Sucessfully set system time";
         restartRtklib();
     } else {
@@ -477,11 +478,13 @@ void CarClient::rebootSystemReceived(quint8 id, bool powerOff)
     logStop();
     sync();
 
-    if (powerOff) {
-        reboot(RB_POWER_OFF);
-    } else {
-        reboot(RB_AUTOBOOT);
-    }
+//    if (powerOff) {
+//        reboot(RB_POWER_OFF);
+//    } else {
+//        reboot(RB_AUTOBOOT);
+//    }
+
+    rebootSystem(powerOff);
 }
 
 void CarClient::ubxRx(const QByteArray &data)
@@ -503,20 +506,46 @@ void CarClient::rxRawx(ubx_rxm_rawx rawx)
         // Set the system time if the difference is over 10 seconds.
         qDebug() << "System time is different from GPS time. Difference: " << diff << " ms";
 
-        struct timeval now;
-        int rc;
+//        struct timeval now;
+//        int rc;
+//        now.tv_sec = dateGps.toTime_t();
+//        now.tv_usec = dateGps.time().msec() * 1000.0;
+//        rc = settimeofday(&now, NULL);
 
-        now.tv_sec = dateGps.toTime_t();
-        now.tv_usec = dateGps.time().msec() * 1000.0;
-        rc = settimeofday(&now, NULL);
-
-        if(rc == 0) {
+        if(setUnixTime(dateGps.toTime_t())) {
             qDebug() << "Sucessfully updated system time";
             restartRtklib();
         } else {
             qDebug() << "Setting system time failed";
         }
     }
+}
+
+void CarClient::rebootSystem(bool powerOff)
+{
+    QStringList args;
+    QString cmd = "sudo";
+
+    if (powerOff) {
+        args << "shutdown" << "-h" << "now";
+    } else {
+        args << "reboot";
+    }
+
+    QProcess process;
+    process.setEnvironment(QProcess::systemEnvironment());
+    process.start(cmd, args);
+    waitProcess(process);
+
+    qApp->quit();
+}
+
+bool CarClient::setUnixTime(qint64 t)
+{
+    QProcess process;
+    process.setEnvironment(QProcess::systemEnvironment());
+    process.start("sudo", QStringList() << "date" << "+%s" << "-s" << QString("@%1").arg(t));
+    return waitProcess(process, 5000);
 }
 
 void CarClient::printTerminal(QString str)

@@ -344,7 +344,7 @@ void NmeaServer::disconnectClientTcp()
  */
 int NmeaServer::decodeNmeaGGA(QByteArray data, NmeaServer::nmea_gga_info_t &gga)
 {
-    static char nmea_str[1024];
+    char nmea_str[1024];
     int ms = -1;
     double lat = 0.0;
     double lon = 0.0;

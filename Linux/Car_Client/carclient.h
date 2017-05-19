@@ -102,6 +102,8 @@ private:
     QFile mLog;
     Ublox *mUblox;
 
+    void rebootSystem(bool powerOff = false);
+    bool setUnixTime(qint64 t);
     void printTerminal(QString str);
     bool waitProcess(QProcess &process, int timeoutMs = 300000);
 
