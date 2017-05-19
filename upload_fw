@@ -16,6 +16,9 @@ DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 FWPATH="Embedded/RC_Controller/precompiled"
 
 cd $DIR
+
+git pull
+
 cd $FWPATH
 
 openocd -f board/stm32f4discovery.cfg -c "reset_config trst_only combined" -c "program $FW verify reset exit 0x08000000"
