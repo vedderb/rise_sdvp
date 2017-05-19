@@ -494,6 +494,11 @@ void CarClient::ubxRx(const QByteArray &data)
 
 void CarClient::rxRawx(ubx_rxm_rawx rawx)
 {
+    if (!rawx.leap_sec) {
+        // Leap seconds are not known...
+        return;
+    }
+
     QDateTime dateGps(QDate(1980, 1, 6), QTime(0, 0, 0));
     dateGps.setOffsetFromUtc(0);
     dateGps = dateGps.addDays(rawx.week * 7);
@@ -523,6 +528,7 @@ void CarClient::rxRawx(ubx_rxm_rawx rawx)
 
 void CarClient::rebootSystem(bool powerOff)
 {
+    // https://askubuntu.com/questions/159007/how-do-i-run-specific-sudo-commands-without-a-password
     QStringList args;
     QString cmd = "sudo";
 
@@ -542,6 +548,7 @@ void CarClient::rebootSystem(bool powerOff)
 
 bool CarClient::setUnixTime(qint64 t)
 {
+    // https://askubuntu.com/questions/159007/how-do-i-run-specific-sudo-commands-without-a-password
     QProcess process;
     process.setEnvironment(QProcess::systemEnvironment());
     process.start("sudo", QStringList() << "date" << "+%s" << "-s" << QString("@%1").arg(t));
