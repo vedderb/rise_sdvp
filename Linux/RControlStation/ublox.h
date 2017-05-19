@@ -49,6 +49,7 @@ signals:
     void rxAck(uint8_t cls_id, uint8_t msg_id);
     void rxNak(uint8_t cls_id, uint8_t msg_id);
     void rxRawx(ubx_rxm_rawx rawx);
+    void ubxRx(const QByteArray &data);
 
 public slots:
 
@@ -74,8 +75,9 @@ private:
     rtcm3_state mRtcmState;
     bool mWaitingAck;
 
-    void ubx_send(unsigned char *data, unsigned int len);
+    void ubx_send(QByteArray data);
     bool ubx_encode_send(uint8_t msg_class, uint8_t id, uint8_t *msg, int len, int timeoutMs = -1);
+    QByteArray ubx_encode(uint8_t msg_class, uint8_t id, const QByteArray &data);
 
     void ubx_decode(uint8_t msg_class, uint8_t id, uint8_t *msg, int len);
     void ubx_decode_relposned(uint8_t *msg, int len);

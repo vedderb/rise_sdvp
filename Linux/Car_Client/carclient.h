@@ -28,6 +28,7 @@
 #include "packetinterface.h"
 #include "tcpbroadcast.h"
 #include "serialport.h"
+#include "ublox.h"
 
 class CarClient : public QObject
 {
@@ -53,6 +54,7 @@ public:
     void connectSerial(QString port, int baudrate = 115200);
     void connectSerialRtcm(QString port, int baudrate = 9600);
     void startRtcmServer(int port = 8200);
+    void startUbxServer(int port = 8210);
     void connectNmea(QString server, int port = 2948);
     void startUdpServer(int port = 8300);
     bool enableLogging(QString directory);
@@ -79,10 +81,13 @@ public slots:
     void logLineUsbReceived(quint8 id, QString str);
     void systemTimeReceived(quint8 id, qint32 sec, qint32 usec);
     void rebootSystemReceived(quint8 id, bool powerOff);
+    void ubxRx(const QByteArray &data);
+    void rxRawx(ubx_rxm_rawx rawx);
 
 private:
     PacketInterface *mPacketInterface;
     TcpBroadcast *mRtcmBroadcaster;
+    TcpBroadcast *mUbxBroadcaster;
     SerialPort *mSerialPort;
     QSerialPort *mSerialPortRtcm;
     QTcpSocket *mTcpSocket;
@@ -95,6 +100,7 @@ private:
     QHostAddress mHostAddress;
     int mUdpPort;
     QFile mLog;
+    Ublox *mUblox;
 
     void printTerminal(QString str);
     bool waitProcess(QProcess &process, int timeoutMs = 300000);

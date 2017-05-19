@@ -24,7 +24,6 @@
 #include <unistd.h>
 #include <QEventLoop>
 #include "rtcm3_simple.h"
-#include "ublox.h"
 
 namespace {
 void rtcm_rx(uint8_t *data, int len, int type) {
@@ -49,6 +48,8 @@ CarClient::CarClient(QObject *parent) : QObject(parent)
     mSerialPortRtcm = new QSerialPort(this);
     mPacketInterface = new PacketInterface(this);
     mRtcmBroadcaster = new TcpBroadcast(this);
+    mUbxBroadcaster = new TcpBroadcast(this);
+    mUblox = new Ublox(this);
     mTcpSocket = new QTcpSocket(this);
     mCarId = 255;
     mReconnectTimer = new QTimer(this);
@@ -94,6 +95,8 @@ CarClient::CarClient(QObject *parent) : QObject(parent)
             this, SLOT(systemTimeReceived(quint8,qint32,qint32)));
     connect(mPacketInterface, SIGNAL(rebootSystemReceived(quint8,bool)),
             this, SLOT(rebootSystemReceived(quint8,bool)));
+    connect(mUblox, SIGNAL(ubxRx(QByteArray)), this, SLOT(ubxRx(QByteArray)));
+    connect(mUblox, SIGNAL(rxRawx(ubx_rxm_rawx)), this, SLOT(rxRawx(ubx_rxm_rawx)));
 }
 
 CarClient::~CarClient()
@@ -151,6 +154,11 @@ void CarClient::connectSerialRtcm(QString port, int baudrate)
 void CarClient::startRtcmServer(int port)
 {
     mRtcmBroadcaster->startTcpServer(port);
+}
+
+void CarClient::startUbxServer(int port)
+{
+    mUbxBroadcaster->startTcpServer(port);
 }
 
 void CarClient::connectNmea(QString server, int port)
@@ -220,9 +228,9 @@ void CarClient::restartRtklib()
         return;
     }
 
-    // Set up ublox before starting RTKLib
-    Ublox ubx;
-    if (ubx.connectSerial(ublox.fileName())) {
+    mUblox->disconnectSerial();
+
+    if (mUblox->connectSerial(ublox.fileName())) {
         // Serial port baud rate
         // if it is too low the buffer will overfill and it won't work properly.
         ubx_cfg_prt_uart uart;
@@ -234,22 +242,21 @@ void CarClient::restartRtklib()
         uart.out_ubx = true;
         uart.out_nmea = true;
         uart.out_rtcm3 = true;
-        ubx.ubxCfgPrtUart(&uart);
+        mUblox->ubxCfgPrtUart(&uart);
 
         // Set configuration
-        // Switch on RAWX messages, set rate to 5 Hz and time reference to UTC
-        ubx.ubxCfgRate(200, 1, 0);
-        ubx.ubxCfgMsg(UBX_CLASS_RXM, UBX_RXM_RAWX, 1); // Every second
-        ubx.ubxCfgMsg(UBX_CLASS_RXM, UBX_RXM_SFRBX, 1); // Every second
+        // Switch on RAWX and NMEA messages, set rate to 1 Hz and time reference to UTC
+        mUblox->ubxCfgRate(200, 1, 0);
+        mUblox->ubxCfgMsg(UBX_CLASS_RXM, UBX_RXM_RAWX, 1); // Every second
+        mUblox->ubxCfgMsg(UBX_CLASS_RXM, UBX_RXM_SFRBX, 1); // Every second
+        mUblox->ubxCfgMsg(UBX_CLASS_NMEA, UBX_NMEA_GGA, 1); // Every second
 
         // Automotive dynamic model
         ubx_cfg_nav5 nav5;
         memset(&nav5, 0, sizeof(ubx_cfg_nav5));
         nav5.apply_dyn = true;
         nav5.dyn_model = 4;
-        ubx.ubxCfgNav5(&nav5);
-
-        ubx.disconnectSerial();
+        mUblox->ubxCfgNav5(&nav5);
     }
 
     QString user = qgetenv("USER");
@@ -474,6 +481,41 @@ void CarClient::rebootSystemReceived(quint8 id, bool powerOff)
         reboot(RB_POWER_OFF);
     } else {
         reboot(RB_AUTOBOOT);
+    }
+}
+
+void CarClient::ubxRx(const QByteArray &data)
+{
+    mUbxBroadcaster->broadcastData(data);
+}
+
+void CarClient::rxRawx(ubx_rxm_rawx rawx)
+{
+    QDateTime dateGps(QDate(1980, 1, 6), QTime(0, 0, 0));
+    dateGps.setOffsetFromUtc(0);
+    dateGps = dateGps.addDays(rawx.week * 7);
+    dateGps = dateGps.addMSecs((rawx.rcv_tow - (double)rawx.leaps) * 1000.0);
+
+    QDateTime date = QDateTime::currentDateTime();
+    qint64 diff = dateGps.toMSecsSinceEpoch() - date.toMSecsSinceEpoch();
+
+    if (abs(diff) > 60000) {
+        // Set the system time if the difference is over 10 seconds.
+        qDebug() << "System time is different from GPS time. Difference: " << diff << " ms";
+
+        struct timeval now;
+        int rc;
+
+        now.tv_sec = dateGps.toTime_t();
+        now.tv_usec = dateGps.time().msec() * 1000.0;
+        rc = settimeofday(&now, NULL);
+
+        if(rc == 0) {
+            qDebug() << "Sucessfully updated system time";
+            restartRtklib();
+        } else {
+            qDebug() << "Setting system time failed";
+        }
     }
 }
 
