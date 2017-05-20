@@ -20,7 +20,9 @@ SOURCES += main.cpp \
     rtcm3_simple.c \
     serialport.cpp \
     ublox.cpp \
-    nmeaserver.cpp
+    nmeaserver.cpp \
+    packet.cpp \
+    tcpserversimple.cpp
 
 HEADERS += \
     packetinterface.h \
@@ -32,5 +34,7 @@ HEADERS += \
     rtcm3_simple.h \
     serialport.h \
     ublox.h \
-    nmeaserver.h
+    nmeaserver.h \
+    packet.h \
+    tcpserversimple.h
 

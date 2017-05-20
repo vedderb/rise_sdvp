@@ -29,6 +29,7 @@
 #include "tcpbroadcast.h"
 #include "serialport.h"
 #include "ublox.h"
+#include "tcpserversimple.h"
 
 class CarClient : public QObject
 {
@@ -57,6 +58,7 @@ public:
     void startUbxServer(int port = 8210);
     void connectNmea(QString server, int port = 2948);
     void startUdpServer(int port = 8300);
+    bool startTcpServer(int port = 8300);
     bool enableLogging(QString directory);
     void logStop();
     void rtcmRx(QByteArray data, int type);
@@ -83,6 +85,7 @@ public slots:
     void rebootSystemReceived(quint8 id, bool powerOff);
     void ubxRx(const QByteArray &data);
     void rxRawx(ubx_rxm_rawx rawx);
+    void tcpRx(QByteArray &data);
 
 private:
     PacketInterface *mPacketInterface;
@@ -91,6 +94,7 @@ private:
     SerialPort *mSerialPort;
     QSerialPort *mSerialPortRtcm;
     QTcpSocket *mTcpSocket;
+    TcpServerSimple *mTcpServer;
     int mCarId;
     QTimer *mReconnectTimer;
     QTimer *mLogFlushTimer;

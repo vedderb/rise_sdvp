@@ -52,6 +52,7 @@ CarClient::CarClient(QObject *parent) : QObject(parent)
     mUbxBroadcaster = new TcpBroadcast(this);
     mUblox = new Ublox(this);
     mTcpSocket = new QTcpSocket(this);
+    mTcpServer = new TcpServerSimple(this);
     mCarId = 255;
     mReconnectTimer = new QTimer(this);
     mReconnectTimer->start(2000);
@@ -66,6 +67,8 @@ CarClient::CarClient(QObject *parent) : QObject(parent)
     currentMsgHandler = this;
     rtcm3_init_state(&rtcmState);
     rtcm3_set_rx_callback(rtcm_rx, &rtcmState);
+
+    mTcpServer->setUsePacket(true);
 
     connect(mSerialPort, SIGNAL(serial_data_available()),
             this, SLOT(serialDataAvailable()));
@@ -98,6 +101,8 @@ CarClient::CarClient(QObject *parent) : QObject(parent)
             this, SLOT(rebootSystemReceived(quint8,bool)));
     connect(mUblox, SIGNAL(ubxRx(QByteArray)), this, SLOT(ubxRx(QByteArray)));
     connect(mUblox, SIGNAL(rxRawx(ubx_rxm_rawx)), this, SLOT(rxRawx(ubx_rxm_rawx)));
+    connect(mTcpServer->packet(), SIGNAL(packetReceived(QByteArray&)),
+            this, SLOT(tcpRx(QByteArray&)));
 }
 
 CarClient::~CarClient()
@@ -177,6 +182,17 @@ void CarClient::startUdpServer(int port)
     mUdpPort = port + 1;
     mUdpSocket->close();
     mUdpSocket->bind(QHostAddress::Any, port);
+}
+
+bool CarClient::startTcpServer(int port)
+{
+    bool res = mTcpServer->startServer(port);
+
+    if (!res) {
+        qWarning() << "Starting TCP server failed:" << mTcpServer->errorString();
+    }
+
+    return res;
 }
 
 bool CarClient::enableLogging(QString directory)
@@ -441,6 +457,8 @@ void CarClient::carPacketRx(quint8 id, CMD_PACKET cmd, const QByteArray &data)
             mUdpSocket->writeDatagram(data, mHostAddress, mUdpPort);
         }
     }
+
+    mTcpServer->packet()->sendPacket(data);
 }
 
 void CarClient::logLineUsbReceived(quint8 id, QString str)
@@ -524,6 +542,11 @@ void CarClient::rxRawx(ubx_rxm_rawx rawx)
             qDebug() << "Setting system time failed";
         }
     }
+}
+
+void CarClient::tcpRx(QByteArray &data)
+{
+    mPacketInterface->sendPacket(data);
 }
 
 void CarClient::rebootSystem(bool powerOff)

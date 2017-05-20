@@ -32,8 +32,10 @@ void showHelp()
     qDebug() << "--tcpubxport : TCP server port for UBX data";
     qDebug() << "--tcpnmeasrv : NMEA server address";
     qDebug() << "--tcpnmeaport : NMEA server port";
-    qDebug() << "--useudp : Use UDP server instead of serial port";
+    qDebug() << "--useudp : Use UDP server";
     qDebug() << "--udpport : Port to use for the UDP server";
+    qDebug() << "--usetcp : Use TCP server";
+    qDebug() << "--tcpport : Port to use for the TCP server";
     qDebug() << "--logusb : Store log files";
     qDebug() << "--logusbdir : Directory to store USB logs to";
     qDebug() << "--inputrtcm : Input RTCM data from serial port";
@@ -62,6 +64,8 @@ int main(int argc, char *argv[])
     int tcpNmeaPort = 2948;
     bool useUdp = false;
     int udpPort = 8300;
+    bool useTcp = false;
+    int tcpPort = 8300;
     bool logUsb = false;
     QString logUsbDir = QDir::currentPath() + "/logs";
     bool inputRtcm = false;
@@ -167,6 +171,20 @@ int main(int argc, char *argv[])
             }
         }
 
+        if (str == "--usetcp") {
+            useTcp = true;
+            found = true;
+        }
+
+        if (str == "--tcpport") {
+            if ((i - 1) < args.size()) {
+                i++;
+                bool ok;
+                tcpPort = args.at(i).toInt(&ok);
+                found = ok;
+            }
+        }
+
         if (str == "--logusb") {
             logUsb = true;
             found = true;
@@ -223,6 +241,10 @@ int main(int argc, char *argv[])
 
     if (useUdp) {
         car.startUdpServer(udpPort);
+    }
+
+    if (useTcp) {
+        car.startTcpServer(tcpPort);
     }
 
     if (logUsb) {
