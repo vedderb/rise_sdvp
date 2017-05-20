@@ -23,6 +23,7 @@
 #include <QTimer>
 #include <QSerialPort>
 #include <QLabel>
+#include <QTcpSocket>
 #include "carinterface.h"
 #include "copterinterface.h"
 #include "packetinterface.h"
@@ -64,6 +65,10 @@ private slots:
     void nmeaGgaRx(int fields, NmeaServer::nmea_gga_info_t gga);
     void routePointAdded(LocPoint pos);
     void infoTraceChanged(int traceNow);
+    void tcpInputConnected();
+    void tcpInputDisconnected();
+    void tcpInputDataAvailable();
+    void tcpInputError(QAbstractSocket::SocketError socketError);
 
     void on_carAddButton_clicked();
     void on_copterAddButton_clicked();
@@ -73,6 +78,9 @@ private slots:
     void on_mapRemoveTraceButton_clicked();
     void on_MapRemovePixmapsButton_clicked();
     void on_udpConnectButton_clicked();
+    void on_udpPingButton_clicked();
+    void on_tcpConnectButton_clicked();
+    void on_tcpPingButton_clicked();
     void on_mapZeroButton_clicked();
     void on_mapRemoveRouteButton_clicked();
     void on_mapRouteSpeedBox_valueChanged(double arg1);
@@ -90,7 +98,6 @@ private slots:
     void on_mapKbButton_clicked();
     void on_mapOffButton_clicked();
     void on_mapUpdateSpeedButton_clicked();
-    void on_udpPingButton_clicked();
     void on_mapOpenStreetMapBox_toggled(bool checked);
     void on_mapAntialiasOsmBox_toggled(bool checked);
     void on_mapOsmResSlider_valueChanged(int value);
@@ -145,6 +152,7 @@ private:
     Ping *mPing;
     NmeaServer *mNmea;
     QUdpSocket *mUdpSocket;
+    QTcpSocket *mTcpSocket;
     QString mVersion;
 
 #ifdef HAS_JOYSTICK

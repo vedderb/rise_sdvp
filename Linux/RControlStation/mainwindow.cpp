@@ -65,7 +65,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    mVersion = "0.5";
+    mVersion = "0.6";
 
     qRegisterMetaType<LocPoint>("LocPoint");
 
@@ -87,6 +87,7 @@ MainWindow::MainWindow(QWidget *parent) :
     mPing = new Ping(this);
     mNmea = new NmeaServer(this);
     mUdpSocket = new QUdpSocket(this);
+    mTcpSocket = new QTcpSocket(this);
 
     mKeyUp = false;
     mKeyDown = false;
@@ -130,6 +131,12 @@ MainWindow::MainWindow(QWidget *parent) :
             this, SLOT(routePointAdded(LocPoint)));
     connect(ui->mapWidget, SIGNAL(infoTraceChanged(int)),
             this, SLOT(infoTraceChanged(int)));
+    connect(mTcpSocket, SIGNAL(readyRead()), this, SLOT(tcpInputDataAvailable()));
+    connect(mTcpSocket, SIGNAL(connected()), this, SLOT(tcpInputConnected()));
+    connect(mTcpSocket, SIGNAL(disconnected()),
+            this, SLOT(tcpInputDisconnected()));
+    connect(mTcpSocket, SIGNAL(error(QAbstractSocket::SocketError)),
+            this, SLOT(tcpInputError(QAbstractSocket::SocketError)));
 
     connect(ui->actionAboutQt, SIGNAL(triggered(bool)),
             qApp, SLOT(aboutQt()));
@@ -325,7 +332,7 @@ void MainWindow::timerSlot()
             mStatusLabel->setStyleSheet(qApp->styleSheet());
         }
     } else {
-        if (mSerialPort->isOpen() || mPacketInterface->isUdpConnected()) {
+        if (mSerialPort->isOpen() || mPacketInterface->isUdpConnected() || mTcpSocket->isOpen()) {
             mStatusLabel->setText("Connected");
         } else {
             mStatusLabel->setText("Not connected");
@@ -428,6 +435,10 @@ void MainWindow::packetDataToSend(QByteArray &data)
 {
     if (mSerialPort->isOpen()) {
         mSerialPort->write(data);
+    }
+
+    if (mTcpSocket->isOpen()) {
+        mTcpSocket->write(data);
     }
 }
 
@@ -621,6 +632,35 @@ void MainWindow::infoTraceChanged(int traceNow)
     ui->mapInfoTraceBox->setValue(traceNow);
 }
 
+void MainWindow::tcpInputConnected()
+{
+    showStatusInfo(tr("TCP Connected"), true);
+}
+
+void MainWindow::tcpInputDisconnected()
+{
+    showStatusInfo(tr("TCP Disconnected"), false);
+}
+
+void MainWindow::tcpInputDataAvailable()
+{
+    while (mTcpSocket->bytesAvailable() > 0) {
+        QByteArray data = mTcpSocket->readAll();
+        mPacketInterface->processData(data);
+    }
+}
+
+void MainWindow::tcpInputError(QAbstractSocket::SocketError socketError)
+{
+    (void)socketError;
+
+    QString errorStr = mTcpSocket->errorString();
+    qWarning() << "TCP Error:" << errorStr;
+    QMessageBox::warning(this, "TCP Error", errorStr);
+
+    mTcpSocket->close();
+}
+
 void MainWindow::on_carAddButton_clicked()
 {
     CarInterface *car = new CarInterface(this);
@@ -671,6 +711,10 @@ void MainWindow::on_serialConnectButton_clicked()
     mSerialPort->setFlowControl(QSerialPort::NoFlowControl);
 
     mPacketInterface->stopUdpConnection();
+
+    if (mTcpSocket->isOpen()) {
+        mTcpSocket->close();
+    }
 }
 
 void MainWindow::on_serialRefreshButton_clicked()
@@ -707,6 +751,10 @@ void MainWindow::on_disconnectButton_clicked()
     if (mPacketInterface->isUdpConnected()) {
         mPacketInterface->stopUdpConnection();
     }
+
+    if (mTcpSocket->isOpen()) {
+        mTcpSocket->close();
+    }
 }
 
 void MainWindow::on_mapRemoveTraceButton_clicked()
@@ -728,10 +776,30 @@ void MainWindow::on_udpConnectButton_clicked()
             mSerialPort->close();
         }
 
+        if (mTcpSocket->isOpen()) {
+            mTcpSocket->close();
+        }
+
         mPacketInterface->startUdpConnection(ip, ui->udpPortBox->value());
     } else {
         showStatusInfo("Invalid IP address", false);
     }
+}
+
+void MainWindow::on_udpPingButton_clicked()
+{
+    mPing->pingHost(ui->udpIpEdit->text(), 64, "UDP Host");
+}
+
+void MainWindow::on_tcpConnectButton_clicked()
+{
+    mTcpSocket->abort();
+    mTcpSocket->connectToHost(ui->tcpIpEdit->text(), ui->tcpPortBox->value());
+}
+
+void MainWindow::on_tcpPingButton_clicked()
+{
+    mPing->pingHost(ui->tcpIpEdit->text(), 64, "TCP Host");
 }
 
 void MainWindow::on_mapZeroButton_clicked()
@@ -881,7 +949,7 @@ void MainWindow::on_mapSetAbsYawButton_clicked()
 {
     CarInfo *car = ui->mapWidget->getCarInfo(ui->mapCarBox->value());
     if (car) {
-        if (mSerialPort->isOpen() || mPacketInterface->isUdpConnected()) {
+        if (mSerialPort->isOpen() || mPacketInterface->isUdpConnected() || mTcpSocket->isOpen()) {
             ui->mapSetAbsYawButton->setEnabled(false);
             ui->mapAbsYawSlider->setEnabled(false);
             bool ok = mPacketInterface->setYawOffsetAck(car->getId(), (double)ui->mapAbsYawSlider->value());
@@ -923,7 +991,7 @@ void MainWindow::on_stopButton_clicked()
 
 void MainWindow::on_mapUploadRouteButton_clicked()
 {
-    if (!mSerialPort->isOpen() && !mPacketInterface->isUdpConnected()) {
+    if (!mSerialPort->isOpen() && !mPacketInterface->isUdpConnected() && !mTcpSocket->isOpen()) {
         QMessageBox::warning(this, "Upload route",
                              "Serial port not connected.");
         return;
@@ -1021,11 +1089,6 @@ void MainWindow::on_mapUpdateSpeedButton_clicked()
     }
 
     ui->mapWidget->setRoute(route);
-}
-
-void MainWindow::on_udpPingButton_clicked()
-{
-    mPing->pingHost(ui->udpIpEdit->text(), 64, "UDP Host");
 }
 
 void MainWindow::on_mapOpenStreetMapBox_toggled(bool checked)
