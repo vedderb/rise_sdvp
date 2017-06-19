@@ -318,11 +318,11 @@ void NetworkInterface::processXml(const QByteArray &xml)
             }
         } else if (name == "addRoutePoint" || name == "replaceRoute") {
             quint8 id = 0;
-            double px = 0.0;
-            double py = 0.0;
-            double speed = 0.0;
-            int time = 0;
             bool ok = true;
+
+            QList<LocPoint> route;
+            LocPoint p;
+            route.append(p);
 
             while (stream.readNextStartElement()) {
                 QString name2 = stream.name().toString();
@@ -330,13 +330,35 @@ void NetworkInterface::processXml(const QByteArray &xml)
                 if (name2 == "id") {
                     id = stream.readElementText().toInt();
                 } else if (name2 == "px") {
-                    px = stream.readElementText().toDouble();
+                    p.setX(stream.readElementText().toDouble());
                 } else if (name2 == "py") {
-                    py = stream.readElementText().toDouble();
+                    p.setY(stream.readElementText().toDouble());
                 } else if (name2 == "speed") {
-                    speed = stream.readElementText().toDouble();
+                    p.setSpeed(stream.readElementText().toDouble());
                 } else if (name2 == "time") {
-                    time = stream.readElementText().toInt();
+                    p.setTime(stream.readElementText().toInt());
+                } else if (name2 == "point") {
+                    while (stream.readNextStartElement()) {
+                        QString name3 = stream.name().toString();
+
+                        if (name3 == "px") {
+                            p.setX(stream.readElementText().toDouble());
+                        } else if (name3 == "py") {
+                            p.setY(stream.readElementText().toDouble());
+                        } else if (name3 == "speed") {
+                            p.setSpeed(stream.readElementText().toDouble());
+                        } else if (name3 == "time") {
+                            p.setTime(stream.readElementText().toInt());
+                        } else {
+                            QString str;
+                            str += "argument not found: " + name3;
+                            sendError(str, name);
+                            stream.skipCurrentElement();
+                            ok = false;
+                        }
+                    }
+
+                    route.append(p);
                 } else {
                     QString str;
                     str += "argument not found: " + name2;
@@ -354,14 +376,11 @@ void NetworkInterface::processXml(const QByteArray &xml)
                 continue;
             }
 
-            if (!ui->disableSendCarBox->isChecked() && mPacketInterface) {
-                LocPoint p;
-                p.setXY(px, py);
-                p.setSpeed(speed);
-                p.setTime(time);
-                QList<LocPoint> route;
+            if (route.isEmpty()) {
                 route.append(p);
+            }
 
+            if (!ui->disableSendCarBox->isChecked() && mPacketInterface) {
                 if (name == "addRoutePoint") {
                     if (!mPacketInterface->setRoutePoints(id, route)) {
                         sendError("No ACK received from car. Make sure that the car connection "
@@ -380,7 +399,9 @@ void NetworkInterface::processXml(const QByteArray &xml)
                     mMap->clearRoute();
                 }
 
-                mMap->addRoutePoint(px, py, speed, time);
+                for (LocPoint p: route) {
+                    mMap->addRoutePoint(p.getX(), p.getY(), p.getSpeed(), p.getTime());
+                }
             }
         } else if (name == "removeLastPoint") {
             quint8 id = 0;

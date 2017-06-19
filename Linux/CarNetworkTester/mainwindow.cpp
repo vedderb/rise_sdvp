@@ -183,10 +183,21 @@ void MainWindow::on_addRoutePointGenerateButton_clicked()
     stream.writeStartElement("message");
     stream.writeStartElement("addRoutePoint");
     stream.writeTextElement("id", QString::number(ui->addRoutePointCarBox->value()));
-    stream.writeTextElement("px", QString::number(ui->addRoutePointPxBox->value()));
-    stream.writeTextElement("py", QString::number(ui->addRoutePointPyBox->value()));
-    stream.writeTextElement("speed", QString::number(ui->addRoutePointSpeedBox->value()));
-    stream.writeTextElement("time", QString::number(ui->addRoutePointTimeEdit->time().msecsSinceStartOfDay()));
+
+    int points = ui->addRoutePointPointsBox->value();
+    for (int i = 0;i < points;i++) {
+        if (points > 1) {
+            stream.writeStartElement("point");
+        }
+        stream.writeTextElement("px", QString::number(ui->addRoutePointPxBox->value() + (double)i));
+        stream.writeTextElement("py", QString::number(ui->addRoutePointPyBox->value() + (double)i));
+        stream.writeTextElement("speed", QString::number(ui->addRoutePointSpeedBox->value()));
+        stream.writeTextElement("time", QString::number(ui->addRoutePointTimeEdit->time().msecsSinceStartOfDay()));
+        if (points > 1) {
+            stream.writeEndElement();
+        }
+    }
+
     stream.writeEndDocument();
 
     ui->outgoingEdit->clear();
@@ -325,10 +336,21 @@ void MainWindow::on_replaceRouteGenerateButton_clicked()
     stream.writeStartElement("message");
     stream.writeStartElement("replaceRoute");
     stream.writeTextElement("id", QString::number(ui->replaceRouteCarBox->value()));
-    stream.writeTextElement("px", QString::number(ui->replaceRoutePxBox->value()));
-    stream.writeTextElement("py", QString::number(ui->replaceRoutePyBox->value()));
-    stream.writeTextElement("speed", QString::number(ui->replaceRouteSpeedBox->value()));
-    stream.writeTextElement("time", QString::number(ui->replaceRouteTimeEdit->time().msecsSinceStartOfDay()));
+
+    int points = ui->replaceRoutePointsBox->value();
+    for (int i = 0;i < points;i++) {
+        if (points > 1) {
+            stream.writeStartElement("point");
+        }
+        stream.writeTextElement("px", QString::number(ui->replaceRoutePxBox->value() + (double)i));
+        stream.writeTextElement("py", QString::number(ui->replaceRoutePyBox->value() + (double)i));
+        stream.writeTextElement("speed", QString::number(ui->replaceRouteSpeedBox->value()));
+        stream.writeTextElement("time", QString::number(ui->replaceRouteTimeEdit->time().msecsSinceStartOfDay()));
+        if (points > 1) {
+            stream.writeEndElement();
+        }
+    }
+
     stream.writeEndDocument();
 
     ui->outgoingEdit->clear();
