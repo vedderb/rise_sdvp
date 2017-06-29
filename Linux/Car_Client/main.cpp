@@ -16,10 +16,12 @@
     */
 
 #include <QCoreApplication>
-#include "carclient.h"
 #include <QDebug>
 #include <signal.h>
 #include <QDir>
+
+#include "carclient.h"
+#include "chronos.h"
 
 void showHelp()
 {
@@ -41,6 +43,7 @@ void showHelp()
     qDebug() << "--inputrtcm : Input RTCM data from serial port";
     qDebug() << "--ttyportrtcm : Serial port for RTCM, e.g. /dev/ttyUSB0";
     qDebug() << "--rtcmbaud : RTCM port baud rate, e.g. 9600";
+    qDebug() << "--chronos : Run CHRONOS client";
 }
 
 static void m_cleanup(int sig)
@@ -71,6 +74,7 @@ int main(int argc, char *argv[])
     bool inputRtcm = false;
     QString ttyPortRtcm = "/dev/ttyUSB0";
     int rtcmBaud = 9600;
+    bool useChronos = false;
 
     signal(SIGINT, m_cleanup);
     signal(SIGTERM, m_cleanup);
@@ -220,6 +224,11 @@ int main(int argc, char *argv[])
             }
         }
 
+        if (str == "--chronos") {
+            useChronos = true;
+            found = true;
+        }
+
         if (!found) {
             if (dash) {
                 qCritical() << "At least one of the flags is invalid:" << str;
@@ -233,11 +242,16 @@ int main(int argc, char *argv[])
     }
 
     CarClient car;
+    Chronos chronos;
+
     car.connectSerial(ttyPort, baudrate);
-    car.connectNmea(tcpNmeaServer, tcpNmeaPort);
     car.startRtcmServer(tcpRtcmPort);
     car.startUbxServer(tcpUbxPort);
     car.restartRtklib();
+
+    if (car.isRtklibRunning()) {
+        car.connectNmea(tcpNmeaServer, tcpNmeaPort);
+    }
 
     if (useUdp) {
         car.startUdpServer(udpPort);
@@ -253,6 +267,10 @@ int main(int argc, char *argv[])
 
     if (inputRtcm) {
         car.connectSerialRtcm(ttyPortRtcm, rtcmBaud);
+    }
+
+    if (useChronos) {
+        chronos.startServer(car.packetInterface());
     }
 
     return a.exec();

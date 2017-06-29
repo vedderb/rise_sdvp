@@ -59,6 +59,7 @@ CarClient::CarClient(QObject *parent) : QObject(parent)
     mTcpConnected = false;
     mLogFlushTimer = new QTimer(this);
     mLogFlushTimer->start(2000);
+    mRtklibRunning = false;
 
     mHostAddress = QHostAddress("0.0.0.0");
     mUdpPort = 0;
@@ -242,8 +243,11 @@ void CarClient::restartRtklib()
 {
     QFile ublox("/dev/ublox");
     if (!ublox.exists()) {
+        mRtklibRunning = false;
         return;
     }
+
+    mRtklibRunning = true;
 
     mUblox->disconnectSerial();
 
@@ -307,6 +311,21 @@ void CarClient::restartRtklib()
                    "-d" << "-m" << "-S" << "rtklib" << "bash" << "-c" <<
                    QString("cd /home/%1/rise_sdvp/Linux/RTK/rtkrcv_arm && ./start_ublox ; bash").arg(user));
     waitProcess(process3);
+}
+
+PacketInterface *CarClient::packetInterface()
+{
+    return mPacketInterface;
+}
+
+bool CarClient::isRtklibRunning()
+{
+    return mRtklibRunning;
+}
+
+quint8 CarClient::carId()
+{
+    return mCarId;
 }
 
 void CarClient::serialDataAvailable()

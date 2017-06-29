@@ -63,6 +63,9 @@ public:
     void logStop();
     void rtcmRx(QByteArray data, int type);
     void restartRtklib();
+    PacketInterface* packetInterface();
+    bool isRtklibRunning();
+    quint8 carId();
 
 signals:
 
@@ -105,6 +108,7 @@ private:
     int mUdpPort;
     QFile mLog;
     Ublox *mUblox;
+    bool mRtklibRunning;
 
     void rebootSystem(bool powerOff = false);
     bool setUnixTime(qint64 t);

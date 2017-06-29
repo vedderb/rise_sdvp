@@ -22,7 +22,9 @@ SOURCES += main.cpp \
     ublox.cpp \
     nmeaserver.cpp \
     packet.cpp \
-    tcpserversimple.cpp
+    tcpserversimple.cpp \
+    chronos.cpp \
+    vbytearray.cpp
 
 HEADERS += \
     packetinterface.h \
@@ -36,5 +38,7 @@ HEADERS += \
     ublox.h \
     nmeaserver.h \
     packet.h \
-    tcpserversimple.h
+    tcpserversimple.h \
+    chronos.h \
+    vbytearray.h
 
