@@ -38,6 +38,7 @@ public:
                        int retries, int timeoutMs = 200);
     void processData(QByteArray &data);
     void startUdpConnection(QHostAddress ip, int port);
+    void startUdpConnection2(QHostAddress ip);
     void startUdpConnectionServer(int port);
     void stopUdpConnection();
     bool isUdpConnected();
@@ -116,6 +117,7 @@ private:
     quint8 *mSendBuffer;
     QUdpSocket *mUdpSocket;
     QHostAddress mHostAddress;
+    QHostAddress mHostAddress2;
     int mUdpPort;
     bool mUdpServer;
     bool mWaitingAck;

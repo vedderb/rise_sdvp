@@ -60,7 +60,9 @@ public:
     void clearTrace();
     void addRoutePoint(double px, double py, double speed = 0.0, qint32 time = 0);
     QList<LocPoint> getRoute();
-    void setRoute(QList<LocPoint> route);
+    QList<QList<LocPoint> > getRoutes();
+    void setRoute(const QList<LocPoint> &route);
+    void addRoute(const QList<LocPoint> &route);
     void clearRoute();
     void clearAllRoutes();
     void setRoutePointSpeed(double speed);

@@ -339,9 +339,20 @@ QList<LocPoint> MapWidget::getRoute()
     return mRoutes[mRouteNow];
 }
 
-void MapWidget::setRoute(QList<LocPoint> route)
+QList<QList<LocPoint> > MapWidget::getRoutes()
+{
+    return mRoutes;
+}
+
+void MapWidget::setRoute(const QList<LocPoint> &route)
 {
     mRoutes[mRouteNow] = route;
+    update();
+}
+
+void MapWidget::addRoute(const QList<LocPoint> &route)
+{
+    mRoutes.append(route);
     update();
 }
 
@@ -940,6 +951,17 @@ void MapWidget::paintEvent(QPaintEvent *event)
                 rect_txt.setCoords(pt_txt.x(), pt_txt.y() - 20,
                                    pt_txt.x() + 150, pt_txt.y() + 25);
                 painter.drawText(rect_txt, txt);
+            } else {
+                txt.sprintf("%d", rn);
+                pt_txt.setX(p.x());
+                pt_txt.setY(p.y());
+                painter.setTransform(txtTrans);
+                pt_txt = drawTrans.map(pt_txt);
+                pen.setColor(Qt::black);
+                painter.setPen(pen);
+                rect_txt.setCoords(pt_txt.x() - 20, pt_txt.y() - 20,
+                                   pt_txt.x() + 20, pt_txt.y() + 20);
+                painter.drawText(rect_txt, Qt::AlignCenter, txt);
             }
         }
     }

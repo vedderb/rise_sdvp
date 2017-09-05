@@ -71,6 +71,7 @@ CarInterface::CarInterface(QWidget *parent) :
     mLastHostAddress.clear();
     mUdpPort = 27800;
     mTcpServer = new TcpServerSimple(this);
+    mFaultLast = "Fault code...";
 
     connect(mTimer, SIGNAL(timeout()), this, SLOT(timerSlot()));
     connect(mUdpSocket, SIGNAL(readyRead()), this, SLOT(udpReadReady()));
@@ -184,9 +185,8 @@ void CarInterface::setStateData(CAR_STATE data)
     bool isOk;
     faultToStr(data.mc_fault, fault_str, isOk);
 
-    static QString fault_last = "Fault code...";
-    if (fault_last != fault_str) {
-        fault_last = fault_str;
+    if (mFaultLast != fault_str) {
+        mFaultLast = fault_str;
         ui->mcFaultLabel->setText(fault_str);
         if (isOk) {
             ui->mcFaultLabel->setStyleSheet("QLabel { background-color : lightgreen; color : black; }");

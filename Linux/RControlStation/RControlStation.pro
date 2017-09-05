@@ -81,7 +81,8 @@ SOURCES += main.cpp\
     copterinterface.cpp \
     nmeawidget.cpp \
     confcommonwidget.cpp \
-    ublox.cpp
+    ublox.cpp \
+    rtrange.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
@@ -113,7 +114,8 @@ HEADERS  += mainwindow.h \
     copterinterface.h \
     nmeawidget.h \
     confcommonwidget.h \
-    ublox.h
+    ublox.h \
+    rtrange.h
 
 FORMS    += mainwindow.ui \
     carinterface.ui \
@@ -126,7 +128,8 @@ FORMS    += mainwindow.ui \
     imuplot.ui \
     copterinterface.ui \
     nmeawidget.ui \
-    confcommonwidget.ui
+    confcommonwidget.ui \
+    rtrange.ui
 
 contains(DEFINES, HAS_JOYSTICK) {
     SOURCES += joystick.cpp

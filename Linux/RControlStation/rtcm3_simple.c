@@ -182,43 +182,43 @@ int rtcm3_input_data(uint8_t data, rtcm3_state *state) {
 
     switch (type) {
     case 1002:
-        if (state->rx_rtcm_obs) {
+        if (state->rx_rtcm_obs || state->decode_all) {
             decode_1002(state);
         }
         break;
 
     case 1004:
-        if (state->rx_rtcm_obs) {
+        if (state->rx_rtcm_obs || state->decode_all) {
             decode_1004(state);
         }
         break;
 
     case 1005:
-        if (state->rx_rtcm_1005_1006) {
+        if (state->rx_rtcm_1005_1006 || state->decode_all) {
             decode_1005(state);
         }
         break;
 
     case 1006:
-        if (state->rx_rtcm_1005_1006) {
+        if (state->rx_rtcm_1005_1006 || state->decode_all) {
             decode_1006(state);
         }
         break;
 
     case 1010:
-        if (state->rx_rtcm_obs) {
+        if (state->rx_rtcm_obs || state->decode_all) {
             decode_1010(state);
         }
         break;
 
     case 1012:
-        if (state->rx_rtcm_obs) {
+        if (state->rx_rtcm_obs || state->decode_all) {
             decode_1012(state);
         }
         break;
 
     case 1019:
-        if (state->rx_rtcm_1019) {
+        if (state->rx_rtcm_1019 || state->decode_all) {
             decode_1019(state);
         }
         break;

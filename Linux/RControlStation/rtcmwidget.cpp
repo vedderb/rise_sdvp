@@ -170,8 +170,8 @@ void RtcmWidget::rtcmRx(QByteArray data, int type, bool sync)
 void RtcmWidget::refPosRx(double lat, double lon, double height, double antenna_height)
 {
     QString str;
-    str.sprintf("Lat:            %.6f\n"
-                "Lon:            %.6f\n"
+    str.sprintf("Lat:            %.8f\n"
+                "Lon:            %.8f\n"
                 "Height:         %.3f\n"
                 "Antenna Height: %.3f",
                 lat, lon, height, antenna_height);

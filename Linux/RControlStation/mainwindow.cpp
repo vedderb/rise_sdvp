@@ -24,6 +24,8 @@
 #include <QFileDialog>
 #include <QHostInfo>
 #include <QInputDialog>
+#include <QXmlStreamWriter>
+#include <QXmlStreamReader>
 
 #include "utility.h"
 
@@ -99,6 +101,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->networkInterface->setMap(ui->mapWidget);
     ui->networkInterface->setPacketInterface(mPacketInterface);
     ui->moteWidget->setPacketInterface(mPacketInterface);
+    ui->rtRangeWidget->setMap(ui->mapWidget);
 
     connect(mTimer, SIGNAL(timeout()), this, SLOT(timerSlot()));
     connect(mSerialPort, SIGNAL(readyRead()),
@@ -479,6 +482,18 @@ void MainWindow::ackReceived(quint8 id, CMD_PACKET cmd, QString msg)
 void MainWindow::rtcmReceived(QByteArray data)
 {
     mPacketInterface->sendRtcmUsb(255, data);
+
+    if (ui->mapEnuBaseBox->isChecked()) {
+        rtcm3_init_state(&mRtcmState);
+        mRtcmState.decode_all = true;
+
+        for(char b: data) {
+            int res = rtcm3_input_data(b, &mRtcmState);
+            if (res == 1005 || res == 1006) {
+                ui->mapWidget->setEnuRef(mRtcmState.pos.lat, mRtcmState.pos.lon, mRtcmState.pos.height);
+            }
+        }
+    }
 }
 
 void MainWindow::rtcmRefPosGet()
@@ -781,6 +796,11 @@ void MainWindow::on_udpConnectButton_clicked()
         }
 
         mPacketInterface->startUdpConnection(ip, ui->udpPortBox->value());
+
+        QHostAddress ip2;
+        if (ip2.setAddress(ui->udpIp2Edit->text().trimmed())) {
+            mPacketInterface->startUdpConnection2(ip2);
+        }
     } else {
         showStatusInfo("Invalid IP address", false);
     }
@@ -883,8 +903,8 @@ void MainWindow::on_genCircButton_clicked()
     double rad = ui->genCircRadBox->value();
     double speed = ui->mapRouteSpeedBox->value() / 3.6;
     double ang_ofs = M_PI;
-    double cx = 0;
-    double cy = 0;
+    double cx = 0.0;
+    double cy = 0.0;
     int points = ui->genCircPointsBox->value();
     int type = ui->genCircCenterBox->currentIndex();
 
@@ -903,12 +923,28 @@ void MainWindow::on_genCircButton_clicked()
                 ang_ofs = ang + M_PI;
             }
         }
-    }
-
-    if (type == 3) {
+    } else if (type == 3) {
         cx = ui->genCircXBox->value();
         cy = ui->genCircYBox->value();
+    } else if (type == 4) {
+        QList<LocPoint> r = ui->mapWidget->getRoute();
+        int samples = 0;
+        cx = 0.0;
+        cy = 0.0;
+
+        for (LocPoint lp: r) {
+            cx += lp.getX();
+            cy += lp.getY();
+            samples++;
+        }
+
+        if (samples > 0) {
+            cx /= (double)samples;
+            cy /= (double)samples;
+        }
     }
+
+    QList<LocPoint> route;
 
     for (int i = 1;i <= points;i++) {
         int ind = i;
@@ -926,12 +962,11 @@ void MainWindow::on_genCircButton_clicked()
         px += cx;
         py += cy;
 
-        ui->mapWidget->addRoutePoint(px, py, speed);
-
         bool res = true;
         LocPoint pos;
         pos.setXY(px, py);
         pos.setSpeed(speed);
+        route.append(pos);
 
         QList<LocPoint> points;
         points.append(pos);
@@ -947,6 +982,14 @@ void MainWindow::on_genCircButton_clicked()
                                  "No ack from car when uploading point.");
             break;
         }
+    }
+
+    if (ui->genCircAppendCurrentBox->isChecked()) {
+        for (LocPoint p: route) {
+            ui->mapWidget->addRoutePoint(p.getX(), p.getY(), p.getSpeed(), p.getTime());
+        }
+    } else {
+        ui->mapWidget->addRoute(route);
     }
 }
 
@@ -1403,4 +1446,145 @@ void MainWindow::on_actionAboutLibrariesUsed_triggered()
 void MainWindow::on_actionExit_triggered()
 {
     qApp->exit();
+}
+
+void MainWindow::on_actionSaveRoutes_triggered()
+{
+    QString filename = QFileDialog::getSaveFileName(this,
+                                                    tr("Save Routes"), ".",
+                                                    tr("Xml files (*.xml)"));
+
+    // Cancel pressed
+    if (filename.isEmpty()) {
+        return;
+    }
+
+    if (!filename.toLower().endsWith(".xml")) {
+        filename.append(".xml");
+    }
+
+    QFile file(filename);
+    if (!file.open(QIODevice::WriteOnly)) {
+        QMessageBox::critical(this, "Save Routes",
+                              "Could not open\n" + filename + "\nfor writing");
+        showStatusInfo("Could not save routes", false);
+        return;
+    }
+
+
+    QXmlStreamWriter stream(&file);
+    stream.setCodec("UTF-8");
+    stream.setAutoFormatting(true);
+    stream.writeStartDocument();
+
+    stream.writeStartElement("routes");
+
+    QList<QList<LocPoint> > routes = ui->mapWidget->getRoutes();
+
+    for (QList<LocPoint> route: routes) {
+        stream.writeStartElement("route");
+        for (LocPoint p: route) {
+            stream.writeStartElement("point");
+            stream.writeTextElement("x", QString::number(p.getX()));
+            stream.writeTextElement("y", QString::number(p.getY()));
+            stream.writeTextElement("speed", QString::number(p.getSpeed()));
+            stream.writeTextElement("time", QString::number(p.getTime()));
+            stream.writeEndElement();
+        }
+        stream.writeEndElement();
+    }
+
+    stream.writeEndDocument();
+    file.close();
+    showStatusInfo("Saved routes", true);
+}
+
+void MainWindow::on_actionLoadRoutes_triggered()
+{
+    QString filename = QFileDialog::getOpenFileName(this,
+                                                    tr("Load Routes"), ".",
+                                                    tr("Xml files (*.xml)"));
+
+    if (!filename.isEmpty()) {
+        QFile file(filename);
+        if (!file.open(QIODevice::ReadOnly)) {
+            QMessageBox::critical(this, "Load Routes",
+                                  "Could not open\n" + filename + "\nfor reading");
+            return;
+        }
+
+        QXmlStreamReader stream(&file);
+
+        // Look for routes tag
+        bool routes_found = false;
+        while (stream.readNextStartElement()) {
+            if (stream.name() == "routes") {
+                routes_found = true;
+                break;
+            }
+        }
+
+        if (routes_found) {
+            QList<QList<LocPoint> > routes;
+
+            while (stream.readNextStartElement()) {
+                QString name = stream.name().toString();
+
+                if (name == "route") {
+                    QList<LocPoint> route;
+
+                    while (stream.readNextStartElement()) {
+                        QString name2 = stream.name().toString();
+
+                        if (name2 == "point") {
+                            LocPoint p;
+
+                            while (stream.readNextStartElement()) {
+                                QString name3 = stream.name().toString();
+
+                                if (name3 == "x") {
+                                    p.setX(stream.readElementText().toDouble());
+                                } else if (name3 == "y") {
+                                    p.setY(stream.readElementText().toDouble());
+                                } else if (name3 == "speed") {
+                                    p.setSpeed(stream.readElementText().toDouble());
+                                } else if (name3 == "time") {
+                                    p.setTime(stream.readElementText().toInt());
+                                } else {
+                                    qWarning() << ": Unknown XML element :" << name2;
+                                    stream.skipCurrentElement();
+                                }
+                            }
+
+                            route.append(p);
+                        } else {
+                            qWarning() << ": Unknown XML element :" << name2;
+                            stream.skipCurrentElement();
+                        }
+
+                        if (stream.hasError()) {
+                            qWarning() << " : XML ERROR :" << stream.errorString();
+                        }
+                    }
+
+                    routes.append(route);
+                }
+
+                if (stream.hasError()) {
+                    qWarning() << "XML ERROR :" << stream.errorString();
+                    qWarning() << stream.lineNumber() << stream.columnNumber();
+                }
+            }
+
+            for (QList<LocPoint> r: routes) {
+                ui->mapWidget->addRoute(r);
+            }
+
+            file.close();
+            showStatusInfo("Loaded routes", true);
+        } else {
+            QMessageBox::critical(this, "Load Routes",
+                                  "routes tag not found in " + filename);
+        }
+    }
 }

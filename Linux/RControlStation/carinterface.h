@@ -128,6 +128,7 @@ private:
     quint16 mUdpPort;
     TcpServerSimple *mTcpServer;
     bool mExperimentReplot;
+    QString mFaultLast;
 
     void getConfGui(MAIN_CONFIG &conf);
     void setConfGui(MAIN_CONFIG &conf);

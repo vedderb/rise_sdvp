@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1103</width>
-    <height>766</height>
+    <width>1108</width>
+    <height>784</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -105,7 +105,7 @@
            <x>0</x>
            <y>0</y>
            <width>180</width>
-           <height>68</height>
+           <height>88</height>
           </rect>
          </property>
          <attribute name="label">
@@ -127,7 +127,7 @@
           <property name="spacing">
            <number>2</number>
           </property>
-          <item row="1" column="0">
+          <item row="2" column="0">
            <widget class="QSpinBox" name="udpPortBox">
             <property name="toolTip">
              <string>Port</string>
@@ -149,11 +149,11 @@
              <string>Host</string>
             </property>
             <property name="text">
-             <string>10.42.0.79</string>
+             <string>195.0.0.12</string>
             </property>
            </widget>
           </item>
-          <item row="1" column="1">
+          <item row="2" column="1">
            <widget class="QPushButton" name="udpPingButton">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -173,13 +173,20 @@
             </property>
            </widget>
           </item>
-          <item row="0" column="1">
+          <item row="1" column="0">
+           <widget class="QLineEdit" name="udpIp2Edit">
+            <property name="text">
+             <string>0.0.0.0</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1" rowspan="2">
            <widget class="QPushButton" name="udpConnectButton">
             <property name="enabled">
              <bool>true</bool>
             </property>
             <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <sizepolicy hsizetype="Fixed" vsizetype="Minimum">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
@@ -199,6 +206,14 @@
          </layout>
         </widget>
         <widget class="QWidget" name="page_3">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>0</y>
+           <width>180</width>
+           <height>68</height>
+          </rect>
+         </property>
          <attribute name="label">
           <string>TCP Connection</string>
          </attribute>
@@ -1069,7 +1084,7 @@
                  <property name="spacing">
                   <number>2</number>
                  </property>
-                 <item row="0" column="0">
+                 <item row="1" column="0">
                   <widget class="QPushButton" name="mapGetEnuButton">
                    <property name="toolTip">
                     <string>Get enu reference point from car and use it</string>
@@ -1083,7 +1098,7 @@
                    </property>
                   </widget>
                  </item>
-                 <item row="0" column="1">
+                 <item row="1" column="1">
                   <widget class="QPushButton" name="mapSetEnuButton">
                    <property name="toolTip">
                     <string>Set current ENU reference point</string>
@@ -1094,6 +1109,19 @@
                    <property name="icon">
                     <iconset resource="resources.qrc">
                      <normaloff>:/models/Icons/Download-96.png</normaloff>:/models/Icons/Download-96.png</iconset>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="0" colspan="2">
+                  <widget class="QCheckBox" name="mapEnuBaseBox">
+                   <property name="toolTip">
+                    <string>Use base station position from RTCM as ENU reference</string>
+                   </property>
+                   <property name="text">
+                    <string>Base station position</string>
+                   </property>
+                   <property name="checked">
+                    <bool>true</bool>
                    </property>
                   </widget>
                  </item>
@@ -1209,8 +1237,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>186</width>
-                   <height>416</height>
+                   <width>203</width>
+                   <height>441</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_17">
@@ -1354,7 +1382,7 @@
                      <property name="spacing">
                       <number>2</number>
                      </property>
-                     <item row="6" column="0" colspan="2">
+                     <item row="7" column="0" colspan="2">
                       <widget class="QPushButton" name="genCircButton">
                        <property name="toolTip">
                         <string>Generate</string>
@@ -1365,28 +1393,6 @@
                        <property name="icon">
                         <iconset resource="resources.qrc">
                          <normaloff>:/models/Icons/Process-96.png</normaloff>:/models/Icons/Process-96.png</iconset>
-                       </property>
-                      </widget>
-                     </item>
-                     <item row="4" column="0" colspan="2">
-                      <widget class="QDoubleSpinBox" name="genCircRadBox">
-                       <property name="toolTip">
-                        <string>Circle Radius</string>
-                       </property>
-                       <property name="prefix">
-                        <string>R: </string>
-                       </property>
-                       <property name="suffix">
-                        <string> m</string>
-                       </property>
-                       <property name="minimum">
-                        <double>-9999.000000000000000</double>
-                       </property>
-                       <property name="maximum">
-                        <double>9999.000000000000000</double>
-                       </property>
-                       <property name="value">
-                        <double>5.000000000000000</double>
                        </property>
                       </widget>
                      </item>
@@ -1428,6 +1434,28 @@
                        </property>
                        <property name="singleStep">
                         <double>0.010000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="4" column="0" colspan="2">
+                      <widget class="QDoubleSpinBox" name="genCircRadBox">
+                       <property name="toolTip">
+                        <string>Circle Radius</string>
+                       </property>
+                       <property name="prefix">
+                        <string>R: </string>
+                       </property>
+                       <property name="suffix">
+                        <string> m</string>
+                       </property>
+                       <property name="minimum">
+                        <double>-9999.000000000000000</double>
+                       </property>
+                       <property name="maximum">
+                        <double>9999.000000000000000</double>
+                       </property>
+                       <property name="value">
+                        <double>5.000000000000000</double>
                        </property>
                       </widget>
                      </item>
@@ -1478,6 +1506,21 @@
                          <string>Coordinates</string>
                         </property>
                        </item>
+                       <item>
+                        <property name="text">
+                         <string>Selected Route Center</string>
+                        </property>
+                       </item>
+                      </widget>
+                     </item>
+                     <item row="6" column="0">
+                      <widget class="QCheckBox" name="genCircAppendCurrentBox">
+                       <property name="text">
+                        <string>Append to Current</string>
+                       </property>
+                       <property name="checked">
+                        <bool>false</bool>
+                       </property>
                       </widget>
                      </item>
                     </layout>
@@ -2395,6 +2438,23 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="tab_12">
+       <attribute name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/models/Icons/Gyroscope-96.png</normaloff>:/models/Icons/Gyroscope-96.png</iconset>
+       </attribute>
+       <attribute name="title">
+        <string/>
+       </attribute>
+       <attribute name="toolTip">
+        <string>RT Range</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_20">
+        <item>
+         <widget class="RtRange" name="rtRangeWidget" native="true"/>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
    </layout>
@@ -2404,7 +2464,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1103</width>
+     <width>1108</width>
      <height>22</height>
     </rect>
    </property>
@@ -2420,6 +2480,8 @@
     <property name="title">
      <string>File</string>
     </property>
+    <addaction name="actionSaveRoutes"/>
+    <addaction name="actionLoadRoutes"/>
     <addaction name="actionExit"/>
    </widget>
    <addaction name="menuFile"/>
@@ -2462,6 +2524,24 @@
     <string>Exit</string>
    </property>
   </action>
+  <action name="actionSaveRoutes">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/models/Icons/Save as-96.png</normaloff>:/models/Icons/Save as-96.png</iconset>
+   </property>
+   <property name="text">
+    <string>Save Routes...</string>
+   </property>
+  </action>
+  <action name="actionLoadRoutes">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/models/Icons/Open Folder-96.png</normaloff>:/models/Icons/Open Folder-96.png</iconset>
+   </property>
+   <property name="text">
+    <string>Load Routes...</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
@@ -2499,6 +2579,12 @@
    <class>MoteConfig</class>
    <extends>QWidget</extends>
    <header>moteconfig.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>RtRange</class>
+   <extends>QWidget</extends>
+   <header>rtrange.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

@@ -391,6 +391,7 @@ typedef struct {
 } rtcm_ephemeris_t;
 
 typedef struct {
+    bool decode_all;
     int buffer_ptr;
     int len;
     uint8_t buffer[1100];

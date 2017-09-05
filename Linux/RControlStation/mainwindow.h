@@ -29,6 +29,7 @@
 #include "packetinterface.h"
 #include "ping.h"
 #include "nmeaserver.h"
+#include "rtcm3_simple.h"
 
 #ifdef HAS_JOYSTICK
 #include "joystick.h"
@@ -133,6 +134,8 @@ private slots:
     void on_actionAbout_triggered();
     void on_actionAboutLibrariesUsed_triggered();
     void on_actionExit_triggered();
+    void on_actionSaveRoutes_triggered();
+    void on_actionLoadRoutes_triggered();
 
 private:
     Ui::MainWindow *ui;
@@ -154,6 +157,7 @@ private:
     QUdpSocket *mUdpSocket;
     QTcpSocket *mTcpSocket;
     QString mVersion;
+    rtcm3_state mRtcmState;
 
 #ifdef HAS_JOYSTICK
     Joystick *mJoystick;
