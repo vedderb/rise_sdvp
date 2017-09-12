@@ -1101,6 +1101,44 @@ void MainWindow::on_mapUploadRouteButton_clicked()
     ui->mapUploadRouteButton->setEnabled(true);
 }
 
+void MainWindow::on_mapGetRouteButton_clicked()
+{
+    if (!mSerialPort->isOpen() && !mPacketInterface->isUdpConnected() && !mTcpSocket->isOpen()) {
+        QMessageBox::warning(this, "Get route",
+                             "Serial port not connected.");
+        return;
+    }
+
+    ui->mapGetRouteButton->setEnabled(false);
+
+    QList<LocPoint> route;
+    int routeLen;
+    bool ok = mPacketInterface->getRoutePart(ui->mapCarBox->value(), route.size(), 10, route, routeLen);
+
+    while (route.size() < routeLen && ok) {
+        ok = mPacketInterface->getRoutePart(ui->mapCarBox->value(), route.size(), 10, route, routeLen);
+    }
+
+    while (route.size() > routeLen) {
+        route.removeLast();
+    }
+
+    ui->mapGetRouteButton->setEnabled(true);
+
+    if (ok) {
+        if (route.size() > 0) {
+            ui->mapWidget->addRoute(route);
+            showStatusInfo("GetRoute OK", true);
+        } else {
+            showStatusInfo("GetRoute OK, but route empty", true);
+        }
+    } else {
+        showStatusInfo("GetRoute failed", false);
+        QMessageBox::warning(this, "Get route",
+                             "Could not get route from car.");
+    }
+}
+
 void MainWindow::on_mapApButton_clicked()
 {
     for (int i = 0;i < mCars.size();i++) {

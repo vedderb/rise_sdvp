@@ -1,5 +1,5 @@
 /*
-    Copyright 2012-2016 Benjamin Vedder	benjamin@vedder.se
+    Copyright 2012 - 2017 Benjamin Vedder	benjamin@vedder.se
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -74,6 +74,7 @@ PacketInterface::PacketInterface(QObject *parent) :
     mTimer->start();
 
     mHostAddress = QHostAddress("0.0.0.0");
+    mHostAddress2 = QHostAddress("0.0.0.0");
     mUdpPort = 0;
     mUdpSocket = new QUdpSocket(this);
     mUdpServer = false;
@@ -215,7 +216,13 @@ bool PacketInterface::sendPacket(const unsigned char *data, unsigned int len_pac
         memcpy(mSendBufferAck + ind, data, len_packet);
         ind += len_packet;
 
-        mUdpSocket->writeDatagram(QByteArray::fromRawData((const char*)mSendBufferAck, ind), mHostAddress, mUdpPort);
+        QByteArray toSend = QByteArray::fromRawData((const char*)mSendBufferAck, ind);
+        mUdpSocket->writeDatagram(toSend, mHostAddress, mUdpPort);
+
+        if (QString::compare(mHostAddress2.toString(), "0.0.0.0") != 0) {
+            mUdpSocket->writeDatagram(toSend, mHostAddress2, mUdpPort);
+        }
+
         return true;
     }
 
@@ -310,6 +317,22 @@ bool PacketInterface::sendPacketAck(const unsigned char *data, unsigned int len_
     return ok;
 }
 
+bool PacketInterface::waitSignal(QObject *sender, const char *signal, int timeoutMs)
+{
+    QEventLoop loop;
+    QTimer timeoutTimer;
+    timeoutTimer.setSingleShot(true);
+    timeoutTimer.start(timeoutMs);
+    auto conn1 = connect(sender, signal, &loop, SLOT(quit()));
+    auto conn2 = connect(&timeoutTimer, SIGNAL(timeout()), &loop, SLOT(quit()));
+    loop.exec();
+
+    disconnect(conn1);
+    disconnect(conn2);
+
+    return timeoutTimer.isActive();
+}
+
 void PacketInterface::processPacket(const unsigned char *data, int len)
 {
     QByteArray pkt = QByteArray((const char*)data, len);
@@ -338,6 +361,24 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         lon = utility::buffer_get_double64(data, 1e16, &ind);
         height = utility::buffer_get_double32(data, 1e3, &ind);
         emit enuRefReceived(id, lat, lon, height);
+    } break;
+
+    case CMD_AP_GET_ROUTE_PART: {
+        int32_t ind = 0;
+        QList<LocPoint> route;
+
+        int routeLen = utility::buffer_get_int32(data, &ind);
+
+        while (ind < len) {
+            LocPoint p;
+            p.setX(utility::buffer_get_double32_auto(data, &ind));
+            p.setY(utility::buffer_get_double32_auto(data, &ind));
+            p.setSpeed(utility::buffer_get_double32_auto(data, &ind));
+            p.setTime(utility::buffer_get_int32(data, &ind));
+            route.append(p);
+        }
+
+        emit routePartReceived(id, routeLen, route);
     } break;
 
     case CMD_SEND_RTCM_USB: {
@@ -409,41 +450,59 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
 
         // Multirotor settings
         conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.vel_decay_l = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.vel_max = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.map_min_x = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.map_max_x = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.map_min_y = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.map_max_y = utility::buffer_get_double32_auto(data, &ind);
 
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.vel_gain_p = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.vel_gain_i = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.vel_gain_d = utility::buffer_get_double32_auto(data, &ind);
 
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.tilt_gain_p = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.tilt_gain_i = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.tilt_gain_d = utility::buffer_get_double32_auto(data, &ind);
 
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.max_corr_error = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.max_tilt_error = utility::buffer_get_double32_auto(data, &ind);
 
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_roll_p = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_roll_i = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_roll_dp = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_roll_de = utility::buffer_get_double32_auto(data, &ind);
 
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_pitch_p = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_pitch_i = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_pitch_dp = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_pitch_de = utility::buffer_get_double32_auto(data, &ind);
 
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_yaw_p = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_yaw_i = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_yaw_dp = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_yaw_de = utility::buffer_get_double32_auto(data, &ind);
 
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_pos_p = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_pos_i = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_pos_d = utility::buffer_get_double32_auto(data, &ind);
+
+        conf.mr.ctrl_gain_alt_p = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_alt_i = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_alt_d = utility::buffer_get_double32_auto(data, &ind);
+
+        conf.mr.js_gain_tilt = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.js_gain_yaw = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.js_mode_rate = data[ind++];
+
+        conf.mr.motor_fl_f = data[ind++];
+        conf.mr.motor_bl_l = data[ind++];
+        conf.mr.motor_fr_r = data[ind++];
+        conf.mr.motor_br_b = data[ind++];
+        conf.mr.motors_x = data[ind++];
+        conf.mr.motors_cw = data[ind++];
+        conf.mr.motor_pwm_min_us = utility::buffer_get_uint16(data, &ind);
+        conf.mr.motor_pwm_max_us = utility::buffer_get_uint16(data, &ind);
 
         emit configurationReceived(id, conf);
     } break;
@@ -480,6 +539,11 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         s.cc_rad = utility::buffer_get_double32_auto(data, &ind);
         s.log_rate_ms = utility::buffer_get_int32(data, &ind);
         s.log_en = data[ind++];
+        s.map_plot_avg_factor = utility::buffer_get_double32_auto(data, &ind);
+        s.map_plot_max_div = utility::buffer_get_double32_auto(data, &ind);
+        s.plot_mode = data[ind++];
+        s.map_plot_start = utility::buffer_get_uint16(data, &ind);
+        s.map_plot_end = utility::buffer_get_uint16(data, &ind);
 
         emit radarSetupReceived(id, s);
     } break;
@@ -532,6 +596,10 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         CAR_STATE state;
         int32_t ind = 0;
 
+        if (len <= 1) {
+            break;
+        }
+
         state.fw_major = data[ind++];
         state.fw_minor = data[ind++];
         state.roll = utility::buffer_get_double32(data, 1e6, &ind);
@@ -569,6 +637,10 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
     case CMD_MR_GET_STATE: {
         MULTIROTOR_STATE state;
         int32_t ind = 0;
+
+        if (len <= 1) {
+            break;
+        }
 
         state.fw_major = data[ind++];
         state.fw_minor = data[ind++];
@@ -653,6 +725,11 @@ void PacketInterface::startUdpConnection(QHostAddress ip, int port)
     mUdpSocket->bind(QHostAddress::Any, mUdpPort + 1);
 }
 
+void PacketInterface::startUdpConnection2(QHostAddress ip)
+{
+    mHostAddress2 = ip;
+}
+
 void PacketInterface::startUdpConnectionServer(int port)
 {
     mUdpPort = port + 1;
@@ -664,6 +741,7 @@ void PacketInterface::startUdpConnectionServer(int port)
 void PacketInterface::stopUdpConnection()
 {
     mHostAddress = QHostAddress("0.0.0.0");
+    mHostAddress2 = QHostAddress("0.0.0.0");
     mUdpPort = 0;
     mUdpServer = false;
     mUdpSocket->close();
@@ -829,8 +907,26 @@ bool PacketInterface::setConfiguration(quint8 id, MAIN_CONFIG &conf, int retries
     utility::buffer_append_double32_auto(mSendBuffer, conf.mr.ctrl_gain_yaw_dp, &send_index);
     utility::buffer_append_double32_auto(mSendBuffer, conf.mr.ctrl_gain_yaw_de, &send_index);
 
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.ctrl_gain_pos_p, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.ctrl_gain_pos_i, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.ctrl_gain_pos_d, &send_index);
+
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.ctrl_gain_alt_p, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.ctrl_gain_alt_i, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.mr.ctrl_gain_alt_d, &send_index);
+
     utility::buffer_append_double32_auto(mSendBuffer, conf.mr.js_gain_tilt, &send_index);
     utility::buffer_append_double32_auto(mSendBuffer, conf.mr.js_gain_yaw, &send_index);
+    mSendBuffer[send_index++] = conf.mr.js_mode_rate;
+
+    mSendBuffer[send_index++] = conf.mr.motor_fl_f;
+    mSendBuffer[send_index++] = conf.mr.motor_bl_l;
+    mSendBuffer[send_index++] = conf.mr.motor_fr_r;
+    mSendBuffer[send_index++] = conf.mr.motor_br_b;
+    mSendBuffer[send_index++] = conf.mr.motors_x;
+    mSendBuffer[send_index++] = conf.mr.motors_cw;
+    utility::buffer_append_uint16(mSendBuffer, conf.mr.motor_pwm_min_us, &send_index);
+    utility::buffer_append_uint16(mSendBuffer, conf.mr.motor_pwm_max_us, &send_index);
 
     return sendPacketAck(mSendBuffer, send_index, retries, 500);
 }
@@ -880,6 +976,11 @@ bool PacketInterface::radarSetupSet(quint8 id, radar_settings_t *s, int retries)
     utility::buffer_append_double32_auto(mSendBuffer, s->cc_rad, &send_index);
     utility::buffer_append_int32(mSendBuffer, s->log_rate_ms, &send_index);
     mSendBuffer[send_index++] = s->log_en;
+    utility::buffer_append_double32_auto(mSendBuffer, s->map_plot_avg_factor, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, s->map_plot_max_div, &send_index);
+    mSendBuffer[send_index++] = s->plot_mode;
+    utility::buffer_append_uint16(mSendBuffer, s->map_plot_start, &send_index);
+    utility::buffer_append_uint16(mSendBuffer, s->map_plot_end, &send_index);
     return sendPacketAck(mSendBuffer, send_index, retries);
 }
 
@@ -900,6 +1001,47 @@ bool PacketInterface::sendReboot(quint8 id, bool powerOff, int retries)
     mSendBuffer[send_index++] = CMD_REBOOT_SYSTEM;
     mSendBuffer[send_index++] = powerOff;
     return sendPacketAck(mSendBuffer, send_index, retries);
+}
+
+bool PacketInterface::getRoutePart(quint8 id,
+                                   qint32 first,
+                                   quint8 num,
+                                   QList<LocPoint> &points,
+                                   int &routeLen,
+                                   int retries)
+{
+    quint8 idRx;
+
+    auto conn = connect(this, &PacketInterface::routePartReceived,
+                        [&routeLen, &points, &idRx](quint8 id, int len, const QList<LocPoint> &route){
+        idRx = id;
+        routeLen = len;
+        points.append(route);
+    }
+    );
+
+    bool res = false;
+    for (int i = 0;i < retries;i++) {
+        qint32 send_index = 0;
+        mSendBuffer[send_index++] = id;
+        mSendBuffer[send_index++] = CMD_AP_GET_ROUTE_PART;
+        utility::buffer_append_int32(mSendBuffer, first, &send_index);
+        mSendBuffer[send_index++] = num;
+
+        sendPacket(mSendBuffer, send_index);
+        res = waitSignal(this, SIGNAL(routePartReceived(quint8,int,QList<LocPoint>)), 200);
+
+        if (res) {
+            qDebug() << "RX part";
+            break;
+        }
+
+        qDebug() << "Retrying to send packet...";
+    }
+
+    disconnect(conn);
+
+    return res;
 }
 
 bool PacketInterface::sendMoteUbxBase(int mode,
@@ -1096,4 +1238,28 @@ void PacketInterface::radarSetupGet(quint8 id)
     packet.append(id);
     packet.append((char)CMD_RADAR_SETUP_GET);
     sendPacket(packet);
+}
+
+void PacketInterface::mrRcControl(quint8 id, double throttle, double roll, double pitch, double yaw)
+{
+    qint32 send_index = 0;
+    mSendBuffer[send_index++] = id;
+    mSendBuffer[send_index++] = CMD_MR_RC_CONTROL;
+    utility::buffer_append_double32_auto(mSendBuffer, throttle, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, roll, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, pitch, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, yaw, &send_index);
+    sendPacket(mSendBuffer, send_index);
+}
+
+void PacketInterface::mrOverridePower(quint8 id, double fl_f, double bl_l, double fr_r, double br_b)
+{
+    qint32 send_index = 0;
+    mSendBuffer[send_index++] = id;
+    mSendBuffer[send_index++] = CMD_MR_OVERRIDE_POWER;
+    utility::buffer_append_double32_auto(mSendBuffer, fl_f, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, bl_l, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, fr_r, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, br_b, &send_index);
+    sendPacket(mSendBuffer, send_index);
 }

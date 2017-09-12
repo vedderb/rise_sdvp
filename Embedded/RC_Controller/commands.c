@@ -257,6 +257,33 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
 
+		case CMD_AP_GET_ROUTE_PART: {
+			int32_t ind = 0;
+			int first = buffer_get_int32(data, &ind);
+			int num = data[ind++];
+
+			if (num > 20) {
+				break;
+			}
+
+			int32_t send_index = 0;
+			m_send_buffer[send_index++] = main_id;
+			m_send_buffer[send_index++] = CMD_AP_GET_ROUTE_PART;
+
+			int route_len = autopilot_get_route_len();
+			buffer_append_int32(m_send_buffer, route_len, &send_index);
+
+			for (int i = first;i < (first + num);i++) {
+				ROUTE_POINT rp = autopilot_get_route_point(i);
+				buffer_append_float32_auto(m_send_buffer, rp.px, &send_index);
+				buffer_append_float32_auto(m_send_buffer, rp.py, &send_index);
+				buffer_append_float32_auto(m_send_buffer, rp.speed, &send_index);
+				buffer_append_int32(m_send_buffer, rp.time, &send_index);
+			}
+
+			commands_send_packet(m_send_buffer, send_index);
+		} break;
+
 		case CMD_AP_SET_ACTIVE: {
 			timeout_reset();
 			commands_set_send_func(func);

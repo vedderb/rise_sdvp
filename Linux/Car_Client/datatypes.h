@@ -245,6 +245,7 @@ typedef enum {
     CMD_AP_ADD_POINTS,
     CMD_AP_REMOVE_LAST_POINT,
     CMD_AP_CLEAR_POINTS,
+    CMD_AP_GET_ROUTE_PART,
     CMD_AP_SET_ACTIVE,
     CMD_AP_REPLACE_ROUTE,
     CMD_SEND_RTCM_USB,
@@ -324,7 +325,8 @@ typedef struct {
 
 typedef enum {
     JS_TYPE_HK = 0,
-    JS_TYPE_PS4
+    JS_TYPE_PS4,
+    JS_TYPE_PS3
 } JS_TYPE;
 
 // ============== RTCM Datatypes ================== //
@@ -390,6 +392,7 @@ typedef struct {
 } rtcm_ephemeris_t;
 
 typedef struct {
+    bool decode_all;
     int buffer_ptr;
     int len;
     uint8_t buffer[1100];

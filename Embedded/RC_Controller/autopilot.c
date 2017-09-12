@@ -150,6 +150,21 @@ bool autopilot_is_active(void) {
 	return m_is_active;
 }
 
+int autopilot_get_route_len(void) {
+	return m_point_last;
+}
+
+ROUTE_POINT autopilot_get_route_point(int ind) {
+	ROUTE_POINT res;
+	memset(&res, 0, sizeof(ROUTE_POINT));
+
+	if (ind < m_point_last) {
+		res = m_route[ind];
+	}
+
+	return res;
+}
+
 /**
  * Override the speed with a fixed speed instead of using the value defined by
  * the route.
@@ -252,8 +267,8 @@ static THD_FUNCTION(ap_thread, arg) {
 			car_pos.px = car_cx;
 			car_pos.py = car_cy;
 
-			// Look 5 points ahead, or less than that if the route is shorter
-			int add = 5;
+			// Look 8 points ahead, or less than that if the route is shorter
+			int add = 8;
 			if (add > len) {
 				add = len;
 			}

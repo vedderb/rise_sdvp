@@ -54,6 +54,12 @@ public:
     bool radarSetupSet(quint8 id, radar_settings_t *s, int retries = 10);
     bool setSystemTime(quint8 id, qint32 sec, qint32 usec, int retries = 10);
     bool sendReboot(quint8 id, bool powerOff, int retries = 10);
+    bool getRoutePart(quint8 id,
+                      qint32 first,
+                      quint8 num,
+                      QList<LocPoint> &points,
+                      int &routeLen,
+                      int retries = 10);
 
     bool sendMoteUbxBase(int mode,
                          double pos_acc = 10.0,
@@ -84,6 +90,7 @@ signals:
     void systemTimeReceived(quint8 id, qint32 sec, qint32 usec);
     void rebootSystemReceived(quint8 id, bool powerOff);
     void dwSampleReceived(quint8 id, DW_LOG_INFO dw);
+    void routePartReceived(quint8 id, int len, const QList<LocPoint> &route);
     
 public slots:
     void timerSlot();
@@ -112,6 +119,7 @@ public slots:
 private:
     unsigned short crc16(const unsigned char *buf, unsigned int len);
     void processPacket(const unsigned char *data, int len);
+    bool waitSignal(QObject *sender, const char *signal, int timeoutMs);
 
     QTimer *mTimer;
     quint8 *mSendBuffer;

@@ -317,6 +317,22 @@ bool PacketInterface::sendPacketAck(const unsigned char *data, unsigned int len_
     return ok;
 }
 
+bool PacketInterface::waitSignal(QObject *sender, const char *signal, int timeoutMs)
+{
+    QEventLoop loop;
+    QTimer timeoutTimer;
+    timeoutTimer.setSingleShot(true);
+    timeoutTimer.start(timeoutMs);
+    auto conn1 = connect(sender, signal, &loop, SLOT(quit()));
+    auto conn2 = connect(&timeoutTimer, SIGNAL(timeout()), &loop, SLOT(quit()));
+    loop.exec();
+
+    disconnect(conn1);
+    disconnect(conn2);
+
+    return timeoutTimer.isActive();
+}
+
 void PacketInterface::processPacket(const unsigned char *data, int len)
 {
     QByteArray pkt = QByteArray((const char*)data, len);
@@ -345,6 +361,24 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         lon = utility::buffer_get_double64(data, 1e16, &ind);
         height = utility::buffer_get_double32(data, 1e3, &ind);
         emit enuRefReceived(id, lat, lon, height);
+    } break;
+
+    case CMD_AP_GET_ROUTE_PART: {
+        int32_t ind = 0;
+        QList<LocPoint> route;
+
+        int routeLen = utility::buffer_get_int32(data, &ind);
+
+        while (ind < len) {
+            LocPoint p;
+            p.setX(utility::buffer_get_double32_auto(data, &ind));
+            p.setY(utility::buffer_get_double32_auto(data, &ind));
+            p.setSpeed(utility::buffer_get_double32_auto(data, &ind));
+            p.setTime(utility::buffer_get_int32(data, &ind));
+            route.append(p);
+        }
+
+        emit routePartReceived(id, routeLen, route);
     } break;
 
     case CMD_SEND_RTCM_USB: {
@@ -967,6 +1001,47 @@ bool PacketInterface::sendReboot(quint8 id, bool powerOff, int retries)
     mSendBuffer[send_index++] = CMD_REBOOT_SYSTEM;
     mSendBuffer[send_index++] = powerOff;
     return sendPacketAck(mSendBuffer, send_index, retries);
+}
+
+bool PacketInterface::getRoutePart(quint8 id,
+                                   qint32 first,
+                                   quint8 num,
+                                   QList<LocPoint> &points,
+                                   int &routeLen,
+                                   int retries)
+{
+    quint8 idRx;
+
+    auto conn = connect(this, &PacketInterface::routePartReceived,
+                        [&routeLen, &points, &idRx](quint8 id, int len, const QList<LocPoint> &route){
+        idRx = id;
+        routeLen = len;
+        points.append(route);
+    }
+    );
+
+    bool res = false;
+    for (int i = 0;i < retries;i++) {
+        qint32 send_index = 0;
+        mSendBuffer[send_index++] = id;
+        mSendBuffer[send_index++] = CMD_AP_GET_ROUTE_PART;
+        utility::buffer_append_int32(mSendBuffer, first, &send_index);
+        mSendBuffer[send_index++] = num;
+
+        sendPacket(mSendBuffer, send_index);
+        res = waitSignal(this, SIGNAL(routePartReceived(quint8,int,QList<LocPoint>)), 200);
+
+        if (res) {
+            qDebug() << "RX part";
+            break;
+        }
+
+        qDebug() << "Retrying to send packet...";
+    }
+
+    disconnect(conn);
+
+    return res;
 }
 
 bool PacketInterface::sendMoteUbxBase(int mode,

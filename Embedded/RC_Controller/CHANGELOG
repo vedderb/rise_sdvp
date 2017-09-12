@@ -1,3 +1,6 @@
+=== FW 8.6 ===
+* Added support to read routes.
+
 === FW 8.5 ===
 * Start of multirotor support.
  - Configuration parameters.

@@ -28,6 +28,8 @@ void autopilot_clear_route(void);
 void autopilot_replace_route(ROUTE_POINT *p);
 void autopilot_set_active(bool active);
 bool autopilot_is_active(void);
+int autopilot_get_route_len(void);
+ROUTE_POINT autopilot_get_route_point(int ind);
 void autopilot_set_speed_override(bool is_override, float speed);
 void autopilot_set_motor_speed(float speed);
 float autopilot_get_steering_scale(void);
