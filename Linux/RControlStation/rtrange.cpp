@@ -99,6 +99,8 @@ void RtRange::readPendingDatagrams()
         ind = 52;
         double head = (double)get_I3((uint8_t*)datagram.data(), &ind) * 1e-6 * 180.0 / M_PI;
 
+//        qDebug() << fixed << qSetRealNumberPrecision(7) << lon << lat << alt;
+
         if (mMap) {
             double illh[3], llh[3], xyz[3];
             mMap->getEnuRef(illh);
@@ -123,8 +125,6 @@ void RtRange::readPendingDatagrams()
 
             mMap->addInfoPoint(p);
         }
-
-        qDebug() << lat << lon << alt << head;
     }
 }
 

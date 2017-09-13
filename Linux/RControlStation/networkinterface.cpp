@@ -322,7 +322,6 @@ void NetworkInterface::processXml(const QByteArray &xml)
 
             QList<LocPoint> route;
             LocPoint p;
-            route.append(p);
 
             while (stream.readNextStartElement()) {
                 QString name2 = stream.name().toString();
