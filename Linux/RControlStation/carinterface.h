@@ -129,6 +129,7 @@ private:
     TcpServerSimple *mTcpServer;
     bool mExperimentReplot;
     QString mFaultLast;
+    bool settingsReadDone;
 
     void getConfGui(MAIN_CONFIG &conf);
     void setConfGui(MAIN_CONFIG &conf);

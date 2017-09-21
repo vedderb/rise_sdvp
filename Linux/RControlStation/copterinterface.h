@@ -85,6 +85,7 @@ private:
 
     int mId;
     QTimer *mTimer;
+    bool settingsReadDone;
 
     QVector<double> mAltitudeData;
     QVector<double> mAltitudeXAxis;

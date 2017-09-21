@@ -41,6 +41,7 @@ CopterInterface::CopterInterface(QWidget *parent) :
     mMap = 0;
     mPacketInterface = 0;
     mId = 0;
+    settingsReadDone = false;
 
     mAltitudeData.resize(1000);
     mAltitudeXAxis.resize(1000);
@@ -303,6 +304,7 @@ void CopterInterface::configurationReceived(quint8 id, MAIN_CONFIG config)
 {
     if (id == mId) {
         setConfGui(config);
+        settingsReadDone = true;
         QString str;
         str.sprintf("Copter %d: Configuration Received", id);
         emit showStatusInfo(str, true);
@@ -341,6 +343,13 @@ void CopterInterface::on_terminalSendButton_clicked()
 
 void CopterInterface::on_confWriteButton_clicked()
 {
+    if (!settingsReadDone) {
+        QMessageBox::warning(this, "Configuration",
+                             "You must read the configuration at least once before writing it. "
+                             "Otherwise everything would be set to 0.");
+        return;
+    }
+
     if (mPacketInterface) {
         MAIN_CONFIG conf;
         getConfGui(conf);
