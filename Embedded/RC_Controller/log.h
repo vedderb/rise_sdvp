@@ -24,7 +24,9 @@
 
 // Functions
 void log_init(void);
+void log_set_rate(int rate_hz);
 void log_set_enabled(bool enabled);
 void log_set_name(char *name);
+void log_set_uart(bool enabled, int baud);
 
 #endif /* LOG_H_ */

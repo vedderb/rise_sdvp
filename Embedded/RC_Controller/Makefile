@@ -156,7 +156,8 @@ CSRC = $(STARTUPSRC) \
        srf10.c \
        pwm_esc.c \
        mr_control.c \
-       actuator.c
+       actuator.c \
+       radar_cont.c
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.

@@ -26,6 +26,7 @@
 #include "packet.h"
 #include "bldc_interface.h"
 #include "commands.h"
+#include "radar_cont.h"
 
 // Settings
 #define CANDx						CAND1
@@ -212,6 +213,7 @@ static THD_FUNCTION(cancom_process_thread, arg) {
 				}
 			} else if (rxmsg.IDE == CAN_IDE_STD) {
 				// Process standard IDs
+#if CAN_EN_DW
 				if ((rxmsg.SID & 0x700) == CAN_MASK_DW) {
 					switch (rxmsg.data8[0]) {
 					case CMD_DW_RANGE: {
@@ -228,6 +230,21 @@ static THD_FUNCTION(cancom_process_thread, arg) {
 						break;
 					}
 				}
+#endif
+#if RADAR_CONT_EN
+				switch (rxmsg.SID) {
+				case 0x60A:
+				case 0x60B:
+				case 0x60C:
+				case 0x600:
+				case 0x701:
+				case 0x702:
+					radar_cont_input(rxmsg.SID, rxmsg.data8);
+					break;
+				default:
+					break;
+				}
+#endif
 			}
 
 			if (rx_frame_read == RX_FRAMES_SIZE) {

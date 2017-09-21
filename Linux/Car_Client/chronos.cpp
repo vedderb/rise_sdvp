@@ -1,6 +1,9 @@
 #include "chronos.h"
+#include "utility.h"
+
 #include <QDebug>
 #include <cmath>
+#include <QDateTime>
 
 Chronos::Chronos(QObject *parent) : QObject(parent)
 {
@@ -129,7 +132,29 @@ void Chronos::stateReceived(quint8 id, CAR_STATE state)
     (void)id;
     (void)state;
 
-    // TODO: Send monr message
+    chronos_monr monr;
+    double llh[3], xyz[3];
+
+    xyz[0] = state.px;
+    xyz[1] = state.py;
+    xyz[2] = 0.0;
+
+    utility::enuToLlh(mLlhRef, xyz, llh);
+
+    QDateTime date = QDateTime::currentDateTime();
+
+    monr.lat = llh[0];
+    monr.lon = llh[1];
+    monr.alt = llh[2];
+    monr.heading = state.yaw;
+    monr.direction = 0;
+    monr.speed = state.speed;
+    monr.ts = date.currentMSecsSinceEpoch() - 1072915200000 + 5000;
+    monr.status = state.speed > 0.2 ? 2 : 1;
+
+    qDebug() << fixed << qSetRealNumberPrecision(8) << monr.lat << monr.lon << monr.alt;
+
+    sendMonr(monr);
 }
 
 bool Chronos::decodeMsg(quint8 type, quint32 len, QByteArray payload)
@@ -248,15 +273,14 @@ void Chronos::processOsem(chronos_osem osem)
 {
     qDebug() << "OSEM RX";
 
-    double llh[3];
-    llh[0] = osem.lat;
-    llh[1] = osem.lon;
-    llh[2] = osem.alt;
+    mLlhRef[0] = osem.lat;
+    mLlhRef[1] = osem.lon;
+    mLlhRef[2] = osem.alt;
 
     // TODO: Rotate route with heading
 
     if (mPacket) {
-        mPacket->setEnuRef(255, llh);
+        mPacket->setEnuRef(255, mLlhRef);
     }
 }
 

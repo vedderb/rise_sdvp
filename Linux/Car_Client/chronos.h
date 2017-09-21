@@ -34,6 +34,7 @@ private:
     QByteArray mTcpData;
 
     int mHeabPollCnt;
+    double mLlhRef[3];
 
     bool decodeMsg(quint8 type, quint32 len, QByteArray payload);
 

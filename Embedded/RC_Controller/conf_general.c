@@ -93,6 +93,7 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 	conf->gps_ant_y = 0.0;
 	conf->gps_comp = true;
 	conf->gps_req_rtk = true;
+	conf->gps_use_rtcm_base_as_enu_ref = true;
 	conf->gps_corr_gain_stat = 0.05;
 	conf->gps_corr_gain_dyn = 0.05;
 	conf->gps_corr_gain_yaw = 1.0;
@@ -106,8 +107,11 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 	conf->ap_max_speed = 30.0 / 3.6;
 	conf->ap_time_add_repeat_ms = 60 * 1000;
 
+	conf->log_rate_hz = 50;
 	conf->log_en = false;
 	strcpy(conf->log_name, "New Log");
+	conf->log_en_uart = false;
+	conf->log_uart_baud = 115200;
 
 	// Default car settings
 	conf->car.yaw_use_odometry = false;

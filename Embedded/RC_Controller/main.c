@@ -47,6 +47,7 @@
 #include "srf10.h"
 #include "pwm_esc.h"
 #include "mr_control.h"
+#include "radar_cont.h"
 
 /*
  * Timers used:
@@ -93,6 +94,9 @@ int main(void) {
 	radar_init();
 	radar_setup_measurement_default();
 #endif
+#if RADAR_CONT_EN
+	radar_cont_init();
+#endif
 #endif
 
 #if MAIN_MODE == MAIN_MODE_MULTIROTOR
@@ -118,8 +122,10 @@ int main(void) {
 #endif
 
 	timeout_configure(2000, 20.0);
+	log_set_rate(main_config.log_rate_hz);
 	log_set_enabled(main_config.log_en);
 	log_set_name(main_config.log_name);
+	log_set_uart(main_config.log_en_uart, main_config.log_uart_baud);
 
 	for(;;) {
 		chThdSleepMilliseconds(2);

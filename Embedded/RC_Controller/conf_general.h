@@ -37,7 +37,7 @@
 
 // Firmware version
 #define FW_VERSION_MAJOR			8
-#define FW_VERSION_MINOR			6
+#define FW_VERSION_MINOR			7
 
 // Default car settings
 //#define CAR_TERO // Benjamins tero car
@@ -53,13 +53,13 @@
 #define UBLOX_EN					1
 #endif
 
+// CAN settings
+#define CAN_EN_DW					0
+
 // Log configuration to enable. Choose one only.
 #define LOG_EN_CARREL
 //#define LOG_EN_ITRANSIT
 //#define LOG_EN_DW
-
-// Logging time interval
-#define LOG_INTERVAL_MS				10
 
 // Anchor IDs to range against in DW logging mode. -1 to disable.
 #define LOG_DW_ANCHOR0				122
@@ -96,6 +96,9 @@
 #define RADAR_PLOT_MODE				0
 #define RADAR_MAP_PLOT_START		20
 #define RADAR_MAP_PLOT_END			300
+
+// radar_cont
+#define RADAR_CONT_EN				0
 
 // Servo settings
 #define SERVO_OUT_RATE_HZ			50

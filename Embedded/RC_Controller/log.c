@@ -21,13 +21,28 @@
 #include "servo_simple.h"
 #include "radar.h"
 #include "comm_can.h"
+#include "ch.h"
+#include "hal.h"
 
 #include <string.h>
+#include <stdarg.h>
+#include <stdio.h>
+
+// Settings
+#define UART_DEV					UARTD1
+#define UART_TX_PORT				GPIOB
+#define UART_TX_PIN					6
+#define UART_RX_PORT				GPIOB
+#define UART_RX_PIN					7
+#define UART_ALT_PIN_FUNCTION		7
 
 // private variables
+static int m_log_rate_hz;
 static bool m_log_en;
 static bool m_write_split;
 static char m_log_name[LOG_NAME_MAX_LEN + 1];
+static bool m_log_en_uart;
+static int m_log_uart_baud;
 #ifdef LOG_EN_DW
 static int m_dw_anchor_now = 0;
 static DW_LOG_INFO m_dw_anchor_info[3];
@@ -41,13 +56,41 @@ static THD_FUNCTION(log_thread, arg);
 #ifdef LOG_EN_DW
 static void range_callback(uint8_t id, uint8_t dest, float range);
 #endif
+static void txend1(UARTDriver *uartp);
+static void txend2(UARTDriver *uartp);
+static void rxerr(UARTDriver *uartp, uartflags_t e);
+static void rxchar(UARTDriver *uartp, uint16_t c);
+static void rxend(UARTDriver *uartp);
+static void set_baudrate(uint32_t baud);
+static void printf_blocking(char* format, ...);
+static void write_blocking(unsigned char *data, unsigned int len);
+
+// Configuration structures
+static UARTConfig uart_cfg = {
+		txend1,
+		txend2,
+		rxend,
+		rxchar,
+		rxerr,
+		115200,
+		0,
+		USART_CR2_LINEN,
+		0
+};
 
 void log_init(void) {
+	m_log_rate_hz = 20;
 	m_log_en = false;
 	m_write_split = true;
 	strcpy(m_log_name, "Undefined");
+	m_log_en_uart = false;
+	m_log_uart_baud = 115200;
 
 	chThdCreateStatic(log_thread_wa, sizeof(log_thread_wa), NORMALPRIO, log_thread, NULL);
+}
+
+void log_set_rate(int rate_hz) {
+	m_log_rate_hz = rate_hz;
 }
 
 void log_set_enabled(bool enabled) {
@@ -62,6 +105,24 @@ void log_set_name(char *name) {
 	strcpy(m_log_name, name);
 }
 
+void log_set_uart(bool enabled, int baud) {
+	if (enabled && !m_log_en_uart) {
+		palSetPadMode(UART_TX_PORT, UART_TX_PIN, PAL_MODE_ALTERNATE(UART_ALT_PIN_FUNCTION));
+		palSetPadMode(UART_RX_PORT, UART_RX_PIN, PAL_MODE_ALTERNATE(UART_ALT_PIN_FUNCTION));
+		uartStart(&UART_DEV, &uart_cfg);
+	} else if (!enabled && m_log_en_uart) {
+		uartStop(&UART_DEV);
+		palSetPadMode(UART_TX_PORT, UART_TX_PIN, PAL_MODE_RESET);
+		palSetPadMode(UART_RX_PORT, UART_RX_PIN, PAL_MODE_RESET);
+	}
+
+	m_log_en_uart = enabled;
+
+	if (m_log_en_uart) {
+		set_baudrate(baud);
+	}
+}
+
 static THD_FUNCTION(log_thread, arg) {
 	(void)arg;
 
@@ -70,6 +131,42 @@ static THD_FUNCTION(log_thread, arg) {
 	systime_t time_p = chVTGetSystemTimeX(); // T0
 
 	for(;;) {
+		if (m_log_en_uart) {
+			mc_values val;
+			POS_STATE pos;
+			GPS_STATE gps;
+
+			pos_get_mc_val(&val);
+			pos_get_pos(&pos);
+			pos_get_gps(&gps);
+			uint32_t time = ST2MS(chVTGetSystemTimeX());
+
+			printf_blocking(
+					"%u,"     // timestamp (ms)
+					"%.3f,"   // car x
+					"%.3f,"   // car y
+					"%.2f,"   // roll
+					"%.2f,"   // pitch
+					"%.2f,"   // yaw
+					"%.3f,"   // speed
+					"%d,"     // tachometer
+					"%.7f,"   // lat
+					"%.7f,"   // lon
+					"%.3f\r\n",  // height
+
+					time,
+					(double)pos.px,
+					(double)pos.py,
+					(double)pos.roll,
+					(double)pos.pitch,
+					(double)pos.yaw,
+					(double)pos.speed,
+					val.tachometer,
+					gps.lat,
+					gps.lon,
+					gps.height);
+		}
+
 		if (m_log_en) {
 #ifndef LOG_EN_DW
 			if (m_write_split) {
@@ -88,8 +185,8 @@ static THD_FUNCTION(log_thread, arg) {
 
 			float steering_angle = (servo_simple_get_pos_now()
 					- main_config.car.steering_center)
-					* ((2.0 * main_config.car.steering_max_angle_rad)
-							/ main_config.car.steering_range);
+							* ((2.0 * main_config.car.steering_max_angle_rad)
+									/ main_config.car.steering_range);
 
 			pos_get_mc_val(&val);
 			pos_get_pos(&pos);
@@ -163,9 +260,9 @@ static THD_FUNCTION(log_thread, arg) {
 			float mag[3];
 
 			float steering_angle = (servo_simple_get_pos_now()
-						- main_config.car.steering_center)
-								* ((2.0 * main_config.car.steering_max_angle_rad)
-										/ main_config.car.steering_range);
+					- main_config.car.steering_center)
+										* ((2.0 * main_config.car.steering_max_angle_rad)
+												/ main_config.car.steering_range);
 
 			pos_get_mc_val(&val);
 			pos_get_gps(&gps);
@@ -253,7 +350,7 @@ static THD_FUNCTION(log_thread, arg) {
 #endif
 		}
 
-		time_p += MS2ST(LOG_INTERVAL_MS);
+		time_p += CH_CFG_ST_FREQUENCY / m_log_rate_hz;
 		systime_t time = chVTGetSystemTimeX();
 
 		if (time_p >= time + 5) {
@@ -286,3 +383,84 @@ static void range_callback(uint8_t id, uint8_t dest, float range) {
 	}
 }
 #endif
+
+/*
+ * This callback is invoked when a transmission buffer has been completely
+ * read by the driver.
+ */
+static void txend1(UARTDriver *uartp) {
+	(void)uartp;
+}
+
+/*
+ * This callback is invoked when a transmission has physically completed.
+ */
+static void txend2(UARTDriver *uartp) {
+	(void)uartp;
+
+}
+
+/*
+ * This callback is invoked on a receive error, the errors mask is passed
+ * as parameter.
+ */
+static void rxerr(UARTDriver *uartp, uartflags_t e) {
+	(void)uartp;
+	(void)e;
+}
+
+/*
+ * This callback is invoked when a character is received but the application
+ * was not ready to receive it, the character is passed as parameter.
+ */
+static void rxchar(UARTDriver *uartp, uint16_t c) {
+	(void)uartp;
+	(void)c;
+
+	// Ignore received data for now
+}
+
+/*
+ * This callback is invoked when a receive buffer has been completely written.
+ */
+static void rxend(UARTDriver *uartp) {
+	(void)uartp;
+}
+
+static void set_baudrate(uint32_t baud) {
+	if (UART_DEV.usart == USART1) {
+		UART_DEV.usart->BRR = STM32_PCLK2 / baud;
+	} else {
+		UART_DEV.usart->BRR = STM32_PCLK1 / baud;
+	}
+}
+
+static void printf_blocking(char* format, ...) {
+	va_list arg;
+	va_start (arg, format);
+	int len;
+	static char print_buffer[256];
+
+	len = vsnprintf(print_buffer, 255, format, arg);
+	va_end (arg);
+
+	print_buffer[len] = '\0';
+
+	if(len > 0) {
+		write_blocking((unsigned char*)print_buffer, (len < 255) ? len : 255);
+	}
+}
+
+static void write_blocking(unsigned char *data, unsigned int len) {
+	// Wait for the previous transmission to finish.
+	while (UART_DEV.txstate == UART_TX_ACTIVE) {
+		chThdSleep(1);
+	}
+
+	// Copy this data to a new buffer in case the provided one is re-used
+	// after this function returns.
+	static uint8_t buffer[256];
+	memcpy(buffer, data, len);
+
+	uartStartSend(&UART_DEV, len, buffer);
+}

@@ -591,8 +591,8 @@ typedef struct {
     double alt;
     double speed;
     double heading;
-    uint8_t direction;
-    uint8_t status;
+    uint8_t direction; // 0: FWD 1: REV 2: Unavailable
+    uint8_t status; // 0: Init 1: Armed 2: Running 3: Stopped 4: General error
 } chronos_monr;
 
 #endif /* DATATYPES_H_ */

@@ -55,6 +55,7 @@ void ConfCommonWidget::getConfGui(MAIN_CONFIG &conf)
     conf.gps_ant_y = ui->confGpsAntYBox->value();
     conf.gps_comp = ui->confGpsCorrBox->isChecked();
     conf.gps_req_rtk = ui->confGpsReqRtkBox->isChecked();
+    conf.gps_use_rtcm_base_as_enu_ref = ui->confGpsEnuRefBaseBox->isChecked();
     conf.gps_corr_gain_stat = ui->confGpsCorrStatBox->value();
     conf.gps_corr_gain_dyn = ui->confGpsCorrDynBox->value();
     conf.gps_corr_gain_yaw = ui->confGpsCorrYawBox->value();
@@ -68,8 +69,11 @@ void ConfCommonWidget::getConfGui(MAIN_CONFIG &conf)
     conf.ap_max_speed = ui->confApMaxSpeedBox->value() / 3.6;
     conf.ap_time_add_repeat_ms = ui->confApAddRepeatTimeEdit->time().msecsSinceStartOfDay();
 
+    conf.log_rate_hz = ui->confLogRateBox->value();
     conf.log_en = ui->confLogEnBox->isChecked();
     strcpy(conf.log_name, ui->confLogNameEdit->text().toLocal8Bit().data());
+    conf.log_en_uart = ui->confLogEnUartBox->isChecked();
+    conf.log_uart_baud = ui->confLogUartBaudBox->value();
 }
 
 void ConfCommonWidget::setConfGui(const MAIN_CONFIG &conf)
@@ -95,6 +99,7 @@ void ConfCommonWidget::setConfGui(const MAIN_CONFIG &conf)
     ui->confGpsAntYBox->setValue(conf.gps_ant_y);
     ui->confGpsCorrBox->setChecked(conf.gps_comp);
     ui->confGpsReqRtkBox->setChecked(conf.gps_req_rtk);
+    ui->confGpsEnuRefBaseBox->setChecked(conf.gps_use_rtcm_base_as_enu_ref);
     ui->confGpsCorrStatBox->setValue(conf.gps_corr_gain_stat);
     ui->confGpsCorrDynBox->setValue(conf.gps_corr_gain_dyn);
     ui->confGpsCorrYawBox->setValue(conf.gps_corr_gain_yaw);
@@ -108,8 +113,11 @@ void ConfCommonWidget::setConfGui(const MAIN_CONFIG &conf)
     ui->confApMaxSpeedBox->setValue(conf.ap_max_speed * 3.6);
     ui->confApAddRepeatTimeEdit->setTime(QTime::fromMSecsSinceStartOfDay(conf.ap_time_add_repeat_ms));
 
+    ui->confLogRateBox->setValue(conf.log_rate_hz);
     ui->confLogEnBox->setChecked(conf.log_en);
     ui->confLogNameEdit->setText(QString::fromLocal8Bit(conf.log_name));
+    ui->confLogEnUartBox->setChecked(conf.log_en_uart);
+    ui->confLogUartBaudBox->setValue(conf.log_uart_baud);
 }
 
 void ConfCommonWidget::setMagComp(QVector<double> comp)
