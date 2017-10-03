@@ -11,6 +11,25 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = intersection_test
 TEMPLATE = app
 
+release_win {
+    DESTDIR = build/win
+    OBJECTS_DIR = build/win/obj
+    MOC_DIR = build/win/obj
+    RCC_DIR = build/win/obj
+    UI_DIR = build/win/obj
+}
+
+release_lin {
+    # http://micro.nicholaswilson.me.uk/post/31855915892/rules-of-static-linking-libstdc-libc-libgcc
+    # http://insanecoding.blogspot.se/2012/07/creating-portable-linux-binaries.html
+    QMAKE_LFLAGS += -static-libstdc++ -static-libgcc
+    DESTDIR = build/lin
+    OBJECTS_DIR = build/lin/obj
+    MOC_DIR = build/lin/obj
+    RCC_DIR = build/lin/obj
+    UI_DIR = build/lin/obj
+}
+
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which as been marked as deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the

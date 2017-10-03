@@ -343,4 +343,26 @@ bool truncate_number_abs(double *number, double max)
     return did_trunc;
 }
 
+void norm_angle(double *angle)
+{
+    while (*angle < -180.0) {
+        *angle += 360.0;
+    }
+
+    while (*angle >  180.0) {
+        *angle -= 360.0;
+    }
+}
+
+void norm_angle_rad(double *angle)
+{
+    while (*angle < -M_PI) {
+        *angle += 2.0 * M_PI;
+    }
+
+    while (*angle >  M_PI) {
+        *angle -= 2.0 * M_PI;
+    }
+}
+
 }

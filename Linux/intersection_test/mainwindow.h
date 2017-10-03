@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QTimer>
+#include <QUdpSocket>
 
 namespace Ui {
 class MainWindow;
@@ -25,6 +26,14 @@ private slots:
 private:
     Ui::MainWindow *ui;
     QTimer *mTimer;
+    QUdpSocket *mUdpSocket;
+
+    void sendNcom(double *illh,
+                  double px,
+                  double py,
+                  double pz,
+                  double heading,
+                  double vel);
 
 };
 

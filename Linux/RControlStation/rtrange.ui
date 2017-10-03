@@ -24,9 +24,9 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="ipEditEdit">
+      <widget class="QLineEdit" name="ipEdit">
        <property name="text">
-        <string>195.0.0.50</string>
+        <string>195.0.0.13</string>
        </property>
       </widget>
      </item>
@@ -81,6 +81,13 @@
     <widget class="QLabel" name="packetLabel">
      <property name="text">
       <string>Packets RX: 0</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="posLabel">
+     <property name="text">
+      <string/>
      </property>
     </widget>
    </item>

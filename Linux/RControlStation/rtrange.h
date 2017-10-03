@@ -17,6 +17,12 @@ public:
     explicit RtRange(QWidget *parent = 0);
     ~RtRange();
     void setMap(MapWidget *map);
+    void sendNcom(double *illh,
+                  double px,
+                  double py,
+                  double pz,
+                  double heading,
+                  double vel);
 
 private slots:
     void readPendingDatagrams();
@@ -28,6 +34,7 @@ private:
     QUdpSocket *mUdpSocket;
     int mPacketCounter;
     MapWidget *mMap;
+    unsigned int mMapCnt;
 
 };
 

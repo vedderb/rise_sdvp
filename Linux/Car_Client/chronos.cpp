@@ -146,13 +146,20 @@ void Chronos::stateReceived(quint8 id, CAR_STATE state)
     monr.lat = llh[0];
     monr.lon = llh[1];
     monr.alt = llh[2];
-    monr.heading = state.yaw;
     monr.direction = 0;
     monr.speed = state.speed;
     monr.ts = date.currentMSecsSinceEpoch() - 1072915200000 + 5000;
     monr.status = state.speed > 0.2 ? 2 : 1;
 
-    qDebug() << fixed << qSetRealNumberPrecision(8) << monr.lat << monr.lon << monr.alt;
+    monr.heading = state.yaw - 90.0;
+    while (monr.heading < 0) {
+        monr.heading += 360.0;
+    }
+    while (monr.heading > 360.0) {
+        monr.heading -= 360.0;
+    }
+
+    qDebug() << fixed << qSetRealNumberPrecision(8) << monr.lat << monr.lon << monr.alt << mUdpPort;
 
     sendMonr(monr);
 }
@@ -192,7 +199,7 @@ bool Chronos::decodeMsg(quint8 type, quint32 len, QByteArray payload)
 
                 if (sqrt((pt.x - pt_last.x) * (pt.x - pt_last.x) +
                          (pt.y - pt_last.y) * (pt.y - pt_last.y) +
-                         (pt.z - pt_last.z) * (pt.z - pt_last.z)) > 0.5) {
+                         (pt.z - pt_last.z) * (pt.z - pt_last.z)) > 1.0) {
                     path_redued.append(pt);
                 }
             }
@@ -247,17 +254,17 @@ void Chronos::processDopm(QVector<chronos_dopm_pt> path)
 {
     qDebug() << "DOPM RX";
 
-    mPacket->clearRoute(255);
+    if (mPacket) {
+        mPacket->clearRoute(255);
 
-    for (chronos_dopm_pt pt: path) {
-//        qDebug() << "-- Point" <<
-//                    "X:" << pt.x <<
-//                    "Y:" << pt.y <<
-//                    "Z:" << pt.z <<
-//                    "T:" << pt.tRel <<
-//                    "Speed:" << pt.speed * 3.6;
+        for (chronos_dopm_pt pt: path) {
+            //        qDebug() << "-- Point" <<
+            //                    "X:" << pt.x <<
+            //                    "Y:" << pt.y <<
+            //                    "Z:" << pt.z <<
+            //                    "T:" << pt.tRel <<
+            //                    "Speed:" << pt.speed * 3.6;
 
-        if (mPacket) {
             QList<LocPoint> points;
             LocPoint lpt;
             lpt.setXY(pt.x, pt.y);
@@ -326,6 +333,8 @@ bool Chronos::sendMonr(chronos_monr monr)
     }
 
     VByteArray vb;
+    vb.vbAppendInt8(CHRONOS_MSG_MONR);
+    vb.vbAppendInt32(24);
     vb.vbAppendUint48(monr.ts);
     vb.vbAppendInt32((int32_t)(monr.lat * 1e7));
     vb.vbAppendInt32((int32_t)(monr.lon * 1e7));

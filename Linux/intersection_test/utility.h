@@ -51,6 +51,8 @@ void enuToLlh(const double *iLlh, const double *xyz, double *llh);
 double logn(double base, double number);
 bool truncate_number(double *number, double min, double max);
 bool truncate_number_abs(double *number, double max);
+void norm_angle(double *angle);
+void norm_angle_rad(double *angle);
 
 }
 

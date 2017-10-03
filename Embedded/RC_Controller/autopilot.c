@@ -453,7 +453,6 @@ static THD_FUNCTION(ap_thread, arg) {
 			if (!route_end) {
 				float distance, steering_angle;
 				float servo_pos;
-				static int max_steering = 0;
 
 				steering_angle_to_point(p.px, p.py, -p.yaw * M_PI / 180.0, rp_now.px,
 						rp_now.py, &steering_angle, &distance);
@@ -463,12 +462,8 @@ static THD_FUNCTION(ap_thread, arg) {
 
 				if (steering_angle >= max_rad) {
 					steering_angle = max_rad;
-					max_steering++;
 				} else if (steering_angle <= -max_rad) {
 					steering_angle = -max_rad;
-					max_steering++;
-				} else {
-					max_steering = 0;
 				}
 
 				servo_pos = steering_angle
@@ -613,4 +608,6 @@ static void clear_route(void) {
 	m_point_now = 0;
 	m_point_last = 0;
 	m_point_rx_prev_set = false;
+	memset(&m_rp_now, 0, sizeof(ROUTE_POINT));
+	memset(&m_point_rx_prev, 0, sizeof(ROUTE_POINT));
 }
