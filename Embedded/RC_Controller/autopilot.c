@@ -24,6 +24,8 @@
 #include "utils.h"
 #include "pos.h"
 #include "bldc_interface.h"
+#include "commands.h"
+#include "terminal.h"
 
 // Defines
 #define AP_HZ						100 // Hz
@@ -55,6 +57,7 @@ static void steering_angle_to_point(
 		float *distance);
 static bool add_point(ROUTE_POINT *p, bool first);
 static void clear_route(void);
+static void terminal_state(int argc, const char **argv);
 
 void autopilot_init(void) {
 	memset(m_route, 0, sizeof(m_route));
@@ -69,6 +72,12 @@ void autopilot_init(void) {
 	memset(&m_point_rx_prev, 0, sizeof(ROUTE_POINT));
 	m_point_rx_prev_set = false;
 	chMtxObjectInit(&m_ap_lock);
+
+	terminal_register_command_callback(
+			"ap_state",
+			"Print the state of the autopilot",
+			"",
+			terminal_state);
 
 	chThdCreateStatic(ap_thread_wa, sizeof(ap_thread_wa),
 			NORMALPRIO, ap_thread, NULL);
@@ -610,4 +619,22 @@ static void clear_route(void) {
 	m_point_rx_prev_set = false;
 	memset(&m_rp_now, 0, sizeof(ROUTE_POINT));
 	memset(&m_point_rx_prev, 0, sizeof(ROUTE_POINT));
+}
+
+static void terminal_state(int argc, const char **argv) {
+	(void)argc;
+	(void)argv;
+
+	commands_printf(
+			"m_is_active: %i\n"
+			"m_has_prev_point: %i\n"
+			"m_point_now: %i\n"
+			"m_point_last: %i\n"
+			"m_point_rx_prev_set: %i\n",
+
+			m_is_active,
+			m_has_prev_point,
+			m_point_now,
+			m_point_last,
+			m_point_rx_prev_set);
 }

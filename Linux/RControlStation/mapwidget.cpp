@@ -196,6 +196,38 @@ MapWidget::MapWidget(QWidget *parent) : QWidget(parent)
             this, SLOT(errorGetTile(QString)));
 
     setMouseTracking(true);
+
+    // Pre-render some things for speed
+    for (int i = 0;i < 2;i++) {
+        QPixmap pix(24, 24);
+        pix.fill(Qt::transparent);
+        QPainter *p = new QPainter(&pix);
+
+        QPen pen;
+        pen.setWidth(4);
+
+        switch (i) {
+        case 0: {
+            // Circle
+            pen.setColor(Qt::darkYellow);
+            p->setBrush(Qt::yellow);
+            p->setPen(pen);
+            p->drawEllipse(2, 2, 20, 20);
+        } break;
+
+        case 1: {
+            // Inactive circle
+            pen.setColor(Qt::darkGray);
+            p->setBrush(Qt::gray);
+            p->setPen(pen);
+            p->drawEllipse(2, 2, 20, 20);
+        } break;
+
+        }
+
+        delete p;
+        mPixmaps.append(pix);
+    }
 }
 
 CarInfo *MapWidget::getCarInfo(int car)
@@ -932,7 +964,7 @@ void MapWidget::paintEvent(QPaintEvent *event)
             painter.setTransform(drawTrans);
             pen.setColor(Qt::darkYellow);
             painter.setPen(pen);
-            painter.drawEllipse(p, 10 / mScaleFactor, 10 / mScaleFactor);
+            drawCircleFast(painter, p, 10.0 / mScaleFactor, mRouteNow == rn ? 0 : 1);
 
             // Draw text only for selected route
             if (mRouteNow == rn) {
@@ -1482,6 +1514,16 @@ void MapWidget::setRouteNow(int routeNow)
         QList<LocPoint> l;
         mRoutes.append(l);
     }
+
+    // Clean empty routes
+    while (mRouteNow < (mRoutes.size() - 1)) {
+        if (mRoutes.last().isEmpty()) {
+            mRoutes.removeLast();
+        } else {
+            break;
+        }
+    }
+
     update();
 }
 
@@ -1624,6 +1666,12 @@ int MapWidget::getClosestPoint(LocPoint p, QList<LocPoint> points, double &dist)
     }
 
     return closest;
+}
+
+void MapWidget::drawCircleFast(QPainter &painter, QPointF center, double radius, int type)
+{
+    painter.drawPixmap(center.x() - radius, center.y() - radius,
+                       2.0 * radius, 2.0 * radius, mPixmaps.at(type));
 }
 
 int MapWidget::getOsmZoomLevel() const

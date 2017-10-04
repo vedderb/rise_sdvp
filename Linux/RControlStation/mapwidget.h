@@ -174,6 +174,7 @@ private:
     int mInfoTraceNow;
     double mTraceMinSpaceCar;
     double mTraceMinSpaceGps;
+    QList<QPixmap> mPixmaps;
 
     void updateClosestInfoPoint();
     int drawInfoPoints(QPainter &painter, const QList<LocPoint> &pts,
@@ -181,6 +182,7 @@ private:
                        double xStart, double xEnd, double yStart, double yEnd,
                        double min_dist);
     int getClosestPoint(LocPoint p, QList<LocPoint> points, double &dist);
+    void drawCircleFast(QPainter &painter, QPointF center, double radius, int type = 0);
 
 };
 
