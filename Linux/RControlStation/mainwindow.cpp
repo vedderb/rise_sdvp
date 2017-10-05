@@ -1117,6 +1117,7 @@ void MainWindow::on_mapGetRouteButton_clicked()
 
     while (route.size() < routeLen && ok) {
         ok = mPacketInterface->getRoutePart(ui->mapCarBox->value(), route.size(), 10, route, routeLen);
+        ui->mapUploadRouteProgressBar->setValue((100 * route.size()) / routeLen);
     }
 
     while (route.size() > routeLen) {
@@ -1128,6 +1129,7 @@ void MainWindow::on_mapGetRouteButton_clicked()
     if (ok) {
         if (route.size() > 0) {
             ui->mapWidget->addRoute(route);
+            ui->mapUploadRouteProgressBar->setValue(100);
             showStatusInfo("GetRoute OK", true);
         } else {
             showStatusInfo("GetRoute OK, but route empty", true);

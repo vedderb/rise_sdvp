@@ -7,13 +7,28 @@
     <x>0</x>
     <y>0</y>
     <width>615</width>
-    <height>340</height>
+    <height>259</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="spacing">
+    <number>3</number>
+   </property>
+   <property name="leftMargin">
+    <number>3</number>
+   </property>
+   <property name="topMargin">
+    <number>3</number>
+   </property>
+   <property name="rightMargin">
+    <number>3</number>
+   </property>
+   <property name="bottomMargin">
+    <number>3</number>
+   </property>
    <item>
     <widget class="QTabWidget" name="tabWidget_2">
      <property name="sizePolicy">
@@ -43,6 +58,21 @@
        <string>IMU</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_10">
+       <property name="spacing">
+        <number>3</number>
+       </property>
+       <property name="leftMargin">
+        <number>3</number>
+       </property>
+       <property name="topMargin">
+        <number>3</number>
+       </property>
+       <property name="rightMargin">
+        <number>3</number>
+       </property>
+       <property name="bottomMargin">
+        <number>3</number>
+       </property>
        <item>
         <layout class="QGridLayout" name="gridLayout_2">
          <item row="3" column="1">
@@ -346,6 +376,21 @@
        <string>GPS</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_11">
+       <property name="spacing">
+        <number>3</number>
+       </property>
+       <property name="leftMargin">
+        <number>3</number>
+       </property>
+       <property name="topMargin">
+        <number>3</number>
+       </property>
+       <property name="rightMargin">
+        <number>3</number>
+       </property>
+       <property name="bottomMargin">
+        <number>3</number>
+       </property>
        <item>
         <layout class="QGridLayout" name="gridLayout_5">
          <item row="3" column="2">
@@ -585,6 +630,21 @@
        <string>Autopilot</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_13">
+       <property name="spacing">
+        <number>3</number>
+       </property>
+       <property name="leftMargin">
+        <number>3</number>
+       </property>
+       <property name="topMargin">
+        <number>3</number>
+       </property>
+       <property name="rightMargin">
+        <number>3</number>
+       </property>
+       <property name="bottomMargin">
+        <number>3</number>
+       </property>
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_14">
          <item>
@@ -669,6 +729,21 @@
        <string>Logging</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_2">
+       <property name="spacing">
+        <number>3</number>
+       </property>
+       <property name="leftMargin">
+        <number>3</number>
+       </property>
+       <property name="topMargin">
+        <number>3</number>
+       </property>
+       <property name="rightMargin">
+        <number>3</number>
+       </property>
+       <property name="bottomMargin">
+        <number>3</number>
+       </property>
        <item>
         <layout class="QGridLayout" name="gridLayout">
          <property name="spacing">
@@ -747,8 +822,8 @@
          </property>
          <property name="sizeHint" stdset="0">
           <size>
-           <width>17</width>
-           <height>116</height>
+           <width>0</width>
+           <height>0</height>
           </size>
          </property>
         </spacer>

@@ -549,7 +549,9 @@ typedef enum {
     CHRONOS_MSG_OSTM,
     CHRONOS_MSG_STRT,
     CHRONOS_MSG_HEAB,
-    CHRONOS_MSG_MONR
+    CHRONOS_MSG_MONR,
+    CHRONOS_MSG_SYPM = 9,
+    CHRONOS_MSG_MTSP
 } CHRONOS_MSG;
 
 typedef struct {
@@ -572,7 +574,7 @@ typedef struct {
 } chronos_osem;
 
 typedef struct {
-    bool armed;
+    int armed;
 } chronos_ostm;
 
 typedef struct {
@@ -594,5 +596,14 @@ typedef struct {
     uint8_t direction; // 0: FWD 1: REV 2: Unavailable
     uint8_t status; // 0: Init 1: Armed 2: Running 3: Stopped 4: General error
 } chronos_monr;
+
+typedef struct {
+    uint32_t sync_point;
+    uint32_t stop_time;
+} chronos_sypm;
+
+typedef struct {
+    uint64_t time_est;
+} chronos_mtsp;
 
 #endif /* DATATYPES_H_ */

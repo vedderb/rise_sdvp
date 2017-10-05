@@ -1217,6 +1217,7 @@ void MapWidget::paintEvent(QPaintEvent *event)
 
     double start_txt = 30.0;
     const double txt_row_h = 20.0;
+    const double txtOffset = 145.0;
 
     painter.setTransform(txtTrans);
     font.setPointSize(10);
@@ -1232,32 +1233,32 @@ void MapWidget::paintEvent(QPaintEvent *event)
         } else {
             txt.sprintf("Grid res: %.0f cm", res * 100.0);
         }
-        painter.drawText(width() - 140.0, start_txt, txt);
+        painter.drawText(width() - txtOffset, start_txt, txt);
         start_txt += txt_row_h;
     }
 
     // Draw zoom level
     txt.sprintf("Zoom: %.7f", mScaleFactor);
-    painter.drawText(width() - 140.0, start_txt, txt);
+    painter.drawText(width() - txtOffset, start_txt, txt);
     start_txt += txt_row_h;
 
     // Draw OSM zoom level
     if (mDrawOpenStreetmap) {
         txt.sprintf("OSM zoom: %d", mOsmZoomLevel);
-        painter.drawText(width() - 140.0, start_txt, txt);
+        painter.drawText(width() - txtOffset, start_txt, txt);
         start_txt += txt_row_h;
 
         if (mDrawOsmStats) {
             txt.sprintf("DL Tiles: %d", mOsm->getTilesDownloaded());
-            painter.drawText(width() - 140.0, start_txt, txt);
+            painter.drawText(width() - txtOffset, start_txt, txt);
             start_txt += txt_row_h;
 
             txt.sprintf("HDD Tiles: %d", mOsm->getHddTilesLoaded());
-            painter.drawText(width() - 140.0, start_txt, txt);
+            painter.drawText(width() - txtOffset, start_txt, txt);
             start_txt += txt_row_h;
 
             txt.sprintf("RAM Tiles: %d", mOsm->getRamTilesLoaded());
-            painter.drawText(width() - 140.0, start_txt, txt);
+            painter.drawText(width() - txtOffset, start_txt, txt);
             start_txt += txt_row_h;
         }
     }
@@ -1265,13 +1266,31 @@ void MapWidget::paintEvent(QPaintEvent *event)
     // Some info
     if (info_segments > 0) {
         txt.sprintf("Info seg: %d", info_segments);
-        painter.drawText(width() - 140.0, start_txt, txt);
+        painter.drawText(width() - txtOffset, start_txt, txt);
         start_txt += txt_row_h;
     }
 
     if (info_points > 0) {
         txt.sprintf("Info pts: %d", info_points);
-        painter.drawText(width() - 140.0, start_txt, txt);
+        painter.drawText(width() - txtOffset, start_txt, txt);
+        start_txt += txt_row_h;
+    }
+
+    // Route info
+    if (mRoutes.at(mRouteNow).size() > 0) {
+        LocPoint prev = mRoutes.at(mRouteNow).first();
+        double len = 0.0;
+        for (int i = 1;i < mRoutes.at(mRouteNow).size();i++) {
+            len += prev.getDistanceTo(mRoutes.at(mRouteNow).at(i));
+            prev = mRoutes.at(mRouteNow).at(i);
+        }
+
+        txt.sprintf("RP: %d", mRoutes.at(mRouteNow).size());
+        painter.drawText(width() - txtOffset, start_txt, txt);
+        start_txt += txt_row_h;
+
+        txt.sprintf("RLen: %.2f m", len);
+        painter.drawText(width() - txtOffset, start_txt, txt);
         start_txt += txt_row_h;
     }
 

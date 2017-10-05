@@ -1032,7 +1032,6 @@ bool PacketInterface::getRoutePart(quint8 id,
         res = waitSignal(this, SIGNAL(routePartReceived(quint8,int,QList<LocPoint>)), 200);
 
         if (res) {
-            qDebug() << "RX part";
             break;
         }
 
