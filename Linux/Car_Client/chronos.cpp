@@ -344,9 +344,15 @@ void Chronos::processStrt(chronos_strt strt)
         return;
     }
 
-    mStartTimer->setSingleShot(true);
-    mStartTimer->start(strt.ts - chronosTimeNow());
-    qDebug() << "Starting car in" << strt.ts - chronosTimeNow() << "ms";
+    quint64 cTime = chronosTimeNow();
+
+    if ((strt.ts <= cTime) || (strt.ts - cTime) < 10) {
+        startTimerSlot();
+    } else {
+        mStartTimer->setSingleShot(true);
+        mStartTimer->start(strt.ts - chronosTimeNow());
+        qDebug() << "Starting car in" << strt.ts - cTime << "ms";
+    }
 }
 
 void Chronos::processHeab(chronos_heab heab)
