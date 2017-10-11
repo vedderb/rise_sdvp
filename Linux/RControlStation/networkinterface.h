@@ -40,6 +40,7 @@ public:
     ~NetworkInterface();
     void setMap(MapWidget *map);
     void setPacketInterface(PacketInterface *packetInterface);
+    void setCars(QList<CarInterface*> *cars);
 
     void sendState(quint8 id, const CAR_STATE &state);
     void sendEnuRef(quint8 id, double lat, double lon, double height);
@@ -67,6 +68,7 @@ private:
     PacketInterface *mPacketInterface;
     QTimer *mPollTimer;
     int mPollTimerCarId;
+    QList<CarInterface*> *mCars;
 
     void processData(const QByteArray &data);
     void processXml(const QByteArray &xml);

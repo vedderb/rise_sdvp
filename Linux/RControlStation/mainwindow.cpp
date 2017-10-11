@@ -100,6 +100,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->networkLoggerWidget->setMap(ui->mapWidget);
     ui->networkInterface->setMap(ui->mapWidget);
     ui->networkInterface->setPacketInterface(mPacketInterface);
+    ui->networkInterface->setCars(&mCars);
     ui->moteWidget->setPacketInterface(mPacketInterface);
     ui->rtRangeWidget->setMap(ui->mapWidget);
 

@@ -368,6 +368,11 @@ bool CarInterface::setAp(bool on)
     return ok;
 }
 
+void CarInterface::disableKbBox()
+{
+    ui->keyboardControlBox->setChecked(false);
+}
+
 void CarInterface::timerSlot()
 {   
     if (mExperimentReplot) {

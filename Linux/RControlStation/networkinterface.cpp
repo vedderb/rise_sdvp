@@ -33,6 +33,7 @@ NetworkInterface::NetworkInterface(QWidget *parent) :
     mPollTimer = new QTimer(this);
     mPollTimerCarId = -1;
     mPollTimer->setSingleShot(false);
+    mCars = 0;
 
     connect(mTcpServer, SIGNAL(dataRx(QByteArray)),
             this, SLOT(tcpDataRx(QByteArray)));
@@ -64,6 +65,11 @@ void NetworkInterface::setPacketInterface(PacketInterface *packetInterface)
             this, SLOT(stateReceived(quint8,CAR_STATE)));
     connect(mPacketInterface, SIGNAL(enuRefReceived(quint8,double,double,double)),
             this, SLOT(enuRefReceived(quint8,double,double,double)));
+}
+
+void NetworkInterface::setCars(QList<CarInterface *> *cars)
+{
+    mCars = cars;
 }
 
 void NetworkInterface::sendState(quint8 id, const CAR_STATE &state)
@@ -496,6 +502,14 @@ void NetworkInterface::processXml(const QByteArray &xml)
             }
 
             if (!ui->disableSendCarBox->isChecked() && mPacketInterface) {
+                if (mCars && enabled) {
+                    for (int i = 0;i < mCars->size();i++) {
+                        if (mCars->at(i)->getId() == id) {
+                            mCars->at(i)->disableKbBox();
+                        }
+                    }
+                }
+
                 if (!mPacketInterface->setApActive(id, enabled)) {
                     sendError("No ACK received from car. Make sure that the car connection "
                               "works.", name);

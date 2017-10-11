@@ -55,6 +55,7 @@ public:
     void setCtrlAp();
     void setCtrlKb();
     bool setAp(bool on);
+    void disableKbBox();
 
 signals:
     void terminalCmd(quint8 id, QString cmd);
