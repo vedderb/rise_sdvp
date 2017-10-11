@@ -171,7 +171,7 @@ void RtRange::readPendingDatagrams()
 
         QHostAddress listenTo(ui->ipEdit->text());
 
-        if (listenTo.toIPv4Address() != sender.toIPv4Address()) {
+        if (!ui->ipAnyBox->isChecked() && listenTo.toIPv4Address() != sender.toIPv4Address()) {
 //            qDebug() << listenTo << sender;
             return;
         }
@@ -188,8 +188,36 @@ void RtRange::readPendingDatagrams()
 
 //        qDebug() << fixed << qSetRealNumberPrecision(7) << lon << lat << alt;
 
+        int posMode = -1;
+        QString posModeStr;
+
+        ind = 62;
+        int channel = datagram.data()[ind++];
+        if (channel == 0) {
+            ind += 5;
+            posMode = datagram.data()[ind++];
+
+            switch (posMode) {
+            case 0: posModeStr = "None"; break;
+            case 1: posModeStr = "Search"; break;
+            case 2: posModeStr = "Doppler"; break;
+            case 3: posModeStr = "SPS"; break;
+            case 4: posModeStr = "Differential"; break;
+            case 5: posModeStr = "RTK Float"; break;
+            case 6: posModeStr = "RTK Integer"; break;
+            case 255: posModeStr = "Invalid"; break;
+            default: posModeStr = "Unknown"; break;;
+            }
+
+            QString tmp;
+            tmp.sprintf(" (%d)", posMode);
+            posModeStr.append(tmp);
+
+            ui->posModeLabel->setText("Pos mode: " + posModeStr);
+        }
+
         mMapCnt++;
-        if (mMap && mMapCnt >= 10) {
+        if (mMap && mMapCnt >= 5) {
             mMapCnt = 0;
 
             mPacketCounter++;
@@ -211,30 +239,42 @@ void RtRange::readPendingDatagrams()
             utility::norm_angle_rad(&phi);
             phi *= 180 / M_PI;
 
-            LocPoint p;
-            p.setXY(xyz[0], xyz[1]);
-            QString info;
-
-            info.sprintf("Head    : %.2f\n"
-                         "X       : %.2f\n"
-                         "Y       : %.2f\n"
-                         "Height  : %.2f\n"
-                         "velN    : %.2f\n"
-                         "velE    : %.2f\n"
-                         "velD    : %.2f\n",
-                         phi,
-                         xyz[0], xyz[1], xyz[2],
-                         velN, velE, velD
-                    );
-
-            p.setInfo(info);
-
             QString posStr;
             posStr.sprintf("X %.2f, Y: %.2f, H: %.2f, YAW: %.2f",
                            xyz[0], xyz[1], xyz[2], phi);
             ui->posLabel->setText(posStr);
 
-            mMap->addInfoPoint(p);
+            if (ui->mapPlotPointsBox->isChecked()) {
+                LocPoint p;
+                p.setXY(xyz[0], xyz[1]);
+                QString info;
+
+                info.sprintf("Head    : %.2f\n"
+                             "X       : %.2f\n"
+                             "Y       : %.2f\n"
+                             "Height  : %.2f\n"
+                             "velN    : %.2f\n"
+                             "velE    : %.2f\n"
+                             "velD    : %.2f\n",
+                             phi,
+                             xyz[0], xyz[1], xyz[2],
+                             velN, velE, velD
+                        );
+
+                p.setInfo(info);
+                mMap->addInfoPoint(p);
+            }
+
+            if (ui->mapDrawCarBox->isChecked()) {
+                CarInfo *car = mMap->getCarInfo(220);
+                if (car) {
+                    LocPoint p;
+                    p.setXY(xyz[0], xyz[1]);
+                    p.setYaw(phi * M_PI / 180.0);
+                    car->setLocation(p);
+                    mMap->update();
+                }
+            }
         }
     }
 }
@@ -250,4 +290,26 @@ void RtRange::on_disconnectButton_clicked()
     mUdpSocket->close();
     mPacketCounter = 0;
     ui->packetLabel->setText("Packets RX: 0");
+}
+
+void RtRange::on_ipAnyBox_toggled(bool checked)
+{
+    ui->ipEdit->setEnabled(!checked);
+}
+
+void RtRange::on_mapDrawCarBox_toggled(bool checked)
+{
+    if (mMap) {
+        CarInfo *car = mMap->getCarInfo(220);
+
+        if (car && !checked) {
+            mMap->removeCar(220);
+        } else if (!car && checked) {
+            CarInfo carNew;
+            carNew.setColor(Qt::blue);
+            carNew.setId(220);
+            carNew.setName("RtRange (ID 220)");
+            mMap->addCar(carNew);
+        }
+    }
 }

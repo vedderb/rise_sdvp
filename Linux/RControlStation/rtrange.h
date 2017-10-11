@@ -28,6 +28,8 @@ private slots:
     void readPendingDatagrams();
     void on_connectButton_clicked();
     void on_disconnectButton_clicked();
+    void on_ipAnyBox_toggled(bool checked);
+    void on_mapDrawCarBox_toggled(bool checked);
 
 private:
     Ui::RtRange *ui;
