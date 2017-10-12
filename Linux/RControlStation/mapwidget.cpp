@@ -349,6 +349,15 @@ void MapWidget::setYOffset(double offset)
     update();
 }
 
+void MapWidget::moveView(double px, double py)
+{
+    LocPoint followLoc;
+    followLoc.setXY(px, py);
+    mXOffset = -followLoc.getX() * 1000.0 * mScaleFactor;
+    mYOffset = -followLoc.getY() * 1000.0 * mScaleFactor;
+    update();
+}
+
 void MapWidget::clearTrace()
 {
     mCarTrace.clear();

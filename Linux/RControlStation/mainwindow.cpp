@@ -575,6 +575,10 @@ void MainWindow::nmeaGgaRx(int fields, NmeaServer::nmea_gga_info_t gga)
             p.setInfo(info);
             ui->mapWidget->addInfoPoint(p);
 
+            if (ui->mapStreamNmeaFollowBox->isChecked()) {
+                ui->mapWidget->moveView(p.getX(), p.getY());
+            }
+
             // Optionally stream the data over UDP
             if (ui->mapStreamNmeaForwardUdpBox->isChecked()) {
                 QString hostString = ui->mapStreamNmeaForwardUdpHostEdit->text();

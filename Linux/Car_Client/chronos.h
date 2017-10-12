@@ -39,6 +39,8 @@ private:
 
     int mHeabPollCnt;
     double mLlhRef[3];
+    QList<LocPoint> mRouteLast;
+    chronos_sypm mSypmLast;
 
     bool decodeMsg(quint8 type, quint32 len, QByteArray payload);
 

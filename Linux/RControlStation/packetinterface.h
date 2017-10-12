@@ -60,6 +60,7 @@ public:
                       QList<LocPoint> &points,
                       int &routeLen,
                       int retries = 10);
+    bool setSyncPoint(quint8 id, int point, int time, int min_time_diff, int retries = 10);
 
     bool sendMoteUbxBase(int mode,
                          double pos_acc = 10.0,

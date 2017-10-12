@@ -65,9 +65,16 @@ void ConfCommonWidget::getConfGui(MAIN_CONFIG &conf)
 
     conf.ap_repeat_routes = ui->confApRepeatBox->isChecked();
     conf.ap_base_rad = ui->confApBaseRadBox->value();
-    conf.ap_mode_time = ui->confApModeTimeBox->isChecked();
     conf.ap_max_speed = ui->confApMaxSpeedBox->value() / 3.6;
     conf.ap_time_add_repeat_ms = ui->confApAddRepeatTimeEdit->time().msecsSinceStartOfDay();
+
+    if (ui->confApModeSpeedButton->isChecked()) {
+        conf.ap_mode_time = 0;
+    } else if (ui->confApModeTimeAbsButton->isChecked()) {
+        conf.ap_mode_time = 1;
+    } else if (ui->confApModeTimeRelButton->isChecked()) {
+        conf.ap_mode_time = 2;
+    }
 
     conf.log_rate_hz = ui->confLogRateBox->value();
     conf.log_en = ui->confLogEnBox->isChecked();
@@ -109,9 +116,15 @@ void ConfCommonWidget::setConfGui(const MAIN_CONFIG &conf)
 
     ui->confApRepeatBox->setChecked(conf.ap_repeat_routes);
     ui->confApBaseRadBox->setValue(conf.ap_base_rad);
-    ui->confApModeTimeBox->setChecked(conf.ap_mode_time);
     ui->confApMaxSpeedBox->setValue(conf.ap_max_speed * 3.6);
     ui->confApAddRepeatTimeEdit->setTime(QTime::fromMSecsSinceStartOfDay(conf.ap_time_add_repeat_ms));
+
+    switch (conf.ap_mode_time) {
+    case 0: ui->confApModeSpeedButton->setChecked(true); break;
+    case 1: ui->confApModeTimeAbsButton->setChecked(true); break;
+    case 2: ui->confApModeTimeRelButton->setChecked(true); break;
+    default: break;
+    }
 
     ui->confLogRateBox->setValue(conf.log_rate_hz);
     ui->confLogEnBox->setChecked(conf.log_en);

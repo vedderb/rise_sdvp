@@ -146,6 +146,7 @@ typedef enum {
 	CMD_AP_GET_ROUTE_PART,
 	CMD_AP_SET_ACTIVE,
 	CMD_AP_REPLACE_ROUTE,
+	CMD_AP_SYNC_POINT,
 	CMD_SEND_RTCM_USB,
 	CMD_SEND_NMEA_RADIO,
 	CMD_SET_YAW_OFFSET,
@@ -307,7 +308,7 @@ typedef struct {
 	// Autopilot parameters
 	bool ap_repeat_routes; // Repeat the same route when the end is reached
 	float ap_base_rad; // Radius around car at 0 speed
-	bool ap_mode_time; // Drive to route points based on timestamps instead of speed
+	int ap_mode_time; // Drive to route points based on time (1 = abs time, 2 = rel since start)
 	float ap_max_speed; // Maximum allowed speed for autopilot
 	int32_t ap_time_add_repeat_ms; // Time to add to each point for each repetition of the route
 

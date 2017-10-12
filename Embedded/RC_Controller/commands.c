@@ -329,6 +329,24 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
 
+		case CMD_AP_SYNC_POINT: {
+			timeout_reset();
+			commands_set_send_func(func);
+
+			int32_t ind = 0;
+			int32_t point = buffer_get_int32(data, &ind);
+			int32_t time = buffer_get_int32(data, &ind);
+			int32_t min_diff = buffer_get_int32(data, &ind);
+
+			autopilot_sync_point(point, time, min_diff);
+
+			// Send ack
+			int32_t send_index = 0;
+			m_send_buffer[send_index++] = main_id;
+			m_send_buffer[send_index++] = packet_id;
+			commands_send_packet(m_send_buffer, send_index);
+		} break;
+
 		case CMD_SEND_RTCM_USB: {
 			for (unsigned int i = 0;i < len;i++) {
 				rtcm3_input_data(data[i], &rtcm_state);

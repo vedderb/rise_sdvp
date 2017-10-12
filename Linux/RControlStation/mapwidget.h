@@ -57,6 +57,7 @@ public:
     void setRotation(double rotation);
     void setXOffset(double offset);
     void setYOffset(double offset);
+    void moveView(double px, double py);
     void clearTrace();
     void addRoutePoint(double px, double py, double speed = 0.0, qint32 time = 0);
     QList<LocPoint> getRoute();

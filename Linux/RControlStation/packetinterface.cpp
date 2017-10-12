@@ -690,6 +690,9 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
     case CMD_AP_REPLACE_ROUTE:
         emit ackReceived(id, cmd, "CMD_AP_REPLACE_ROUTE");
         break;
+    case CMD_AP_SYNC_POINT:
+        emit ackReceived(id, cmd, "CMD_AP_SYNC_POINT");
+        break;
     case CMD_SET_MAIN_CONFIG:
         emit ackReceived(id, cmd, "CMD_SET_MAIN_CONFIG");
         break;
@@ -1049,6 +1052,17 @@ bool PacketInterface::getRoutePart(quint8 id,
     disconnect(conn);
 
     return res;
+}
+
+bool PacketInterface::setSyncPoint(quint8 id, int point, int time, int min_time_diff, int retries)
+{
+    qint32 send_index = 0;
+    mSendBuffer[send_index++] = id;
+    mSendBuffer[send_index++] = CMD_AP_SYNC_POINT;
+    utility::buffer_append_int32(mSendBuffer, point, &send_index);
+    utility::buffer_append_int32(mSendBuffer, time, &send_index);
+    utility::buffer_append_int32(mSendBuffer, min_time_diff, &send_index);
+    return sendPacketAck(mSendBuffer, send_index, retries);
 }
 
 bool PacketInterface::sendMoteUbxBase(int mode,

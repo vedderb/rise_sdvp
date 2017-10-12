@@ -121,6 +121,7 @@ void Chronos::tcpConnectionChanged(bool connected)
         qDebug() << "Chronos TCP connection accepted";
     } else {
         qDebug() << "Chronos TCP disconnected";
+        mIsArmed = false;
     }
 }
 
@@ -288,6 +289,7 @@ void Chronos::processDopm(QVector<chronos_dopm_pt> path)
     if (mPacket) {
         mPacket->clearRoute(255);
 
+        mRouteLast.clear();
         for (chronos_dopm_pt pt: path) {
             //        qDebug() << "-- Point" <<
             //                    "X:" << pt.x <<
@@ -300,8 +302,9 @@ void Chronos::processDopm(QVector<chronos_dopm_pt> path)
             LocPoint lpt;
             lpt.setXY(pt.x, pt.y);
             lpt.setSpeed(pt.speed);
-            lpt.setTime(chronosTimeToUtcToday(pt.tRel));
+            lpt.setTime(pt.tRel);
             points.append(lpt);
+            mRouteLast.append(lpt);
 
             mPacket->setRoutePoints(255, points);
         }
@@ -346,6 +349,8 @@ void Chronos::processStrt(chronos_strt strt)
 
     quint64 cTime = chronosTimeNow();
 
+    qDebug() << strt.ts << cTime << ((int)strt.ts - (int)cTime);
+
     if ((strt.ts <= cTime) || (strt.ts - cTime) < 10) {
         startTimerSlot();
     } else {
@@ -377,13 +382,30 @@ void Chronos::processHeab(chronos_heab heab)
 void Chronos::processSypm(chronos_sypm sypm)
 {
     qDebug() << "SYPM RX";
-    (void)sypm;
+    mSypmLast = sypm;
 }
 
 void Chronos::processMtsp(chronos_mtsp mtsp)
 {
     qDebug() << "MTSP RX";
     (void)mtsp;
+
+    // Find points
+    int closest_sync = 0;
+    for (int i = 0;i < mRouteLast.size();i++) {
+        if (fabs(mRouteLast.at(i).getTime() - mSypmLast.sync_point) <
+                fabs(mRouteLast.at(closest_sync).getTime() - mSypmLast.sync_point)) {
+            closest_sync = i;
+        }
+    }
+
+    if (mPacket) {
+        mPacket->setSyncPoint(255, closest_sync, mtsp.time_est - chronosTimeNow(),
+                              mSypmLast.sync_point - mSypmLast.stop_time);
+
+        qDebug() << closest_sync << mtsp.time_est - chronosTimeNow() <<
+                    mSypmLast.sync_point - mSypmLast.stop_time;
+    }
 }
 
 bool Chronos::sendMonr(chronos_monr monr)

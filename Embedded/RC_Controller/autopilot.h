@@ -26,6 +26,7 @@ bool autopilot_add_point(ROUTE_POINT *p, bool first);
 void autopilot_remove_last_point(void);
 void autopilot_clear_route(void);
 void autopilot_replace_route(ROUTE_POINT *p);
+void autopilot_sync_point(int32_t point, int32_t time, int32_t min_time_diff);
 void autopilot_set_active(bool active);
 bool autopilot_is_active(void);
 int autopilot_get_route_len(void);

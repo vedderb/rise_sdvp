@@ -1237,8 +1237,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>206</width>
-                   <height>472</height>
+                   <width>203</width>
+                   <height>441</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_17">
@@ -1770,6 +1770,21 @@
                      <string>Stream NMEA over TCP</string>
                     </property>
                     <layout class="QVBoxLayout" name="verticalLayout_9">
+                     <property name="spacing">
+                      <number>3</number>
+                     </property>
+                     <property name="leftMargin">
+                      <number>3</number>
+                     </property>
+                     <property name="topMargin">
+                      <number>3</number>
+                     </property>
+                     <property name="rightMargin">
+                      <number>3</number>
+                     </property>
+                     <property name="bottomMargin">
+                      <number>3</number>
+                     </property>
                      <item>
                       <widget class="QLineEdit" name="mapStreamNmeaServerEdit">
                        <property name="text">
@@ -1807,6 +1822,13 @@
                       <widget class="QCheckBox" name="mapStreamNmeaRtkOnlyBox">
                        <property name="text">
                         <string>RTK only</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QCheckBox" name="mapStreamNmeaFollowBox">
+                       <property name="text">
+                        <string>Follow</string>
                        </property>
                       </widget>
                      </item>

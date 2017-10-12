@@ -1,3 +1,7 @@
+=== FW 8.8 ===
+* Added AP relative time mode.
+* Implemented CMD_AP_SYNC_POINT.
+
 === FW 8.7 ===
 * Added UART log output.
 * Added configurable log rate.
