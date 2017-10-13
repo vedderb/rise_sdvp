@@ -143,6 +143,12 @@ void MainWindow::timerSlot()
             car->setLocation(loc);
             ui->map->update();
 
+            LocPoint locCenter;
+            locCenter.setXY(43.75, -900.215);
+            if (locCenter.getDistanceTo(loc) > fabs(ui->posBox->value()) * 1.1) {
+                on_resetSim_clicked();
+            }
+
             double illh[3];
             ui->map->getEnuRef(illh);
 

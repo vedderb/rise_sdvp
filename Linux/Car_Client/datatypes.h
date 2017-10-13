@@ -611,4 +611,20 @@ typedef struct {
     uint64_t time_est;
 } chronos_mtsp;
 
+// RtRange
+
+typedef struct {
+    int posMode;
+    double lat;
+    double lon;
+    double alt;
+    double velN;
+    double velE;
+    double velD;
+    double yaw;
+    double mapX;
+    double mapY;
+    double mapYawRad;
+} rt_range_data;
+
 #endif /* DATATYPES_H_ */

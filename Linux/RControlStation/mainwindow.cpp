@@ -91,6 +91,13 @@ MainWindow::MainWindow(QWidget *parent) :
     mUdpSocket = new QUdpSocket(this);
     mTcpSocket = new QTcpSocket(this);
 
+    mIntersectionTest = new IntersectionTest(this);
+    mIntersectionTest->setCars(&mCars);
+    mIntersectionTest->setMap(ui->mapWidget);
+    mIntersectionTest->setPacketInterface(mPacketInterface);
+    connect(ui->rtRangeWidget, SIGNAL(dataRx(rt_range_data)),
+            mIntersectionTest, SLOT(rtRangeRx(rt_range_data)));
+
     mKeyUp = false;
     mKeyDown = false;
     mKeyLeft = false;
@@ -1632,4 +1639,9 @@ void MainWindow::on_actionLoadRoutes_triggered()
                                   "routes tag not found in " + filename);
         }
     }
+}
+
+void MainWindow::on_actionTestIntersection_triggered()
+{
+    mIntersectionTest->show();
 }

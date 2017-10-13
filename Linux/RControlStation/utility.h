@@ -19,6 +19,7 @@
 #define BUFFER_H_
 
 #include <stdint.h>
+#include "packetinterface.h"
 
 namespace utility {
 
@@ -53,6 +54,8 @@ bool truncate_number(double *number, double min, double max);
 bool truncate_number_abs(double *number, double max);
 void norm_angle(double *angle);
 void norm_angle_rad(double *angle);
+bool uploadRouteHelper(PacketInterface *packetInterface, int carId, QList<LocPoint> route);
+bool replaceRouteHelper(PacketInterface *packetInterface, int carId, QList<LocPoint> route);
 
 }
 

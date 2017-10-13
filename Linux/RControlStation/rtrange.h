@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QUdpSocket>
 #include "mapwidget.h"
+#include "datatypes.h"
 
 namespace Ui {
 class RtRange;
@@ -24,6 +25,9 @@ public:
                   double heading,
                   double vel);
 
+signals:
+    void dataRx(const rt_range_data &data);
+
 private slots:
     void readPendingDatagrams();
     void on_connectButton_clicked();
@@ -37,6 +41,7 @@ private:
     int mPacketCounter;
     MapWidget *mMap;
     unsigned int mMapCnt;
+    rt_range_data mData;
 
 };
 

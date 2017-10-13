@@ -365,4 +365,57 @@ void norm_angle_rad(double *angle)
     }
 }
 
+bool uploadRouteHelper(PacketInterface *packetInterface, int carId, QList<LocPoint> route)
+{
+    bool ok = true;
+    int len = route.size();
+    int ind = 0;
+    for (ind = 0;ind < len;ind += 5) {
+        QList<LocPoint> tmpList;
+        for (int j = ind;j < (ind + 5);j++) {
+            if (j < len) {
+                tmpList.append(route.at(j));
+            }
+        }
+
+        ok = packetInterface->setRoutePoints(carId, tmpList);
+
+        if (!ok) {
+            break;
+        }
+    }
+
+    return ok;
+}
+
+bool replaceRouteHelper(PacketInterface *packetInterface, int carId, QList<LocPoint> route)
+{
+    bool ok = true;
+    bool first = true;
+    int len = route.size();
+    int ind = 0;
+    for (ind = 0;ind < len;ind += 5) {
+        QList<LocPoint> tmpList;
+        for (int j = ind;j < (ind + 5);j++) {
+            if (j < len) {
+                tmpList.append(route.at(j));
+            }
+        }
+
+        if (first) {
+            ok = packetInterface->replaceRoute(carId, tmpList);
+        } else {
+            ok = packetInterface->setRoutePoints(carId, tmpList);
+        }
+
+        first = false;
+
+        if (!ok) {
+            break;
+        }
+    }
+
+    return ok;
+}
+
 }

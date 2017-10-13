@@ -174,9 +174,14 @@ MapWidget::MapWidget(QWidget *parent) : QWidget(parent)
     mInfoTraces.append(l);
 
     // Set this to the SP base station position for now
-    mRefLat = 57.71495867;
-    mRefLon = 12.89134921;
-    mRefHeight = 219.0;
+//    mRefLat = 57.71495867;
+//    mRefLon = 12.89134921;
+//    mRefHeight = 219.0;
+
+    // ASTA
+    mRefLat = 57.78100308;
+    mRefLon = 12.76925422;
+    mRefHeight = 253.76;
 
     // Home
     //    mRefLat = 57.57848470;
@@ -375,9 +380,18 @@ void MapWidget::addRoutePoint(double px, double py, double speed, qint32 time)
     update();
 }
 
-QList<LocPoint> MapWidget::getRoute()
+QList<LocPoint> MapWidget::getRoute(int ind)
 {
-    return mRoutes[mRouteNow];
+    if (ind < 0) {
+        return mRoutes[mRouteNow];
+    } else {
+        if (mRoutes.size() > ind) {
+            return mRoutes[ind];
+        } else {
+            QList<LocPoint> tmp;
+            return tmp;
+        }
+    }
 }
 
 QList<QList<LocPoint> > MapWidget::getRoutes()
@@ -978,8 +992,10 @@ void MapWidget::paintEvent(QPaintEvent *event)
             // Draw text only for selected route
             if (mRouteNow == rn) {
                 QTime t = QTime::fromMSecsSinceStartOfDay(routeNow[i].getTime());
-                txt.sprintf("%.1f km/h\n"
+                txt.sprintf("P: %d\n"
+                            "%.1f km/h\n"
                             "%02d:%02d:%02d:%03d",
+                            i,
                             routeNow[i].getSpeed() * 3.6,
                             t.hour(), t.minute(), t.second(), t.msec());
 

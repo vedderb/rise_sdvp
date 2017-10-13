@@ -60,7 +60,7 @@ public:
     void moveView(double px, double py);
     void clearTrace();
     void addRoutePoint(double px, double py, double speed = 0.0, qint32 time = 0);
-    QList<LocPoint> getRoute();
+    QList<LocPoint> getRoute(int ind = -1);
     QList<QList<LocPoint> > getRoutes();
     void setRoute(const QList<LocPoint> &route);
     void addRoute(const QList<LocPoint> &route);

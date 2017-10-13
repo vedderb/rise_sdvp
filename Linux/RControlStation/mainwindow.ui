@@ -1679,8 +1679,8 @@
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>206</width>
-                   <height>472</height>
+                   <width>196</width>
+                   <height>436</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_12">
@@ -2523,7 +2523,14 @@
     <addaction name="actionLoadRoutes"/>
     <addaction name="actionExit"/>
    </widget>
+   <widget class="QMenu" name="menuTests">
+    <property name="title">
+     <string>Tests</string>
+    </property>
+    <addaction name="actionTestIntersection"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuTests"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
@@ -2579,6 +2586,18 @@
    </property>
    <property name="text">
     <string>Load Routes...</string>
+   </property>
+  </action>
+  <action name="actionTestIntersection">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/models/Icons/Streets-100.png</normaloff>:/models/Icons/Streets-100.png</iconset>
+   </property>
+   <property name="text">
+    <string>Intersection</string>
+   </property>
+   <property name="toolTip">
+    <string>Intersection Test</string>
    </property>
   </action>
  </widget>

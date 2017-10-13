@@ -107,6 +107,9 @@ RtRange::RtRange(QWidget *parent) :
     mMap = 0;
     mMapCnt = 0;
 
+    memset(&mData, 0, sizeof(mData));
+    mData.posMode = -1;
+
     connect(mUdpSocket, SIGNAL(readyRead()),
             this, SLOT(readPendingDatagrams()));
 }
@@ -177,27 +180,26 @@ void RtRange::readPendingDatagrams()
         }
 
         int ind = 23;
-        double lat = get_R8((uint8_t*)datagram.data(), &ind) * 180.0 / M_PI;
-        double lon = get_R8((uint8_t*)datagram.data(), &ind) * 180.0 / M_PI;
-        double alt = get_R4((uint8_t*)datagram.data(), &ind);
+        mData.lat = get_R8((uint8_t*)datagram.data(), &ind) * 180.0 / M_PI;
+        mData.lon = get_R8((uint8_t*)datagram.data(), &ind) * 180.0 / M_PI;
+        mData.alt = get_R4((uint8_t*)datagram.data(), &ind);
         ind = 43;
-        double velN = (double)get_I3((uint8_t*)datagram.data(), &ind) * 1e-4;
-        double velE = (double)get_I3((uint8_t*)datagram.data(), &ind) * 1e-4;
-        double velD = (double)get_I3((uint8_t*)datagram.data(), &ind) * 1e-4;
-        double head = (double)get_I3((uint8_t*)datagram.data(), &ind) * 1e-6;
+        mData.velN = (double)get_I3((uint8_t*)datagram.data(), &ind) * 1e-4;
+        mData.velE = (double)get_I3((uint8_t*)datagram.data(), &ind) * 1e-4;
+        mData.velD = (double)get_I3((uint8_t*)datagram.data(), &ind) * 1e-4;
+        mData.yaw = (double)get_I3((uint8_t*)datagram.data(), &ind) * 1e-6;
 
 //        qDebug() << fixed << qSetRealNumberPrecision(7) << lon << lat << alt;
 
-        int posMode = -1;
         QString posModeStr;
 
         ind = 62;
         int channel = datagram.data()[ind++];
         if (channel == 0) {
             ind += 5;
-            posMode = datagram.data()[ind++];
+            mData.posMode = datagram.data()[ind++];
 
-            switch (posMode) {
+            switch (mData.posMode) {
             case 0: posModeStr = "None"; break;
             case 1: posModeStr = "Search"; break;
             case 2: posModeStr = "Doppler"; break;
@@ -210,16 +212,13 @@ void RtRange::readPendingDatagrams()
             }
 
             QString tmp;
-            tmp.sprintf(" (%d)", posMode);
+            tmp.sprintf(" (%d)", mData.posMode);
             posModeStr.append(tmp);
 
             ui->posModeLabel->setText("Pos mode: " + posModeStr);
         }
 
-        mMapCnt++;
-        if (mMap && mMapCnt >= 5) {
-            mMapCnt = 0;
-
+        if (mMap) {
             mPacketCounter++;
 
             QString pktStr;
@@ -228,51 +227,58 @@ void RtRange::readPendingDatagrams()
 
             double illh[3], llh[3], xyz[3];
             mMap->getEnuRef(illh);
-            llh[0] = lat;
-            llh[1] = lon;
-            llh[2] = alt;
+            llh[0] = mData.lat;
+            llh[1] = mData.lon;
+            llh[2] = mData.alt;
 
             utility::llhToEnu(illh, llh, xyz);
 
-            //double phi = (M_PI / 2.0) - head;
-            double phi = head - (M_PI / 2.0);
-            utility::norm_angle_rad(&phi);
-            phi *= 180 / M_PI;
+            mData.mapX = xyz[0];
+            mData.mapY = xyz[1];
+            mData.mapYawRad = mData.yaw - (M_PI / 2.0);
+            utility::norm_angle_rad(&mData.mapYawRad);
 
-            QString posStr;
-            posStr.sprintf("X %.2f, Y: %.2f, H: %.2f, YAW: %.2f",
-                           xyz[0], xyz[1], xyz[2], phi);
-            ui->posLabel->setText(posStr);
+            emit dataRx(mData);
 
-            if (ui->mapPlotPointsBox->isChecked()) {
-                LocPoint p;
-                p.setXY(xyz[0], xyz[1]);
-                QString info;
+            mMapCnt++;
+            if (mMapCnt >= 5) {
+                mMapCnt = 0;
 
-                info.sprintf("Head    : %.2f\n"
-                             "X       : %.2f\n"
-                             "Y       : %.2f\n"
-                             "Height  : %.2f\n"
-                             "velN    : %.2f\n"
-                             "velE    : %.2f\n"
-                             "velD    : %.2f\n",
-                             phi,
-                             xyz[0], xyz[1], xyz[2],
-                             velN, velE, velD
-                        );
+                QString posStr;
+                posStr.sprintf("X %.2f, Y: %.2f, H: %.2f, YAW: %.2f",
+                               xyz[0], xyz[1], xyz[2], mData.mapYawRad * 180 / M_PI);
+                ui->posLabel->setText(posStr);
 
-                p.setInfo(info);
-                mMap->addInfoPoint(p);
-            }
-
-            if (ui->mapDrawCarBox->isChecked()) {
-                CarInfo *car = mMap->getCarInfo(220);
-                if (car) {
+                if (ui->mapPlotPointsBox->isChecked()) {
                     LocPoint p;
                     p.setXY(xyz[0], xyz[1]);
-                    p.setYaw(phi * M_PI / 180.0);
-                    car->setLocation(p);
-                    mMap->update();
+                    QString info;
+
+                    info.sprintf("Head    : %.2f\n"
+                                 "X       : %.2f\n"
+                                 "Y       : %.2f\n"
+                                 "Height  : %.2f\n"
+                                 "velN    : %.2f\n"
+                                 "velE    : %.2f\n"
+                                 "velD    : %.2f\n",
+                                 mData.mapYawRad * 180 / M_PI,
+                                 xyz[0], xyz[1], xyz[2],
+                                 mData.velN, mData.velE, mData.velD
+                            );
+
+                    p.setInfo(info);
+                    mMap->addInfoPoint(p);
+                }
+
+                if (ui->mapDrawCarBox->isChecked()) {
+                    CarInfo *car = mMap->getCarInfo(220);
+                    if (car) {
+                        LocPoint p;
+                        p.setXY(xyz[0], xyz[1]);
+                        p.setYaw(mData.mapYawRad);
+                        car->setLocation(p);
+                        mMap->update();
+                    }
                 }
             }
         }
