@@ -17,6 +17,7 @@
 
 #include "ublox.h"
 #include <QEventLoop>
+#include <cmath>
 
 namespace {
 static uint8_t ubx_get_U1(uint8_t *msg, int *ind) {

@@ -21,6 +21,7 @@
 #include <QMessageBox>
 #include <QIcon>
 #include <QSerialPortInfo>
+#include <cmath>
 #include "nmeaserver.h"
 #include "utility.h"
 #include "rtcm3_simple.h"
