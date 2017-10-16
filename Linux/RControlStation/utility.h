@@ -54,6 +54,8 @@ bool truncate_number(double *number, double min, double max);
 bool truncate_number_abs(double *number, double max);
 void norm_angle(double *angle);
 void norm_angle_rad(double *angle);
+double angle_difference(double angle1, double angle2);
+double angle_difference_rad(double angle1, double angle2);
 bool uploadRouteHelper(PacketInterface *packetInterface, int carId, QList<LocPoint> route);
 bool replaceRouteHelper(PacketInterface *packetInterface, int carId, QList<LocPoint> route);
 

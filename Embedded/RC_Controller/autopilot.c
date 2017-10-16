@@ -203,13 +203,13 @@ void autopilot_sync_point(int32_t point, int32_t time, int32_t min_time_diff) {
 	float speed = dist_tot / ((float)time / 1000.0);
 	utils_truncate_number_abs(&speed, main_config.ap_max_speed);
 
-	if (time < min_time_diff) {
+	if (time < min_time_diff || dist_tot < main_config.ap_base_rad) {
 		chMtxUnlock(&m_ap_lock);
 		return;
 	}
 
 	point_i = m_point_now;
-	while (point_i != point && point_i != m_point_last) {
+	while (point_i <= point && point_i != m_point_last) {
 		m_route[point_i].speed = speed;
 
 		point_i++;

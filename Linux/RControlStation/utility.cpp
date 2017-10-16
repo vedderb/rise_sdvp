@@ -365,6 +365,39 @@ void norm_angle_rad(double *angle)
     }
 }
 
+/**
+ * Get the difference between two angles. Will always be between -180 and +180 degrees.
+ * @param angle1
+ * The first angle
+ * @param angle2
+ * The second angle
+ * @return
+ * The difference between the angles
+ */
+double angle_difference(double angle1, double angle2) {
+    // Faster in most cases
+    double difference = angle1 - angle2;
+    while (difference < -180.0) difference += 2.0 * 180.0;
+    while (difference > 180.0) difference -= 2.0 * 180.0;
+    return difference;
+}
+
+/**
+ * Get the difference between two angles. Will always be between -pi and +pi radians.
+ * @param angle1
+ * The first angle in radians
+ * @param angle2
+ * The second angle in radians
+ * @return
+ * The difference between the angles in radians
+ */
+double angle_difference_rad(double angle1, double angle2) {
+    double difference = angle1 - angle2;
+    while (difference < -M_PI) difference += 2.0 * M_PI;
+    while (difference > M_PI) difference -= 2.0 * M_PI;
+    return difference;
+}
+
 bool uploadRouteHelper(PacketInterface *packetInterface, int carId, QList<LocPoint> route)
 {
     bool ok = true;

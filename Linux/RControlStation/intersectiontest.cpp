@@ -56,13 +56,13 @@ void IntersectionTest::rtRangeRx(const rt_range_data &data)
             if (syncFound) {
                 double v = sqrt(mRtRangeData.velE * mRtRangeData.velE +
                                 mRtRangeData.velN * mRtRangeData.velN);
-                double a2 = asin(mRtRangeData.velN / v);
+                double a_vel = atan2(mRtRangeData.velN, mRtRangeData.velE);
                 double xDiff = sync.getX() - mRtRangeData.mapX;
                 double yDiff = sync.getY() - mRtRangeData.mapY;
                 double dSync = sqrt(xDiff * xDiff + yDiff * yDiff);
-                double a1 = asin(yDiff / dSync);
-                double a = a2 - a1;
-                double vComp = v * cos(a);
+                double a_car = atan2(yDiff, xDiff);
+                double a_diff = utility::angle_difference_rad(a_car, a_vel);
+                double vComp = v * cos(a_diff);
                 double tSync = dSync / vComp;
                 utility::truncate_number_abs(&tSync, 1200);
 
@@ -70,16 +70,18 @@ void IntersectionTest::rtRangeRx(const rt_range_data &data)
                 str.sprintf("velE:  %.2f\n"
                             "velN:  %.2f\n"
                             "v:     %.2f\n"
-                            "a2:    %.2f\n"
-                            "a1:    %.2f\n"
+                            "a_diff:%.2f\n"
+                            "a_vel: %.2f\n"
+                            "a_car: %.2f\n"
                             "vComp: %.2f\n"
                             "tSync: %.2f",
 
                             mRtRangeData.velE,
                             mRtRangeData.velN,
                             v,
-                            a2,
-                            a1,
+                            a_diff * 180.0 / M_PI,
+                            a_vel * 180.0 / M_PI,
+                            a_car * 180.0 / M_PI,
                             vComp,
                             tSync);
                 ui->terminalEdit->clear();
@@ -103,10 +105,22 @@ void IntersectionTest::rtRangeRx(const rt_range_data &data)
 
 void IntersectionTest::on_runButton_clicked()
 {
-    ui->settingLayout->setEnabled(false);
+    ui->settingsWidget->setEnabled(false);
     bool ok = true;
 
-    if (mCars && mCars && mPacketInterface) {
+    if (mCars && mCars->isEmpty()) {
+        return;
+    }
+
+    if (mCars && mPacketInterface) {
+        for (CarInterface *car: *mCars) {
+            if (car->getId() == ui->carABox->value()) {
+                car->disableKbBox();
+            } else if (car->getId() == ui->carBBox->value()) {
+                car->disableKbBox();
+            }
+        }
+
         for (CarInterface *car: *mCars) {
             int carId = ui->carABox->value();
 
@@ -159,7 +173,11 @@ void IntersectionTest::on_stopButton_clicked()
 {
     mRunning = false;
     ui->runningLabel->setText("Stopped");
-    ui->settingLayout->setEnabled(true);
+    ui->settingsWidget->setEnabled(true);
+
+    if (mCars && mCars->isEmpty()) {
+        return;
+    }
 
     if (mCars) {
         for (CarInterface *car: *mCars) {
