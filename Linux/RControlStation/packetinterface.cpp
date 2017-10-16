@@ -1054,7 +1054,8 @@ bool PacketInterface::getRoutePart(quint8 id,
     return res;
 }
 
-bool PacketInterface::setSyncPoint(quint8 id, int point, int time, int min_time_diff, int retries)
+bool PacketInterface::setSyncPoint(quint8 id, int point, int time, int min_time_diff,
+                                   bool ack, int retries)
 {
     qint32 send_index = 0;
     mSendBuffer[send_index++] = id;
@@ -1062,7 +1063,12 @@ bool PacketInterface::setSyncPoint(quint8 id, int point, int time, int min_time_
     utility::buffer_append_int32(mSendBuffer, point, &send_index);
     utility::buffer_append_int32(mSendBuffer, time, &send_index);
     utility::buffer_append_int32(mSendBuffer, min_time_diff, &send_index);
-    return sendPacketAck(mSendBuffer, send_index, retries);
+
+    if (ack) {
+        return sendPacketAck(mSendBuffer, send_index, retries);
+    } else {
+        return sendPacket(mSendBuffer, send_index);
+    }
 }
 
 bool PacketInterface::sendMoteUbxBase(int mode,

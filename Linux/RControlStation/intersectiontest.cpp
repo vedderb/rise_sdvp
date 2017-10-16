@@ -90,12 +90,12 @@ void IntersectionTest::rtRangeRx(const rt_range_data &data)
                 if (tSync > 1.0) {
                     if (ui->carABox->value() >= 0) {
                         mPacketInterface->setSyncPoint(ui->carABox->value(), ui->syncABox->value(),
-                                                       (int)(tSync * 1000.0), 1000.0);
+                                                       (int)(tSync * 1000.0), 1000.0, false);
                     }
 
                     if (ui->carBBox->value() >= 0) {
                         mPacketInterface->setSyncPoint(ui->carBBox->value(), ui->syncBBox->value(),
-                                                       (int)(tSync * 1000.0), 1000.0);
+                                                       (int)(tSync * 1000.0), 1000.0, false);
                     }
                 }
             }

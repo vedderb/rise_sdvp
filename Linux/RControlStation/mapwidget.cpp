@@ -431,10 +431,13 @@ void MapWidget::setRoutePointSpeed(double speed)
     mRoutePointSpeed = speed;
 }
 
-void MapWidget::addInfoPoint(LocPoint &info)
+void MapWidget::addInfoPoint(LocPoint &info, bool updateMap)
 {
     mInfoTraces[mInfoTraceNow].append(info);
-    update();
+
+    if (updateMap) {
+        update();
+    }
 }
 
 void MapWidget::clearInfoTrace()

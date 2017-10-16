@@ -67,7 +67,7 @@ public:
     void clearRoute();
     void clearAllRoutes();
     void setRoutePointSpeed(double speed);
-    void addInfoPoint(LocPoint &info);
+    void addInfoPoint(LocPoint &info, bool updateMap = true);
     void clearInfoTrace();
     void clearAllInfoTraces();
     void addPerspectivePixmap(PerspectivePixmap map);

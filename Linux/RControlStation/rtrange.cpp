@@ -106,10 +106,15 @@ RtRange::RtRange(QWidget *parent) :
     mPacketCounter = 0;
     mMap = 0;
     mMapCnt = 0;
+    mTimer = new QTimer(this);
+    mTimer->start(40);
+    mUpdateMap = false;
 
     memset(&mData, 0, sizeof(mData));
     mData.posMode = -1;
 
+    connect(mTimer, SIGNAL(timeout()),
+            this, SLOT(timerSlot()));
     connect(mUdpSocket, SIGNAL(readyRead()),
             this, SLOT(readPendingDatagrams()));
 }
@@ -159,6 +164,13 @@ void RtRange::sendNcom(double *illh,
     put_I3(packet, &ind, (int32_t)(head * 1e6));
 
     mUdpSocket->writeDatagram((char*)packet, sizeof(packet), QHostAddress::Broadcast, 3000);
+}
+
+void RtRange::timerSlot()
+{
+    if (mUpdateMap && mMap) {
+        mMap->update();
+    }
 }
 
 void RtRange::readPendingDatagrams()
@@ -267,7 +279,8 @@ void RtRange::readPendingDatagrams()
                             );
 
                     p.setInfo(info);
-                    mMap->addInfoPoint(p);
+                    mMap->addInfoPoint(p, false);
+                    mUpdateMap = true;
                 }
 
                 if (ui->mapDrawCarBox->isChecked()) {
@@ -277,7 +290,7 @@ void RtRange::readPendingDatagrams()
                         p.setXY(xyz[0], xyz[1]);
                         p.setYaw(mData.mapYawRad);
                         car->setLocation(p);
-                        mMap->update();
+                        mUpdateMap = true;
                     }
                 }
             }

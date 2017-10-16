@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QUdpSocket>
+#include <QTimer>
 #include "mapwidget.h"
 #include "datatypes.h"
 
@@ -29,6 +30,7 @@ signals:
     void dataRx(const rt_range_data &data);
 
 private slots:
+    void timerSlot();
     void readPendingDatagrams();
     void on_connectButton_clicked();
     void on_disconnectButton_clicked();
@@ -42,6 +44,8 @@ private:
     MapWidget *mMap;
     unsigned int mMapCnt;
     rt_range_data mData;
+    QTimer *mTimer;
+    bool mUpdateMap;
 
 };
 
