@@ -407,6 +407,12 @@ void MapWidget::setRoute(const QList<LocPoint> &route)
 
 void MapWidget::addRoute(const QList<LocPoint> &route)
 {
+    while (!mRoutes.isEmpty() &&
+           mRoutes.last().isEmpty() &&
+           mRouteNow < mRoutes.size()) {
+        mRoutes.removeLast();
+    }
+
     mRoutes.append(route);
     update();
 }

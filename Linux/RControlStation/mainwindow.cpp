@@ -1534,16 +1534,18 @@ void MainWindow::on_actionSaveRoutes_triggered()
     QList<QList<LocPoint> > routes = ui->mapWidget->getRoutes();
 
     for (QList<LocPoint> route: routes) {
-        stream.writeStartElement("route");
-        for (LocPoint p: route) {
-            stream.writeStartElement("point");
-            stream.writeTextElement("x", QString::number(p.getX()));
-            stream.writeTextElement("y", QString::number(p.getY()));
-            stream.writeTextElement("speed", QString::number(p.getSpeed()));
-            stream.writeTextElement("time", QString::number(p.getTime()));
+        if (!route.isEmpty()) {
+            stream.writeStartElement("route");
+            for (LocPoint p: route) {
+                stream.writeStartElement("point");
+                stream.writeTextElement("x", QString::number(p.getX()));
+                stream.writeTextElement("y", QString::number(p.getY()));
+                stream.writeTextElement("speed", QString::number(p.getSpeed()));
+                stream.writeTextElement("time", QString::number(p.getTime()));
+                stream.writeEndElement();
+            }
             stream.writeEndElement();
         }
-        stream.writeEndElement();
     }
 
     stream.writeEndDocument();
