@@ -8,16 +8,16 @@
 #include "datatypes.h"
 
 namespace Ui {
-class RtRange;
+class NCom;
 }
 
-class RtRange : public QWidget
+class NCom : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit RtRange(QWidget *parent = 0);
-    ~RtRange();
+    explicit NCom(QWidget *parent = 0);
+    ~NCom();
     void setMap(MapWidget *map);
     void sendNcom(double *illh,
                   double px,
@@ -27,7 +27,7 @@ public:
                   double vel);
 
 signals:
-    void dataRx(const rt_range_data &data);
+    void dataRx(const ncom_data &data);
 
 private slots:
     void timerSlot();
@@ -38,12 +38,12 @@ private slots:
     void on_mapDrawCarBox_toggled(bool checked);
 
 private:
-    Ui::RtRange *ui;
+    Ui::NCom *ui;
     QUdpSocket *mUdpSocket;
     int mPacketCounter;
     MapWidget *mMap;
     unsigned int mMapCnt;
-    rt_range_data mData;
+    ncom_data mData;
     QTimer *mTimer;
     bool mUpdateMap;
 

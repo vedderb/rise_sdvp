@@ -23,7 +23,7 @@ public:
     void setPacketInterface(PacketInterface *packet);
 
 public slots:
-    void rtRangeRx(const rt_range_data &data);
+    void nComRx(const ncom_data &data);
 
 private slots:
     void on_runButton_clicked();
@@ -34,7 +34,7 @@ private:
     QList<CarInterface*> *mCars;
     MapWidget *mMap;
     PacketInterface *mPacketInterface;
-    rt_range_data mRtRangeData;
+    ncom_data mRtRangeData;
     int mRtRangeInt;
     bool mRunning;
 

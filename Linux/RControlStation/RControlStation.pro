@@ -82,8 +82,8 @@ SOURCES += main.cpp\
     nmeawidget.cpp \
     confcommonwidget.cpp \
     ublox.cpp \
-    rtrange.cpp \
-    intersectiontest.cpp
+    intersectiontest.cpp \
+    ncom.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
@@ -116,8 +116,8 @@ HEADERS  += mainwindow.h \
     nmeawidget.h \
     confcommonwidget.h \
     ublox.h \
-    rtrange.h \
-    intersectiontest.h
+    intersectiontest.h \
+    ncom.h
 
 FORMS    += mainwindow.ui \
     carinterface.ui \
@@ -131,8 +131,8 @@ FORMS    += mainwindow.ui \
     copterinterface.ui \
     nmeawidget.ui \
     confcommonwidget.ui \
-    rtrange.ui \
-    intersectiontest.ui
+    intersectiontest.ui \
+    ncom.ui
 
 contains(DEFINES, HAS_JOYSTICK) {
     SOURCES += joystick.cpp

@@ -37,7 +37,7 @@ void IntersectionTest::setPacketInterface(PacketInterface *packet)
     mPacketInterface = packet;
 }
 
-void IntersectionTest::rtRangeRx(const rt_range_data &data)
+void IntersectionTest::nComRx(const ncom_data &data)
 {
     mRtRangeData = data;
 

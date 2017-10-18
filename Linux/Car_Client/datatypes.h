@@ -625,6 +625,6 @@ typedef struct {
     double mapX;
     double mapY;
     double mapYawRad;
-} rt_range_data;
+} ncom_data;
 
 #endif /* DATATYPES_H_ */

@@ -1,5 +1,5 @@
-#include "rtrange.h"
-#include "ui_rtrange.h"
+#include "ncom.h"
+#include "ui_ncom.h"
 #include "utility.h"
 
 #include <QDebug>
@@ -97,9 +97,9 @@ void put_R8(uint8_t *msg, int *ind, double data) {
 }
 }
 
-RtRange::RtRange(QWidget *parent) :
+NCom::NCom(QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::RtRange)
+    ui(new Ui::NCom)
 {
     ui->setupUi(this);
     mUdpSocket = new QUdpSocket(this);
@@ -119,17 +119,17 @@ RtRange::RtRange(QWidget *parent) :
             this, SLOT(readPendingDatagrams()));
 }
 
-RtRange::~RtRange()
+NCom::~NCom()
 {
     delete ui;
 }
 
-void RtRange::setMap(MapWidget *map)
+void NCom::setMap(MapWidget *map)
 {
     mMap = map;
 }
 
-void RtRange::sendNcom(double *illh,
+void NCom::sendNcom(double *illh,
                        double px,
                        double py,
                        double pz,
@@ -166,14 +166,14 @@ void RtRange::sendNcom(double *illh,
     mUdpSocket->writeDatagram((char*)packet, sizeof(packet), QHostAddress::Broadcast, 3000);
 }
 
-void RtRange::timerSlot()
+void NCom::timerSlot()
 {
     if (mUpdateMap && mMap) {
         mMap->update();
     }
 }
 
-void RtRange::readPendingDatagrams()
+void NCom::readPendingDatagrams()
 {
     while (mUdpSocket->hasPendingDatagrams()) {
         QByteArray datagram;
@@ -298,25 +298,25 @@ void RtRange::readPendingDatagrams()
     }
 }
 
-void RtRange::on_connectButton_clicked()
+void NCom::on_connectButton_clicked()
 {
     mUdpSocket->close();
     mUdpSocket->bind(QHostAddress::Any, ui->portBox->value(), QUdpSocket::ShareAddress);
 }
 
-void RtRange::on_disconnectButton_clicked()
+void NCom::on_disconnectButton_clicked()
 {
     mUdpSocket->close();
     mPacketCounter = 0;
     ui->packetLabel->setText("Packets RX: 0");
 }
 
-void RtRange::on_ipAnyBox_toggled(bool checked)
+void NCom::on_ipAnyBox_toggled(bool checked)
 {
     ui->ipEdit->setEnabled(!checked);
 }
 
-void RtRange::on_mapDrawCarBox_toggled(bool checked)
+void NCom::on_mapDrawCarBox_toggled(bool checked)
 {
     if (mMap) {
         CarInfo *car = mMap->getCarInfo(220);

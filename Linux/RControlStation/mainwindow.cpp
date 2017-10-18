@@ -95,8 +95,8 @@ MainWindow::MainWindow(QWidget *parent) :
     mIntersectionTest->setCars(&mCars);
     mIntersectionTest->setMap(ui->mapWidget);
     mIntersectionTest->setPacketInterface(mPacketInterface);
-    connect(ui->rtRangeWidget, SIGNAL(dataRx(rt_range_data)),
-            mIntersectionTest, SLOT(rtRangeRx(rt_range_data)));
+    connect(ui->nComWidget, SIGNAL(dataRx(ncom_data)),
+            mIntersectionTest, SLOT(nComRx(ncom_data)));
 
     mKeyUp = false;
     mKeyDown = false;
@@ -109,7 +109,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->networkInterface->setPacketInterface(mPacketInterface);
     ui->networkInterface->setCars(&mCars);
     ui->moteWidget->setPacketInterface(mPacketInterface);
-    ui->rtRangeWidget->setMap(ui->mapWidget);
+    ui->nComWidget->setMap(ui->mapWidget);
 
     connect(mTimer, SIGNAL(timeout()), this, SLOT(timerSlot()));
     connect(mSerialPort, SIGNAL(readyRead()),

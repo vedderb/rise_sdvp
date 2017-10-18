@@ -2486,11 +2486,11 @@
         <string/>
        </attribute>
        <attribute name="toolTip">
-        <string>RT Range</string>
+        <string>NCom Client</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_20">
         <item>
-         <widget class="RtRange" name="rtRangeWidget" native="true"/>
+         <widget class="NCom" name="nComWidget" native="true"/>
         </item>
        </layout>
       </widget>
@@ -2640,9 +2640,9 @@
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>RtRange</class>
+   <class>NCom</class>
    <extends>QWidget</extends>
-   <header>rtrange.h</header>
+   <header>ncom.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
