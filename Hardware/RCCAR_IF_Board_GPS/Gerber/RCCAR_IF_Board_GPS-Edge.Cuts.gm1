@@ -1,19 +1,18 @@
-G04 #@! TF.GenerationSoftware,KiCad,Pcbnew,no-vcs-found*
-G04 #@! TF.CreationDate,2016-12-22T15:04:26+01:00*
-G04 #@! TF.ProjectId,RCCAR_IF_Board_GPS,52434341525F49465F426F6172645F47,rev?*
-G04 #@! TF.FileFunction,Profile,NP*
+%TF.GenerationSoftware,KiCad,Pcbnew,no-vcs-found-2c23c4c~60~ubuntu14.04.1*%
+%TF.CreationDate,2017-10-20T13:03:47+02:00*%
+%TF.ProjectId,RCCAR_IF_Board_GPS,52434341525F49465F426F6172645F47,rev?*%
+%TF.SameCoordinates,Original*%
+%TF.FileFunction,Profile,NP*%
 %FSLAX46Y46*%
 G04 Gerber Fmt 4.6, Leading zero omitted, Abs format (unit mm)*
-G04 Created by KiCad (PCBNEW no-vcs-found) date Thu Dec 22 15:04:26 2016*
+G04 Created by KiCad (PCBNEW no-vcs-found-2c23c4c~60~ubuntu14.04.1) date Fri Oct 20 13:03:47 2017*
 %MOMM*%
 %LPD*%
 G01*
 G04 APERTURE LIST*
-%ADD10C,0.100000*%
-%ADD11C,0.150000*%
+%ADD10C,0.150000*%
 G04 APERTURE END LIST*
 D10*
-D11*
 X183500000Y-72000000D02*
 X102500000Y-72000000D01*
 X183500000Y-127000000D02*

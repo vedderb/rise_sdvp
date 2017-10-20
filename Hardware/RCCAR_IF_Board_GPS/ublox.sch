@@ -1,4 +1,5 @@
 EESchema Schematic File Version 2
+LIBS:RCCAR_IF_Board_GPS-rescue
 LIBS:power
 LIBS:device
 LIBS:transistors
@@ -35,11 +36,11 @@ EELAYER 26 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
-Sheet 9 9
+Sheet 9 10
 Title "M8T/M8P"
 Date ""
 Rev "A"
-Comp "SP"
+Comp "RISE"
 Comment1 ""
 Comment2 ""
 Comment3 ""
@@ -165,7 +166,7 @@ L R R20
 U 1 1 585F3849
 P 7200 3400
 F 0 "R20" V 7300 3400 50  0000 C CNN
-F 1 "10R" V 7100 3400 50  0000 C CNN
+F 1 "4.7R" V 7100 3400 50  0000 C CNN
 F 2 "Resistors_SMD:R_0603" V 7130 3400 50  0001 C CNN
 F 3 "" H 7200 3400 50  0000 C CNN
 	1    7200 3400

@@ -1,7 +1,0 @@
-(fp_lib_table
-  (lib (name crf1)(type KiCad)(uri "$(KIPRJMOD)/Libraries/crf1.pretty")(options "")(descr ""))
-  (lib (name w_conn_jst-ph)(type KiCad)(uri "$(KIPRJMOD)/Libraries/w_conn_jst-ph.pretty")(options "")(descr ""))
-  (lib (name w_smd_inductors)(type KiCad)(uri "$(KIPRJMOD)/Libraries/w_smd_inductors.pretty")(options "")(descr ""))
-  (lib (name w_conn_rf)(type KiCad)(uri "$(KIPRJMOD)/Libraries/w_conn_rf.pretty")(options "")(descr ""))
-  (lib (name w_conn_screw)(type KiCad)(uri "$(KIPRJMOD)/Libraries/w_conn_screw.pretty")(options "")(descr ""))
-)

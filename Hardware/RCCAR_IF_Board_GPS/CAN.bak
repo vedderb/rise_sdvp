@@ -1,4 +1,5 @@
 EESchema Schematic File Version 2
+LIBS:RCCAR_IF_Board_GPS-rescue
 LIBS:power
 LIBS:device
 LIBS:transistors
@@ -35,11 +36,11 @@ EELAYER 26 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
-Sheet 7 9
+Sheet 7 10
 Title "CAN Transceiver"
 Date "13 okt 2014"
 Rev ""
-Comp "SP"
+Comp "RISE"
 Comment1 ""
 Comment2 ""
 Comment3 ""

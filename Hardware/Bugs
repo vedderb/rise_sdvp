@@ -2,7 +2,3 @@ Mote
 * MISO and MOSI switched.
 * Wrong CAN transceiver (5V only). Change to SN65HVD232.
 
-IF Board:
-* Change DIP switched to SMD.
-* Wrong CAN transceiver (5V only). Change to SN65HVD232.
-

@@ -1,4 +1,5 @@
 EESchema Schematic File Version 2
+LIBS:RCCAR_IF_Board_GPS-rescue
 LIBS:power
 LIBS:device
 LIBS:transistors
@@ -35,11 +36,11 @@ EELAYER 26 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
-Sheet 3 9
+Sheet 3 10
 Title "CC2520 2.4 GHz RF Transceiver"
 Date "2016-02-11"
 Rev "A"
-Comp "SP"
+Comp "RISE"
 Comment1 ""
 Comment2 ""
 Comment3 ""

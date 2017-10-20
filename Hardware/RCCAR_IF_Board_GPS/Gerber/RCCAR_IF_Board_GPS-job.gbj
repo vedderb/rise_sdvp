@@ -1,0 +1,41 @@
+G04 Gerber job file with board parameters*
+%TF.FileFunction,JobInfo*%
+%TF.Part,SinglePCB*%
+G04 Single PCB fabrication instructions*
+%TF.GenerationSoftware,KiCad,Pcbnew,no-vcs-found-2c23c4c~60~ubuntu14.04.1*%
+%TF.CreationDate,2017-10-20T13:03:47+02:00*%
+%TF.ProjectId,RCCAR_IF_Board_GPS,52434341525F49465F426F6172645F47,rev?*%
+%MOMM*%
+G04 Overall board parameters*
+%TJ.B.Size.X,81.150*%
+%TJ.B.Size.Y,55.150*%
+%TJ.B.LayerNum,4*%
+%TJ.B.Overall.Thickness,1.600*%
+%TJ.B.Legend.Present,Both*%
+%TJ.B.SolderMask.Present,Both*%
+G04 board design rules*
+%TJ.D.PadToPad.Outer,0.178*%
+%TJ.D.PadToPad.Inner,0.178*%
+%TJ.D.PadToTrack.Outer,0.178*%
+%TJ.D.PadToTrack.Inner,0.178*%
+%TJ.D.TrackToTrack.Outer,0.178*%
+%TJ.D.TrackToTrack.Inner,0.178*%
+%TJ.D.MinLineWidth.Outer,0.203*%
+%TJ.D.MinLineWidth.Inner,0.203*%
+%TJ.D.TrackToRegion.Outer,0.254*%
+%TJ.D.TrackToRegion.Inner,0.254*%
+%TJ.D.RegionToRegion.Outer,0.254*%
+%TJ.D.RegionToRegion.Inner,0.254*%
+G04 Layer Structure*
+%TJ.L."Copper,L1,Top",Positive,RCCAR_IF_Board_GPS-F.Cu.gtl*%
+%TJ.L."Copper,L2,Inr",Positive,RCCAR_IF_Board_GPS-In1.Cu.g2*%
+%TJ.L."Copper,L3,Inr",Positive,RCCAR_IF_Board_GPS-In2.Cu.g3*%
+%TJ.L."Copper,L4,Bot",Positive,RCCAR_IF_Board_GPS-B.Cu.gbl*%
+%TJ.L."SolderPaste,Bot",Positive,RCCAR_IF_Board_GPS-B.Paste.gbp*%
+%TJ.L."SolderPaste,Top",Positive,RCCAR_IF_Board_GPS-F.Paste.gtp*%
+%TJ.L."Legend,Bot",Positive,RCCAR_IF_Board_GPS-B.SilkS.gbo*%
+%TJ.L."Legend,Top",Positive,RCCAR_IF_Board_GPS-F.SilkS.gto*%
+%TJ.L."SolderMask,Bot",Negative,RCCAR_IF_Board_GPS-B.Mask.gbs*%
+%TJ.L."SolderMask,Top",Negative,RCCAR_IF_Board_GPS-F.Mask.gts*%
+%TJ.L."Profile",Positive,RCCAR_IF_Board_GPS-Edge.Cuts.gm1*%
+M02*
