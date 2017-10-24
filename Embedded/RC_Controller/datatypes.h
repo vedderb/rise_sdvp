@@ -112,6 +112,16 @@ typedef struct {
 	int32_t time;
 } ROUTE_POINT;
 
+// Position history point
+typedef struct {
+	float px;
+	float py;
+	float pz;
+	float yaw;
+	float speed;
+	int32_t time;
+} POS_POINT;
+
 typedef enum {
 	MOTE_PACKET_FILL_RX_BUFFER = 0,
 	MOTE_PACKET_FILL_RX_BUFFER_LONG,

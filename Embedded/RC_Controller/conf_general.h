@@ -37,7 +37,7 @@
 
 // Firmware version
 #define FW_VERSION_MAJOR			8
-#define FW_VERSION_MINOR			8
+#define FW_VERSION_MINOR			9
 
 // Default car settings
 //#define CAR_TERO // Benjamins tero car
@@ -51,6 +51,12 @@
 // Ublox settings
 #ifndef UBLOX_EN
 #define UBLOX_EN					1
+#endif
+
+// External PPS signal for accurate time synchronization and delay compensation on PD4.
+// Note: This is always enabled on PC8 when using the ublox module.
+#ifndef GPS_EXT_PPS
+#define GPS_EXT_PPS					0
 #endif
 
 // CAN settings

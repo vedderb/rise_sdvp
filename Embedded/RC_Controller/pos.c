@@ -19,6 +19,7 @@
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "ch.h"
 #include "hal.h"
 #include "stm32f4xx_conf.h"
@@ -31,9 +32,11 @@
 #include "ublox.h"
 #include "mr_control.h"
 #include "srf10.h"
+#include "terminal.h"
 
 // Defines
 #define ITERATION_TIMER_FREQ			50000
+#define POS_HISTORY_LEN					100
 
 // Private variables
 static ATTITUDE_INFO m_att;
@@ -50,13 +53,20 @@ static mutex_t m_mutex_pos;
 static mutex_t m_mutex_gps;
 static int32_t m_ms_today;
 static bool m_ubx_pos_valid;
+static int32_t m_nma_last_time;
+static POS_POINT m_pos_history[POS_HISTORY_LEN];
+static int m_pos_history_ptr;
+static bool m_pos_history_print;
 
 // Private functions
+static void cmd_terminal_delay_info(int argc, const char **argv);
 static void mpu9150_read(void);
 static void update_orientation_angles(float *accel, float *gyro, float *mag, float dt);
 static void init_gps_local(GPS_STATE *gps);
 static double nmea_parse_val(char *str);
 static void ublox_relposned_rx(ubx_nav_relposned *pos);
+static void save_pos_history(void);
+static POS_POINT get_closest_point_to_time(int32_t time);
 static void correct_pos_gps(POS_STATE *pos);
 
 #if MAIN_MODE == MAIN_MODE_CAR
@@ -77,6 +87,10 @@ void pos_init(void) {
 	memset(&m_mc_val, 0, sizeof(m_mc_val));
 	m_imu_yaw = 0.0;
 	m_ubx_pos_valid = true;
+	m_nma_last_time = 0;
+	memset(&m_pos_history, 0, sizeof(m_pos_history));
+	m_pos_history_ptr = 0;
+	m_pos_history_print = false;
 
 #ifdef IMU_ROT_180
 	m_yaw_offset_gps = -90.0;
@@ -113,6 +127,35 @@ void pos_init(void) {
 #elif MAIN_MODE == MAIN_MODE_MULTIROTOR
 	srf10_set_sample_callback(srf_distance_received);
 #endif
+
+	// PPS interrupt
+#if UBLOX_EN
+	extChannelEnable(&EXTD1, 8);
+#elif GPS_EXT_PPS
+	palSetPadMode(GPIOD, 4, PAL_MODE_INPUT_PULLDOWN);
+	extChannelEnable(&EXTD1, 4);
+#endif
+
+	terminal_register_command_callback(
+			"delay_info",
+			"Print delay information when doing GNSS position correction.\n"
+			"  0 - Disabled\n"
+			"  1 - Enabled",
+			"[print_en]",
+			cmd_terminal_delay_info);
+}
+
+void pos_pps_cb(EXTDriver *extp, expchannel_t channel) {
+	(void)extp;
+	(void)channel;
+
+	// Assume that the last NMEA time stamp is less than one second
+	// old and round to the closest second after it.
+	if (m_nma_last_time != 0) {
+		int32_t s_today = m_nma_last_time / 1000;
+		s_today++;
+		m_ms_today = s_today * 1000;
+	}
 }
 
 void pos_get_imu(float *accel, float *gyro, float *mag) {
@@ -356,7 +399,11 @@ bool pos_input_nmea(const char *data) {
 	}
 
 	if (ms >= 0) {
+		m_nma_last_time = ms;
+
+#if !UBLOX_EN && !GPS_EXT_PPS
 		m_ms_today = ms;
+#endif
 	}
 
 	// Only use valid fixes
@@ -459,6 +506,22 @@ void pos_reset_attitude(void) {
  */
 int pos_time_since_gps_corr(void) {
 	return ST2MS(chVTTimeElapsedSinceX(m_pos.gps_corr_time));
+}
+
+static void cmd_terminal_delay_info(int argc, const char **argv) {
+	if (argc == 2) {
+		if (strcmp(argv[1], "0") == 0) {
+			m_pos_history_print = 0;
+			commands_printf("OK\n");
+		} else if (strcmp(argv[1], "1") == 0) {
+			m_pos_history_print = 1;
+			commands_printf("OK\n");
+		} else {
+			commands_printf("Invalid argument %s\n", argv[1]);
+		}
+	} else {
+		commands_printf("Wrong number of arguments\n");
+	}
 }
 
 static void mpu9150_read(void) {
@@ -703,6 +766,53 @@ static void ublox_relposned_rx(ubx_nav_relposned *pos) {
 	m_ubx_pos_valid = valid;
 }
 
+static void save_pos_history(void) {
+	m_pos_history[m_pos_history_ptr].px = m_pos.px;
+	m_pos_history[m_pos_history_ptr].py = m_pos.py;
+	m_pos_history[m_pos_history_ptr].pz = m_pos.pz;
+	m_pos_history[m_pos_history_ptr].yaw = m_pos.yaw;
+	m_pos_history[m_pos_history_ptr].speed = m_pos.speed;
+	m_pos_history[m_pos_history_ptr].time = m_ms_today;
+
+	m_pos_history_ptr++;
+	if (m_pos_history_ptr >= POS_HISTORY_LEN) {
+		m_pos_history_ptr = 0;
+	}
+}
+
+static POS_POINT get_closest_point_to_time(int32_t time) {
+	int32_t ind = m_pos_history_ptr > 0 ? m_pos_history_ptr - 1 : POS_HISTORY_LEN - 1;
+	int32_t min_diff = abs(time - m_pos_history[ind].time);
+	int32_t ind_use = ind;
+
+	int cnt = 0;
+	for (;;) {
+		ind = ind > 0 ? ind - 1 : POS_HISTORY_LEN - 1;
+
+		if (ind == m_pos_history_ptr) {
+			break;
+		}
+
+		int32_t diff = abs(time - m_pos_history[ind].time);
+
+		if (diff < min_diff) {
+			min_diff = diff;
+			ind_use = ind;
+		} else {
+			break;
+		}
+
+		cnt++;
+	}
+
+	if (m_pos_history_print) {
+		commands_printf("Age: %d ms Ind: %d, Diff: %d ms",
+				m_ms_today - time, cnt, min_diff);
+	}
+
+	return m_pos_history[ind_use];
+}
+
 static void correct_pos_gps(POS_STATE *pos) {
 #if MAIN_MODE == MAIN_MODE_MULTIROTOR
 	pos->gps_corr_cnt = sqrtf(SQ(pos->px_gps - pos->px_gps_last) +
@@ -712,26 +822,31 @@ static void correct_pos_gps(POS_STATE *pos) {
 	float gain = main_config.gps_corr_gain_stat +
 			main_config.gps_corr_gain_dyn * pos->gps_corr_cnt;
 
+	POS_POINT closest = get_closest_point_to_time(pos->gps_ms);
+
 	float yaw_gps = atan2f(pos->py_gps - pos->gps_ang_corr_y_last_gps,
 			pos->px_gps - pos->gps_ang_corr_x_last_gps);
-	float yaw_car = atan2f(pos->py - pos->gps_ang_corr_y_last_car,
-			pos->px - pos->gps_ang_corr_x_last_car);
+	float yaw_car = atan2f(closest.py - pos->gps_ang_corr_y_last_car,
+			closest.px - pos->gps_ang_corr_x_last_car);
 	float yaw_diff = utils_angle_difference_rad(yaw_gps, yaw_car) * 180.0 / M_PI;
 
-	if (fabsf(pos->speed * 3.6) > 0.5) {
+	if (fabsf(closest.speed * 3.6) > 0.5) {
 		utils_step_towards(&m_yaw_offset_gps, m_yaw_offset_gps + yaw_diff,
 				main_config.gps_corr_gain_yaw * pos->gps_corr_cnt);
 	}
 
 	utils_norm_angle(&m_yaw_offset_gps);
 
-	utils_step_towards(&pos->px, pos->px_gps, gain);
-	utils_step_towards(&pos->py, pos->py_gps, gain);
+	POS_POINT closest_corr = closest;
+	utils_step_towards(&closest_corr.px, pos->px_gps, gain);
+	utils_step_towards(&closest_corr.py, pos->py_gps, gain);
+	pos->px += closest_corr.px - closest.px;
+	pos->py += closest_corr.py - closest.py;
 
 	pos->gps_ang_corr_x_last_gps = pos->px_gps;
 	pos->gps_ang_corr_y_last_gps = pos->py_gps;
-	pos->gps_ang_corr_x_last_car = pos->px;
-	pos->gps_ang_corr_y_last_car = pos->py;
+	pos->gps_ang_corr_x_last_car = closest.px;
+	pos->gps_ang_corr_y_last_car = closest.py;
 
 	// Update multirotor state
 #if MAIN_MODE == MAIN_MODE_MULTIROTOR
@@ -858,6 +973,8 @@ static void mc_values_received(mc_values *val) {
 	m_pos.speed = val->rpm * main_config.car.gear_ratio
 			* (2.0 / main_config.car.motor_poles) * (1.0 / 60.0)
 			* main_config.car.wheel_diam * M_PI;
+
+	save_pos_history();
 
 	chMtxUnlock(&m_mutex_pos);
 }

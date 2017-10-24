@@ -19,9 +19,12 @@
 #define POS_H_
 
 #include "conf_general.h"
+#include "ch.h"
+#include "hal.h"
 
 // Functions
 void pos_init(void);
+void pos_pps_cb(EXTDriver *extp, expchannel_t channel);
 void pos_get_imu(float *accel, float *gyro, float *mag);
 void pos_get_quaternions(float *q);
 void pos_get_pos(POS_STATE *p);
