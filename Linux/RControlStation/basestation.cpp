@@ -419,6 +419,27 @@ void BaseStation::on_ubxSerialConnectButton_clicked()
         nav5.apply_dyn = true;
         nav5.dyn_model = 2;
         mUblox->ubxCfgNav5(&nav5);
+
+        // Time pulse configuration
+        ubx_cfg_tp5 tp5;
+        memset(&tp5, 0, sizeof(ubx_cfg_tp5));
+        tp5.active = true;
+        tp5.polarity = true;
+        tp5.alignToTow = true;
+        tp5.lockGnssFreq = true;
+        tp5.lockedOtherSet = true;
+        tp5.syncMode = false;
+        tp5.isFreq = false;
+        tp5.isLength = true;
+        tp5.freq_period = 1000000;
+        tp5.pulse_len_ratio = 0;
+        tp5.freq_period_lock = 1000000;
+        tp5.pulse_len_ratio_lock = 100000;
+        tp5.gridUtcGnss = 0;
+        tp5.user_config_delay = 0;
+        tp5.rf_group_delay = 0;
+        tp5.ant_cable_delay = 50;
+        mUblox->ubloxCfgTp5(&tp5);
     }
 }
 

@@ -1,3 +1,6 @@
+=== FW 8.10 ===
+* Ublox timepulse configuration support.
+
 === FW 8.9 ===
 * PPS support and NMEA delay compensation.
 

@@ -546,6 +546,100 @@ typedef struct {
     uint8_t utc_standard;
 } ubx_cfg_nav5;
 
+typedef struct {
+    uint8_t tp_idx; // Timepulse selection. 0=TP1, 1=TP2
+    int16_t ant_cable_delay; // Antenna cable delay in ns
+    int16_t rf_group_delay; // RF group delay in ns
+    uint32_t freq_period; // Frequency or time period, Hz or us
+    uint32_t freq_period_lock; // Frequency or time period when locked to GNSS time, Hz or us
+    uint32_t pulse_len_ratio; // Pulse length or duty cycle, us or 2^-32
+    uint32_t pulse_len_ratio_lock; // Pulse length or duty cycle when locked to GNSS time, us or 2^-32
+    int32_t user_config_delay; // User configurable time pulse delay, ns
+
+    /*
+     * If set enable time pulse; if pin assigned to another function, other function takes
+     * precedence. Must be set for FTS variant.
+     */
+    bool active;
+
+    /*
+     * If set synchronize time pulse to GNSS as soon as GNSS time is valid. If not
+     * set, or before GNSS time is valid use local clock. This flag is ignored by
+     * the FTS product variant; in this case the receiver always locks to the best
+     * available time/frequency reference (which is not necessarily GNSS).
+     */
+    bool lockGnssFreq;
+
+    /*
+     * If set the receiver switches between the timepulse settings given by 'freqPeriodLocked' &
+     * 'pulseLenLocked' and those given by 'freqPeriod' & 'pulseLen'. The 'Locked' settings are
+     * used where the receiver has an accurate sense of time. For non-FTS products, this occurs
+     * when GNSS solution with a reliable time is available, but for FTS products the setting syncMode
+     * field governs behavior. In all cases, the receiver only uses 'freqPeriod' & 'pulseLen' when
+     * the flag is unset.
+     */
+    bool lockedOtherSet;
+
+    /*
+     * If set 'freqPeriodLock' and 'freqPeriod' are interpreted as frequency,
+     * otherwise interpreted as period.
+     */
+    bool isFreq;
+
+    /*
+     * If set 'pulseLenRatioLock' and 'pulseLenRatio' interpreted as pulse
+     * length, otherwise interpreted as duty cycle.
+     */
+    bool isLength;
+
+    /*
+     * Align pulse to top of second (period time must be integer fraction of 1s).
+     * Also set 'lockGnssFreq' to use this feature.
+     * This flag is ignored by the FTS product variant; it is assumed to be always set
+     * (as is lockGnssFreq). Set maxSlewRate and maxPhaseCorrRate fields of CFG-SMGR to
+     * 0 to disable alignment.
+     */
+    bool alignToTow;
+
+    /*
+     * Pulse polarity:
+     * 0: falling edge at top of second
+     * 1: rising edge at top of second
+     */
+    bool polarity;
+
+    /*
+     * Timegrid to use:
+     * 0: UTC
+     * 1: GPS
+     * 2: GLONASS
+     * 3: BeiDou
+     * 4: Galileo (not supported in protocol versions less than 18)
+     * This flag is only relevant if 'lockGnssFreq' and 'alignToTow' are set.
+     * Note that configured GNSS time is estimated by the receiver if locked to
+     * any GNSS system. If the receiver has a valid GNSS fix it will attempt to
+     * steer the TP to the specified time grid even if the specified time is not
+     * based on information from the constellation's satellites. To ensure timing
+     * based purely on a given GNSS, restrict the supported constellations in CFG-GNSS.
+     */
+    uint8_t gridUtcGnss;
+
+    /*
+     * Sync Manager lock mode to use:
+     *
+     * 0: switch to 'freqPeriodLock' and 'pulseLenRatioLock' as soon as Sync
+     * Manager has an accurate time, never switch back to 'freqPeriod' and 'pulseLenRatio'
+     *
+     * 1: switch to 'freqPeriodLock' and 'pulseLenRatioLock' as soon as Sync Manager has
+     * an accurate time, and switch back to 'freqPeriod' and 'pulseLenRatio' as soon as
+     * time gets inaccurate.
+     *
+     * This field is only relevant for the FTS product variant.
+     * This field is only relevant if the flag 'lockedOtherSet' is set.
+     */
+    uint8_t syncMode;
+} ubx_cfg_tp5;
+
 // Chronos messages
 
 typedef enum {

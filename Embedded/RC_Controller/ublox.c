@@ -270,6 +270,27 @@ void ublox_init(void) {
 	nav5.dyn_model = 4;
 	ublox_cfg_nav5(&nav5);
 
+	// Time pulse configuration
+	ubx_cfg_tp5 tp5;
+	memset(&tp5, 0, sizeof(ubx_cfg_tp5));
+	tp5.active = true;
+	tp5.polarity = true;
+	tp5.alignToTow = true;
+	tp5.lockGnssFreq = true;
+	tp5.lockedOtherSet = true;
+	tp5.syncMode = false;
+	tp5.isFreq = false;
+	tp5.isLength = true;
+	tp5.freq_period = 1000000;
+	tp5.pulse_len_ratio = 0;
+	tp5.freq_period_lock = 1000000;
+	tp5.pulse_len_ratio_lock = 100000;
+	tp5.gridUtcGnss = 0;
+	tp5.user_config_delay = 0;
+	tp5.rf_group_delay = 0;
+	tp5.ant_cable_delay = 50;
+	ublox_cfg_tp5(&tp5);
+
 	// Switch in RELPOSNED messages
 	ublox_cfg_msg(UBX_CLASS_NAV, UBX_NAV_RELPOSNED, 1);
 }
@@ -321,7 +342,7 @@ void ublox_poll(uint8_t msg_class, uint8_t id) {
  * -1: Timeout when waiting for ack/nak
  */
 int ublox_cfg_prt_uart(ubx_cfg_prt_uart *cfg) {
-	uint8_t buffer[40];
+	uint8_t buffer[20];
 	int ind = 0;
 
 	ubx_put_U1(buffer, &ind, 1); // ID for UART1
@@ -547,6 +568,39 @@ int ublox_cfg_nav5(ubx_cfg_nav5 *cfg) {
 	ubx_put_U1(buffer, &ind, 0);
 
 	ubx_encode_send(UBX_CLASS_CFG, UBX_CFG_NAV5, buffer, ind);
+	return wait_ack_nak(CFG_ACK_WAIT_MS);
+}
+
+int ublox_cfg_tp5(ubx_cfg_tp5 *cfg) {
+	uint8_t buffer[32];
+	int ind = 0;
+
+	ubx_put_U1(buffer, &ind, 0);
+	ubx_put_U1(buffer, &ind, 1);
+	ubx_put_U1(buffer, &ind, 0);
+	ubx_put_U1(buffer, &ind, 0);
+	ubx_put_I2(buffer, &ind, cfg->ant_cable_delay);
+	ubx_put_I2(buffer, &ind, cfg->rf_group_delay);
+	ubx_put_U4(buffer, &ind, cfg->freq_period);
+	ubx_put_U4(buffer, &ind, cfg->freq_period_lock);
+	ubx_put_U4(buffer, &ind, cfg->pulse_len_ratio);
+	ubx_put_U4(buffer, &ind, cfg->pulse_len_ratio_lock);
+	ubx_put_I4(buffer, &ind, cfg->user_config_delay);
+
+	uint32_t mask = 0;
+	mask |= (cfg->active ? 1 : 0) << 0;
+	mask |= (cfg->lockGnssFreq ? 1 : 0) << 1;
+	mask |= (cfg->lockedOtherSet ? 1 : 0) << 2;
+	mask |= (cfg->isFreq ? 1 : 0) << 3;
+	mask |= (cfg->isLength ? 1 : 0) << 4;
+	mask |= (cfg->alignToTow ? 1 : 0) << 5;
+	mask |= (cfg->polarity ? 1 : 0) << 6;
+	mask |= (cfg->gridUtcGnss & 0b1111) << 7;
+	mask |= (cfg->syncMode & 0b111) << 8;
+
+	ubx_put_X4(buffer, &ind, mask);
+
+	ubx_encode_send(UBX_CLASS_CFG, UBX_CFG_TP5, buffer, ind);
 	return wait_ack_nak(CFG_ACK_WAIT_MS);
 }
 

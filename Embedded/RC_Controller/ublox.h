@@ -33,6 +33,7 @@ int ublox_cfg_tmode3(ubx_cfg_tmode3 *cfg);
 int ublox_cfg_msg(uint8_t msg_class, uint8_t id, uint8_t rate);
 int ublox_cfg_rate(uint16_t meas_rate_ms, uint16_t nav_rate_ms, uint16_t time_ref);
 int ublox_cfg_nav5(ubx_cfg_nav5 *cfg);
+int ublox_cfg_tp5(ubx_cfg_tp5 *cfg);
 
 // Message classes
 #define UBX_CLASS_NAV					0x01
@@ -69,6 +70,7 @@ int ublox_cfg_nav5(ubx_cfg_nav5 *cfg);
 #define UBX_CFG_MSG						0x01
 #define UBX_CFG_RATE					0x08
 #define UBX_CFG_NAV5					0x24
+#define UBX_CFG_TP5						0x31
 #define UBX_CFG_TMODE3					0x71
 
 // RTCM3 messages

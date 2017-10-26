@@ -57,6 +57,7 @@ static int32_t m_nma_last_time;
 static POS_POINT m_pos_history[POS_HISTORY_LEN];
 static int m_pos_history_ptr;
 static bool m_pos_history_print;
+static int32_t m_pps_cnt;
 
 // Private functions
 static void cmd_terminal_delay_info(int argc, const char **argv);
@@ -91,6 +92,7 @@ void pos_init(void) {
 	memset(&m_pos_history, 0, sizeof(m_pos_history));
 	m_pos_history_ptr = 0;
 	m_pos_history_print = false;
+	m_pps_cnt = 0;
 
 #ifdef IMU_ROT_180
 	m_yaw_offset_gps = -90.0;
@@ -148,6 +150,8 @@ void pos_init(void) {
 void pos_pps_cb(EXTDriver *extp, expchannel_t channel) {
 	(void)extp;
 	(void)channel;
+
+	m_pps_cnt++;
 
 	// Assume that the last NMEA time stamp is less than one second
 	// old and round to the closest second after it.
@@ -806,8 +810,8 @@ static POS_POINT get_closest_point_to_time(int32_t time) {
 	}
 
 	if (m_pos_history_print) {
-		commands_printf("Age: %d ms Ind: %d, Diff: %d ms",
-				m_ms_today - time, cnt, min_diff);
+		commands_printf("Age: %d ms Ind: %d, Diff: %d ms PPS_CNT: %d",
+				m_ms_today - time, cnt, min_diff, m_pps_cnt);
 	}
 
 	return m_pos_history[ind_use];

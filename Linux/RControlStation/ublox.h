@@ -41,6 +41,7 @@ public:
     bool ubxCfgMsg(uint8_t msg_class, uint8_t id, uint8_t rate);
     bool ubxCfgRate(uint16_t meas_rate_ms, uint16_t nav_rate_ms, uint16_t time_ref);
     bool ubxCfgNav5(ubx_cfg_nav5 *cfg);
+    bool ubloxCfgTp5(ubx_cfg_tp5 *cfg);
 
 signals:
     void rxGga(int fields, NmeaServer::nmea_gga_info_t gga);
@@ -122,6 +123,7 @@ private:
 #define UBX_CFG_MSG						0x01
 #define UBX_CFG_RATE					0x08
 #define UBX_CFG_NAV5					0x24
+#define UBX_CFG_TP5						0x31
 #define UBX_CFG_TMODE3					0x71
 
 // RTCM3 messages

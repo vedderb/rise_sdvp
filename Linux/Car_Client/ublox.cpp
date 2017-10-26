@@ -17,6 +17,7 @@
 
 #include "ublox.h"
 #include <QEventLoop>
+#include <cmath>
 
 namespace {
 static uint8_t ubx_get_U1(uint8_t *msg, int *ind) {
@@ -286,7 +287,7 @@ void Ublox::ubxPoll(uint8_t msg_class, uint8_t id)
  */
 bool Ublox::ubxCfgPrtUart(ubx_cfg_prt_uart *cfg)
 {
-    uint8_t buffer[40];
+    uint8_t buffer[20];
     int ind = 0;
 
     ubx_put_U1(buffer, &ind, 1); // ID for UART1
@@ -508,6 +509,39 @@ bool Ublox::ubxCfgNav5(ubx_cfg_nav5 *cfg)
     ubx_put_U1(buffer, &ind, 0);
 
     return ubx_encode_send(UBX_CLASS_CFG, UBX_CFG_NAV5, buffer, ind, 10);
+}
+
+bool Ublox::ubloxCfgTp5(ubx_cfg_tp5 *cfg)
+{
+    uint8_t buffer[32];
+    int ind = 0;
+
+    ubx_put_U1(buffer, &ind, 0);
+    ubx_put_U1(buffer, &ind, 1);
+    ubx_put_U1(buffer, &ind, 0);
+    ubx_put_U1(buffer, &ind, 0);
+    ubx_put_I2(buffer, &ind, cfg->ant_cable_delay);
+    ubx_put_I2(buffer, &ind, cfg->rf_group_delay);
+    ubx_put_U4(buffer, &ind, cfg->freq_period);
+    ubx_put_U4(buffer, &ind, cfg->freq_period_lock);
+    ubx_put_U4(buffer, &ind, cfg->pulse_len_ratio);
+    ubx_put_U4(buffer, &ind, cfg->pulse_len_ratio_lock);
+    ubx_put_I4(buffer, &ind, cfg->user_config_delay);
+
+    uint32_t mask = 0;
+    mask |= (cfg->active ? 1 : 0) << 0;
+    mask |= (cfg->lockGnssFreq ? 1 : 0) << 1;
+    mask |= (cfg->lockedOtherSet ? 1 : 0) << 2;
+    mask |= (cfg->isFreq ? 1 : 0) << 3;
+    mask |= (cfg->isLength ? 1 : 0) << 4;
+    mask |= (cfg->alignToTow ? 1 : 0) << 5;
+    mask |= (cfg->polarity ? 1 : 0) << 6;
+    mask |= (cfg->gridUtcGnss & 0b1111) << 7;
+    mask |= (cfg->syncMode & 0b111) << 8;
+
+    ubx_put_X4(buffer, &ind, mask);
+
+    return ubx_encode_send(UBX_CLASS_CFG, UBX_CFG_TP5, buffer, ind, 10);
 }
 
 void Ublox::serialDataAvailable()
