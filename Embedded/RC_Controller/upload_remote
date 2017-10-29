@@ -4,14 +4,32 @@ bin=$1
 user=$2
 server=$3
 port=$4
+mode=$5
+
+if [[ !($mode == @(uart|stlink|pi_gpio)) ]]; then
+    echo No valid mode specified. Please use
+    echo ./upload_fw [mode]
+    echo where [mode] can be uart, stlink or pi_gpio
+    exit 1
+fi
 
 # Upload elf file to server
 scp -P $port $bin $user@$server:/home/$user/
 
 # Run programming command on server
 filename="$(basename $bin)"
-#ssh $user@$server -p $port "stm32flash '$dev' -i -rts,dtr,-dtr:rts,dtr,-dtr -b 1000000 -w '$filename' -v -g 0x0"
-ssh $user@$server -p $port "openocd -f board/stm32f4discovery.cfg -c 'reset_config trst_only combined' -c 'program $filename verify reset exit'"
+
+if [ "$mode" == "uart" ]; then
+	ssh $user@$server -p $port "stm32flash '$dev' -i -rts,dtr,-dtr:rts,dtr,-dtr -b 1000000 -w '$filename' -v -g 0x0"
+fi
+
+if [ "$mode" == "stlink" ]; then
+	ssh $user@$server -p $port "openocd -f board/stm32f4discovery.cfg -c 'reset_config trst_only combined' -c 'program $filename verify reset exit 0x08000000'"
+fi
+
+if [ "$mode" == "pi_gpio" ]; then
+	ssh $user@$server -p $port "sudo openocd -f interface/raspberrypi2-native.cfg -c 'transport select swd' -c 'set CHIPNAME stm32f4x' -f 'target/stm32f4x.cfg' -c 'reset_config  srst_nogate' -c 'adapter_nsrst_delay 100' -c 'adapter_nsrst_assert_width 100' -c 'program $filename verify reset exit 0x08000000'"
+fi
 
 # Remove elf file from server
 ssh $user@$server -p $port "rm /home/$user/$(basename $bin)"
