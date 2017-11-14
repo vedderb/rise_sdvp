@@ -52,9 +52,11 @@
 #ifndef UBLOX_EN
 #define UBLOX_EN					1
 #endif
+#ifndef UBLOX_USE_PPS
+#define UBLOX_USE_PPS				1
+#endif
 
 // External PPS signal for accurate time synchronization and delay compensation on PD4.
-// Note: This is always enabled on PC8 when using the ublox module.
 #ifndef GPS_EXT_PPS
 #define GPS_EXT_PPS					0
 #endif
@@ -63,9 +65,11 @@
 #define CAN_EN_DW					0
 
 // Log configuration to enable. Choose one only.
-#define LOG_EN_CARREL
+//#define LOG_EN_CARREL
 //#define LOG_EN_ITRANSIT
 //#define LOG_EN_DW
+#define LOG_EN_SW
+#define LOG_EN_CORR
 
 // Anchor IDs to range against in DW logging mode. -1 to disable.
 #define LOG_DW_ANCHOR0				122

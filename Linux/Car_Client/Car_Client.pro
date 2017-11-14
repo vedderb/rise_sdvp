@@ -24,7 +24,8 @@ SOURCES += main.cpp \
     packet.cpp \
     tcpserversimple.cpp \
     chronos.cpp \
-    vbytearray.cpp
+    vbytearray.cpp \
+    rtcmclient.cpp
 
 HEADERS += \
     packetinterface.h \
@@ -40,5 +41,6 @@ HEADERS += \
     packet.h \
     tcpserversimple.h \
     chronos.h \
-    vbytearray.h
+    vbytearray.h \
+    rtcmclient.h
 

@@ -30,6 +30,7 @@
 #include "serialport.h"
 #include "ublox.h"
 #include "tcpserversimple.h"
+#include "rtcmclient.h"
 
 class CarClient : public QObject
 {
@@ -66,6 +67,8 @@ public:
     PacketInterface* packetInterface();
     bool isRtklibRunning();
     quint8 carId();
+    void connectNtrip(QString server, QString stream, QString user = "", QString pass = "", int port = 80);
+    void setSendRtcmBasePos(bool send, double lat = 0.0, double lon = 0.0, double height = 0.0);
 
 signals:
 
@@ -89,6 +92,7 @@ public slots:
     void ubxRx(const QByteArray &data);
     void rxRawx(ubx_rxm_rawx rawx);
     void tcpRx(QByteArray &data);
+    void rtcmReceived(QByteArray data, int type, bool sync = false);
 
 private:
     PacketInterface *mPacketInterface;
@@ -98,6 +102,7 @@ private:
     QSerialPort *mSerialPortRtcm;
     QTcpSocket *mTcpSocket;
     TcpServerSimple *mTcpServer;
+    RtcmClient *mRtcmClient;
     int mCarId;
     QTimer *mReconnectTimer;
     QTimer *mLogFlushTimer;
@@ -109,6 +114,11 @@ private:
     QFile mLog;
     Ublox *mUblox;
     bool mRtklibRunning;
+
+    double mRtcmBaseLat;
+    double mRtcmBaseLon;
+    double mRtcmBaseHeight;
+    bool mRtcmSendBase;
 
     void rebootSystem(bool powerOff = false);
     bool setUnixTime(qint64 t);

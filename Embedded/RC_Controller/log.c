@@ -43,6 +43,10 @@ static bool m_write_split;
 static char m_log_name[LOG_NAME_MAX_LEN + 1];
 static bool m_log_en_uart;
 static int m_log_uart_baud;
+static POS_STATE m_pos_last_sw;
+static bool m_pos_last_sw_updated;
+static POS_STATE m_pos_last_corr;
+static bool m_pos_last_corr_updated;
 #ifdef LOG_EN_DW
 static int m_dw_anchor_now = 0;
 static DW_LOG_INFO m_dw_anchor_info[3];
@@ -85,6 +89,10 @@ void log_init(void) {
 	strcpy(m_log_name, "Undefined");
 	m_log_en_uart = false;
 	m_log_uart_baud = 115200;
+	memset(&m_pos_last_sw, 0, sizeof(m_pos_last_sw));
+	m_pos_last_sw_updated = false;
+	memset(&m_pos_last_corr, 0, sizeof(m_pos_last_corr));
+	m_pos_last_corr_updated = false;
 
 	chThdCreateStatic(log_thread_wa, sizeof(log_thread_wa), NORMALPRIO, log_thread, NULL);
 }
@@ -121,6 +129,16 @@ void log_set_uart(bool enabled, int baud) {
 	if (m_log_en_uart) {
 		set_baudrate(baud);
 	}
+}
+
+void log_update_sw_pos(const POS_STATE *pos) {
+	m_pos_last_sw = *pos;
+	m_pos_last_sw_updated = true;
+}
+
+void log_update_corr_pos(const POS_STATE *pos) {
+	m_pos_last_corr = *pos;
+	m_pos_last_corr_updated = true;
 }
 
 static THD_FUNCTION(log_thread, arg) {
@@ -185,8 +203,8 @@ static THD_FUNCTION(log_thread, arg) {
 
 			float steering_angle = (servo_simple_get_pos_now()
 					- main_config.car.steering_center)
-							* ((2.0 * main_config.car.steering_max_angle_rad)
-									/ main_config.car.steering_range);
+									* ((2.0 * main_config.car.steering_max_angle_rad)
+											/ main_config.car.steering_range);
 
 			pos_get_mc_val(&val);
 			pos_get_pos(&pos);
@@ -261,8 +279,8 @@ static THD_FUNCTION(log_thread, arg) {
 
 			float steering_angle = (servo_simple_get_pos_now()
 					- main_config.car.steering_center)
-										* ((2.0 * main_config.car.steering_max_angle_rad)
-												/ main_config.car.steering_range);
+												* ((2.0 * main_config.car.steering_max_angle_rad)
+														/ main_config.car.steering_range);
 
 			pos_get_mc_val(&val);
 			pos_get_gps(&gps);
@@ -347,6 +365,42 @@ static THD_FUNCTION(log_thread, arg) {
 			}
 
 			m_dw_anchor_now++;
+#endif
+
+#ifdef LOG_EN_SW
+			if (m_pos_last_sw_updated) {
+				m_pos_last_sw_updated = false;
+				commands_printf_log_usb(
+						"SW "
+						"%u "     // gps ms
+						"%u "     // fix type
+						"%.3f "   // x
+						"%.3f\n", // y
+
+						m_pos_last_sw.gps_ms,
+						m_pos_last_sw.gps_fix_type,
+						(double)m_pos_last_sw.px,
+						(double)m_pos_last_sw.py);
+			}
+#endif
+
+#ifdef LOG_EN_CORR
+			if (m_pos_last_corr_updated) {
+				m_pos_last_corr_updated = false;
+				commands_printf_log_usb(
+						"CORR "
+						"%u "     // gps ms
+						"%u "     // fix type
+						"%.3f "   // x
+						"%.3f\n"  // y
+						"%.3f\n", // corr_diff
+
+						m_pos_last_corr.gps_ms,
+						m_pos_last_corr.gps_fix_type,
+						(double)m_pos_last_corr.px,
+						(double)m_pos_last_corr.py,
+						(double)m_pos_last_corr.gps_last_corr_diff);
+			}
 #endif
 		}
 

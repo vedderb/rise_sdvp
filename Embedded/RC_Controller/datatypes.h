@@ -72,6 +72,8 @@ typedef struct {
 	float py_gps;
 	float pz_gps;
 	int32_t gps_ms;
+	int gps_fix_type;
+	float gps_last_corr_diff;
 
 	// Previous GPS position and time stamp
 	float px_gps_last;

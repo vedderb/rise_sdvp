@@ -33,6 +33,7 @@
 #include "mr_control.h"
 #include "srf10.h"
 #include "terminal.h"
+#include "log.h"
 
 // Defines
 #define ITERATION_TIMER_FREQ			50000
@@ -131,7 +132,7 @@ void pos_init(void) {
 #endif
 
 	// PPS interrupt
-#if UBLOX_EN
+#if UBLOX_EN && UBLOX_USE_PPS
 	extChannelEnable(&EXTD1, 8);
 #elif GPS_EXT_PPS
 	palSetPadMode(GPIOD, 4, PAL_MODE_INPUT_PULLDOWN);
@@ -145,6 +146,10 @@ void pos_init(void) {
 			"  1 - Enabled",
 			"[print_en]",
 			cmd_terminal_delay_info);
+
+#ifdef LOG_EN_SW
+	palSetPadMode(GPIOD, 3, PAL_MODE_INPUT_PULLUP);
+#endif
 }
 
 void pos_pps_cb(EXTDriver *extp, expchannel_t channel) {
@@ -405,7 +410,7 @@ bool pos_input_nmea(const char *data) {
 	if (ms >= 0) {
 		m_nma_last_time = ms;
 
-#if !UBLOX_EN && !GPS_EXT_PPS
+#if !(UBLOX_EN && UBLOX_USE_PPS) && !GPS_EXT_PPS
 		m_ms_today = ms;
 #endif
 	}
@@ -462,12 +467,17 @@ bool pos_input_nmea(const char *data) {
 			m_pos.py_gps = py;
 			m_pos.pz_gps = m_gps.lz;
 			m_pos.gps_ms = m_gps.ms;
+			m_pos.gps_fix_type = m_gps.fix_type;
 
 			// Correct position
 			// Optionally require RTK and good ublox quality indication.
 			if (main_config.gps_comp &&
 					(!main_config.gps_req_rtk || (fix_type == 4 || fix_type == 5)) &&
 					(!main_config.gps_use_ubx_info || m_ubx_pos_valid)) {
+
+				m_pos.gps_last_corr_diff = sqrtf(SQ(m_pos.px - m_pos.px_gps) +
+						SQ(m_pos.py - m_pos.py_gps));
+				log_update_corr_pos(&m_pos);
 
 				correct_pos_gps(&m_pos);
 				m_pos.gps_corr_time = chVTGetSystemTimeX();
@@ -577,6 +587,15 @@ static void mpu9150_read(void) {
 
 #if MAIN_MODE == MAIN_MODE_MULTIROTOR
 	mr_control_run_iteration(dt);
+#endif
+
+#ifdef LOG_EN_SW
+	static int sw_cnt = 0;
+	if (!palReadPad(GPIOD, 3) && sw_cnt > 100) {
+		sw_cnt = 0;
+		log_update_sw_pos(&m_pos);
+	}
+	sw_cnt++;
 #endif
 }
 
@@ -828,15 +847,27 @@ static void correct_pos_gps(POS_STATE *pos) {
 
 	POS_POINT closest = get_closest_point_to_time(pos->gps_ms);
 
-	float yaw_gps = atan2f(pos->py_gps - pos->gps_ang_corr_y_last_gps,
-			pos->px_gps - pos->gps_ang_corr_x_last_gps);
-	float yaw_car = atan2f(closest.py - pos->gps_ang_corr_y_last_car,
-			closest.px - pos->gps_ang_corr_x_last_car);
-	float yaw_diff = utils_angle_difference_rad(yaw_gps, yaw_car) * 180.0 / M_PI;
-
 	if (fabsf(closest.speed * 3.6) > 0.5) {
+		float yaw_gps = atan2f(pos->py_gps - pos->gps_ang_corr_y_last_gps,
+				pos->px_gps - pos->gps_ang_corr_x_last_gps);
+		float yaw_car = atan2f(closest.py - pos->gps_ang_corr_y_last_car,
+				closest.px - pos->gps_ang_corr_x_last_car);
+		float yaw_diff = utils_angle_difference_rad(yaw_gps, yaw_car) * 180.0 / M_PI;
+
 		utils_step_towards(&m_yaw_offset_gps, m_yaw_offset_gps + yaw_diff,
-				main_config.gps_corr_gain_yaw * pos->gps_corr_cnt);
+						main_config.gps_corr_gain_yaw * pos->gps_corr_cnt);
+
+		// TODO: Finish and test new angle correction
+//		float dx = closest.px - pos->px_gps;
+//		float dy = closest.py - pos->py_gps;
+//		float d = sqrtf(SQ(dx) + SQ(dy));
+//		float al2 = atan2f(dy, dx);
+//		float al3 = utils_angle_difference((closest.yaw * (M_PI / 180.0)), al2);
+//		float ds = d = cosf(al3);
+//		if (d < 0.1) {
+//			d = 0.1;
+//		}
+//		m_yaw_offset_gps += (ds / d) * main_config.gps_corr_gain_yaw;
 	}
 
 	utils_norm_angle(&m_yaw_offset_gps);

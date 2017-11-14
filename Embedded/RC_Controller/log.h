@@ -21,6 +21,7 @@
 #include "ch.h"
 #include "chtypes.h"
 #include "chsystypes.h"
+#include "datatypes.h"
 
 // Functions
 void log_init(void);
@@ -28,5 +29,7 @@ void log_set_rate(int rate_hz);
 void log_set_enabled(bool enabled);
 void log_set_name(char *name);
 void log_set_uart(bool enabled, int baud);
+void log_update_sw_pos(const POS_STATE *pos);
+void log_update_corr_pos(const POS_STATE *pos);
 
 #endif /* LOG_H_ */

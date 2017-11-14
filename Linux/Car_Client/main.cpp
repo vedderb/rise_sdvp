@@ -44,6 +44,8 @@ void showHelp()
     qDebug() << "--ttyportrtcm : Serial port for RTCM, e.g. /dev/ttyUSB0";
     qDebug() << "--rtcmbaud : RTCM port baud rate, e.g. 9600";
     qDebug() << "--chronos : Run CHRONOS client";
+    qDebug() << "--ntrip [server]:[stream]:[user]:[password]:[port] : Connect to ntrip server";
+    qDebug() << "--rtcmbasepos [lat]:[lon]:[height] : Inject RTCM base position message";
 }
 
 static void m_cleanup(int sig)
@@ -75,6 +77,16 @@ int main(int argc, char *argv[])
     QString ttyPortRtcm = "/dev/ttyUSB0";
     int rtcmBaud = 9600;
     bool useChronos = false;
+    bool useNtrip = false;
+    QString ntripServer;
+    QString ntripStream;
+    QString ntripUser;
+    QString ntripPass;
+    int ntripPort = 80;
+    bool sendRtcmBase = false;
+    double rtcmBaseLat = 0.0;
+    double rtcmBaseLon = 0.0;
+    double rtcmBaseHeight = 0.0;
 
     signal(SIGINT, m_cleanup);
     signal(SIGTERM, m_cleanup);
@@ -229,6 +241,40 @@ int main(int argc, char *argv[])
             found = true;
         }
 
+        if (str == "--ntrip") {
+            if ((i - 1) < args.size()) {
+                i++;
+                QString tmp = args.at(i);
+                QStringList ntripData = tmp.split(":");
+
+                if (ntripData.size() == 5) {
+                    found = true;
+                    ntripServer = ntripData.at(0);
+                    ntripStream = ntripData.at(1);
+                    ntripUser = ntripData.at(2);
+                    ntripPass = ntripData.at(3);
+                    ntripPort = ntripData.at(4).toInt();
+                    useNtrip = true;
+                }
+            }
+        }
+
+        if (str == "--rtcmbasepos") {
+            if ((i - 1) < args.size()) {
+                i++;
+                QString tmp = args.at(i);
+                QStringList baseData = tmp.split(":");
+
+                if (baseData.size() == 3) {
+                    found = true;
+                    sendRtcmBase = true;
+                    rtcmBaseLat = baseData.at(0).toDouble();
+                    rtcmBaseLon = baseData.at(1).toDouble();
+                    rtcmBaseHeight = baseData.at(2).toDouble();
+                }
+            }
+        }
+
         if (!found) {
             if (dash) {
                 qCritical() << "At least one of the flags is invalid:" << str;
@@ -271,6 +317,14 @@ int main(int argc, char *argv[])
 
     if (useChronos) {
         chronos.startServer(car.packetInterface());
+    }
+
+    if (useNtrip) {
+        car.connectNtrip(ntripServer, ntripStream, ntripUser, ntripPass, ntripPort);
+    }
+
+    if (sendRtcmBase) {
+        car.setSendRtcmBasePos(true, rtcmBaseLat, rtcmBaseLon, rtcmBaseHeight);
     }
 
     return a.exec();
