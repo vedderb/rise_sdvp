@@ -787,17 +787,30 @@
          <property name="spacing">
           <number>3</number>
          </property>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_3">
+         <item row="1" column="1" colspan="2">
+          <widget class="QLineEdit" name="confLogNameEdit"/>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label">
            <property name="text">
-            <string>Log rate</string>
+            <string>Log name</string>
            </property>
           </widget>
          </item>
-         <item row="0" column="1">
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>UART baud rate</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1" colspan="2">
           <widget class="QSpinBox" name="confLogRateBox">
            <property name="suffix">
             <string> Hz</string>
+           </property>
+           <property name="prefix">
+            <string>Rate: </string>
            </property>
            <property name="minimum">
             <number>1</number>
@@ -807,24 +820,7 @@
            </property>
           </widget>
          </item>
-         <item row="2" column="0">
-          <widget class="QLabel" name="label">
-           <property name="text">
-            <string>Log name</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
-          <widget class="QLineEdit" name="confLogNameEdit"/>
-         </item>
-         <item row="4" column="0">
-          <widget class="QLabel" name="label_2">
-           <property name="text">
-            <string>UART baud rate</string>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="1">
+         <item row="3" column="1" colspan="2">
           <widget class="QSpinBox" name="confLogUartBaudBox">
            <property name="sizePolicy">
             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
@@ -837,17 +833,34 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="0" colspan="2">
-          <widget class="QCheckBox" name="confLogEnBox">
+         <item row="2" column="2">
+          <widget class="QRadioButton" name="confLogUartPolledButton">
            <property name="text">
-            <string>Enable logging</string>
+            <string>Log Uart Polled</string>
            </property>
           </widget>
          </item>
-         <item row="3" column="0" colspan="2">
-          <widget class="QCheckBox" name="confLogEnUartBox">
+         <item row="2" column="0">
+          <widget class="QRadioButton" name="confLogUartOffButton">
            <property name="text">
-            <string>Enable UART log output</string>
+            <string>Log Uart Off</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QRadioButton" name="confLogUartContButton">
+           <property name="text">
+            <string>Log Uart Cont</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QCheckBox" name="confLogEnBox">
+           <property name="text">
+            <string>Enable logging</string>
            </property>
           </widget>
          </item>

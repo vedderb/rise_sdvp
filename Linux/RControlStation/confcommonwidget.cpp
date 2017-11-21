@@ -79,7 +79,15 @@ void ConfCommonWidget::getConfGui(MAIN_CONFIG &conf)
     conf.log_rate_hz = ui->confLogRateBox->value();
     conf.log_en = ui->confLogEnBox->isChecked();
     strcpy(conf.log_name, ui->confLogNameEdit->text().toLocal8Bit().data());
-    conf.log_en_uart = ui->confLogEnUartBox->isChecked();
+
+    if (ui->confLogUartOffButton->isChecked()) {
+        conf.log_en_uart = 0;
+    } else if (ui->confLogUartContButton->isChecked()) {
+        conf.log_en_uart = 1;
+    } else if (ui->confLogUartPolledButton->isChecked()) {
+        conf.log_en_uart = 2;
+    }
+
     conf.log_uart_baud = ui->confLogUartBaudBox->value();
 }
 
@@ -129,7 +137,14 @@ void ConfCommonWidget::setConfGui(const MAIN_CONFIG &conf)
     ui->confLogRateBox->setValue(conf.log_rate_hz);
     ui->confLogEnBox->setChecked(conf.log_en);
     ui->confLogNameEdit->setText(QString::fromLocal8Bit(conf.log_name));
-    ui->confLogEnUartBox->setChecked(conf.log_en_uart);
+
+    switch (conf.log_en_uart) {
+    case 0: ui->confLogUartOffButton->setChecked(true); break;
+    case 1: ui->confLogUartContButton->setChecked(true); break;
+    case 2: ui->confLogUartPolledButton->setChecked(true); break;
+    default: break;
+    }
+
     ui->confLogUartBaudBox->setValue(conf.log_uart_baud);
 }
 

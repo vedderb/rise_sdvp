@@ -1,3 +1,6 @@
+=== FW 8.11 ===
+* Added polled UART logging support.
+
 === FW 8.10 ===
 * Ublox timepulse configuration support.
 

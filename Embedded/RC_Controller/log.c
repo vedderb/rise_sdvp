@@ -35,14 +35,17 @@
 #define UART_RX_PORT				GPIOB
 #define UART_RX_PIN					7
 #define UART_ALT_PIN_FUNCTION		7
+#define UART_LOG_RX_BUFFER_SIZE		256
 
 // private variables
 static int m_log_rate_hz;
 static bool m_log_en;
 static bool m_write_split;
 static char m_log_name[LOG_NAME_MAX_LEN + 1];
-static bool m_log_en_uart;
+static int m_log_uart;
 static int m_log_uart_baud;
+static char m_log_uart_rx_buffer[UART_LOG_RX_BUFFER_SIZE];
+static int m_log_uart_rx_ptr;
 static POS_STATE m_pos_last_sw;
 static bool m_pos_last_sw_updated;
 static POS_STATE m_pos_last_corr;
@@ -55,11 +58,15 @@ static DW_LOG_INFO m_dw_anchor_info[3];
 // Threads
 static THD_WORKING_AREA(log_thread_wa, 2048);
 static THD_FUNCTION(log_thread, arg);
+static THD_WORKING_AREA(log_uart_thread_wa, 1024);
+static THD_FUNCTION(log_uart_thread, arg);
+static thread_t *log_uart_tp;
 
 // Private functions
 #ifdef LOG_EN_DW
 static void range_callback(uint8_t id, uint8_t dest, float range);
 #endif
+static void print_log_uart(void);
 static void txend1(UARTDriver *uartp);
 static void txend2(UARTDriver *uartp);
 static void rxerr(UARTDriver *uartp, uartflags_t e);
@@ -87,14 +94,18 @@ void log_init(void) {
 	m_log_en = false;
 	m_write_split = true;
 	strcpy(m_log_name, "Undefined");
-	m_log_en_uart = false;
+	m_log_uart = 0;
 	m_log_uart_baud = 115200;
+	m_log_uart_rx_ptr = 0;
 	memset(&m_pos_last_sw, 0, sizeof(m_pos_last_sw));
 	m_pos_last_sw_updated = false;
 	memset(&m_pos_last_corr, 0, sizeof(m_pos_last_corr));
 	m_pos_last_corr_updated = false;
 
-	chThdCreateStatic(log_thread_wa, sizeof(log_thread_wa), NORMALPRIO, log_thread, NULL);
+	chThdCreateStatic(log_thread_wa, sizeof(log_thread_wa),
+			NORMALPRIO, log_thread, NULL);
+	chThdCreateStatic(log_uart_thread_wa, sizeof(log_uart_thread_wa),
+			NORMALPRIO, log_uart_thread, NULL);
 }
 
 void log_set_rate(int rate_hz) {
@@ -113,20 +124,20 @@ void log_set_name(char *name) {
 	strcpy(m_log_name, name);
 }
 
-void log_set_uart(bool enabled, int baud) {
-	if (enabled && !m_log_en_uart) {
+void log_set_uart(int mode, int baud) {
+	if (mode > 0 && m_log_uart == 0) {
 		palSetPadMode(UART_TX_PORT, UART_TX_PIN, PAL_MODE_ALTERNATE(UART_ALT_PIN_FUNCTION));
 		palSetPadMode(UART_RX_PORT, UART_RX_PIN, PAL_MODE_ALTERNATE(UART_ALT_PIN_FUNCTION));
 		uartStart(&UART_DEV, &uart_cfg);
-	} else if (!enabled && m_log_en_uart) {
+	} else if (mode == 0 && m_log_uart != 0) {
 		uartStop(&UART_DEV);
 		palSetPadMode(UART_TX_PORT, UART_TX_PIN, PAL_MODE_RESET);
 		palSetPadMode(UART_RX_PORT, UART_RX_PIN, PAL_MODE_RESET);
 	}
 
-	m_log_en_uart = enabled;
+	m_log_uart = mode;
 
-	if (m_log_en_uart) {
+	if (m_log_uart > 0) {
 		set_baudrate(baud);
 	}
 }
@@ -149,40 +160,8 @@ static THD_FUNCTION(log_thread, arg) {
 	systime_t time_p = chVTGetSystemTimeX(); // T0
 
 	for(;;) {
-		if (m_log_en_uart) {
-			mc_values val;
-			POS_STATE pos;
-			GPS_STATE gps;
-
-			pos_get_mc_val(&val);
-			pos_get_pos(&pos);
-			pos_get_gps(&gps);
-			uint32_t time = ST2MS(chVTGetSystemTimeX());
-
-			printf_blocking(
-					"%u,"     // timestamp (ms)
-					"%.3f,"   // car x
-					"%.3f,"   // car y
-					"%.2f,"   // roll
-					"%.2f,"   // pitch
-					"%.2f,"   // yaw
-					"%.3f,"   // speed
-					"%d,"     // tachometer
-					"%.7f,"   // lat
-					"%.7f,"   // lon
-					"%.3f\r\n",  // height
-
-					time,
-					(double)pos.px,
-					(double)pos.py,
-					(double)pos.roll,
-					(double)pos.pitch,
-					(double)pos.yaw,
-					(double)pos.speed,
-					val.tachometer,
-					gps.lat,
-					gps.lon,
-					gps.height);
+		if (m_log_uart == 1) {
+			print_log_uart();
 		}
 
 		if (m_log_en) {
@@ -415,6 +394,57 @@ static THD_FUNCTION(log_thread, arg) {
 	}
 }
 
+static THD_FUNCTION(log_uart_thread, arg) {
+	(void)arg;
+
+	chRegSetThreadName("Log UART");
+	log_uart_tp = chThdGetSelfX();
+
+	for (;;) {
+		chEvtWaitAny((eventmask_t) 1);
+
+		if (strcmp(m_log_uart_rx_buffer, "READ_POS") == 0) {
+			print_log_uart();
+		}
+	}
+}
+
+static void print_log_uart(void) {
+	static mc_values val;
+	static POS_STATE pos;
+	static GPS_STATE gps;
+
+	pos_get_mc_val(&val);
+	pos_get_pos(&pos);
+	pos_get_gps(&gps);
+	uint32_t time = ST2MS(chVTGetSystemTimeX());
+
+	printf_blocking(
+			"%u,"     // timestamp (ms)
+			"%.3f,"   // car x
+			"%.3f,"   // car y
+			"%.2f,"   // roll
+			"%.2f,"   // pitch
+			"%.2f,"   // yaw
+			"%.3f,"   // speed
+			"%d,"     // tachometer
+			"%.7f,"   // lat
+			"%.7f,"   // lon
+			"%.3f\r\n",  // height
+
+			time,
+			(double)pos.px,
+			(double)pos.py,
+			(double)pos.roll,
+			(double)pos.pitch,
+			(double)pos.yaw,
+			(double)pos.speed,
+			val.tachometer,
+			gps.lat,
+			gps.lon,
+			gps.height);
+}
+
 #ifdef LOG_EN_DW
 static void range_callback(uint8_t id, uint8_t dest, float range) {
 	(void)id;
@@ -469,9 +499,22 @@ static void rxerr(UARTDriver *uartp, uartflags_t e) {
  */
 static void rxchar(UARTDriver *uartp, uint16_t c) {
 	(void)uartp;
-	(void)c;
 
-	// Ignore received data for now
+	if (m_log_uart == 2) {
+		if (c == '\n' || c == '\r') {
+			if (m_log_uart_rx_ptr > 0) {
+				m_log_uart_rx_buffer[m_log_uart_rx_ptr] = '\0';
+				m_log_uart_rx_ptr = 0;
+				chEvtSignalI(log_uart_tp, (eventmask_t) 1);
+			}
+		} else {
+			m_log_uart_rx_buffer[m_log_uart_rx_ptr++] = c;
+
+			if (m_log_uart_rx_ptr >= UART_LOG_RX_BUFFER_SIZE) {
+				m_log_uart_rx_ptr = 0;
+			}
+		}
+	}
 }
 
 /*

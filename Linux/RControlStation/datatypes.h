@@ -227,7 +227,7 @@ typedef struct {
     int log_rate_hz;
     bool log_en;
     char log_name[LOG_NAME_MAX_LEN + 1];
-    bool log_en_uart;
+    int log_en_uart;
     int log_uart_baud;
 
     MAIN_CONFIG_CAR car;
