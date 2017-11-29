@@ -150,7 +150,7 @@ bool cc1120_init(void) {
 	// Enable interrupt
 	extChannelEnable(&EXTD1, 3);
 
-	cc1120_update_rf(CC1120_SET_434_0M_50K_2GFSK_BW100K_25K);
+	cc1120_update_rf(CC1120_SET_434_0M_9_6K_2FSK_BW50K_12K);
 
 	// Manual calibration. Only needed for PARTVERSION 0x21
 //	cc1120_set_idle();

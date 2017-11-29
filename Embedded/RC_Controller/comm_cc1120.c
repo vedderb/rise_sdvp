@@ -29,7 +29,7 @@
 #define DEBUG_MODE			0
 #define TX_BUFFER_LENGTH	1100
 #define TX_BUFFER_SLOTS		5
-#define TX_DELAY_US			5000
+#define TX_DELAY_US			15000
 
 // Threads
 static THD_WORKING_AREA(tx_thread_wa, 1024);

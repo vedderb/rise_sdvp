@@ -45,7 +45,7 @@
 
 // Defaults for different cars
 #ifdef CAR_TERO
-#define IMU_ROT_180					1
+#define BOARD_ROT_180					1
 #endif
 
 // Ublox settings
@@ -89,8 +89,8 @@
 #define ID_MOTE						254 // If the packet is for the mote and not to be forwarded in mote mode
 
 // Car parameters
-#ifndef IMU_ROT_180
-#define IMU_ROT_180					0
+#ifndef BOARD_ROT_180
+#define BOARD_ROT_180					0
 #endif
 
 // Radar settings

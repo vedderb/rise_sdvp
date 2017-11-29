@@ -24,6 +24,7 @@
 
 // Functions
 void mpu9150_init(void);
+bool mpu9150_is_mpu9250(void);
 void mpu9150_cmd_print(BaseSequentialStream *chp, int argc, char *argv[]);
 void mpu9150_cmd_sample_offsets(BaseSequentialStream *chp, int argc, char *argv[]);
 void mpu9150_get_raw_accel_gyro_mag(int16_t *gyro_accel);

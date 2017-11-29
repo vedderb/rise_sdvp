@@ -1,3 +1,9 @@
+=== FW 8.12 ===
+* MPU9250 support.
+* Larger stack for polled UART logging.
+* Lower 433 MHz speed for longer range.
+* Added terminal command to zero gyro bias.
+
 === FW 8.11 ===
 * Added polled UART logging support.
 

@@ -25,6 +25,8 @@
 #include "cc1120.h"
 #include "pos.h"
 #include "comm_can.h"
+#include "mpu9150.h"
+#include "led.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -162,6 +164,10 @@ void terminal_process_string(char *str) {
 				comm_can_dw_range(CAN_DW_ID_ANY, dest, 5);
 			}
 		}
+	} else if (strcmp(argv[0], "zero_gyro") == 0) {
+		led_write(LED_RED, 1);
+		mpu9150_sample_gyro_offsets(100);
+		led_write(LED_RED, 0);
 	}
 
 	// The help command
@@ -221,6 +227,9 @@ void terminal_process_string(char *str) {
 
 		commands_printf("dw_range [dest]");
 		commands_printf("  Measure the distance to DW module [dest] with ultra wideband.");
+
+		commands_printf("zero_gyro");
+		commands_printf("  Zero the gyro bias. Note: The PCB must be completely still when running this command.");
 
 		for (int i = 0;i < callback_write;i++) {
 			if (callbacks[i].arg_names) {

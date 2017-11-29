@@ -150,6 +150,8 @@ void pos_init(void) {
 #ifdef LOG_EN_SW
 	palSetPadMode(GPIOD, 3, PAL_MODE_INPUT_PULLUP);
 #endif
+
+	(void)save_pos_history();
 }
 
 void pos_pps_cb(EXTDriver *extp, expchannel_t channel) {
@@ -652,17 +654,18 @@ static void update_orientation_angles(float *accel, float *gyro, float *mag, flo
 
 	chMtxLock(&m_mutex_pos);
 
-#if IMU_ROT_180
-	m_pos.roll = -roll * 180.0 / M_PI;
-	m_pos.pitch = -pitch * 180.0 / M_PI;
-	m_pos.roll_rate = gyro[0] * 180.0 / M_PI;
-	m_pos.pitch_rate = -gyro[1] * 180.0 / M_PI;
-#else
-	m_pos.roll = roll * 180.0 / M_PI;
-	m_pos.pitch = pitch * 180.0 / M_PI;
-	m_pos.roll_rate = -gyro[0] * 180.0 / M_PI;
-	m_pos.pitch_rate = gyro[1] * 180.0 / M_PI;
-#endif
+	if ((BOARD_ROT_180 && !mpu9150_is_mpu9250()) ||
+			(!BOARD_ROT_180 && mpu9150_is_mpu9250())) {
+		m_pos.roll = -roll * 180.0 / M_PI;
+		m_pos.pitch = -pitch * 180.0 / M_PI;
+		m_pos.roll_rate = gyro[0] * 180.0 / M_PI;
+		m_pos.pitch_rate = -gyro[1] * 180.0 / M_PI;
+	} else {
+		m_pos.roll = roll * 180.0 / M_PI;
+		m_pos.pitch = pitch * 180.0 / M_PI;
+		m_pos.roll_rate = -gyro[0] * 180.0 / M_PI;
+		m_pos.pitch_rate = gyro[1] * 180.0 / M_PI;
+	}
 
 	if (main_config.mag_use) {
 		static float yaw_ofs = 0.0;

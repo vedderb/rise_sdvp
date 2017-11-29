@@ -58,7 +58,7 @@ static DW_LOG_INFO m_dw_anchor_info[3];
 // Threads
 static THD_WORKING_AREA(log_thread_wa, 2048);
 static THD_FUNCTION(log_thread, arg);
-static THD_WORKING_AREA(log_uart_thread_wa, 1024);
+static THD_WORKING_AREA(log_uart_thread_wa, 2048);
 static THD_FUNCTION(log_uart_thread, arg);
 static thread_t *log_uart_tp;
 
