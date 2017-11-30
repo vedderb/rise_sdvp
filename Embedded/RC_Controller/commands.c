@@ -36,6 +36,7 @@
 #include "comm_cc1120.h"
 #include "mr_control.h"
 #include "adconv.h"
+#include "motor_sim.h"
 
 #include <math.h>
 #include <string.h>
@@ -568,6 +569,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			main_config.car.yaw_use_odometry = data[ind++];
 			main_config.car.yaw_imu_gain = buffer_get_float32_auto(data, &ind);
 			main_config.car.disable_motor = data[ind++];
+			main_config.car.simulate_motor = data[ind++];
 
 			main_config.car.gear_ratio = buffer_get_float32_auto(data, &ind);
 			main_config.car.wheel_diam = buffer_get_float32_auto(data, &ind);
@@ -577,6 +579,10 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			main_config.car.steering_range = buffer_get_float32_auto(data, &ind);
 			main_config.car.steering_ramp_time = buffer_get_float32_auto(data, &ind);
 			main_config.car.axis_distance = buffer_get_float32_auto(data, &ind);
+
+#if MAIN_MODE == MAIN_MODE_CAR
+			motor_sim_set_running(main_config.car.simulate_motor);
+#endif
 
 			// Multirotor settings
 			main_config.mr.vel_decay_e = buffer_get_float32_auto(data, &ind);
@@ -709,6 +715,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			m_send_buffer[send_index++] = main_cfg_tmp.car.yaw_use_odometry;
 			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.car.yaw_imu_gain, &send_index);
 			m_send_buffer[send_index++] = main_cfg_tmp.car.disable_motor;
+			m_send_buffer[send_index++] = main_cfg_tmp.car.simulate_motor;
 
 			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.car.gear_ratio, &send_index);
 			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.car.wheel_diam, &send_index);

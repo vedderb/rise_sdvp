@@ -15,13 +15,13 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <ahrs.h>
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "ch.h"
 #include "hal.h"
+#include "ahrs.h"
 #include "stm32f4xx_conf.h"
 #include "led.h"
 #include "mpu9150.h"

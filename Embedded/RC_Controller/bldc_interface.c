@@ -70,6 +70,8 @@ static void(*rx_dec_adc_func)(float val, float voltage) = 0;
 static void(*rx_dec_chuk_func)(float val) = 0;
 static void(*rx_mcconf_received_func)(void) = 0;
 static void(*rx_appconf_received_func)(void) = 0;
+static void(*motor_control_set_func)(motor_control_mode mode, float value) = 0;
+static void(*values_requested_func)(void) = 0;
 
 void bldc_interface_init(void(*func)(unsigned char *data, unsigned int len)) {
 	send_func = func;
@@ -511,6 +513,14 @@ void bldc_interface_set_rx_appconf_received_func(void(*func)(void)) {
 	rx_appconf_received_func = func;
 }
 
+void bldc_interface_set_sim_control_function(void(*func)(motor_control_mode mode, float value)) {
+	motor_control_set_func = func;
+}
+
+void bldc_interface_set_sim_values_func(void(*func)(void)) {
+	values_requested_func = func;
+}
+
 // Setters
 void bldc_interface_terminal_cmd(char* cmd) {
 	int len = strlen(cmd);
@@ -520,6 +530,10 @@ void bldc_interface_terminal_cmd(char* cmd) {
 }
 
 void bldc_interface_set_duty_cycle(float dutyCycle) {
+	if (motor_control_set_func) {
+		motor_control_set_func(MOTOR_CONTROL_DUTY, dutyCycle);
+		return;
+	}
 	int32_t send_index = 0;
 	send_buffer[send_index++] = COMM_SET_DUTY;
 	buffer_append_float32(send_buffer, dutyCycle, 100000.0, &send_index);
@@ -527,6 +541,10 @@ void bldc_interface_set_duty_cycle(float dutyCycle) {
 }
 
 void bldc_interface_set_current(float current) {
+	if (motor_control_set_func) {
+		motor_control_set_func(MOTOR_CONTROL_CURRENT, current);
+		return;
+	}
 	int32_t send_index = 0;
 	send_buffer[send_index++] = COMM_SET_CURRENT;
 	buffer_append_float32(send_buffer, current, 1000.0, &send_index);
@@ -534,6 +552,10 @@ void bldc_interface_set_current(float current) {
 }
 
 void bldc_interface_set_current_brake(float current) {
+	if (motor_control_set_func) {
+		motor_control_set_func(MOTOR_CONTROL_CURRENT_BRAKE, current);
+		return;
+	}
 	int32_t send_index = 0;
 	send_buffer[send_index++] = COMM_SET_CURRENT_BRAKE;
 	buffer_append_float32(send_buffer, current, 1000.0, &send_index);
@@ -541,6 +563,10 @@ void bldc_interface_set_current_brake(float current) {
 }
 
 void bldc_interface_set_rpm(int rpm) {
+	if (motor_control_set_func) {
+		motor_control_set_func(MOTOR_CONTROL_RPM, rpm);
+		return;
+	}
 	int32_t send_index = 0;
 	send_buffer[send_index++] = COMM_SET_RPM;
 	buffer_append_int32(send_buffer, rpm, &send_index);
@@ -548,6 +574,10 @@ void bldc_interface_set_rpm(int rpm) {
 }
 
 void bldc_interface_set_pos(float pos) {
+	if (motor_control_set_func) {
+		motor_control_set_func(MOTOR_CONTROL_POS, pos);
+		return;
+	}
 	int32_t send_index = 0;
 	send_buffer[send_index++] = COMM_SET_POS;
 	buffer_append_float32(send_buffer, pos, 1000000.0, &send_index);
@@ -755,6 +785,10 @@ void bldc_interface_get_fw_version(void) {
 }
 
 void bldc_interface_get_values(void) {
+	if (values_requested_func) {
+		values_requested_func();
+		return;
+	}
 	int32_t send_index = 0;
 	send_buffer[send_index++] = COMM_GET_VALUES;
 	send_packet_no_fwd(send_buffer, send_index);
@@ -810,6 +844,12 @@ void bldc_interface_send_alive(void) {
 	int32_t send_index = 0;
 	send_buffer[send_index++] = COMM_ALIVE;
 	send_packet_no_fwd(send_buffer, send_index);
+}
+
+void send_values_to_receiver(mc_values *values) {
+	if (rx_value_func) {
+		rx_value_func(values);
+	}
 }
 
 // Helpers

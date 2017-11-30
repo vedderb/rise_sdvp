@@ -117,6 +117,7 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 	conf->car.yaw_use_odometry = false;
 	conf->car.yaw_imu_gain = 0.5;
 	conf->car.disable_motor = false;
+	conf->car.simulate_motor = false;
 
 	conf->car.gear_ratio = (1.0 / 3.0) * (21.0 / 37.0);
 	conf->car.wheel_diam = 0.12;

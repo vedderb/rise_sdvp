@@ -41,6 +41,9 @@ void bldc_interface_set_rx_dec_chuk_func(void(*func)(float val));
 void bldc_interface_set_rx_mcconf_received_func(void(*func)(void));
 void bldc_interface_set_rx_appconf_received_func(void(*func)(void));
 
+void bldc_interface_set_sim_control_function(void(*func)(motor_control_mode mode, float value));
+void bldc_interface_set_sim_values_func(void(*func)(void));
+
 // Setters
 void bldc_interface_terminal_cmd(char* cmd);
 void bldc_interface_set_duty_cycle(float dutyCycle);
@@ -66,6 +69,7 @@ void bldc_interface_get_decoded_chuk(void);
 void bldc_interface_detect_motor_param(float current, float min_rpm, float low_duty);
 void bldc_interface_reboot(void);
 void bldc_interface_send_alive(void);
+void send_values_to_receiver(mc_values *values);
 
 // Helpers
 const char* bldc_interface_fault_to_string(mc_fault_code fault);

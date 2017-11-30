@@ -208,6 +208,7 @@ typedef struct {
 	bool yaw_use_odometry; // Use odometry data for yaw angle correction.
 	float yaw_imu_gain; // Gain for yaw angle from IMU (vs odometry)
 	bool disable_motor; // Disable motor drive commands to make sure that the motor does not move.
+	bool simulate_motor; // Simulate motor movement without motor controller feedback
 
 	float gear_ratio;
 	float wheel_diam;
@@ -780,6 +781,14 @@ typedef enum {
 	DRV8301_OC_REPORT_ONLY,
 	DRV8301_OC_DISABLED
 } drv8301_oc_mode;
+
+typedef enum {
+	MOTOR_CONTROL_DUTY = 0,
+	MOTOR_CONTROL_CURRENT,
+	MOTOR_CONTROL_CURRENT_BRAKE,
+	MOTOR_CONTROL_RPM,
+	MOTOR_CONTROL_POS
+} motor_control_mode;
 
 typedef struct {
 	// Switching and drive

@@ -48,6 +48,7 @@
 #include "pwm_esc.h"
 #include "mr_control.h"
 #include "radar_cont.h"
+#include "motor_sim.h"
 
 /*
  * Timers used:
@@ -90,6 +91,7 @@ int main(void) {
 	autopilot_init();
 	timeout_init();
 	log_init();
+	motor_sim_init();
 #if RADAR_EN
 	radar_init();
 	radar_setup_measurement_default();
@@ -119,6 +121,10 @@ int main(void) {
 
 #if UBLOX_EN
 	ublox_init();
+#endif
+
+#if MAIN_MODE == MAIN_MODE_CAR
+	motor_sim_set_running(main_config.car.simulate_motor);
 #endif
 
 	timeout_configure(2000, 20.0);

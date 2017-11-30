@@ -37,7 +37,7 @@
 
 // Firmware version
 #define FW_VERSION_MAJOR			8
-#define FW_VERSION_MINOR			11
+#define FW_VERSION_MINOR			13
 
 // Default car settings
 //#define CAR_TERO // Benjamins tero car
@@ -45,7 +45,7 @@
 
 // Defaults for different cars
 #ifdef CAR_TERO
-#define BOARD_ROT_180					1
+#define BOARD_ROT_180				1
 #endif
 
 // Ublox settings
