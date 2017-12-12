@@ -1,3 +1,7 @@
+=== FW 8.14 ===
+* Increased autopilot stack size.
+* Reverted yaw correction.
+
 === FW 8.13 ===
 * Motor simulation support.
 

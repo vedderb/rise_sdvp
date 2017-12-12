@@ -31,7 +31,7 @@
 #define AP_HZ						100 // Hz
 
 // Private variables
-static THD_WORKING_AREA(ap_thread_wa, 512);
+static THD_WORKING_AREA(ap_thread_wa, 2048);
 static ROUTE_POINT m_route[AP_ROUTE_SIZE];
 static bool m_is_active;
 static int m_point_last; // The last point on the route

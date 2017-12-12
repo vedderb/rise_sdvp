@@ -845,16 +845,12 @@ static void correct_pos_gps(POS_STATE *pos) {
 			SQ(pos->py_gps - pos->py_gps_last));
 #endif
 
-	float gain = main_config.gps_corr_gain_stat +
-			main_config.gps_corr_gain_dyn * pos->gps_corr_cnt;
-
-	POS_POINT closest = get_closest_point_to_time(pos->gps_ms);
-
-	if (fabsf(closest.speed * 3.6) > 0.5) {
+	// Angle
+	if (fabsf(pos->speed * 3.6) > 0.5) {
 		float yaw_gps = atan2f(pos->py_gps - pos->gps_ang_corr_y_last_gps,
 				pos->px_gps - pos->gps_ang_corr_x_last_gps);
-		float yaw_car = atan2f(closest.py - pos->gps_ang_corr_y_last_car,
-				closest.px - pos->gps_ang_corr_x_last_car);
+		float yaw_car = atan2f(pos->py - pos->gps_ang_corr_y_last_car,
+				pos->px - pos->gps_ang_corr_x_last_car);
 		float yaw_diff = utils_angle_difference_rad(yaw_gps, yaw_car) * 180.0 / M_PI;
 
 		utils_step_towards(&m_yaw_offset_gps, m_yaw_offset_gps + yaw_diff,
@@ -866,14 +862,20 @@ static void correct_pos_gps(POS_STATE *pos) {
 //		float d = sqrtf(SQ(dx) + SQ(dy));
 //		float al2 = atan2f(dy, dx);
 //		float al3 = utils_angle_difference((closest.yaw * (M_PI / 180.0)), al2);
-//		float ds = d = cosf(al3);
+//		float ds = d * cosf(al3);
 //		if (d < 0.1) {
 //			d = 0.1;
 //		}
-//		m_yaw_offset_gps += (ds / d) * main_config.gps_corr_gain_yaw;
+//		m_yaw_offset_gps += (ds / d) * al3 * main_config.gps_corr_gain_yaw;
 	}
 
 	utils_norm_angle(&m_yaw_offset_gps);
+
+	// Position
+	float gain = main_config.gps_corr_gain_stat +
+				main_config.gps_corr_gain_dyn * pos->gps_corr_cnt;
+
+	POS_POINT closest = get_closest_point_to_time(pos->gps_ms);
 
 	POS_POINT closest_corr = closest;
 	utils_step_towards(&closest_corr.px, pos->px_gps, gain);
