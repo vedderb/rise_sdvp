@@ -101,6 +101,7 @@ void log_init(void) {
 	m_pos_last_sw_updated = false;
 	memset(&m_pos_last_corr, 0, sizeof(m_pos_last_corr));
 	m_pos_last_corr_updated = false;
+	memset(m_log_uart_rx_buffer, 0, sizeof(m_log_uart_rx_buffer));
 
 	chThdCreateStatic(log_thread_wa, sizeof(log_thread_wa),
 			NORMALPRIO, log_thread, NULL);
@@ -505,12 +506,15 @@ static void rxchar(UARTDriver *uartp, uint16_t c) {
 			if (m_log_uart_rx_ptr > 0) {
 				m_log_uart_rx_buffer[m_log_uart_rx_ptr] = '\0';
 				m_log_uart_rx_ptr = 0;
+
+				chSysLockFromISR();
 				chEvtSignalI(log_uart_tp, (eventmask_t) 1);
+				chSysUnlockFromISR();
 			}
 		} else {
 			m_log_uart_rx_buffer[m_log_uart_rx_ptr++] = c;
 
-			if (m_log_uart_rx_ptr >= UART_LOG_RX_BUFFER_SIZE) {
+			if (m_log_uart_rx_ptr >= (UART_LOG_RX_BUFFER_SIZE - 1)) {
 				m_log_uart_rx_ptr = 0;
 			}
 		}
@@ -536,15 +540,15 @@ static void printf_blocking(char* format, ...) {
 	va_list arg;
 	va_start (arg, format);
 	int len;
-	static char print_buffer[256];
+	static char print_buffer[512];
 
-	len = vsnprintf(print_buffer, 255, format, arg);
+	len = vsnprintf(print_buffer, 511, format, arg);
 	va_end (arg);
 
 	print_buffer[len] = '\0';
 
 	if(len > 0) {
-		write_blocking((unsigned char*)print_buffer, (len < 255) ? len : 255);
+		write_blocking((unsigned char*)print_buffer, (len < 511) ? len : 511);
 	}
 }
 
@@ -556,7 +560,7 @@ static void write_blocking(unsigned char *data, unsigned int len) {
 
 	// Copy this data to a new buffer in case the provided one is re-used
 	// after this function returns.
-	static uint8_t buffer[256];
+	static uint8_t buffer[512];
 	memcpy(buffer, data, len);
 
 	uartStartSend(&UART_DEV, len, buffer);

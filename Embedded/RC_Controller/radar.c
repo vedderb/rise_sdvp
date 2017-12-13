@@ -100,7 +100,9 @@ static void rxchar(UARTDriver *uartp, uint16_t c) {
 	}
 
 	if (c == '\n') {
-		chEvtSignal(radar_tp, (eventmask_t) 1);
+		chSysLockFromISR();
+		chEvtSignalI(radar_tp, (eventmask_t) 1);
+		chSysUnlockFromISR();
 	}
 }
 
