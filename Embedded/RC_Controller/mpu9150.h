@@ -20,7 +20,6 @@
 
 #include "ch.h"
 #include "hal.h"
-#include "conf_general.h"
 
 // Functions
 void mpu9150_init(void);

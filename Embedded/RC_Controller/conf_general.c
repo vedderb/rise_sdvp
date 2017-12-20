@@ -188,22 +188,6 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 	// Custom parameters based on ID
 	switch (main_id) {
 	case 1:
-		conf->mag_cal_cx = -8.1581;
-		conf->mag_cal_cy = -2.6050;
-		conf->mag_cal_cz = -7.9479;
-
-		conf->mag_cal_xx = 0.8347;
-		conf->mag_cal_xy = -0.0196;
-		conf->mag_cal_xz = -0.0032;
-
-		conf->mag_cal_yx = -0.0196;
-		conf->mag_cal_yy = 0.8487;
-		conf->mag_cal_yz = 0.0106;
-
-		conf->mag_cal_zx = -0.0032;
-		conf->mag_cal_zy = 0.0106;
-		conf->mag_cal_zz = 0.9991;
-
 		conf->car.steering_center = 0.53;
 		conf->gps_ant_x = 0.42;
 		break;

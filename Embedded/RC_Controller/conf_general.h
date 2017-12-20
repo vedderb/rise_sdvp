@@ -37,7 +37,7 @@
 
 // Firmware version
 #define FW_VERSION_MAJOR			8
-#define FW_VERSION_MINOR			14
+#define FW_VERSION_MINOR			15
 
 // Default car settings
 //#define CAR_TERO // Benjamins tero car
@@ -45,7 +45,7 @@
 
 // Defaults for different cars
 #ifdef CAR_TERO
-#define BOARD_ROT_180				1
+#define BOARD_YAW_ROT				180.0
 #endif
 
 // Ublox settings
@@ -89,8 +89,8 @@
 #define ID_MOTE						254 // If the packet is for the mote and not to be forwarded in mote mode
 
 // Car parameters
-#ifndef BOARD_ROT_180
-#define BOARD_ROT_180					0
+#ifndef BOARD_YAW_ROT
+#define BOARD_YAW_ROT				0.0
 #endif
 
 // Radar settings

@@ -249,31 +249,6 @@ void mpu9150_get_accel_gyro_mag(float *accel, float *gyro, float *mag) {
 	mag[0] = (float)raw_accel_gyro_mag[6] * 1200.0 / 4096.0;
 	mag[1] = (float)raw_accel_gyro_mag[7] * 1200.0 / 4096.0;
 	mag[2] = (float)raw_accel_gyro_mag[8] * 1200.0 / 4096.0;
-
-	/*
-	 * Hard and soft iron compensation
-	 *
-	 * http://davidegironi.blogspot.it/2013/01/magnetometer-calibration-helper-01-for.html#.UriTqkMjulM
-	 *
-	 * xt_raw = x_raw - offsetx;
-	 * yt_raw = y_raw - offsety;
-	 * zt_raw = z_raw - offsetz;
-	 * x_calibrated = scalefactor_x[1] * xt_raw + scalefactor_x[2] * yt_raw + scalefactor_x[3] * zt_raw;
-	 * y_calibrated = scalefactor_y[1] * xt_raw + scalefactor_y[2] * yt_raw + scalefactor_y[3] * zt_raw;
-	 * z_calibrated = scalefactor_z[1] * xt_raw + scalefactor_z[2] * yt_raw + scalefactor_z[3] * zt_raw;
-	 */
-	if (main_config.mag_comp) {
-		float mag_t[3];
-
-		mag_t[0] = mag[0] - main_config.mag_cal_cx;
-		mag_t[1] = mag[1] - main_config.mag_cal_cy;
-		mag_t[2] = mag[2] - main_config.mag_cal_cz;
-
-		mag[0] = main_config.mag_cal_xx * mag_t[0] + main_config.mag_cal_xy * mag_t[1] + main_config.mag_cal_xz * mag_t[2];
-		mag[1] = main_config.mag_cal_yx * mag_t[0] + main_config.mag_cal_yy * mag_t[1] + main_config.mag_cal_yz * mag_t[2];
-		mag[2] = main_config.mag_cal_zx * mag_t[0] + main_config.mag_cal_zy * mag_t[1] + main_config.mag_cal_zz * mag_t[2];
-	}
-
 #else
 	mag[0] = 0.0;
 	mag[1] = 0.0;
