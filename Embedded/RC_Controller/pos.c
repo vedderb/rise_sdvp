@@ -709,14 +709,18 @@ static void update_orientation_angles(float *accel, float *gyro, float *mag, flo
 	m_pos.pitch_rate = m_gyro[1] * 180.0 / M_PI;
 
 	if (main_config.mag_use) {
-		static float yaw_ofs = 0.0;
-		float yaw_imu = yaw - yaw_ofs * M_PI / 180.0;
-		float yaw_diff = utils_angle_difference_rad(yaw_imu, yaw_mag) * 180.0 / M_PI;
+		static float yaw_now = 0;
+		static float yaw_imu_last = 0;
 
-		utils_step_towards(&yaw_ofs, yaw_diff, main_config.yaw_mag_gain);
-		utils_norm_angle(&yaw_ofs);
+		float yaw_imu_diff = utils_angle_difference_rad(yaw, yaw_imu_last);
+		yaw_imu_last = yaw;
+		yaw_now += yaw_imu_diff;
 
-		m_imu_yaw = (yaw * 180.0 / M_PI) - yaw_ofs;
+		float diff = utils_angle_difference_rad(yaw_mag, yaw_now);
+		yaw_now += SIGN(diff) * main_config.yaw_mag_gain * M_PI / 180.0 * dt;
+		utils_norm_angle_rad(&yaw_now);
+
+		m_imu_yaw = yaw_now * 180.0 / M_PI;
 	} else {
 		m_imu_yaw = yaw * 180.0 / M_PI;
 	}

@@ -1,3 +1,6 @@
+=== FW 8.16 ===
+* More magnetometer yaw estimation fixes.
+
 === FW 8.15 ===
 * General board yaw rotation support.
 * Always send raw magnetometer values.

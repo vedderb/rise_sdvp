@@ -192,6 +192,7 @@ float utils_angle_difference_rad(float angle1, float angle2) {
 float utils_weight_angle(float angle1, float angle2, float ratio) {
 	utils_norm_angle(&angle1);
 	utils_norm_angle(&angle2);
+	utils_truncate_number(&ratio, 0.0, 1.0);
 
 	if (fabsf(angle1 - angle2) > 180.0) {
 		if (angle1 < angle2) {
