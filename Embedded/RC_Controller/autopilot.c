@@ -45,6 +45,7 @@ static ROUTE_POINT m_point_rx_prev;
 static bool m_point_rx_prev_set;
 static mutex_t m_ap_lock;
 static int32_t m_start_time;
+static bool m_sync_rx;
 
 // Private functions
 static THD_FUNCTION(ap_thread, arg);
@@ -74,6 +75,7 @@ void autopilot_init(void) {
 	m_point_rx_prev_set = false;
 	chMtxObjectInit(&m_ap_lock);
 	m_start_time = 0;
+	m_sync_rx = false;
 
 	terminal_register_command_callback(
 			"ap_state",
@@ -204,6 +206,7 @@ void autopilot_sync_point(int32_t point, int32_t time, int32_t min_time_diff) {
 	utils_truncate_number_abs(&speed, main_config.ap_max_speed);
 
 	if (time < min_time_diff || dist_tot < main_config.ap_base_rad) {
+		m_sync_rx = false;
 		chMtxUnlock(&m_ap_lock);
 		return;
 	}
@@ -218,6 +221,8 @@ void autopilot_sync_point(int32_t point, int32_t time, int32_t min_time_diff) {
 		}
 	}
 
+	m_sync_rx = true;
+
 	chMtxUnlock(&m_ap_lock);
 }
 
@@ -226,6 +231,7 @@ void autopilot_set_active(bool active) {
 
 	if (active && !m_is_active) {
 		m_start_time = pos_get_ms_today();
+		m_sync_rx = false;
 	}
 
 	m_is_active = active;
@@ -560,7 +566,7 @@ static THD_FUNCTION(ap_thread, arg) {
 
 				float speed = 0.0;
 
-				if (main_config.ap_mode_time) {
+				if (main_config.ap_mode_time && !m_sync_rx) {
 					if (ms_today >= 0) {
 						// Calculate speed such that the route points are reached at their
 						// specified time. Notice that the direct distance between the car
@@ -576,7 +582,7 @@ static THD_FUNCTION(ap_thread, arg) {
 						int32_t t_diff = time - ms_today;
 
 						if (main_config.ap_mode_time == 2) {
-							t_diff -= m_start_time;
+							t_diff += m_start_time;
 						}
 
 						if (t_diff < 0) {
@@ -701,6 +707,7 @@ static void clear_route(void) {
 	m_point_last = 0;
 	m_point_rx_prev_set = false;
 	m_start_time = pos_get_ms_today();
+	m_sync_rx = false;
 	memset(&m_rp_now, 0, sizeof(ROUTE_POINT));
 	memset(&m_point_rx_prev, 0, sizeof(ROUTE_POINT));
 }
