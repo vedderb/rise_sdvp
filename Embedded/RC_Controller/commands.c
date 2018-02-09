@@ -1168,5 +1168,7 @@ static void rtcm_rx(uint8_t *data, int len, int type) {
 }
 
 static void rtcm_base_rx(rtcm_ref_sta_pos_t *pos) {
-	pos_set_enu_ref(pos->lat, pos->lon, pos->height);
+	if (main_config.gps_use_rtcm_base_as_enu_ref) {
+		pos_set_enu_ref(pos->lat, pos->lon, pos->height);
+	}
 }

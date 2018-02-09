@@ -1,3 +1,7 @@
+=== FW 8.17 ===
+* Use gps_use_rtcm_base_as_enu_ref setting.
+* Relative time AP fix.
+
 === FW 8.16 ===
 * More magnetometer yaw estimation fixes.
 
