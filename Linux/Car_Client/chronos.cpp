@@ -215,6 +215,15 @@ bool Chronos::decodeMsg(quint8 type, quint32 len, QByteArray payload)
                     path_redued.append(pt);
                 }
             }
+
+            // Add end point
+            chronos_dopm_pt pt = path.last();
+            chronos_dopm_pt pt_last = path_redued.last();
+            if (sqrt((pt.x - pt_last.x) * (pt.x - pt_last.x) +
+                     (pt.y - pt_last.y) * (pt.y - pt_last.y) +
+                     (pt.z - pt_last.z) * (pt.z - pt_last.z)) > 0.01) {
+                path_redued.append(pt);
+            }
         }
 
         processDopm(path_redued);
