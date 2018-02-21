@@ -392,6 +392,22 @@ void Chronos::processSypm(chronos_sypm sypm)
 {
     qDebug() << "SYPM RX";
     mSypmLast = sypm;
+
+    // Make sure that the car stops until MTSP is received.
+    int closest_sync = 0;
+    for (int i = 0;i < mRouteLast.size();i++) {
+        if (fabs(mRouteLast.at(i).getTime() - mSypmLast.sync_point) <
+                fabs(mRouteLast.at(closest_sync).getTime() - mSypmLast.sync_point)) {
+            closest_sync = i;
+        }
+    }
+
+    if (mPacket) {
+        mPacket->setSyncPoint(255, closest_sync, 1000 * 60 * 60,
+                              mSypmLast.sync_point - mSypmLast.stop_time);
+
+        qDebug() << "Car will not start until MTSP is received";
+    }
 }
 
 void Chronos::processMtsp(chronos_mtsp mtsp)
