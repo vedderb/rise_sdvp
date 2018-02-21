@@ -403,9 +403,7 @@ void Chronos::processSypm(chronos_sypm sypm)
     }
 
     if (mPacket) {
-        mPacket->setSyncPoint(255, closest_sync, 1000 * 60 * 60,
-                              mSypmLast.sync_point - mSypmLast.stop_time);
-
+        mPacket->setSyncPoint(255, closest_sync, 1000 * 60 * 60, 1000);
         qDebug() << "Car will not start until MTSP is received";
     }
 }

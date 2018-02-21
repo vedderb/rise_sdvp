@@ -154,10 +154,11 @@ void autopilot_replace_route(ROUTE_POINT *p) {
 void autopilot_sync_point(int32_t point, int32_t time, int32_t min_time_diff) {
 	chMtxLock(&m_ap_lock);
 
-	if (!m_is_active) {
-		chMtxUnlock(&m_ap_lock);
-		return;
-	}
+	// Only update run when the autopilot is active.
+//	if (!m_is_active) {
+//		chMtxUnlock(&m_ap_lock);
+//		return;
+//	}
 
 	int start = m_point_now + 1;
 	if (start >= AP_ROUTE_SIZE) {
