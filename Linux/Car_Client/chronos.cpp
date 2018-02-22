@@ -390,7 +390,7 @@ void Chronos::processHeab(chronos_heab heab)
 
 void Chronos::processSypm(chronos_sypm sypm)
 {
-    qDebug() << "SYPM RX";
+    qDebug() << "SYPM RX:" << sypm.sync_point << sypm.stop_time;
     mSypmLast = sypm;
 
     // Make sure that the car stops until MTSP is received.

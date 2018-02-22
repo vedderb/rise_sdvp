@@ -2529,8 +2529,16 @@
     </property>
     <addaction name="actionTestIntersection"/>
    </widget>
+   <widget class="QMenu" name="menuChronos">
+    <property name="title">
+     <string>Chronos</string>
+    </property>
+    <addaction name="actionSaveSelectedRouteAsDriveFile"/>
+    <addaction name="actionLoadDriveFile"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuTests"/>
+   <addaction name="menuChronos"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
@@ -2598,6 +2606,27 @@
    </property>
    <property name="toolTip">
     <string>Intersection Test</string>
+   </property>
+  </action>
+  <action name="actionSaveSelectedRouteAsDriveFile">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/models/Icons/Save as-96.png</normaloff>:/models/Icons/Save as-96.png</iconset>
+   </property>
+   <property name="text">
+    <string>Save selected route as drive file...</string>
+   </property>
+   <property name="toolTip">
+    <string>Save selected route as drive file</string>
+   </property>
+  </action>
+  <action name="actionLoadDriveFile">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/models/Icons/Open Folder-96.png</normaloff>:/models/Icons/Open Folder-96.png</iconset>
+   </property>
+   <property name="text">
+    <string>Load drive file...</string>
    </property>
   </action>
  </widget>

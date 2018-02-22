@@ -232,7 +232,7 @@ void autopilot_set_active(bool active) {
 
 	if (active && !m_is_active) {
 		m_start_time = pos_get_ms_today();
-		m_sync_rx = false;
+//		m_sync_rx = false;
 	}
 
 	m_is_active = active;

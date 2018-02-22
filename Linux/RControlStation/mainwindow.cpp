@@ -26,6 +26,7 @@
 #include <QInputDialog>
 #include <QXmlStreamWriter>
 #include <QXmlStreamReader>
+#include <QStringList>
 
 #include "utility.h"
 
@@ -1646,4 +1647,122 @@ void MainWindow::on_actionLoadRoutes_triggered()
 void MainWindow::on_actionTestIntersection_triggered()
 {
     mIntersectionTest->show();
+}
+
+void MainWindow::on_actionSaveSelectedRouteAsDriveFile_triggered()
+{
+    QString filename = QFileDialog::getSaveFileName(this,
+                                                    tr("Save Drive File"), ".",
+                                                    tr("Csv files (*.csv)"));
+
+    // Cancel pressed
+    if (filename.isEmpty()) {
+        return;
+    }
+
+    if (!filename.toLower().endsWith(".csv")) {
+        filename.append(".csv");
+    }
+
+    QFile file(filename);
+    if (!file.open(QIODevice::WriteOnly)) {
+        QMessageBox::critical(this, "Save Drive File",
+                              "Could not open\n" + filename + "\nfor writing");
+        showStatusInfo("Could not save drive file", false);
+        return;
+    }
+
+    QFileInfo fileInfo(file);
+
+
+    QTextStream stream(&file);
+    stream.setCodec("UTF-8");
+
+    QList<LocPoint> route = ui->mapWidget->getRoute();
+
+    stream << "TRAJECTORY;" << fileInfo.fileName().chopped(4) <<
+              ";0.1;" << route.size() << ";\n";
+
+    for (LocPoint p: route) {
+        // LINE;TIME(s);X(m);Y(m);Z(m);HEAD(rad, 0=right, ccw);VEL(m/s);ACCEL(m/s/s);CURVATURE(rad/m);MODE(0);ENDLINE;
+
+        stream << "LINE;";
+        stream << (double)p.getTime() / 1000.0 << ";";
+        stream << p.getX() << ";" << p.getY() << ";" << "0.0;";
+        stream << "0.0;";
+        stream << p.getSpeed() << ";";
+        stream << "0.0;";
+        stream << "0.0;";
+        stream << "0;";
+        stream << "ENDLINE;\n";
+    }
+
+    stream << "ENDTRAJECTORY;";
+    file.close();
+    showStatusInfo("Saved drive file", true);
+}
+
+void MainWindow::on_actionLoadDriveFile_triggered()
+{
+    QString filename = QFileDialog::getOpenFileName(this,
+                                                    tr("Load Drive File"), ".",
+                                                    tr("Csv files (*.csv)"));
+
+    if (!filename.isEmpty()) {
+        QFile file(filename);
+        if (!file.open(QIODevice::ReadOnly)) {
+            QMessageBox::critical(this, "Load Drive File",
+                                  "Could not open\n" + filename + "\nfor reading");
+            return;
+        }
+
+        QTextStream stream(&file);
+
+        QList<LocPoint> route;
+
+        while (!stream.atEnd()) {
+            QString line = stream.readLine();
+            if (line.toUpper().startsWith("LINE;")) {
+                QStringList tokens = line.split(";");
+
+                // LINE;TIME(s);X(m);Y(m);Z(m);HEAD(rad, 0=right, ccw);VEL(m/s);ACCEL(m/s/s);CURVATURE(rad/m);MODE(0);ENDLINE;
+
+                LocPoint p;
+                p.setTime(tokens.at(1).toDouble() * 1000.0);
+                p.setX(tokens.at(2).toDouble());
+                p.setY(tokens.at(3).toDouble());
+                p.setSpeed(tokens.at(6).toDouble());
+
+                route.append(p);
+            }
+        }
+
+        if (route.size() == 0) {
+            file.close();
+            QMessageBox::critical(this, "Load Drive File",
+                                  "Drive file empty or could not be parsed.");
+            return;
+        }
+
+        // Reduce route density
+        QList<LocPoint> routeReduced;
+        LocPoint pointLast = route.first();
+        routeReduced.append(route.first());
+
+        for (LocPoint p: route) {
+            if (p.getDistanceTo(pointLast) >= 1.0) {
+                routeReduced.append(p);
+                pointLast = p;
+            }
+        }
+
+        if (route.last().getDistanceTo(pointLast) > 0.01) {
+            routeReduced.append(route.last());
+        }
+
+        ui->mapWidget->addRoute(routeReduced);
+
+        file.close();
+        showStatusInfo("Loaded drive file", true);
+    }
 }

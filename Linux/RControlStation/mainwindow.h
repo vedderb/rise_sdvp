@@ -139,6 +139,9 @@ private slots:
     void on_actionSaveRoutes_triggered();
     void on_actionLoadRoutes_triggered();
     void on_actionTestIntersection_triggered();
+    void on_actionSaveSelectedRouteAsDriveFile_triggered();
+
+    void on_actionLoadDriveFile_triggered();
 
 private:
     Ui::MainWindow *ui;
