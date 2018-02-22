@@ -163,7 +163,7 @@ void Chronos::stateReceived(quint8 id, CAR_STATE state)
     monr.ts = chronosTimeNow();
     monr.status = state.speed > 0.2 ? 2 : 1;
 
-    monr.heading = state.yaw - 90.0;
+    monr.heading = state.yaw + 90.0;
     while (monr.heading < 0) {
         monr.heading += 360.0;
     }
