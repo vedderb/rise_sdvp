@@ -207,7 +207,7 @@ void autopilot_sync_point(int32_t point, int32_t time, int32_t min_time_diff) {
 	utils_truncate_number_abs(&speed, main_config.ap_max_speed);
 
 	if (time < min_time_diff || dist_tot < main_config.ap_base_rad) {
-		m_sync_rx = false;
+//		m_sync_rx = false;
 		chMtxUnlock(&m_ap_lock);
 		return;
 	}
