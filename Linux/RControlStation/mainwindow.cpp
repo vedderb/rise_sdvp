@@ -1680,7 +1680,9 @@ void MainWindow::on_actionSaveSelectedRouteAsDriveFile_triggered()
 
     QList<LocPoint> route = ui->mapWidget->getRoute();
 
-    stream << "TRAJECTORY;" << fileInfo.fileName().chopped(4) <<
+    QString trajName = fileInfo.fileName();
+    trajName.chop(4);
+    stream << "TRAJECTORY;" << trajName <<
               ";0.1;" << route.size() << ";\n";
 
     for (LocPoint p: route) {
