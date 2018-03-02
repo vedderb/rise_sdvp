@@ -1,36 +1,4 @@
-EESchema Schematic File Version 2
-LIBS:RCCAR_IF_Board_GPS-rescue
-LIBS:power
-LIBS:device
-LIBS:transistors
-LIBS:conn
-LIBS:linear
-LIBS:regul
-LIBS:74xx
-LIBS:cmos4000
-LIBS:adc-dac
-LIBS:memory
-LIBS:xilinx
-LIBS:microcontrollers
-LIBS:dsp
-LIBS:microchip
-LIBS:analog_switches
-LIBS:motorola
-LIBS:texas
-LIBS:intel
-LIBS:audio
-LIBS:interface
-LIBS:digital-audio
-LIBS:philips
-LIBS:display
-LIBS:cypress
-LIBS:siliconi
-LIBS:opto
-LIBS:atmel
-LIBS:contrib
-LIBS:valves
-LIBS:crf_1
-LIBS:dips-s
+EESchema Schematic File Version 4
 LIBS:RCCAR_IF_Board_GPS-cache
 EELAYER 26 0
 EELAYER END
@@ -47,7 +15,7 @@ Comment3 ""
 Comment4 ""
 $EndDescr
 $Comp
-L MPU9150 U8
+L crf_1:MPU9150 U8
 U 1 1 56BD19AD
 P 5400 3800
 F 0 "U8" H 5400 4650 60  0000 C CNN
@@ -88,7 +56,7 @@ Connection ~ 6100 3200
 Connection ~ 6100 3300
 Connection ~ 6100 3100
 $Comp
-L VCC #PWR0102
+L power:VCC #PWR0102
 U 1 1 56BD19B1
 P 6500 3050
 F 0 "#PWR0102" H 6500 3150 30  0001 C CNN
@@ -138,7 +106,7 @@ Wire Wire Line
 Wire Wire Line
 	4700 3700 4700 3850
 $Comp
-L C C65
+L RCCAR_IF_Board_GPS-rescue:C-RESCUE-RCCAR_IF_Board_GPS C65
 U 1 1 56BD1B5E
 P 4450 3300
 F 0 "C65" H 4475 3400 50  0000 L CNN
@@ -149,7 +117,7 @@ F 3 "" H 4450 3300 60  0000 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L C C64
+L RCCAR_IF_Board_GPS-rescue:C-RESCUE-RCCAR_IF_Board_GPS C64
 U 1 1 56BD1BED
 P 4450 3050
 F 0 "C64" H 4475 3150 50  0000 L CNN
@@ -160,7 +128,7 @@ F 3 "" H 4450 3050 60  0000 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L GND #PWR0103
+L power:GND #PWR0103
 U 1 1 56BD1D47
 P 4150 3400
 F 0 "#PWR0103" H 4150 3150 50  0001 C CNN
@@ -171,7 +139,7 @@ F 3 "" H 4150 3400 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L GND #PWR0104
+L power:GND #PWR0104
 U 1 1 56BD1E02
 P 4700 3850
 F 0 "#PWR0104" H 4700 3600 50  0001 C CNN
@@ -182,7 +150,7 @@ F 3 "" H 4700 3850 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L C C66
+L RCCAR_IF_Board_GPS-rescue:C-RESCUE-RCCAR_IF_Board_GPS C66
 U 1 1 56BD1F63
 P 6100 3750
 F 0 "C66" H 6125 3850 50  0000 L CNN
@@ -193,7 +161,7 @@ F 3 "" H 6100 3750 60  0000 C CNN
 	-1   0    0    1   
 $EndComp
 $Comp
-L C C67
+L RCCAR_IF_Board_GPS-rescue:C-RESCUE-RCCAR_IF_Board_GPS C67
 U 1 1 56BD1FF4
 P 6300 3750
 F 0 "C67" H 6325 3850 50  0000 L CNN
@@ -204,7 +172,7 @@ F 3 "" H 6300 3750 60  0000 C CNN
 	-1   0    0    1   
 $EndComp
 $Comp
-L C C68
+L RCCAR_IF_Board_GPS-rescue:C-RESCUE-RCCAR_IF_Board_GPS C68
 U 1 1 56BD2017
 P 6500 3750
 F 0 "C68" H 6525 3850 50  0000 L CNN
@@ -215,7 +183,7 @@ F 3 "" H 6500 3750 60  0000 C CNN
 	-1   0    0    1   
 $EndComp
 $Comp
-L GND #PWR0105
+L power:GND #PWR0105
 U 1 1 56BE1D9B
 P 6500 4600
 F 0 "#PWR0105" H 6500 4350 50  0001 C CNN

@@ -1,36 +1,4 @@
-EESchema Schematic File Version 2
-LIBS:RCCAR_IF_Board_GPS-rescue
-LIBS:power
-LIBS:device
-LIBS:transistors
-LIBS:conn
-LIBS:linear
-LIBS:regul
-LIBS:74xx
-LIBS:cmos4000
-LIBS:adc-dac
-LIBS:memory
-LIBS:xilinx
-LIBS:microcontrollers
-LIBS:dsp
-LIBS:microchip
-LIBS:analog_switches
-LIBS:motorola
-LIBS:texas
-LIBS:intel
-LIBS:audio
-LIBS:interface
-LIBS:digital-audio
-LIBS:philips
-LIBS:display
-LIBS:cypress
-LIBS:siliconi
-LIBS:opto
-LIBS:atmel
-LIBS:contrib
-LIBS:valves
-LIBS:crf_1
-LIBS:dips-s
+EESchema Schematic File Version 4
 LIBS:RCCAR_IF_Board_GPS-cache
 EELAYER 26 0
 EELAYER END
@@ -47,7 +15,7 @@ Comment3 ""
 Comment4 ""
 $EndDescr
 $Comp
-L MPU9250 U14
+L crf_1:MPU9250 U14
 U 1 1 59E9DC35
 P 5650 3700
 F 0 "U14" H 5650 4687 60  0000 C CNN
@@ -62,7 +30,7 @@ SCL
 Text HLabel 5100 4400 0    60   Input ~ 0
 SDA
 $Comp
-L GND #PWR022
+L power:GND #PWR022
 U 1 1 59E9DD30
 P 4750 4350
 F 0 "#PWR022" H 4750 4100 50  0001 C CNN
@@ -73,7 +41,7 @@ F 3 "" H 4750 4350 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L VCC #PWR023
+L power:VCC #PWR023
 U 1 1 59E9DDA5
 P 4600 4000
 F 0 "#PWR023" H 4600 3850 50  0001 C CNN
@@ -88,7 +56,7 @@ NoConn ~ 5100 3300
 NoConn ~ 5100 3100
 NoConn ~ 5100 3000
 $Comp
-L C C76
+L RCCAR_IF_Board_GPS-rescue:C-RESCUE-RCCAR_IF_Board_GPS C76
 U 1 1 59E9DE24
 P 6350 4000
 F 0 "C76" H 6350 4100 50  0000 L CNN
@@ -110,7 +78,7 @@ Wire Wire Line
 	6200 4300 6350 4300
 Connection ~ 6350 4300
 $Comp
-L GND #PWR027
+L power:GND #PWR027
 U 1 1 59E9DE84
 P 6350 4500
 F 0 "#PWR027" H 6350 4250 50  0001 C CNN
@@ -122,7 +90,7 @@ F 3 "" H 6350 4500 50  0001 C CNN
 $EndComp
 Connection ~ 6350 4400
 $Comp
-L C C78
+L RCCAR_IF_Board_GPS-rescue:C-RESCUE-RCCAR_IF_Board_GPS C78
 U 1 1 59E9DEA5
 P 6750 4000
 F 0 "C78" H 6750 4100 50  0000 L CNN
@@ -135,7 +103,7 @@ $EndComp
 Wire Wire Line
 	6750 4400 6750 4150
 $Comp
-L C C77
+L RCCAR_IF_Board_GPS-rescue:C-RESCUE-RCCAR_IF_Board_GPS C77
 U 1 1 59E9DF54
 P 6550 4000
 F 0 "C77" H 6550 4100 50  0000 L CNN
@@ -151,7 +119,7 @@ Wire Wire Line
 	6550 4150 6550 4400
 Connection ~ 6550 4400
 $Comp
-L VCC #PWR033
+L power:VCC #PWR033
 U 1 1 59E9E01F
 P 6750 2900
 F 0 "#PWR033" H 6750 2750 50  0001 C CNN

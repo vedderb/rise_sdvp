@@ -1,36 +1,4 @@
-EESchema Schematic File Version 2
-LIBS:RCCAR_IF_Board_GPS-rescue
-LIBS:power
-LIBS:device
-LIBS:transistors
-LIBS:conn
-LIBS:linear
-LIBS:regul
-LIBS:74xx
-LIBS:cmos4000
-LIBS:adc-dac
-LIBS:memory
-LIBS:xilinx
-LIBS:microcontrollers
-LIBS:dsp
-LIBS:microchip
-LIBS:analog_switches
-LIBS:motorola
-LIBS:texas
-LIBS:intel
-LIBS:audio
-LIBS:interface
-LIBS:digital-audio
-LIBS:philips
-LIBS:display
-LIBS:cypress
-LIBS:siliconi
-LIBS:opto
-LIBS:atmel
-LIBS:contrib
-LIBS:valves
-LIBS:crf_1
-LIBS:dips-s
+EESchema Schematic File Version 4
 LIBS:RCCAR_IF_Board_GPS-cache
 EELAYER 26 0
 EELAYER END
@@ -47,7 +15,7 @@ Comment3 ""
 Comment4 ""
 $EndDescr
 $Comp
-L ublox_neo_m8p U13
+L crf_1:ublox_neo_m8p U13
 U 1 1 585F12E3
 P 5650 3700
 F 0 "U13" H 5650 4587 60  0000 C CNN
@@ -58,7 +26,7 @@ F 3 "" H 5650 3700 60  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L C C74
+L RCCAR_IF_Board_GPS-rescue:C-RESCUE-RCCAR_IF_Board_GPS C74
 U 1 1 585F135A
 P 4450 4450
 F 0 "C74" H 4565 4496 50  0000 L CNN
@@ -81,7 +49,7 @@ Wire Wire Line
 Wire Wire Line
 	4450 4600 4450 4850
 $Comp
-L GND #PWR0106
+L power:GND #PWR0106
 U 1 1 585F1434
 P 4450 4850
 F 0 "#PWR0106" H 4450 4600 50  0001 C CNN
@@ -93,7 +61,7 @@ F 3 "" H 4450 4850 50  0000 C CNN
 $EndComp
 Connection ~ 4450 4750
 $Comp
-L VCC #PWR0107
+L power:VCC #PWR0107
 U 1 1 585F1463
 P 4450 4050
 F 0 "#PWR0107" H 4450 3900 50  0001 C CNN
@@ -125,7 +93,7 @@ RESET_N
 Text HLabel 4900 3300 0    60   Input ~ 0
 RTK_STAT
 $Comp
-L SMA J3
+L crf_1:SMA J3
 U 1 1 585F2744
 P 6800 2700
 F 0 "J3" V 7190 2731 60  0000 C CNN
@@ -140,7 +108,7 @@ Wire Wire Line
 Wire Wire Line
 	6700 3200 6700 2800
 $Comp
-L L L18
+L RCCAR_IF_Board_GPS-rescue:L-RESCUE-RCCAR_IF_Board_GPS L18
 U 1 1 585F28EA
 P 7350 3200
 F 0 "L18" V 7172 3200 50  0000 C CNN
@@ -151,7 +119,7 @@ F 3 "" H 7350 3200 50  0000 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L C C75
+L RCCAR_IF_Board_GPS-rescue:C-RESCUE-RCCAR_IF_Board_GPS C75
 U 1 1 585F35FF
 P 7600 3600
 F 0 "C75" H 7715 3646 50  0000 L CNN
@@ -162,7 +130,7 @@ F 3 "" H 7600 3600 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L R R20
+L RCCAR_IF_Board_GPS-rescue:R-RESCUE-RCCAR_IF_Board_GPS R20
 U 1 1 585F3849
 P 7200 3400
 F 0 "R20" V 7300 3400 50  0000 C CNN
@@ -183,7 +151,7 @@ Wire Wire Line
 	7350 3400 7600 3400
 Connection ~ 7600 3400
 $Comp
-L GND #PWR0108
+L power:GND #PWR0108
 U 1 1 585F39D8
 P 7600 3900
 F 0 "#PWR0108" H 7600 3650 50  0001 C CNN
@@ -208,7 +176,7 @@ Wire Wire Line
 	7000 2750 6900 2750
 Connection ~ 7000 2700
 $Comp
-L GND #PWR0109
+L power:GND #PWR0109
 U 1 1 585F6B31
 P 7000 2800
 F 0 "#PWR0109" H 7000 2550 50  0001 C CNN
@@ -227,7 +195,7 @@ Wire Wire Line
 	6400 3300 6950 3300
 Connection ~ 6950 3300
 $Comp
-L GND #PWR0110
+L power:GND #PWR0110
 U 1 1 585F6C2B
 P 6950 3500
 F 0 "#PWR0110" H 6950 3250 50  0001 C CNN
@@ -238,7 +206,7 @@ F 3 "" H 6950 3500 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L GND #PWR0111
+L power:GND #PWR0111
 U 1 1 585F6CC6
 P 4300 3450
 F 0 "#PWR0111" H 4300 3200 50  0001 C CNN

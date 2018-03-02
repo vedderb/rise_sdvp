@@ -1,36 +1,4 @@
-EESchema Schematic File Version 2
-LIBS:RCCAR_IF_Board_GPS-rescue
-LIBS:power
-LIBS:device
-LIBS:transistors
-LIBS:conn
-LIBS:linear
-LIBS:regul
-LIBS:74xx
-LIBS:cmos4000
-LIBS:adc-dac
-LIBS:memory
-LIBS:xilinx
-LIBS:microcontrollers
-LIBS:dsp
-LIBS:microchip
-LIBS:analog_switches
-LIBS:motorola
-LIBS:texas
-LIBS:intel
-LIBS:audio
-LIBS:interface
-LIBS:digital-audio
-LIBS:philips
-LIBS:display
-LIBS:cypress
-LIBS:siliconi
-LIBS:opto
-LIBS:atmel
-LIBS:contrib
-LIBS:valves
-LIBS:crf_1
-LIBS:dips-s
+EESchema Schematic File Version 4
 LIBS:RCCAR_IF_Board_GPS-cache
 EELAYER 26 0
 EELAYER END
@@ -47,7 +15,7 @@ Comment3 ""
 Comment4 ""
 $EndDescr
 $Comp
-L VCC #PWR099
+L power:VCC #PWR099
 U 1 1 56C0C064
 P 6600 3600
 F 0 "#PWR099" H 6600 3700 30  0001 C CNN
@@ -72,7 +40,7 @@ Wire Wire Line
 	6900 3750 7400 3750
 Connection ~ 7150 3750
 $Comp
-L C C63
+L RCCAR_IF_Board_GPS-rescue:C-RESCUE-RCCAR_IF_Board_GPS C63
 U 1 1 56C0C165
 P 6600 4450
 F 0 "C63" H 6625 4550 50  0000 L CNN
@@ -83,7 +51,7 @@ F 3 "" H 6600 4450 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L R R19
+L RCCAR_IF_Board_GPS-rescue:R-RESCUE-RCCAR_IF_Board_GPS R19
 U 1 1 56C0C2A3
 P 7150 4000
 F 0 "R19" V 7230 4000 50  0000 C CNN
@@ -98,7 +66,7 @@ Wire Wire Line
 Wire Wire Line
 	7150 4150 7150 4250
 $Comp
-L GND #PWR0100
+L power:GND #PWR0100
 U 1 1 56C0C32A
 P 5900 4800
 F 0 "#PWR0100" H 5900 4550 50  0001 C CNN
@@ -111,7 +79,7 @@ $EndComp
 Wire Wire Line
 	5900 4450 5900 4800
 $Comp
-L TJA1051TK3 U7
+L crf_1:TJA1051TK3 U7
 U 1 1 585B3B77
 P 5900 4000
 F 0 "U7" H 5900 4437 60  0000 C CNN
@@ -139,7 +107,7 @@ Wire Wire Line
 	4750 4700 6600 4700
 Connection ~ 5900 4700
 $Comp
-L C C73
+L RCCAR_IF_Board_GPS-rescue:C-RESCUE-RCCAR_IF_Board_GPS C73
 U 1 1 585B3FED
 P 4750 4450
 F 0 "C73" H 4775 4550 50  0000 L CNN
@@ -162,7 +130,7 @@ Wire Wire Line
 	6450 3850 6450 4700
 Connection ~ 6450 4700
 $Comp
-L +5V #PWR0101
+L power:+5V #PWR0101
 U 1 1 585B425F
 P 4750 3600
 F 0 "#PWR0101" H 4750 3450 50  0001 C CNN
