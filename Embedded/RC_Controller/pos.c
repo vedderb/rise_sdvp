@@ -1,5 +1,5 @@
 /*
-	Copyright 2016 - 2017 Benjamin Vedder	benjamin@vedder.se
+	Copyright 2016 - 2018 Benjamin Vedder	benjamin@vedder.se
 
 	This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -66,7 +66,6 @@ static void cmd_terminal_delay_info(int argc, const char **argv);
 static void mpu9150_read(void);
 static void update_orientation_angles(float *accel, float *gyro, float *mag, float dt);
 static void init_gps_local(GPS_STATE *gps);
-static double nmea_parse_val(char *str);
 static void ublox_relposned_rx(ubx_nav_relposned *pos);
 static void save_pos_history(void);
 static POS_POINT get_closest_point_to_time(int32_t time);
@@ -294,146 +293,38 @@ void pos_set_ms_today(int32_t ms) {
 }
 
 bool pos_input_nmea(const char *data) {
-	static char nmea_str[1024];
-	int32_t ms = -1;
-	double lat = 0.0;
-	double lon = 0.0;
-	double height = 0.0;
-	int fix_type = 0;
-	int sats = 0;
-	int ind = 0;
+	nmea_gga_info_t gga;
+	int nmea_res = utils_decode_nmea_gga(data, &gga);
 
-	bool found = false;
-	int len = strlen(data);
-
-	for (int i = 0;i < 10;i++) {
-		if ((i + 5) >= len) {
-			break;
-		}
-
-		if (    data[i] == 'G' &&
-				data[i + 1] == 'G' &&
-				data[i + 2] == 'A' &&
-				data[i + 3] == ',') {
-			found = true;
-			strcpy(nmea_str, data + i + 4);
-			break;
-		}
-	}
-
-	if (found) {
-		char *gga, *str;
-
-		str = nmea_str;
-		gga = strsep(&str, ",");
-
-		while (gga != 0) {
-			switch (ind) {
-			case 0: {
-				// Time
-				int h, m, s, ds;
-				if (sscanf(gga, "%02d%02d%02d.%d", &h, &m, &s, &ds) == 4) {
-					ms = h * 60 * 60 * 1000;
-					ms += m * 60 * 1000;
-					ms += s * 1000;
-					ms += ds * 10;
-				} else {
-					ms = -1;
-				}
-			} break;
-
-			case 1: {
-				// Latitude
-				lat = nmea_parse_val(gga);
-			} break;
-
-			case 2:
-				// Latitude direction
-				if (*gga == 'S' || *gga == 's') {
-					lat = -lat;
-				}
-				break;
-
-			case 3: {
-				// Longitude
-				lon = nmea_parse_val(gga);
-			} break;
-
-			case 4:
-				// Longitude direction
-				if (*gga == 'W' || *gga == 'w') {
-					lon = -lon;
-				}
-				break;
-
-			case 5:
-				// Fix type
-				if (sscanf(gga, "%d", &fix_type) != 1) {
-					fix_type = -1;
-				}
-				break;
-
-			case 6:
-				// Satellites
-				if (sscanf(gga, "%d", &sats) != 1) {
-					sats = 0;
-				}
-				break;
-
-			case 8:
-				// Altitude
-				if (sscanf(gga, "%lf", &height) != 1) {
-					height = 0.0;
-				}
-				break;
-
-			case 10: {
-				// Altitude 2
-				double h2 = 0.0;
-				if (sscanf(gga, "%lf", &h2) != 1) {
-					h2 = 0.0;
-				}
-				height += h2;
-			} break;
-
-			default:
-				break;
-			}
-
-			gga = strsep(&str, ",");
-			ind++;
-		}
-	}
-
-	if (ms >= 0) {
-		m_nma_last_time = ms;
+	if (gga.t_tow >= 0) {
+		m_nma_last_time = gga.t_tow;
 
 #if !(UBLOX_EN && UBLOX_USE_PPS) && !GPS_EXT_PPS
-		m_ms_today = ms;
+		m_ms_today = gga.t_tow;
 #endif
 	}
 
 	// Only use valid fixes
-	if (fix_type == 1 || fix_type == 2 || fix_type == 4 || fix_type == 5) {
+	if (gga.fix_type == 1 || gga.fix_type == 2 || gga.fix_type == 4 || gga.fix_type == 5) {
 		// Convert llh to ecef
-		double sinp = sin(lat * D_PI / D(180.0));
-		double cosp = cos(lat * D_PI / D(180.0));
-		double sinl = sin(lon * D_PI / D(180.0));
-		double cosl = cos(lon * D_PI / D(180.0));
+		double sinp = sin(gga.lat * D_PI / D(180.0));
+		double cosp = cos(gga.lat * D_PI / D(180.0));
+		double sinl = sin(gga.lon * D_PI / D(180.0));
+		double cosl = cos(gga.lon * D_PI / D(180.0));
 		double e2 = FE_WGS84 * (D(2.0) - FE_WGS84);
 		double v = RE_WGS84 / sqrt(D(1.0) - e2 * sinp * sinp);
 
 		chMtxLock(&m_mutex_gps);
 
-		m_gps.lat = lat;
-		m_gps.lon = lon;
-		m_gps.height = height;
-		m_gps.fix_type = fix_type;
-		m_gps.sats = sats;
-		m_gps.ms = ms;
-		m_gps.x = (v + height) * cosp * cosl;
-		m_gps.y = (v + height) * cosp * sinl;
-		m_gps.z = (v * (D(1.0) - e2) + height) * sinp;
+		m_gps.lat = gga.lat;
+		m_gps.lon = gga.lon;
+		m_gps.height = gga.height;
+		m_gps.fix_type = gga.fix_type;
+		m_gps.sats = gga.n_sat;
+		m_gps.ms = gga.t_tow;
+		m_gps.x = (v + gga.height) * cosp * cosl;
+		m_gps.y = (v + gga.height) * cosp * sinl;
+		m_gps.z = (v * (D(1.0) - e2) + gga.height) * sinp;
 
 		// Continue if ENU frame is initialized
 		if (m_gps.local_init_done) {
@@ -470,7 +361,7 @@ bool pos_input_nmea(const char *data) {
 			// Correct position
 			// Optionally require RTK and good ublox quality indication.
 			if (main_config.gps_comp &&
-					(!main_config.gps_req_rtk || (fix_type == 4 || fix_type == 5)) &&
+					(!main_config.gps_req_rtk || (gga.fix_type == 4 || gga.fix_type == 5)) &&
 					(!main_config.gps_use_ubx_info || m_ubx_pos_valid)) {
 
 				m_pos.gps_last_corr_diff = sqrtf(SQ(m_pos.px - m_pos.px_gps) +
@@ -503,7 +394,7 @@ bool pos_input_nmea(const char *data) {
 		chMtxUnlock(&m_mutex_gps);
 	}
 
-	return found;
+	return nmea_res >= 0;
 }
 
 void pos_reset_attitude(void) {
@@ -788,33 +679,6 @@ static void init_gps_local(GPS_STATE *gps) {
 	gps->lx = 0.0;
 	gps->ly = 0.0;
 	gps->lz = 0.0;
-}
-
-static double nmea_parse_val(char *str) {
-	int ind = -1;
-	int len = strlen(str);
-	double retval = 0.0;
-
-	for (int i = 2;i < len;i++) {
-		if (str[i] == '.') {
-			ind = i - 2;
-			break;
-		}
-	}
-
-	if (ind >= 0) {
-		char a[len + 1];
-		memcpy(a, str, ind);
-		a[ind] = ' ';
-		memcpy(a + ind + 1, str + ind, len - ind);
-
-		double l1, l2;
-		if (sscanf(a, "%lf %lf", &l1, &l2) == 2) {
-			retval = l1 + l2 / D(60.0);
-		}
-	}
-
-	return retval;
 }
 
 static void ublox_relposned_rx(ubx_nav_relposned *pos) {

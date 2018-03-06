@@ -43,6 +43,9 @@ private slots:
     void on_ubxPollNavSvinButton_clicked();
     void on_ubxPollNavRelPosNedButton_clicked();
     void on_ubxPollRxmRawxButton_clicked();
+    void on_ubxPollNavSolButton_clicked();
+    void on_m8tBaseStatusButton_clicked();
+    void on_m8tBaseResetButton_clicked();
 
 private:
     Ui::MoteConfig *ui;

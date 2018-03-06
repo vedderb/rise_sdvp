@@ -35,7 +35,22 @@ extern "C" {
 #endif
 
 // Defines
-#define RTCM3PREAMB		0xD3 // rtcm ver.3 frame preamble
+#define RTCM3PREAMB	0xD3 // rtcm ver.3 frame preamble
+#define CODE_L1C	1                   // obs code: L1C/A,G1C/A,E1C (GPS,GLO,GAL,QZS,SBS)
+#define CODE_L1P	2                   // obs code: L1P,G1P    (GPS,GLO)
+#define CODE_L2C	14                  // obs code: L2C/A,G1C/A (GPS,GLO)
+#define CODE_L2P	19                  // obs code: L2P,G2P    (GPS,GLO)
+#define CODE_L2W	20                  // obs code: L2 Z-track (GPS)
+
+#define SYS_NONE	0x00                // navigation system: none
+#define SYS_GPS		0x01                // navigation system: GPS
+#define SYS_SBS		0x02                // navigation system: SBAS
+#define SYS_GLO		0x04                // navigation system: GLONASS
+#define SYS_GAL		0x08                // navigation system: Galileo
+#define SYS_QZS		0x10                // navigation system: QZSS
+#define SYS_CMP		0x20                // navigation system: BeiDou
+#define SYS_LEO		0x40                // navigation system: LEO
+#define SYS_ALL		0xFF                // navigation system: all
 
 // Functions
 void rtcm3_set_rx_callback_obs(void(*func)(rtcm_obs_header_t *header, rtcm_obs_t *obs, int obs_num), rtcm3_state *state);

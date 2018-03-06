@@ -440,6 +440,23 @@ void BaseStation::on_ubxSerialConnectButton_clicked()
         tp5.rf_group_delay = 0;
         tp5.ant_cable_delay = 50;
         mUblox->ubloxCfgTp5(&tp5);
+
+        // Save everything
+        ubx_cfg_cfg cfg;
+        memset(&cfg, 0, sizeof(ubx_cfg_cfg));
+        cfg.save_io_port = true;
+        cfg.save_msg_conf = true;
+        cfg.save_inf_msg = true;
+        cfg.save_nav_conf = true;
+        cfg.save_rxm_conf = true;
+        cfg.save_sen_conf = true;
+        cfg.save_rinv_conf = true;
+        cfg.save_ant_conf = true;
+        cfg.save_log_conf = true;
+        cfg.save_fts_conf = true;
+        cfg.dev_bbr = true;
+        cfg.dev_flash = true;
+        mUblox->ubloxCfgCfg(&cfg);
     }
 }
 

@@ -40,11 +40,13 @@ public:
     bool ubxCfgTmode3(ubx_cfg_tmode3 *cfg);
     bool ubxCfgMsg(uint8_t msg_class, uint8_t id, uint8_t rate);
     bool ubxCfgRate(uint16_t meas_rate_ms, uint16_t nav_rate_ms, uint16_t time_ref);
+    bool ubloxCfgCfg(ubx_cfg_cfg *cfg);
     bool ubxCfgNav5(ubx_cfg_nav5 *cfg);
     bool ubloxCfgTp5(ubx_cfg_tp5 *cfg);
 
 signals:
     void rxGga(int fields, NmeaServer::nmea_gga_info_t gga);
+    void rxNavSol(ubx_nav_sol sol);
     void rxRelPosNed(ubx_nav_relposned pos);
     void rxSvin(ubx_nav_svin svin);
     void rxAck(uint8_t cls_id, uint8_t msg_id);
@@ -81,6 +83,7 @@ private:
     QByteArray ubx_encode(uint8_t msg_class, uint8_t id, const QByteArray &data);
 
     void ubx_decode(uint8_t msg_class, uint8_t id, uint8_t *msg, int len);
+    void ubx_decode_nav_sol(uint8_t *msg, int len);
     void ubx_decode_relposned(uint8_t *msg, int len);
     void ubx_decode_svin(uint8_t *msg, int len);
     void ubx_decode_ack(uint8_t *msg, int len);
@@ -107,6 +110,7 @@ private:
 #define UBX_CLASS_RTCM3					0xF5
 
 // Navigation (NAV) messages
+#define UBX_NAV_SOL						0x06
 #define UBX_NAV_RELPOSNED				0x3C
 #define UBX_NAV_SVIN					0x3B
 
@@ -122,6 +126,7 @@ private:
 #define UBX_CFG_PRT						0x00
 #define UBX_CFG_MSG						0x01
 #define UBX_CFG_RATE					0x08
+#define UBX_CFG_CFG						0x09
 #define UBX_CFG_NAV5					0x24
 #define UBX_CFG_TP5						0x31
 #define UBX_CFG_TMODE3					0x71

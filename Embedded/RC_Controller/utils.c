@@ -1,5 +1,5 @@
 /*
-	Copyright 2012 - 2017 Benjamin Vedder	benjamin@vedder.se
+	Copyright 2012 - 2018 Benjamin Vedder	benjamin@vedder.se
 
 	This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,9 +19,14 @@
 #include "ch.h"
 #include "hal.h"
 #include <math.h>
+#include <string.h>
+#include <stdio.h>
 
 // Private variables
 static volatile int sys_lock_cnt = 0;
+
+// Private functions
+static double nmea_parse_val(char *str);
 
 void utils_step_towards(float *value, float goal, float step) {
 	if (*value < goal) {
@@ -836,6 +841,176 @@ void utils_ms_to_hhmmss(int ms, int *hh, int *mm, int *ss) {
 }
 
 /**
+ * Decode NMEA GGA message.
+ *
+ * @param data
+ * NMEA string
+ *
+ * @param gga
+ * GGA struct to fill.
+ *
+ * @return
+ * -1: Type is not GGA
+ * >= 0: Number of decoded fields.
+ */
+int utils_decode_nmea_gga(const char *data, nmea_gga_info_t *gga) {
+	static char nmea_str[1024];
+	int ms = -1;
+	double lat = 0.0;
+	double lon = 0.0;
+	double height = 0.0;
+	int fix_type = 0;
+	int sats = 0;
+	float hdop = 0.0;
+	float diff_age = -1.0;
+
+	int dec_fields = 0;
+
+	bool found = false;
+	int len = strlen(data);
+
+	for (int i = 0;i < 10;i++) {
+		if ((i + 5) >= len) {
+			break;
+		}
+
+		if (    data[i] == 'G' &&
+				data[i + 1] == 'G' &&
+				data[i + 2] == 'A' &&
+				data[i + 3] == ',') {
+			found = true;
+			strcpy(nmea_str, data + i + 4);
+			break;
+		}
+	}
+
+	if (found) {
+		char *gga, *str;
+		int ind = 0;
+
+		str = nmea_str;
+		gga = strsep(&str, ",");
+
+		while (gga != 0) {
+			switch (ind) {
+			case 0: {
+				// Time
+				int h, m, s, ds;
+				dec_fields++;
+
+				if (sscanf(gga, "%02d%02d%02d.%d", &h, &m, &s, &ds) == 4) {
+					ms = h * 60 * 60 * 1000;
+					ms += m * 60 * 1000;
+					ms += s * 1000;
+					ms += ds * 10;
+				} else {
+					ms = -1;
+				}
+			} break;
+
+			case 1: {
+				// Latitude
+				dec_fields++;
+				lat = nmea_parse_val(gga);
+			} break;
+
+			case 2:
+				// Latitude direction
+				dec_fields++;
+				if (*gga == 'S' || *gga == 's') {
+					lat = -lat;
+				}
+				break;
+
+			case 3: {
+				// Longitude
+				dec_fields++;
+				lon = nmea_parse_val(gga);
+			} break;
+
+			case 4:
+				// Longitude direction
+				dec_fields++;
+				if (*gga == 'W' || *gga == 'w') {
+					lon = -lon;
+				}
+				break;
+
+			case 5:
+				// Fix type
+				dec_fields++;
+				if (sscanf(gga, "%d", &fix_type) != 1) {
+					fix_type = 0;
+				}
+				break;
+
+			case 6:
+				// Satellites
+				dec_fields++;
+				if (sscanf(gga, "%d", &sats) != 1) {
+					sats = 0;
+				}
+				break;
+
+			case 7:
+				// hdop
+				dec_fields++;
+				if (sscanf(gga, "%f", &hdop) != 1) {
+					hdop = 0.0;
+				}
+				break;
+
+			case 8:
+				// Altitude
+				dec_fields++;
+				if (sscanf(gga, "%lf", &height) != 1) {
+					height = 0.0;
+				}
+				break;
+
+			case 10: {
+				// Altitude 2
+				double h2 = 0.0;
+				dec_fields++;
+				if (sscanf(gga, "%lf", &h2) != 1) {
+					h2 = 0.0;
+				}
+
+				height += h2;
+			} break;
+
+			case 12: {
+				// Correction age
+				dec_fields++;
+				if (sscanf(gga, "%f", &diff_age) != 1) {
+					diff_age = -1.0;
+				}
+			} break;
+
+			default:
+				break;
+			}
+
+			gga = strsep(&str, ",");
+			ind++;
+		}
+	} else {
+		dec_fields = -1;
+	}
+
+	gga->lat = lat;
+	gga->lon = lon;
+	gga->height = height;
+	gga->fix_type = fix_type;
+	gga->n_sat = sats;
+	gga->t_tow = ms;
+	gga->h_dop = hdop;
+	gga->diff_age = diff_age;
+
+	return dec_fields;
+}
+
+/**
  * A system locking function with a counter. For every lock, a corresponding unlock must
  * exist to unlock the system. That means, if lock is called five times, unlock has to
  * be called five times as well. Note that chSysLock and chSysLockFromIsr are the same
@@ -861,4 +1036,32 @@ void utils_sys_unlock_cnt(void) {
 			chSysUnlock();
 		}
 	}
+}
+
+// Private functions
+static double nmea_parse_val(char *str) {
+	int ind = -1;
+	int len = strlen(str);
+	double retval = D(0.0);
+
+	for (int i = 2;i < len;i++) {
+		if (str[i] == '.') {
+			ind = i - 2;
+			break;
+		}
+	}
+
+	if (ind >= 0) {
+		char a[len + 1];
+		memcpy(a, str, ind);
+		a[ind] = ' ';
+		memcpy(a + ind + 1, str + ind, len - ind);
+
+		double l1, l2;
+		if (sscanf(a, "%lf %lf", &l1, &l2) == 2) {
+			retval = l1 + l2 / D(60.0);
+		}
+	}
+
+	return retval;
 }

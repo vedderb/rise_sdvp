@@ -1,5 +1,5 @@
 /*
-	Copyright 2012 - 2017 Benjamin Vedder	benjamin@vedder.se
+	Copyright 2012 - 2018 Benjamin Vedder	benjamin@vedder.se
 
 	This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -57,6 +57,7 @@ void utils_enu_to_llh(const double *iLlh, const double *xyz, double *llh);
 void utils_byte_to_binary(int x, char *b);
 bool utils_time_before(int32_t t1, int32_t t2);
 void utils_ms_to_hhmmss(int ms, int *hh, int *mm, int *ss);
+int utils_decode_nmea_gga(const char *data, nmea_gga_info_t *gga);
 void utils_sys_lock_cnt(void);
 void utils_sys_unlock_cnt(void);
 

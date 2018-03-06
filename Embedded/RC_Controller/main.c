@@ -49,6 +49,7 @@
 #include "mr_control.h"
 #include "radar_cont.h"
 #include "motor_sim.h"
+#include "m8t_base.h"
 
 /*
  * Timers used:
@@ -121,6 +122,14 @@ int main(void) {
 
 #if UBLOX_EN
 	ublox_init();
+#endif
+
+#if MAIN_MODE_IS_BASE || MAIN_MODE_IS_MOTE
+	m8t_base_init();
+#endif
+
+#if MAIN_MODE_IS_BASE
+	m8t_base_start();
 #endif
 
 #if MAIN_MODE == MAIN_MODE_CAR

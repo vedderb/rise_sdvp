@@ -1,5 +1,5 @@
 /*
-	Copyright 2016 - 2017 Benjamin Vedder	benjamin@vedder.se
+	Copyright 2016 - 2018 Benjamin Vedder	benjamin@vedder.se
 
 	This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -37,6 +37,7 @@
 #include "mr_control.h"
 #include "adconv.h"
 #include "motor_sim.h"
+#include "m8t_base.h"
 
 #include <math.h>
 #include <string.h>
@@ -985,22 +986,10 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			cfg.svin_min_dur = buffer_get_uint32(data, &ind);
 			cfg.svin_acc_limit = buffer_get_float32_auto(data, &ind);
 
-			ublox_cfg_tmode3(&cfg);
+			if (cfg.mode == 0) {
+				m8t_base_stop();
+				ublox_cfg_tmode3(&cfg);
 
-			if (cfg.mode) {
-				// Switch on RTCM messages, set rate to 1 Hz and time reference to UTC
-				ublox_cfg_rate(1000, 1, 0);
-				ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_1005, 1); // Every second
-				ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_1077, 1); // Every second
-				ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_1087, 1); // Every second
-
-				// Stationary dynamic model
-				ubx_cfg_nav5 nav5;
-				memset(&nav5, 0, sizeof(ubx_cfg_nav5));
-				nav5.apply_dyn = true;
-				nav5.dyn_model = 2;
-				ublox_cfg_nav5(&nav5);
-			} else {
 				// Switch off RTCM messages, set rate to 5 Hz and time reference to UTC
 				ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_1005, 0);
 				ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_1077, 0);
@@ -1013,6 +1002,27 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 				nav5.apply_dyn = true;
 				nav5.dyn_model = 4;
 				ublox_cfg_nav5(&nav5);
+			} else if (cfg.mode == 1 || cfg.mode == 2) {
+				ublox_cfg_tmode3(&cfg);
+
+				// Switch on RTCM messages, set rate to 1 Hz and time reference to UTC
+				ublox_cfg_rate(1000, 1, 0);
+				ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_1005, 1); // Every second
+				ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_1077, 1); // Every second
+				ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_1087, 1); // Every second
+
+				// Stationary dynamic model
+				ubx_cfg_nav5 nav5;
+				memset(&nav5, 0, sizeof(ubx_cfg_nav5));
+				nav5.apply_dyn = true;
+				nav5.dyn_model = 2;
+				ublox_cfg_nav5(&nav5);
+			} else if (cfg.mode == 3) {
+				m8t_base_set_min_acc_samples(cfg.svin_acc_limit, cfg.svin_min_dur);
+				m8t_base_start();
+			} else if (cfg.mode == 4) {
+				m8t_base_set_pos(cfg.ecefx_lat, cfg.ecefy_lon, cfg.ecefz_alt);
+				m8t_base_start();
 			}
 
 			// Send ack

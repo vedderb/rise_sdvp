@@ -25,6 +25,8 @@
 #define MAIN_MODE_MOTE_400			2
 #define MAIN_MODE_MOTE_HYBRID		3 // Use 400 for slow and critical communication and 2400 for the rest.
 #define MAIN_MODE_MULTIROTOR		4
+#define MAIN_MODE_M8T_BASE_2400		5
+#define MAIN_MODE_M8T_BASE_400		6
 
 // Main mode
 #ifndef MAIN_MODE
@@ -34,10 +36,11 @@
 // Mode macros
 #define MAIN_MODE_IS_MOTE			(MAIN_MODE == MAIN_MODE_MOTE_2400 || MAIN_MODE == MAIN_MODE_MOTE_400 || MAIN_MODE == MAIN_MODE_MOTE_HYBRID)
 #define MAIN_MODE_IS_VEHICLE		(MAIN_MODE == MAIN_MODE_CAR || MAIN_MODE == MAIN_MODE_MULTIROTOR)
+#define MAIN_MODE_IS_BASE			(MAIN_MODE == MAIN_MODE_M8T_BASE_2400 || MAIN_MODE == MAIN_MODE_M8T_BASE_400)
 
 // Firmware version
 #define FW_VERSION_MAJOR			8
-#define FW_VERSION_MINOR			17
+#define FW_VERSION_MINOR			18
 
 // Default car settings
 //#define CAR_TERO // Benjamins tero car

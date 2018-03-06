@@ -1,5 +1,5 @@
 /*
-	Copyright 2017 Benjamin Vedder	benjamin@vedder.se
+	Copyright 2017 - 2018 Benjamin Vedder	benjamin@vedder.se
 
 	This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -65,6 +65,7 @@ static uint8_t m_serial_rx_buffer[SERIAL_RX_BUFFER_SIZE];
 static int m_serial_rx_read_pos = 0;
 static int m_serial_rx_write_pos = 0;
 static rtcm3_state m_rtcm_state;
+static bool m_print_next_nav_sol = false;
 static bool m_print_next_relposned = false;
 static bool m_print_next_rawx = false;
 static bool m_print_next_svin = false;
@@ -80,6 +81,7 @@ static void set_baudrate(uint32_t baud);
 
 // Decode functions
 static void ubx_decode(uint8_t class, uint8_t id, uint8_t *msg, int len);
+static void ubx_decode_nav_sol(uint8_t *msg, int len);
 static void ubx_decode_relposned(uint8_t *msg, int len);
 static void ubx_decode_svin(uint8_t *msg, int len);
 static void ubx_decode_ack(uint8_t *msg, int len);
@@ -113,6 +115,7 @@ static void ubx_put_R4(uint8_t *msg, int *ind, float data);
 static void ubx_put_R8(uint8_t *msg, int *ind, double data);
 
 // Callbacks
+static void(*rx_nav_sol)(ubx_nav_sol *sol) = 0;
 static void(*rx_relposned)(ubx_nav_relposned *pos) = 0;
 static void(*rx_rawx)(ubx_rxm_rawx *pos) = 0;
 static void(*rx_svin)(ubx_nav_svin *svin) = 0;
@@ -197,6 +200,7 @@ void ublox_init(void) {
 	terminal_register_command_callback(
 			"ubx_poll",
 			"Poll one of the ubx protocol messages. Supported messages:\n"
+			"  UBX_NAV_SOL - Position solution\n"
 			"  UBX_NAV_RELPOSNED - Relative position to base in NED frame\n"
 			"  UBX_NAV_SVIN - survey-in data\n"
 			"  UBX_RXM_RAWX - raw data",
@@ -313,15 +317,19 @@ void ublox_send(unsigned char *data, unsigned int len) {
 	uartStartSend(&HW_UART_DEV, len, buffer);
 }
 
+void ublox_set_rx_callback_nav_sol(void(*func)(ubx_nav_sol *sol)) {
+	rx_nav_sol = func;
+}
+
 void ublox_set_rx_callback_relposned(void(*func)(ubx_nav_relposned *pos)) {
 	rx_relposned = func;
 }
 
-void ublox_set_rx_callback_rawx(void(*func)(ubx_rxm_rawx *pos)) {
+void ublox_set_rx_callback_rawx(void(*func)(ubx_rxm_rawx *rawx)) {
 	rx_rawx = func;
 }
 
-void ublox_set_rx_callback_svin(void(*func)(ubx_nav_svin *pos)) {
+void ublox_set_rx_callback_svin(void(*func)(ubx_nav_svin *svin)) {
 	rx_svin = func;
 }
 
@@ -513,6 +521,72 @@ int ublox_cfg_rate(uint16_t meas_rate_ms, uint16_t nav_rate_ms, uint16_t time_re
 	ubx_put_U2(buffer, &ind, time_ref);
 
 	ubx_encode_send(UBX_CLASS_CFG, UBX_CFG_RATE, buffer, ind);
+	return wait_ack_nak(CFG_ACK_WAIT_MS);
+}
+
+/**
+ * Save, load or clear configurations
+ *
+ * @param cfg
+ * Which configurations to save/load/clear and which memories.
+ *
+ * @return
+ * 0: Ack received
+ * 1: Nak received (rejected)
+ * -1: Timeout when waiting for ack/nak
+ */
+int ublox_cfg_cfg(ubx_cfg_cfg *cfg) {
+	uint8_t buffer[13];
+	int ind = 0;
+
+	uint32_t clear = 0;
+	clear |= (cfg->clear_io_port ? 1 : 0) << 0;
+	clear |= (cfg->clear_msg_conf ? 1 : 0) << 1;
+	clear |= (cfg->clear_inf_msg ? 1 : 0) << 2;
+	clear |= (cfg->clear_nav_conf ? 1 : 0) << 3;
+	clear |= (cfg->clear_rxm_conf ? 1 : 0) << 4;
+	clear |= (cfg->clear_sen_conf ? 1 : 0) << 8;
+	clear |= (cfg->clear_rinv_conf ? 1 : 0) << 9;
+	clear |= (cfg->clear_ant_conf ? 1 : 0) << 10;
+	clear |= (cfg->clear_log_conf ? 1 : 0) << 11;
+	clear |= (cfg->clear_fts_conf ? 1 : 0) << 12;
+
+	uint32_t save = 0;
+	save |= (cfg->save_io_port ? 1 : 0) << 0;
+	save |= (cfg->save_msg_conf ? 1 : 0) << 1;
+	save |= (cfg->save_inf_msg ? 1 : 0) << 2;
+	save |= (cfg->save_nav_conf ? 1 : 0) << 3;
+	save |= (cfg->save_rxm_conf ? 1 : 0) << 4;
+	save |= (cfg->save_sen_conf ? 1 : 0) << 8;
+	save |= (cfg->save_rinv_conf ? 1 : 0) << 9;
+	save |= (cfg->save_ant_conf ? 1 : 0) << 10;
+	save |= (cfg->save_log_conf ? 1 : 0) << 11;
+	save |= (cfg->save_fts_conf ? 1 : 0) << 12;
+
+	uint32_t load = 0;
+	load |= (cfg->load_io_port ? 1 : 0) << 0;
+	load |= (cfg->load_msg_conf ? 1 : 0) << 1;
+	load |= (cfg->load_inf_msg ? 1 : 0) << 2;
+	load |= (cfg->load_nav_conf ? 1 : 0) << 3;
+	load |= (cfg->load_rxm_conf ? 1 : 0) << 4;
+	load |= (cfg->load_sen_conf ? 1 : 0) << 8;
+	load |= (cfg->load_rinv_conf ? 1 : 0) << 9;
+	load |= (cfg->load_ant_conf ? 1 : 0) << 10;
+	load |= (cfg->load_log_conf ? 1 : 0) << 11;
+	load |= (cfg->load_fts_conf ? 1 : 0) << 12;
+
+	uint8_t device = 0;
+	device |= (cfg->dev_bbr ? 1 : 0) << 0;
+	device |= (cfg->dev_flash ? 1 : 0) << 1;
+	device |= (cfg->dev_eeprom ? 1 : 0) << 2;
+	device |= (cfg->dev_spi_flash ? 1 : 0) << 4;
+
+	ubx_put_X4(buffer, &ind, clear);
+	ubx_put_X4(buffer, &ind, save);
+	ubx_put_X4(buffer, &ind, load);
+	ubx_put_X1(buffer, &ind, device);
+
+	ubx_encode_send(UBX_CLASS_CFG, UBX_CFG_CFG, buffer, ind);
 	return wait_ack_nak(CFG_ACK_WAIT_MS);
 }
 
@@ -722,7 +796,11 @@ static void reset_decoder_state(void) {
 
 static void ubx_terminal_cmd_poll(int argc, const char **argv) {
 	if (argc == 2) {
-		if (strcmp(argv[1], "UBX_NAV_RELPOSNED") == 0) {
+		if (strcmp(argv[1], "UBX_NAV_SOL") == 0) {
+			m_print_next_nav_sol = true;
+			ublox_poll(UBX_CLASS_NAV, UBX_NAV_SOL);
+			commands_printf("OK\n");
+		} else if (strcmp(argv[1], "UBX_NAV_RELPOSNED") == 0) {
 			m_print_next_relposned = true;
 			ublox_poll(UBX_CLASS_NAV, UBX_NAV_RELPOSNED);
 			commands_printf("OK\n");
@@ -840,6 +918,9 @@ static void ubx_decode(uint8_t class, uint8_t id, uint8_t *msg, int len) {
 	switch (class) {
 	case UBX_CLASS_NAV: {
 		switch (id) {
+		case UBX_NAV_SOL:
+			ubx_decode_nav_sol(msg, len);
+			break;
 		case UBX_NAV_RELPOSNED:
 			ubx_decode_relposned(msg, len);
 			break;
@@ -878,6 +959,77 @@ static void ubx_decode(uint8_t class, uint8_t id, uint8_t *msg, int len) {
 
 	default:
 		break;
+	}
+}
+
+static void ubx_decode_nav_sol(uint8_t *msg, int len) {
+	(void)len;
+
+	static ubx_nav_sol sol;
+	int ind = 0;
+	uint8_t flags;
+
+	sol.i_tow = ubx_get_U4(msg, &ind); // 0
+	sol.f_tow = ubx_get_I4(msg, &ind); // 4
+	sol.weel = ubx_get_I2(msg, &ind); // 8
+	sol.gps_fix = ubx_get_U1(msg, &ind); // 10
+	flags = ubx_get_X1(msg, &ind); // 11
+	sol.gpsfixok = flags & 0x01;
+	sol.diffsoln = flags & 0x02;
+	sol.wknset = flags & 0x04;
+	sol.towset = flags & 0x08;
+	sol.ecef_x = (double)ubx_get_I4(msg, &ind) / D(100.0); // 12
+	sol.ecef_y = (double)ubx_get_I4(msg, &ind) / D(100.0); // 16
+	sol.ecef_z = (double)ubx_get_I4(msg, &ind) / D(100.0); // 20
+	sol.p_acc = (float)ubx_get_U4(msg, &ind) / 100.0; // 24
+	sol.ecef_vx = (float)ubx_get_I4(msg, &ind) / 100.0; // 28
+	sol.ecef_vy = (float)ubx_get_I4(msg, &ind) / 100.0; // 32
+	sol.ecef_vz = (float)ubx_get_I4(msg, &ind) / 100.0; // 36
+	sol.s_acc = (float)ubx_get_U4(msg, &ind) / 100.0; // 40
+	sol.p_dop = (float)ubx_get_U2(msg, &ind) * 0.01; // 44
+	ind += 1; // 46
+	sol.num_sv = ubx_get_U1(msg, &ind); // 47
+
+	if (rx_nav_sol) {
+		rx_nav_sol(&sol);
+	}
+
+	if (m_print_next_nav_sol) {
+		m_print_next_nav_sol = false;
+		commands_printf(
+				"NAV_SOL RX\n"
+				"num_sv: %d\n"
+				"i_tow: %d ms\n"
+				"week: %d\n"
+				"fix: %d\n"
+				"X: %.3f m\n"
+				"Y: %.3f m\n"
+				"Z: %.3f m\n"
+				"p_acc: %.3f m\n"
+				"VX: %.3f m/s\n"
+				"VY: %.3f m/s\n"
+				"VZ: %.3f m/s\n"
+				"s_acc: %.3f m/s\n"
+				"Fix OK: %d\n"
+				"Diff Soln: %d\n"
+				"Week valid: %d\n"
+				"TOW valid: %d\n",
+				sol.num_sv,
+				sol.i_tow,
+				sol.weel,
+				sol.gps_fix,
+				sol.ecef_x,
+				sol.ecef_y,
+				sol.ecef_z,
+				(double)sol.p_acc,
+				(double)sol.ecef_vx,
+				(double)sol.ecef_vy,
+				(double)sol.ecef_vz,
+				(double)sol.s_acc,
+				sol.gpsfixok,
+				sol.diffsoln,
+				sol.wknset,
+				sol.towset);
 	}
 }
 

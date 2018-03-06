@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>681</width>
-    <height>431</height>
+    <width>719</width>
+    <height>433</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -51,16 +51,30 @@
            </widget>
           </item>
           <item>
-           <widget class="QRadioButton" name="modeUbxSvinButton">
+           <widget class="QRadioButton" name="modeM8pSvinButton">
             <property name="text">
-             <string>Ublox Survey In</string>
+             <string>M8P Survey In</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QRadioButton" name="modeUbxFixedButton">
+           <widget class="QRadioButton" name="modeM8pFixedButton">
             <property name="text">
-             <string>Ublox Fixed</string>
+             <string>M8P Fixed</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="modeM8tSvinButton">
+            <property name="text">
+             <string>M8T Survey In</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="modeM8tFixedButton">
+            <property name="text">
+             <string>M8T Fixed</string>
             </property>
            </widget>
           </item>
@@ -290,6 +304,13 @@
                <number>4</number>
               </property>
               <item>
+               <widget class="QPushButton" name="ubxPollNavSolButton">
+                <property name="text">
+                 <string>NAV_SOL</string>
+                </property>
+               </widget>
+              </item>
+              <item>
                <widget class="QPushButton" name="ubxPollNavSvinButton">
                 <property name="text">
                  <string>NAV_SVIN</string>
@@ -307,6 +328,44 @@
                <widget class="QPushButton" name="ubxPollRxmRawxButton">
                 <property name="text">
                  <string>RXM_RAWX</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <widget class="QGroupBox" name="groupBox_5">
+             <property name="title">
+              <string>M8T Base</string>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_6">
+              <property name="spacing">
+               <number>4</number>
+              </property>
+              <property name="leftMargin">
+               <number>4</number>
+              </property>
+              <property name="topMargin">
+               <number>4</number>
+              </property>
+              <property name="rightMargin">
+               <number>4</number>
+              </property>
+              <property name="bottomMargin">
+               <number>4</number>
+              </property>
+              <item>
+               <widget class="QPushButton" name="m8tBaseStatusButton">
+                <property name="text">
+                 <string>Status</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="m8tBaseResetButton">
+                <property name="text">
+                 <string>Reset</string>
                 </property>
                </widget>
               </item>

@@ -457,6 +457,61 @@ bool Ublox::ubxCfgRate(uint16_t meas_rate_ms, uint16_t nav_rate_ms, uint16_t tim
     return ubx_encode_send(UBX_CLASS_CFG, UBX_CFG_RATE, buffer, ind, 10);
 }
 
+bool Ublox::ubloxCfgCfg(ubx_cfg_cfg *cfg)
+{
+    uint8_t buffer[13];
+    int ind = 0;
+
+    uint32_t clear = 0;
+    clear |= (cfg->clear_io_port ? 1 : 0) << 0;
+    clear |= (cfg->clear_msg_conf ? 1 : 0) << 1;
+    clear |= (cfg->clear_inf_msg ? 1 : 0) << 2;
+    clear |= (cfg->clear_nav_conf ? 1 : 0) << 3;
+    clear |= (cfg->clear_rxm_conf ? 1 : 0) << 4;
+    clear |= (cfg->clear_sen_conf ? 1 : 0) << 8;
+    clear |= (cfg->clear_rinv_conf ? 1 : 0) << 9;
+    clear |= (cfg->clear_ant_conf ? 1 : 0) << 10;
+    clear |= (cfg->clear_log_conf ? 1 : 0) << 11;
+    clear |= (cfg->clear_fts_conf ? 1 : 0) << 12;
+
+    uint32_t save = 0;
+    save |= (cfg->save_io_port ? 1 : 0) << 0;
+    save |= (cfg->save_msg_conf ? 1 : 0) << 1;
+    save |= (cfg->save_inf_msg ? 1 : 0) << 2;
+    save |= (cfg->save_nav_conf ? 1 : 0) << 3;
+    save |= (cfg->save_rxm_conf ? 1 : 0) << 4;
+    save |= (cfg->save_sen_conf ? 1 : 0) << 8;
+    save |= (cfg->save_rinv_conf ? 1 : 0) << 9;
+    save |= (cfg->save_ant_conf ? 1 : 0) << 10;
+    save |= (cfg->save_log_conf ? 1 : 0) << 11;
+    save |= (cfg->save_fts_conf ? 1 : 0) << 12;
+
+    uint32_t load = 0;
+    load |= (cfg->load_io_port ? 1 : 0) << 0;
+    load |= (cfg->load_msg_conf ? 1 : 0) << 1;
+    load |= (cfg->load_inf_msg ? 1 : 0) << 2;
+    load |= (cfg->load_nav_conf ? 1 : 0) << 3;
+    load |= (cfg->load_rxm_conf ? 1 : 0) << 4;
+    load |= (cfg->load_sen_conf ? 1 : 0) << 8;
+    load |= (cfg->load_rinv_conf ? 1 : 0) << 9;
+    load |= (cfg->load_ant_conf ? 1 : 0) << 10;
+    load |= (cfg->load_log_conf ? 1 : 0) << 11;
+    load |= (cfg->load_fts_conf ? 1 : 0) << 12;
+
+    uint8_t device = 0;
+    device |= (cfg->dev_bbr ? 1 : 0) << 0;
+    device |= (cfg->dev_flash ? 1 : 0) << 1;
+    device |= (cfg->dev_eeprom ? 1 : 0) << 2;
+    device |= (cfg->dev_spi_flash ? 1 : 0) << 4;
+
+    ubx_put_X4(buffer, &ind, clear);
+    ubx_put_X4(buffer, &ind, save);
+    ubx_put_X4(buffer, &ind, load);
+    ubx_put_X1(buffer, &ind, device);
+
+    return ubx_encode_send(UBX_CLASS_CFG, UBX_CFG_CFG, buffer, ind, 10);
+}
+
 /**
  * Set the nav5 configuration.
  *
@@ -786,6 +841,38 @@ void Ublox::ubx_decode(uint8_t msg_class, uint8_t id, uint8_t *msg, int len)
     default:
         break;
     }
+}
+
+void Ublox::ubx_decode_nav_sol(uint8_t *msg, int len)
+{
+    (void)len;
+
+    static ubx_nav_sol sol;
+    int ind = 0;
+    uint8_t flags;
+
+    sol.i_tow = ubx_get_U4(msg, &ind); // 0
+    sol.f_tow = ubx_get_I4(msg, &ind); // 4
+    sol.weel = ubx_get_I2(msg, &ind); // 8
+    sol.gps_fix = ubx_get_U1(msg, &ind); // 10
+    flags = ubx_get_X1(msg, &ind); // 11
+    sol.gpsfixok = flags & 0x01;
+    sol.diffsoln = flags & 0x02;
+    sol.wknset = flags & 0x04;
+    sol.towset = flags & 0x08;
+    sol.ecef_x = (double)ubx_get_I4(msg, &ind) / D(100.0); // 12
+    sol.ecef_y = (double)ubx_get_I4(msg, &ind) / D(100.0); // 16
+    sol.ecef_z = (double)ubx_get_I4(msg, &ind) / D(100.0); // 20
+    sol.p_acc = (float)ubx_get_U4(msg, &ind) / 100.0; // 24
+    sol.ecef_vx = (float)ubx_get_I4(msg, &ind) / 100.0; // 28
+    sol.ecef_vy = (float)ubx_get_I4(msg, &ind) / 100.0; // 32
+    sol.ecef_vz = (float)ubx_get_I4(msg, &ind) / 100.0; // 36
+    sol.s_acc = (float)ubx_get_U4(msg, &ind) / 100.0; // 40
+    sol.p_dop = (float)ubx_get_U2(msg, &ind) * 0.01; // 44
+    ind += 1; // 46
+    sol.num_sv = ubx_get_U1(msg, &ind); // 47
+
+    emit rxNavSol(sol);
 }
 
 void Ublox::ubx_decode_relposned(uint8_t *msg, int len)

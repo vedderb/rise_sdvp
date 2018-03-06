@@ -59,10 +59,14 @@ void MoteConfig::on_setConfigButton_clicked()
         int mode = 0;
         if (ui->modeOffButton->isChecked()) {
             mode = 0;
-        } else if (ui->modeUbxSvinButton->isChecked()) {
+        } else if (ui->modeM8pSvinButton->isChecked()) {
             mode = 1;
-        } else if (ui->modeUbxFixedButton->isChecked()) {
+        } else if (ui->modeM8pFixedButton->isChecked()) {
             mode = 2;
+        } else if (ui->modeM8tSvinButton->isChecked()) {
+            mode = 3;
+        } else if (ui->modeM8tFixedButton->isChecked()) {
+            mode = 4;
         }
 
         bool res = mPacketInterface->sendMoteUbxBase(mode,
@@ -107,5 +111,26 @@ void MoteConfig::on_ubxPollRxmRawxButton_clicked()
 {
     if (mPacketInterface) {
         mPacketInterface->sendTerminalCmd(ID_MOTE, "ubx_poll UBX_RXM_RAWX");
+    }
+}
+
+void MoteConfig::on_ubxPollNavSolButton_clicked()
+{
+    if (mPacketInterface) {
+        mPacketInterface->sendTerminalCmd(ID_MOTE, "ubx_poll UBX_NAV_SOL");
+    }
+}
+
+void MoteConfig::on_m8tBaseStatusButton_clicked()
+{
+    if (mPacketInterface) {
+        mPacketInterface->sendTerminalCmd(ID_MOTE, "base_status");
+    }
+}
+
+void MoteConfig::on_m8tBaseResetButton_clicked()
+{
+    if (mPacketInterface) {
+        mPacketInterface->sendTerminalCmd(ID_MOTE, "base_reset");
     }
 }
