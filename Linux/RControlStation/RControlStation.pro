@@ -83,7 +83,9 @@ SOURCES += main.cpp\
     confcommonwidget.cpp \
     ublox.cpp \
     intersectiontest.cpp \
-    ncom.cpp
+    ncom.cpp \
+    correctionanalysis.cpp \
+    historylineedit.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
@@ -117,7 +119,9 @@ HEADERS  += mainwindow.h \
     confcommonwidget.h \
     ublox.h \
     intersectiontest.h \
-    ncom.h
+    ncom.h \
+    correctionanalysis.h \
+    historylineedit.h
 
 FORMS    += mainwindow.ui \
     carinterface.ui \
@@ -132,7 +136,8 @@ FORMS    += mainwindow.ui \
     nmeawidget.ui \
     confcommonwidget.ui \
     intersectiontest.ui \
-    ncom.ui
+    ncom.ui \
+    correctionanalysis.ui
 
 contains(DEFINES, HAS_JOYSTICK) {
     SOURCES += joystick.cpp

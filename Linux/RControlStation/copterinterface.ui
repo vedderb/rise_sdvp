@@ -160,7 +160,7 @@
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_12">
            <item>
-            <widget class="QLineEdit" name="terminalEdit"/>
+            <widget class="HistoryLineEdit" name="terminalEdit"/>
            </item>
            <item>
             <widget class="QPushButton" name="terminalSendButton">
@@ -1353,6 +1353,11 @@
    <extends>QWidget</extends>
    <header>qcustomplot.h</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>HistoryLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>historylineedit.h</header>
   </customwidget>
  </customwidgets>
  <resources>

@@ -163,7 +163,7 @@
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_12">
            <item>
-            <widget class="QLineEdit" name="terminalEdit"/>
+            <widget class="HistoryLineEdit" name="terminalEdit"/>
            </item>
            <item>
             <widget class="QPushButton" name="terminalSendButton">
@@ -205,7 +205,7 @@
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="terminalEditVesc"/>
+            <widget class="HistoryLineEdit" name="terminalEditVesc"/>
            </item>
            <item>
             <widget class="QPushButton" name="terminalSendVescButton">
@@ -226,7 +226,7 @@
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="terminalEditRadar"/>
+            <widget class="HistoryLineEdit" name="terminalEditRadar"/>
            </item>
            <item>
             <widget class="QPushButton" name="terminalSendRadarButton">
@@ -1631,6 +1631,11 @@
    <extends>QWidget</extends>
    <header>qcustomplot.h</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>HistoryLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>historylineedit.h</header>
   </customwidget>
  </customwidgets>
  <resources>

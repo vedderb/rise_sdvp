@@ -849,6 +849,15 @@ void MapWidget::paintEvent(QPaintEvent *event)
         }
     }
 
+    // Truncate traces
+    while (mCarTrace.size() > 5000) {
+        mCarTrace.removeFirst();
+    }
+
+    while (mCarTraceGps.size() > 1800) {
+        mCarTraceGps.removeFirst();
+    }
+
     // Draw info trace
     int info_segments = 0;
     int info_points = 0;

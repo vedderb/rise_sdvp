@@ -42,6 +42,7 @@ BaseStation::BaseStation(QWidget *parent) :
     mZAvg = 0.0;
     mAvgSamples = 0.0;
     mBasePosCnt = 0;
+    mMap = 0;
 
     mFixNowStr = "Solution...";
     mSatNowStr = "Sats...";
@@ -83,6 +84,11 @@ int BaseStation::getAvgPosLlh(double &lat, double &lon, double &height)
     utility::xyzToLlh(xAvg, yAvg, zAvg, &lat, &lon, &height);
 
     return (int)mAvgSamples;
+}
+
+void BaseStation::setMap(MapWidget *map)
+{
+    mMap = map;
 }
 
 void BaseStation::tcpInputConnected()
@@ -175,6 +181,50 @@ void BaseStation::rxGga(int fields, NmeaServer::nmea_gga_info_t gga)
             mYAvg += mYNow;
             mZAvg += mZNow;
             mAvgSamples += 1.0;
+
+            if (mMap && ui->ubxPlotMapBox->isChecked()) {
+                double i_llh[3];
+
+                mMap->getEnuRef(i_llh);
+
+                double llh[3];
+                double xyz[3];
+
+                llh[0] = gga.lat;
+                llh[1] = gga.lon;
+                llh[2] = gga.height;
+                utility::llhToEnu(i_llh, llh, xyz);
+
+                LocPoint p;
+                p.setXY(xyz[0], xyz[1]);
+                QString info;
+
+                QString fix_t = "Unknown";
+                if (gga.fix_type == 4) {
+                    fix_t = "RTK fix";
+                    p.setColor(Qt::green);
+                } else if (gga.fix_type == 5) {
+                    fix_t = "RTK float";
+                    p.setColor(Qt::yellow);
+                } else if (gga.fix_type == 1) {
+                    fix_t = "Single";
+                    p.setColor(Qt::red);
+                }
+
+                info.sprintf("Fix type: %s\n"
+                             "Sats    : %d\n"
+                             "Height  : %.2f",
+                             fix_t.toLocal8Bit().data(),
+                             gga.n_sat,
+                             gga.height);
+
+                p.setInfo(info);
+                mMap->addInfoPoint(p);
+
+                if (ui->ubxFollowMapBox->isChecked()) {
+                    mMap->moveView(p.getX(), p.getY());
+                }
+            }
         }
     } else {
         mFixNowStr = "Solution: Invalid";
@@ -390,7 +440,7 @@ void BaseStation::on_ubxSerialDisconnectButton_clicked()
 void BaseStation::on_ubxSerialConnectButton_clicked()
 {
     bool res = mUblox->connectSerial(ui->ubxSerialPortBox->currentData().toString(),
-                         ui->ubxSerialBaudBox->value());
+                                     ui->ubxSerialBaudBox->value());
 
     if (res) {
         // Serial port baud rate

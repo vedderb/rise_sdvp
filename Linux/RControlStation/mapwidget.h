@@ -136,8 +136,8 @@ protected:
 private:
     QList<CarInfo> mCarInfo;
     QList<CopterInfo> mCopterInfo;
-    QList<LocPoint> mCarTrace;
-    QList<LocPoint> mCarTraceGps;
+    QVector<LocPoint> mCarTrace;
+    QVector<LocPoint> mCarTraceGps;
     QList<LocPoint> mAnchors;
     QList<QList<LocPoint> > mRoutes;
     QList<QList<LocPoint> > mInfoTraces;

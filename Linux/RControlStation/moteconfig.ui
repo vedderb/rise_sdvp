@@ -392,7 +392,7 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_12">
          <item>
-          <widget class="QLineEdit" name="terminalEdit"/>
+          <widget class="HistoryLineEdit" name="terminalEdit"/>
          </item>
          <item>
           <widget class="QPushButton" name="terminalSendButton">
@@ -430,6 +430,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>HistoryLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>historylineedit.h</header>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="resources.qrc"/>
  </resources>

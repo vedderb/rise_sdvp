@@ -111,6 +111,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->networkInterface->setCars(&mCars);
     ui->moteWidget->setPacketInterface(mPacketInterface);
     ui->nComWidget->setMap(ui->mapWidget);
+    ui->baseStationWidget->setMap(ui->mapWidget);
 
     connect(mTimer, SIGNAL(timeout()), this, SLOT(timerSlot()));
     connect(mSerialPort, SIGNAL(readyRead()),
@@ -201,6 +202,10 @@ bool MainWindow::eventFilter(QObject *object, QEvent *e)
         return false;
     }
 #endif
+
+    if (ui->throttleOffButton->isChecked()) {
+        return false;
+    }
 
     if (e->type() == QEvent::KeyPress || e->type() == QEvent::KeyRelease) {
         QKeyEvent *keyEvent = static_cast<QKeyEvent *>(e);
@@ -576,8 +581,10 @@ void MainWindow::nmeaGgaRx(int fields, NmeaServer::nmea_gga_info_t gga)
             }
 
             info.sprintf("Fix type: %s\n"
+                         "Sats    : %d\n"
                          "Height  : %.2f",
                          fix_t.toLocal8Bit().data(),
+                         gga.n_sat,
                          gga.height);
 
             p.setInfo(info);
@@ -1279,8 +1286,10 @@ void MainWindow::on_mapImportNmeaButton_clicked()
                     }
 
                     info.sprintf("Fix type: %s\n"
+                                 "Sats    : %d\n"
                                  "Height  : %.2f",
                                  fix_t.toLocal8Bit().data(),
+                                 gga.n_sat,
                                  gga.height);
 
                     p.setInfo(info);

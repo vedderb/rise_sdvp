@@ -286,7 +286,7 @@ debug-start:
 	openocd -f stm32-bv_openocd.cfg
 	
 upload_remote: build/$(PROJECT).bin
-	./upload_remote build/$(PROJECT).bin elpgem 10.42.0.67 22 pi_gpio
+	./upload_remote build/$(PROJECT).bin elpgem 10.42.0.200 22 pi_gpio
 
 RULESPATH = $(CHIBIOS)/os/common/ports/ARMCMx/compilers/GCC
 include $(RULESPATH)/rules.mk

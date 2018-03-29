@@ -23,6 +23,7 @@
 #include <QTimer>
 #include "ublox.h"
 #include "tcpbroadcast.h"
+#include "mapwidget.h"
 
 namespace Ui {
 class BaseStation;
@@ -36,6 +37,7 @@ public:
     explicit BaseStation(QWidget *parent = 0);
     ~BaseStation();
     int getAvgPosLlh(double &lat, double &lon, double &height);
+    void setMap(MapWidget *map);
 
 signals:
     void rtcmOut(QByteArray data);
@@ -65,6 +67,7 @@ private:
     Ublox *mUblox;
     TcpBroadcast *mTcpServer;
     int mBasePosCnt;
+    MapWidget *mMap;
 
     double mXNow;
     double mYNow;

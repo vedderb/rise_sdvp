@@ -372,13 +372,17 @@ static THD_FUNCTION(log_thread, arg) {
 						"%u "     // gps ms
 						"%u "     // fix type
 						"%.3f "   // x
-						"%.3f\n"  // y
+						"%.3f "   // y
+						"%.3f "   // yaw
+						"%.3f "   // speed
 						"%.3f\n", // corr_diff
 
 						m_pos_last_corr.gps_ms,
 						m_pos_last_corr.gps_fix_type,
 						(double)m_pos_last_corr.px,
 						(double)m_pos_last_corr.py,
+						(double)m_pos_last_corr.yaw,
+						(double)m_pos_last_corr.speed,
 						(double)m_pos_last_corr.gps_last_corr_diff);
 			}
 #endif

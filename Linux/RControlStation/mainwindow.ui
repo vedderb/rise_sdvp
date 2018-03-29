@@ -571,9 +571,16 @@
          <item row="0" column="0" colspan="2">
           <layout class="QHBoxLayout" name="horizontalLayout_6">
            <item>
+            <widget class="QRadioButton" name="throttleOffButton">
+             <property name="text">
+              <string>Off</string>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QRadioButton" name="throttleDutyButton">
              <property name="text">
-              <string>Duty</string>
+              <string>D</string>
              </property>
              <property name="checked">
               <bool>true</bool>
@@ -583,7 +590,7 @@
            <item>
             <widget class="QRadioButton" name="throttleCurrentButton">
              <property name="text">
-              <string>Current</string>
+              <string>I</string>
              </property>
             </widget>
            </item>
@@ -2426,23 +2433,6 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab_5">
-       <attribute name="icon">
-        <iconset resource="resources.qrc">
-         <normaloff>:/models/Icons/Wi-Fi-96.png</normaloff>:/models/Icons/Wi-Fi-96.png</iconset>
-       </attribute>
-       <attribute name="title">
-        <string/>
-       </attribute>
-       <attribute name="toolTip">
-        <string>Network Logger</string>
-       </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout_2">
-        <item>
-         <widget class="NetworkLogger" name="networkLoggerWidget" native="true"/>
-        </item>
-       </layout>
-      </widget>
       <widget class="QWidget" name="tab_7">
        <attribute name="icon">
         <iconset resource="resources.qrc">
@@ -2491,6 +2481,67 @@
        <layout class="QVBoxLayout" name="verticalLayout_20">
         <item>
          <widget class="NCom" name="nComWidget" native="true"/>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tab_13">
+       <attribute name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/models/Icons/Electrical Sensor-96.png</normaloff>:/models/Icons/Electrical Sensor-96.png</iconset>
+       </attribute>
+       <attribute name="title">
+        <string/>
+       </attribute>
+       <attribute name="toolTip">
+        <string>Logging and Analysis</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_21">
+        <item>
+         <widget class="QTabWidget" name="tabWidget_3">
+          <property name="tabPosition">
+           <enum>QTabWidget::South</enum>
+          </property>
+          <property name="tabShape">
+           <enum>QTabWidget::Triangular</enum>
+          </property>
+          <property name="currentIndex">
+           <number>0</number>
+          </property>
+          <widget class="QWidget" name="tab_14">
+           <attribute name="icon">
+            <iconset resource="resources.qrc">
+             <normaloff>:/models/Icons/Wi-Fi-96.png</normaloff>:/models/Icons/Wi-Fi-96.png</iconset>
+           </attribute>
+           <attribute name="title">
+            <string/>
+           </attribute>
+           <attribute name="toolTip">
+            <string>Network Logger</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout_22">
+            <item>
+             <widget class="NetworkLogger" name="networkLoggerWidget" native="true"/>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="tab_15">
+           <attribute name="icon">
+            <iconset resource="resources.qrc">
+             <normaloff>:/models/Icons/Polyline-96.png</normaloff>:/models/Icons/Polyline-96.png</iconset>
+           </attribute>
+           <attribute name="title">
+            <string/>
+           </attribute>
+           <attribute name="toolTip">
+            <string>Correction Analysis</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout_2">
+            <item>
+             <widget class="CorrectionAnalysis" name="widget" native="true"/>
+            </item>
+           </layout>
+          </widget>
+         </widget>
         </item>
        </layout>
       </widget>
@@ -2672,6 +2723,12 @@
    <class>NCom</class>
    <extends>QWidget</extends>
    <header>ncom.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>CorrectionAnalysis</class>
+   <extends>QWidget</extends>
+   <header>correctionanalysis.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
