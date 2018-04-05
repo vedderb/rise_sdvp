@@ -533,11 +533,11 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
 
     case CMD_PLOT_ADD_GRAPH: {
         emit plotAddGraphReceived(id, QString::fromLocal8Bit((const char*)data));
-    }
+    } break;
 
     case CMD_PLOT_SET_GRAPH: {
         emit plotSetGraphReceived(id, data[0]);
-    }
+    } break;
 
     case CMD_RADAR_SETUP_GET: {
         int32_t ind = 0;

@@ -59,10 +59,12 @@ static int32_t m_nma_last_time;
 static POS_POINT m_pos_history[POS_HISTORY_LEN];
 static int m_pos_history_ptr;
 static bool m_pos_history_print;
+static bool m_gps_corr_print;
 static int32_t m_pps_cnt;
 
 // Private functions
 static void cmd_terminal_delay_info(int argc, const char **argv);
+static void cmd_terminal_gps_corr_info(int argc, const char **argv);
 static void mpu9150_read(void);
 static void update_orientation_angles(float *accel, float *gyro, float *mag, float dt);
 static void init_gps_local(GPS_STATE *gps);
@@ -93,6 +95,7 @@ void pos_init(void) {
 	memset(&m_pos_history, 0, sizeof(m_pos_history));
 	m_pos_history_ptr = 0;
 	m_pos_history_print = false;
+	m_gps_corr_print = false;
 	m_pps_cnt = 0;
 	m_yaw_offset_gps = 0.0;
 
@@ -136,11 +139,19 @@ void pos_init(void) {
 
 	terminal_register_command_callback(
 			"delay_info",
-			"Print delay information when doing GNSS position correction.\n"
+			"Print and plot delay information when doing GNSS position correction.\n"
 			"  0 - Disabled\n"
 			"  1 - Enabled",
 			"[print_en]",
 			cmd_terminal_delay_info);
+
+	terminal_register_command_callback(
+			"gnss_corr_info",
+			"Print and plot correction information when doing GNSS position correction.\n"
+			"  0 - Disabled\n"
+			"  1 - Enabled",
+			"[print_en]",
+			cmd_terminal_gps_corr_info);
 
 #ifdef LOG_EN_SW
 	palSetPadMode(GPIOD, 3, PAL_MODE_INPUT_PULLUP);
@@ -418,6 +429,22 @@ static void cmd_terminal_delay_info(int argc, const char **argv) {
 			commands_printf("OK\n");
 		} else if (strcmp(argv[1], "1") == 0) {
 			m_pos_history_print = 1;
+			commands_printf("OK\n");
+		} else {
+			commands_printf("Invalid argument %s\n", argv[1]);
+		}
+	} else {
+		commands_printf("Wrong number of arguments\n");
+	}
+}
+
+static void cmd_terminal_gps_corr_info(int argc, const char **argv) {
+	if (argc == 2) {
+		if (strcmp(argv[1], "0") == 0) {
+			m_gps_corr_print = 0;
+			commands_printf("OK\n");
+		} else if (strcmp(argv[1], "1") == 0) {
+			m_gps_corr_print = 1;
 			commands_printf("OK\n");
 		} else {
 			commands_printf("Invalid argument %s\n", argv[1]);
@@ -747,13 +774,9 @@ static POS_POINT get_closest_point_to_time(int32_t time) {
 		if (sample == 0) {
 			commands_init_plot("Sample", "Age Difference (ms)");
 			commands_plot_add_graph("Delay");
-			commands_plot_add_graph("Yaw");
+			commands_plot_set_graph(0);
 		}
-		commands_plot_set_graph(0);
-		commands_send_plot_points(sample, m_ms_today - time);
-		commands_plot_set_graph(1);
-		commands_send_plot_points(sample, m_pos.yaw);
-		sample++;
+		commands_send_plot_points(sample++, m_ms_today - time);
 	} else {
 		sample = 0;
 	}
@@ -798,8 +821,31 @@ static void correct_pos_gps(POS_STATE *pos) {
 			main_config.gps_corr_gain_dyn * pos->gps_corr_cnt;
 
 	POS_POINT closest = get_closest_point_to_time(pos->gps_ms);
-
 	POS_POINT closest_corr = closest;
+
+	static int sample = 0;
+	if (m_gps_corr_print) {
+		float diff = utils_point_distance(closest.px, closest.py, pos->px_gps, pos->py_gps) * 100.0;
+
+		commands_printf("Diff: %.1f cm, Speed: %.1f km/h, Yaw: %.1f",
+				(double)diff, (double)(m_pos.speed * 3.6), (double)m_pos.yaw);
+
+		if (sample == 0) {
+			commands_init_plot("Sample", "Diff (cm) & Speed (km/h)");
+			commands_plot_add_graph("Diff (cm)");
+			commands_plot_add_graph("Speed (km/h)");
+		}
+
+		commands_plot_set_graph(0);
+		commands_send_plot_points(sample, diff);
+		commands_plot_set_graph(1);
+		commands_send_plot_points(sample, m_pos.speed * 3.6);
+
+		sample++;
+	} else {
+		sample = 0;
+	}
+
 	utils_step_towards(&closest_corr.px, pos->px_gps, gain);
 	utils_step_towards(&closest_corr.py, pos->py_gps, gain);
 	pos->px += closest_corr.px - closest.px;

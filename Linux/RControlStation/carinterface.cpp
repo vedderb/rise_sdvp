@@ -381,7 +381,7 @@ void CarInterface::disableKbBox()
 void CarInterface::timerSlot()
 {   
     if (mExperimentReplot) {
-        while (ui->experimentPlot->graphCount() <= mExperimentPlots.size()) {
+        while (ui->experimentPlot->graphCount() < mExperimentPlots.size()) {
             ui->experimentPlot->addGraph();
         }
 
