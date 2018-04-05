@@ -77,6 +77,8 @@ private slots:
     void configurationReceived(quint8 id, MAIN_CONFIG config);
     void plotInitReceived(quint8 id, QString xLabel, QString yLabel);
     void plotDataReceived(quint8 id, double x, double y);
+    void plotAddGraphReceived(quint8 id, QString name);
+    void plotSetGraphReceived(quint8 id, int graph);
     void radarSetupReceived(quint8 id, radar_settings_t s);
     void radarSamplesReceived(quint8 id, QVector<QPair<double, double> > samples);
     void dwSampleReceived(quint8 id, DW_LOG_INFO dw);
@@ -108,11 +110,20 @@ private slots:
     void on_dwAnch1GetButton_clicked();
     void on_dwAnch2GetButton_clicked();
     void on_dwClearSamplesButton_clicked();
+    void on_experimentSavePngButton_clicked();
+    void on_experimentSavePdfButton_clicked();
 
 private:
+    typedef struct {
+        QString label;
+        QString color;
+        QVector<double> xData;
+        QVector<double> yData;
+    } EXPERIMENT_PLOT;
+
     Ui::CarInterface *ui;
-    QVector<double> experimentDataX;
-    QVector<double> experimentDataY;
+    QVector<EXPERIMENT_PLOT> mExperimentPlots;
+    int mExperimentPlotNow;
     MapWidget *mMap;
     PacketInterface *mPacketInterface;
 

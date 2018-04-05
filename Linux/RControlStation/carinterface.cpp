@@ -63,6 +63,7 @@ CarInterface::CarInterface(QWidget *parent) :
     mPacketInterface = 0;
     mId = 0;
     mExperimentReplot = false;
+    mExperimentPlotNow = 0;
     settingsReadDone = false;
 
     mTimer = new QTimer(this);
@@ -305,6 +306,10 @@ void CarInterface::setPacketInterface(PacketInterface *packetInterface)
             this, SLOT(plotInitReceived(quint8,QString,QString)));
     connect(mPacketInterface, SIGNAL(plotDataReceived(quint8,double,double)),
             SLOT(plotDataReceived(quint8,double,double)));
+    connect(mPacketInterface, SIGNAL(plotAddGraphReceived(quint8,QString)),
+            this, SLOT(plotAddGraphReceived(quint8,QString)));
+    connect(mPacketInterface, SIGNAL(plotSetGraphReceived(quint8,int)),
+            this, SLOT(plotSetGraphReceived(quint8,int)));
     connect(mPacketInterface, SIGNAL(radarSetupReceived(quint8,radar_settings_t)),
             this, SLOT(radarSetupReceived(quint8,radar_settings_t)));
     connect(mPacketInterface, SIGNAL(radarSamplesReceived(quint8,QVector<QPair<double,double> >)),
@@ -376,7 +381,19 @@ void CarInterface::disableKbBox()
 void CarInterface::timerSlot()
 {   
     if (mExperimentReplot) {
-        ui->experimentPlot->graph()->setData(experimentDataX, experimentDataY);
+        while (ui->experimentPlot->graphCount() <= mExperimentPlots.size()) {
+            ui->experimentPlot->addGraph();
+        }
+
+        for (int i = 0;i < mExperimentPlots.size();i++) {
+            ui->experimentPlot->graph(i)->setData(mExperimentPlots.at(i).xData,
+                                                  mExperimentPlots.at(i).yData);
+            ui->experimentPlot->graph(i)->setName(mExperimentPlots.at(i).label);
+            ui->experimentPlot->graph(i)->setPen(QPen(mExperimentPlots.at(i).color));
+        }
+
+        ui->experimentPlot->legend->setVisible(mExperimentPlots.size() > 1);
+
         ui->experimentPlot->rescaleAxes();
         ui->experimentPlot->replot();
         mExperimentReplot = false;
@@ -474,11 +491,9 @@ void CarInterface::configurationReceived(quint8 id, MAIN_CONFIG config)
 void CarInterface::plotInitReceived(quint8 id, QString xLabel, QString yLabel)
 {
     if (id == mId) {
-        experimentDataX.clear();
-        experimentDataY.clear();
+        mExperimentPlots.clear();
 
         ui->experimentPlot->clearGraphs();
-        ui->experimentPlot->addGraph();
         ui->experimentPlot->xAxis->setLabel(xLabel);
         ui->experimentPlot->yAxis->setLabel(yLabel);
 
@@ -489,9 +504,40 @@ void CarInterface::plotInitReceived(quint8 id, QString xLabel, QString yLabel)
 void CarInterface::plotDataReceived(quint8 id, double x, double y)
 {
     if (id == mId) {
-        experimentDataX.append(x);
-        experimentDataY.append(y);
+        if (mExperimentPlots.size() <= mExperimentPlotNow) {
+            mExperimentPlots.resize(mExperimentPlotNow + 1);
+        }
+
+        mExperimentPlots[mExperimentPlotNow].xData.append(x);
+        mExperimentPlots[mExperimentPlotNow].yData.append(y);
         mExperimentReplot = true;
+    }
+}
+
+void CarInterface::plotAddGraphReceived(quint8 id, QString name)
+{
+    if (id == mId) {
+        mExperimentPlots.resize(mExperimentPlots.size() + 1);
+        mExperimentPlots.last().label = name;
+
+        if (mExperimentPlots.size() == 1) {
+            mExperimentPlots.last().color = "blue";
+        } else if (mExperimentPlots.size() == 2) {
+            mExperimentPlots.last().color = "red";
+        } else if (mExperimentPlots.size() == 3) {
+            mExperimentPlots.last().color = "magenta";
+        } else {
+            mExperimentPlots.last().color = "blue";
+        }
+
+        mExperimentReplot = true;
+    }
+}
+
+void CarInterface::plotSetGraphReceived(quint8 id, int graph)
+{
+    if (id == mId) {
+        mExperimentPlotNow = graph;
     }
 }
 
@@ -999,4 +1045,39 @@ void CarInterface::on_dwClearSamplesButton_clicked()
 {
     mDwData.clear();
     plotDwData();
+}
+
+void CarInterface::on_experimentSavePngButton_clicked()
+{
+    QString fileName = QFileDialog::getSaveFileName(this,
+                                                    tr("Save Image"), "",
+                                                    tr("PNG Files (*.png)"));
+
+    if (!fileName.isEmpty()) {
+        if (!fileName.toLower().endsWith(".png")) {
+            fileName.append(".png");
+        }
+
+        ui->experimentPlot->savePng(fileName,
+                                    ui->experimentWBox->value(),
+                                    ui->experimentHBox->value(),
+                                    ui->experimentScaleBox->value());
+    }
+}
+
+void CarInterface::on_experimentSavePdfButton_clicked()
+{
+    QString fileName = QFileDialog::getSaveFileName(this,
+                                                    tr("Save PDF"), "",
+                                                    tr("PDF Files (*.pdf)"));
+
+    if (!fileName.isEmpty()) {
+        if (!fileName.toLower().endsWith(".pdf")) {
+            fileName.append(".pdf");
+        }
+
+        ui->experimentPlot->savePdf(fileName,
+                                    ui->experimentWBox->value(),
+                                    ui->experimentHBox->value());
+    }
 }

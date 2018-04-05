@@ -1108,6 +1108,24 @@ void commands_init_plot(char *namex, char *namey) {
 	commands_send_packet((unsigned char*)m_send_buffer, ind);
 }
 
+void commands_plot_add_graph(char *name) {
+	int ind = 0;
+	m_send_buffer[ind++] = main_id;
+	m_send_buffer[ind++] = CMD_PLOT_ADD_GRAPH;
+	memcpy(m_send_buffer + ind, name, strlen(name));
+	ind += strlen(name);
+	m_send_buffer[ind++] = '\0';
+	commands_send_packet((unsigned char*)m_send_buffer, ind);
+}
+
+void commands_plot_set_graph(int graph) {
+	int ind = 0;
+	m_send_buffer[ind++] = main_id;
+	m_send_buffer[ind++] = CMD_PLOT_SET_GRAPH;
+	m_send_buffer[ind++] = graph;
+	commands_send_packet((unsigned char*)m_send_buffer, ind);
+}
+
 void commands_send_plot_points(float x, float y) {
 	int32_t ind = 0;
 	m_send_buffer[ind++] = main_id;

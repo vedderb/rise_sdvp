@@ -107,6 +107,7 @@ typedef struct {
     bool yaw_use_odometry; // Use odometry data for yaw angle correction.
     float yaw_imu_gain; // Gain for yaw angle from IMU (vs odometry)
     bool disable_motor; // Disable motor drive commands to make sure that the motor does not move.
+    bool simulate_motor; // Simulate motor movement without motor controller feedback
 
     float gear_ratio;
     float wheel_diam;
@@ -227,7 +228,7 @@ typedef struct {
     int log_rate_hz;
     bool log_en;
     char log_name[LOG_NAME_MAX_LEN + 1];
-    bool log_en_uart;
+    int log_en_uart;
     int log_uart_baud;
 
     MAIN_CONFIG_CAR car;
@@ -260,6 +261,8 @@ typedef enum {
     CMD_LOG_LINE_USB,
     CMD_PLOT_INIT,
     CMD_PLOT_DATA,
+    CMD_PLOT_ADD_GRAPH,
+    CMD_PLOT_SET_GRAPH,
     CMD_SET_MS_TODAY,
     CMD_SET_SYSTEM_TIME,
     CMD_SET_SYSTEM_TIME_ACK,
@@ -441,6 +444,46 @@ typedef struct {
 } ubx_nav_svin;
 
 typedef struct {
+    uint32_t i_tow; // GPS time of week of the navigation epoch
+
+    /*
+     * Fractional part of i_tow. (range +/-500000)
+     * The precise GPS time of week in seconds is:
+     * (i_tow * 1e-3) + (f_tow * 1e-9)
+     */
+    int32_t f_tow;
+
+    int16_t weel; // GPS week number of the navigation epoch
+
+    /*
+     * GPSfix Type, range 0..5
+     * 0x00 = No Fix
+     * 0x01 = Dead Reckoning only
+     * 0x02 = 2D-Fix
+     * 0x03 = 3D-Fix
+     * 0x04 = GPS + dead reckoning combined
+     * 0x05 = Time only fix
+     * 0x06..0xff: reserved
+     */
+    uint8_t gps_fix;
+
+    bool gpsfixok; // Fix within limits (e.g. DOP & accuracy)
+    bool diffsoln; // DGPS used
+    bool wknset; // Valid GPS week number
+    bool towset; // Valid GPS time of week
+    double ecef_x; // ECEF X coordinate
+    double ecef_y; // ECEF Y coordinate
+    double ecef_z; // ECEF Z coordinate
+    float p_acc; // 3D Position Accuracy Estimate
+    float ecef_vx; // ECEF X velocity
+    float ecef_vy; // ECEF Y velocity
+    float ecef_vz; // ECEF Z velocity
+    float s_acc; // Speed Accuracy Estimate
+    float p_dop; // Position DOP
+    uint8_t num_sv; // Number of SVs used in Nav Solution
+} ubx_nav_sol;
+
+typedef struct {
     double pr_mes;
     double cp_mes;
     float do_mes;
@@ -489,6 +532,46 @@ typedef struct {
     uint32_t svin_min_dur; // SVIN minimum duration (s)
     float svin_acc_limit; // SVIN accuracy limit
 } ubx_cfg_tmode3;
+
+typedef struct {
+    bool clear_io_port;
+    bool clear_msg_conf;
+    bool clear_inf_msg;
+    bool clear_nav_conf;
+    bool clear_rxm_conf;
+    bool clear_sen_conf;
+    bool clear_rinv_conf;
+    bool clear_ant_conf;
+    bool clear_log_conf;
+    bool clear_fts_conf;
+
+    bool save_io_port;
+    bool save_msg_conf;
+    bool save_inf_msg;
+    bool save_nav_conf;
+    bool save_rxm_conf;
+    bool save_sen_conf;
+    bool save_rinv_conf;
+    bool save_ant_conf;
+    bool save_log_conf;
+    bool save_fts_conf;
+
+    bool load_io_port;
+    bool load_msg_conf;
+    bool load_inf_msg;
+    bool load_nav_conf;
+    bool load_rxm_conf;
+    bool load_sen_conf;
+    bool load_rinv_conf;
+    bool load_ant_conf;
+    bool load_log_conf;
+    bool load_fts_conf;
+
+    bool dev_bbr; // Battery backed RAM
+    bool dev_flash; // Flash
+    bool dev_eeprom; // EEPROM
+    bool dev_spi_flash; // SPI flash
+} ubx_cfg_cfg;
 
 typedef struct {
     bool apply_dyn; // Apply dynamic model settings

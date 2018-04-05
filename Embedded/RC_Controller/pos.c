@@ -740,9 +740,22 @@ static POS_POINT get_closest_point_to_time(int32_t time) {
 		cnt++;
 	}
 
+	static int sample = 0;
 	if (m_pos_history_print) {
 		commands_printf("Age: %d ms Ind: %d, Diff: %d ms PPS_CNT: %d",
 				m_ms_today - time, cnt, min_diff, m_pps_cnt);
+		if (sample == 0) {
+			commands_init_plot("Sample", "Age Difference (ms)");
+			commands_plot_add_graph("Delay");
+			commands_plot_add_graph("Yaw");
+		}
+		commands_plot_set_graph(0);
+		commands_send_plot_points(sample, m_ms_today - time);
+		commands_plot_set_graph(1);
+		commands_send_plot_points(sample, m_pos.yaw);
+		sample++;
+	} else {
+		sample = 0;
 	}
 
 	return m_pos_history[ind_use];
