@@ -791,27 +791,14 @@ static void correct_pos_gps(POS_STATE *pos) {
 #endif
 
 	// Angle
-	if (fabsf(pos->speed * 3.6) > 0.5) {
-		float yaw_gps = atan2f(pos->py_gps - pos->gps_ang_corr_y_last_gps,
-				pos->px_gps - pos->gps_ang_corr_x_last_gps);
-		float yaw_car = atan2f(pos->py - pos->gps_ang_corr_y_last_car,
-				pos->px - pos->gps_ang_corr_x_last_car);
-		float yaw_diff = utils_angle_difference_rad(yaw_gps, yaw_car) * 180.0 / M_PI;
-
-		utils_step_towards(&m_yaw_offset_gps, m_yaw_offset_gps + yaw_diff,
+	if (fabsf(pos->speed * 3.6) > 0.5 || 1) {
+		float yaw_gps = -atan2f(pos->py_gps - pos->gps_ang_corr_y_last_gps,
+						pos->px_gps - pos->gps_ang_corr_x_last_gps) * 180.0 / M_PI;
+		POS_POINT closest = get_closest_point_to_time(
+				(pos->gps_ms + pos->gps_ang_corr_last_gps_ms) / 2.0);
+		float yaw_diff = utils_angle_difference(yaw_gps, closest.yaw);
+		utils_step_towards(&m_yaw_offset_gps, m_yaw_offset_gps - yaw_diff,
 				main_config.gps_corr_gain_yaw * pos->gps_corr_cnt);
-
-		// TODO: Finish and test new angle correction
-		//		float dx = closest.px - pos->px_gps;
-		//		float dy = closest.py - pos->py_gps;
-		//		float d = sqrtf(SQ(dx) + SQ(dy));
-		//		float al2 = atan2f(dy, dx);
-		//		float al3 = utils_angle_difference((closest.yaw * (M_PI / 180.0)), al2);
-		//		float ds = d * cosf(al3);
-		//		if (d < 0.1) {
-		//			d = 0.1;
-		//		}
-		//		m_yaw_offset_gps += (ds / d) * al3 * main_config.gps_corr_gain_yaw;
 	}
 
 	utils_norm_angle(&m_yaw_offset_gps);
@@ -824,6 +811,7 @@ static void correct_pos_gps(POS_STATE *pos) {
 	POS_POINT closest_corr = closest;
 
 	static int sample = 0;
+	static int ms_before = 0;
 	if (m_gps_corr_print) {
 		float diff = utils_point_distance(closest.px, closest.py, pos->px_gps, pos->py_gps) * 100.0;
 
@@ -831,20 +819,24 @@ static void correct_pos_gps(POS_STATE *pos) {
 				(double)diff, (double)(m_pos.speed * 3.6), (double)m_pos.yaw);
 
 		if (sample == 0) {
-			commands_init_plot("Sample", "Diff (cm) & Speed (km/h)");
+			commands_init_plot("Time (s)", "Value");
 			commands_plot_add_graph("Diff (cm)");
 			commands_plot_add_graph("Speed (km/h)");
+			commands_plot_add_graph("Yaw (degrees)");
 		}
 
-		commands_plot_set_graph(0);
-		commands_send_plot_points(sample, diff);
-		commands_plot_set_graph(1);
-		commands_send_plot_points(sample, m_pos.speed * 3.6);
+		sample += pos->gps_ms - ms_before;
 
-		sample++;
+		commands_plot_set_graph(0);
+		commands_send_plot_points((float)sample / 1000.0, diff);
+		commands_plot_set_graph(1);
+		commands_send_plot_points((float)sample / 1000.0, m_pos.speed * 3.6);
+		commands_plot_set_graph(2);
+		commands_send_plot_points((float)sample / 1000.0, m_pos.yaw);
 	} else {
 		sample = 0;
 	}
+	ms_before = pos->gps_ms;
 
 	utils_step_towards(&closest_corr.px, pos->px_gps, gain);
 	utils_step_towards(&closest_corr.py, pos->py_gps, gain);
@@ -853,8 +845,7 @@ static void correct_pos_gps(POS_STATE *pos) {
 
 	pos->gps_ang_corr_x_last_gps = pos->px_gps;
 	pos->gps_ang_corr_y_last_gps = pos->py_gps;
-	pos->gps_ang_corr_x_last_car = closest.px;
-	pos->gps_ang_corr_y_last_car = closest.py;
+	pos->gps_ang_corr_last_gps_ms = pos->gps_ms;
 
 	// Update multirotor state
 #if MAIN_MODE == MAIN_MODE_MULTIROTOR

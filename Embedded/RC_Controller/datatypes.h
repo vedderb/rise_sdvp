@@ -84,8 +84,7 @@ typedef struct {
 	float gps_corr_cnt;
 	float gps_ang_corr_x_last_gps;
 	float gps_ang_corr_y_last_gps;
-	float gps_ang_corr_x_last_car;
-	float gps_ang_corr_y_last_car;
+	int32_t gps_ang_corr_last_gps_ms;
 	float gps_ground_level;
 
 	uint32_t gps_corr_time;

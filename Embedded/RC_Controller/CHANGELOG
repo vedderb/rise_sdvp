@@ -1,5 +1,6 @@
 === FW 8.19 ===
 * Added more experiment plot functionality.
+* Updated GNSS angle correction.
 
 === FW 8.18 ===
 * Added ublox m8t base station mode.
