@@ -164,6 +164,27 @@ void pos_pps_cb(EXTDriver *extp, expchannel_t channel) {
 	(void)extp;
 	(void)channel;
 
+	// Some filtering in case of long cables and noise
+#if GPS_EXT_PPS
+	bool high = true;
+	for (int i = 0; i < 10;i++) {
+		if (!palReadPad(GPIOD, 4)) {
+			high = false;
+		}
+	}
+
+	if (!high) {
+		return;
+	}
+#endif
+
+	static int32_t last_timestamp = 0;
+
+	// Only one correction per time stamp.
+	if (last_timestamp == m_nma_last_time) {
+		return;
+	}
+
 	m_pps_cnt++;
 
 	// Assume that the last NMEA time stamp is less than one second
@@ -173,6 +194,8 @@ void pos_pps_cb(EXTDriver *extp, expchannel_t channel) {
 		s_today++;
 		m_ms_today = s_today * 1000;
 	}
+
+	last_timestamp = m_nma_last_time;
 }
 
 void pos_get_imu(float *accel, float *gyro, float *mag) {
