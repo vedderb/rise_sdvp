@@ -682,13 +682,6 @@
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_8">
            <item>
-            <widget class="QLabel" name="label">
-             <property name="text">
-              <string>Export Image</string>
-             </property>
-            </widget>
-           </item>
-           <item>
             <widget class="QSpinBox" name="experimentWBox">
              <property name="prefix">
               <string>W: </string>
@@ -739,6 +732,114 @@
               </size>
              </property>
             </spacer>
+           </item>
+           <item>
+            <widget class="QPushButton" name="experimentAutoScaleButton">
+             <property name="toolTip">
+              <string>Auto-Scale Plot when samples are received</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="icon">
+              <iconset resource="resources.qrc">
+               <normaloff>:/models/Icons/size_off.png</normaloff>
+               <normalon>:/models/Icons/size_on.png</normalon>:/models/Icons/size_off.png</iconset>
+             </property>
+             <property name="checkable">
+              <bool>true</bool>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="experimentHZoomButton">
+             <property name="toolTip">
+              <string>Enable Horizontal Zoom</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="icon">
+              <iconset resource="resources.qrc">
+               <normaloff>:/models/Icons/expand_off.png</normaloff>
+               <normalon>:/models/Icons/expand_on.png</normalon>:/models/Icons/expand_off.png</iconset>
+             </property>
+             <property name="checkable">
+              <bool>true</bool>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="experimentVZoomButton">
+             <property name="toolTip">
+              <string>Enable Vertical Zoom</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="icon">
+              <iconset resource="resources.qrc">
+               <normaloff>:/models/Icons/expand_v_off.png</normaloff>
+               <normalon>:/models/Icons/expand_v_on.png</normalon>:/models/Icons/expand_v_off.png</iconset>
+             </property>
+             <property name="checkable">
+              <bool>true</bool>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_9">
+           <item>
+            <widget class="QLabel" name="label_6">
+             <property name="text">
+              <string>Import</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="experimentLoadXmlButton">
+             <property name="text">
+              <string>XML</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_2">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_7">
+             <property name="text">
+              <string>Export</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="experimentSaveXmlButton">
+             <property name="text">
+              <string>XML</string>
+             </property>
+            </widget>
            </item>
            <item>
             <widget class="QPushButton" name="experimentSavePngButton">

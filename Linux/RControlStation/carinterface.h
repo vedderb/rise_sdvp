@@ -112,6 +112,10 @@ private slots:
     void on_dwClearSamplesButton_clicked();
     void on_experimentSavePngButton_clicked();
     void on_experimentSavePdfButton_clicked();
+    void on_experimentSaveXmlButton_clicked();
+    void on_experimentLoadXmlButton_clicked();
+    void on_experimentHZoomButton_toggled(bool checked);
+    void on_experimentVZoomButton_toggled(bool checked);
 
 private:
     typedef struct {
@@ -146,6 +150,7 @@ private:
     void getConfGui(MAIN_CONFIG &conf);
     void setConfGui(MAIN_CONFIG &conf);
     void plotDwData();
+    void updateExperimentZoom();
 
 };
 

@@ -24,6 +24,8 @@
 #include <cmath>
 #include <QTime>
 #include <QDateTime>
+#include <QXmlStreamWriter>
+#include <QXmlStreamReader>
 
 namespace {
 void faultToStr(mc_fault_code fault, QString &str, bool &isOk)
@@ -394,7 +396,10 @@ void CarInterface::timerSlot()
 
         ui->experimentPlot->legend->setVisible(mExperimentPlots.size() > 1);
 
-        ui->experimentPlot->rescaleAxes();
+        if (ui->experimentAutoScaleButton->isChecked()) {
+            ui->experimentPlot->rescaleAxes();
+        }
+
         ui->experimentPlot->replot();
         mExperimentReplot = false;
     }
@@ -742,7 +747,7 @@ void CarInterface::on_vescToolTcpBox_toggled(bool checked)
             qWarning() << "Starting TCP server failed:" << mTcpServer->errorString();
             QMessageBox::warning(this, "TCP Server Error",
                                  tr("Starting TCP server failed. Make sure that the port is not "
-                                 "already in use. Error: %1").arg(mTcpServer->errorString()));
+                                    "already in use. Error: %1").arg(mTcpServer->errorString()));
             ui->vescToolTcpBox->setChecked(false);
         }
     } else {
@@ -931,6 +936,14 @@ void CarInterface::plotDwData()
     ui->dwPlot->replot();
 }
 
+void CarInterface::updateExperimentZoom()
+{
+    Qt::Orientations plotOrientations = (Qt::Orientations)
+            ((ui->experimentHZoomButton->isChecked() ? Qt::Horizontal : 0) |
+             (ui->experimentVZoomButton->isChecked() ? Qt::Vertical : 0));
+    ui->experimentPlot->axisRect()->setRangeZoom(plotOrientations);
+}
+
 void CarInterface::on_radarReadButton_clicked()
 {
     if (mPacketInterface) {
@@ -1080,4 +1093,151 @@ void CarInterface::on_experimentSavePdfButton_clicked()
                                     ui->experimentWBox->value(),
                                     ui->experimentHBox->value());
     }
+}
+
+void CarInterface::on_experimentSaveXmlButton_clicked()
+{
+    QString filename = QFileDialog::getSaveFileName(this,
+                                                    tr("Save Plot"), "",
+                                                    tr("Xml files (*.xml)"));
+
+    if (filename.isEmpty()) {
+        return;
+    }
+
+    if (!filename.toLower().endsWith(".xml")) {
+        filename.append(".xml");
+    }
+
+    QFile file(filename);
+    if (!file.open(QIODevice::WriteOnly)) {
+        QMessageBox::critical(this, "Save Plot",
+                              "Could not open\n" + filename + "\nfor writing");
+        return;
+    }
+
+    QXmlStreamWriter stream(&file);
+    stream.setCodec("UTF-8");
+    stream.setAutoFormatting(true);
+    stream.writeStartDocument();
+
+    stream.writeStartElement("plot");
+    stream.writeTextElement("xlabel", ui->experimentPlot->xAxis->label());
+    stream.writeTextElement("ylabel", ui->experimentPlot->yAxis->label());
+
+    for (EXPERIMENT_PLOT p: mExperimentPlots) {
+        stream.writeStartElement("graph");
+        stream.writeTextElement("label", p.label);
+        stream.writeTextElement("color", p.color);
+        for (int i = 0;i < p.xData.size();i++) {
+            stream.writeStartElement("point");
+            stream.writeTextElement("x", QString::number(p.xData.at(i)));
+            stream.writeTextElement("y", QString::number(p.yData.at(i)));
+            stream.writeEndElement();
+        }
+        stream.writeEndElement();
+    }
+
+    stream.writeEndDocument();
+    file.close();
+}
+
+void CarInterface::on_experimentLoadXmlButton_clicked()
+{
+    QString filename = QFileDialog::getOpenFileName(this,
+                                                    tr("Load Plot"), "",
+                                                    tr("Xml files (*.xml)"));
+
+    if (!filename.isEmpty()) {
+        QFile file(filename);
+        if (!file.open(QIODevice::ReadOnly)) {
+            QMessageBox::critical(this, "Load Plot",
+                                  "Could not open\n" + filename + "\nfor reading");
+            return;
+        }
+
+        QXmlStreamReader stream(&file);
+
+        // Look for plot tag
+        bool plots_found = false;
+        while (stream.readNextStartElement()) {
+            if (stream.name() == "plot") {
+                plots_found = true;
+                break;
+            }
+        }
+
+        if (plots_found) {
+            mExperimentPlots.clear();
+
+            while (stream.readNextStartElement()) {
+                QString name = stream.name().toString();
+
+                if (name == "xlabel") {
+                    ui->experimentPlot->xAxis->setLabel(stream.readElementText());
+                } else if (name == "ylabel") {
+                    ui->experimentPlot->yAxis->setLabel(stream.readElementText());
+                } else if (name == "graph") {
+                    EXPERIMENT_PLOT p;
+
+                    while (stream.readNextStartElement()) {
+                        QString name2 = stream.name().toString();
+
+                        if (name2 == "label") {
+                            p.label = stream.readElementText();
+                        } else if (name2 == "color") {
+                            p.color = stream.readElementText();
+                        } else if (name2 == "point") {
+                            while (stream.readNextStartElement()) {
+                                QString name3 = stream.name().toString();
+
+                                if (name3 == "x") {
+                                    p.xData.append(stream.readElementText().toDouble());
+                                } else if (name3 == "y") {
+                                    p.yData.append(stream.readElementText().toDouble());
+                                } else {
+                                    qWarning() << ": Unknown XML element :" << name2;
+                                    stream.skipCurrentElement();
+                                }
+                            }
+                        } else {
+                            qWarning() << ": Unknown XML element :" << name2;
+                            stream.skipCurrentElement();
+                        }
+
+                        if (stream.hasError()) {
+                            qWarning() << " : XML ERROR :" << stream.errorString();
+                        }
+                    }
+
+                    mExperimentPlots.append(p);
+                }
+
+                if (stream.hasError()) {
+                    qWarning() << "XML ERROR :" << stream.errorString();
+                    qWarning() << stream.lineNumber() << stream.columnNumber();
+                }
+            }
+
+            mExperimentReplot = true;
+
+            file.close();
+            showStatusInfo("Loaded plot", true);
+        } else {
+            QMessageBox::critical(this, "Load Plot",
+                                  "plot tag not found in " + filename);
+        }
+    }
+}
+
+void CarInterface::on_experimentHZoomButton_toggled(bool checked)
+{
+    (void)checked;
+    updateExperimentZoom();
+}
+
+void CarInterface::on_experimentVZoomButton_toggled(bool checked)
+{
+    (void)checked;
+    updateExperimentZoom();
 }

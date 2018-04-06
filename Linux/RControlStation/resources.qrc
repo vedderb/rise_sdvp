@@ -62,5 +62,11 @@
         <file>Icons/Code-96.png</file>
         <file>Icons/About-96.png</file>
         <file>Icons/Streets-100.png</file>
+        <file>Icons/expand_off.png</file>
+        <file>Icons/expand_on.png</file>
+        <file>Icons/expand_v_off.png</file>
+        <file>Icons/expand_v_on.png</file>
+        <file>Icons/size_off.png</file>
+        <file>Icons/size_on.png</file>
     </qresource>
 </RCC>
