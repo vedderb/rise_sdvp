@@ -93,7 +93,7 @@
 
 // Car parameters
 #ifndef BOARD_YAW_ROT
-#define BOARD_YAW_ROT				0.0
+#define BOARD_YAW_ROT				-90.0
 #endif
 
 // Radar settings

@@ -844,7 +844,7 @@ static void correct_pos_gps(POS_STATE *pos) {
 		if (sample == 0) {
 			commands_init_plot("Time (s)", "Value");
 			commands_plot_add_graph("Diff (cm)");
-			commands_plot_add_graph("Speed (km/h)");
+			commands_plot_add_graph("Speed (0.1 * km/h)");
 			commands_plot_add_graph("Yaw (degrees)");
 		}
 
@@ -853,7 +853,7 @@ static void correct_pos_gps(POS_STATE *pos) {
 		commands_plot_set_graph(0);
 		commands_send_plot_points((float)sample / 1000.0, diff);
 		commands_plot_set_graph(1);
-		commands_send_plot_points((float)sample / 1000.0, m_pos.speed * 3.6);
+		commands_send_plot_points((float)sample / 1000.0, m_pos.speed * 3.6 * 10);
 		commands_plot_set_graph(2);
 		commands_send_plot_points((float)sample / 1000.0, m_pos.yaw);
 	} else {
