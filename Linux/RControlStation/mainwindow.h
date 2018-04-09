@@ -141,6 +141,8 @@ private slots:
     void on_actionTestIntersection_triggered();
     void on_actionSaveSelectedRouteAsDriveFile_triggered();
     void on_actionLoadDriveFile_triggered();
+    void on_mapSaveAsPdfButton_clicked();
+    void on_mapSaveAsPngButton_clicked();
 
 private:
     Ui::MainWindow *ui;

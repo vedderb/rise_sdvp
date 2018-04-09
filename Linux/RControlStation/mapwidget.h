@@ -114,6 +114,9 @@ public:
     int getInfoTraceNow() const;
     void setInfoTraceNow(int infoTraceNow);
 
+    void printPdf(QString path, int width = 0, int height = 0);
+    void printPng(QString path, int width = 0, int height = 0);
+
 signals:
     void scaleChanged(double newScale);
     void offsetChanged(double newXOffset, double newYOffset);
@@ -185,6 +188,7 @@ private:
     int getClosestPoint(LocPoint p, QList<LocPoint> points, double &dist);
     void drawCircleFast(QPainter &painter, QPointF center, double radius, int type = 0);
 
+    void paint(QPainter &painter, int width, int height, bool highQuality = false);
 };
 
 #endif // MAPWIDGET_H

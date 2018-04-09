@@ -1980,9 +1980,9 @@
                  <property name="geometry">
                   <rect>
                    <x>0</x>
-                   <y>0</y>
-                   <width>206</width>
-                   <height>519</height>
+                   <y>-140</y>
+                   <width>210</width>
+                   <height>612</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_15">
@@ -2368,6 +2368,70 @@
                        <property name="icon">
                         <iconset resource="resources.qrc">
                          <normaloff>:/models/Icons/Google Images-96.png</normaloff>:/models/Icons/Google Images-96.png</iconset>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QGroupBox" name="groupBox_5">
+                    <property name="title">
+                     <string>Save Picture</string>
+                    </property>
+                    <layout class="QGridLayout" name="gridLayout_11">
+                     <property name="leftMargin">
+                      <number>4</number>
+                     </property>
+                     <property name="topMargin">
+                      <number>4</number>
+                     </property>
+                     <property name="rightMargin">
+                      <number>4</number>
+                     </property>
+                     <property name="bottomMargin">
+                      <number>4</number>
+                     </property>
+                     <property name="horizontalSpacing">
+                      <number>2</number>
+                     </property>
+                     <item row="0" column="0">
+                      <widget class="QSpinBox" name="mapSaveWBox">
+                       <property name="prefix">
+                        <string>W: </string>
+                       </property>
+                       <property name="maximum">
+                        <number>10000</number>
+                       </property>
+                       <property name="value">
+                        <number>640</number>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="1">
+                      <widget class="QSpinBox" name="mapSaveHBox">
+                       <property name="prefix">
+                        <string>H: </string>
+                       </property>
+                       <property name="maximum">
+                        <number>10000</number>
+                       </property>
+                       <property name="value">
+                        <number>480</number>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="0">
+                      <widget class="QPushButton" name="mapSaveAsPngButton">
+                       <property name="text">
+                        <string>PNG</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="1">
+                      <widget class="QPushButton" name="mapSaveAsPdfButton">
+                       <property name="text">
+                        <string>PDF</string>
                        </property>
                       </widget>
                      </item>

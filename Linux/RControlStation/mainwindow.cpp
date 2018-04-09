@@ -1513,7 +1513,7 @@ void MainWindow::on_actionExit_triggered()
 void MainWindow::on_actionSaveRoutes_triggered()
 {
     QString filename = QFileDialog::getSaveFileName(this,
-                                                    tr("Save Routes"), ".",
+                                                    tr("Save Routes"), "",
                                                     tr("Xml files (*.xml)"));
 
     // Cancel pressed
@@ -1566,7 +1566,7 @@ void MainWindow::on_actionSaveRoutes_triggered()
 void MainWindow::on_actionLoadRoutes_triggered()
 {
     QString filename = QFileDialog::getOpenFileName(this,
-                                                    tr("Load Routes"), ".",
+                                                    tr("Load Routes"), "",
                                                     tr("Xml files (*.xml)"));
 
     if (!filename.isEmpty()) {
@@ -1661,7 +1661,7 @@ void MainWindow::on_actionTestIntersection_triggered()
 void MainWindow::on_actionSaveSelectedRouteAsDriveFile_triggered()
 {
     QString filename = QFileDialog::getSaveFileName(this,
-                                                    tr("Save Drive File"), ".",
+                                                    tr("Save Drive File"), "",
                                                     tr("Csv files (*.csv)"));
 
     // Cancel pressed
@@ -1716,7 +1716,7 @@ void MainWindow::on_actionSaveSelectedRouteAsDriveFile_triggered()
 void MainWindow::on_actionLoadDriveFile_triggered()
 {
     QString filename = QFileDialog::getOpenFileName(this,
-                                                    tr("Load Drive File"), ".",
+                                                    tr("Load Drive File"), "",
                                                     tr("Csv files (*.csv)"));
 
     if (!filename.isEmpty()) {
@@ -1776,4 +1776,44 @@ void MainWindow::on_actionLoadDriveFile_triggered()
         file.close();
         showStatusInfo("Loaded drive file", true);
     }
+}
+
+void MainWindow::on_mapSaveAsPdfButton_clicked()
+{
+    QString filename = QFileDialog::getSaveFileName(this,
+                                                    tr("Save Map Image"), "",
+                                                    tr("Pdf files (*.pdf)"));
+
+    // Cancel pressed
+    if (filename.isEmpty()) {
+        return;
+    }
+
+    if (!filename.toLower().endsWith(".pdf")) {
+        filename.append(".pdf");
+    }
+
+    ui->mapWidget->printPdf(filename,
+                            ui->mapSaveWBox->value(),
+                            ui->mapSaveHBox->value());
+}
+
+void MainWindow::on_mapSaveAsPngButton_clicked()
+{
+    QString filename = QFileDialog::getSaveFileName(this,
+                                                    tr("Save Map Image"), "",
+                                                    tr("png files (*.png)"));
+
+    // Cancel pressed
+    if (filename.isEmpty()) {
+        return;
+    }
+
+    if (!filename.toLower().endsWith(".png")) {
+        filename.append(".png");
+    }
+
+    ui->mapWidget->printPng(filename,
+                            ui->mapSaveWBox->value(),
+                            ui->mapSaveHBox->value());
 }

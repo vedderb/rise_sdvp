@@ -102,6 +102,15 @@ CarInterface::CarInterface(QWidget *parent) :
     ui->dwPlot->xAxis->setLabel("Time (s)");
     ui->dwPlot->yAxis->setLabel("Error (m)");
     ui->dwPlot->yAxis2->setLabel("Anchor Now");
+
+    connect(ui->experimentGraph1Button, &QPushButton::toggled,
+            [=]() {mExperimentReplot = true;});
+    connect(ui->experimentGraph2Button, &QPushButton::toggled,
+            [=]() {mExperimentReplot = true;});
+    connect(ui->experimentGraph3Button, &QPushButton::toggled,
+            [=]() {mExperimentReplot = true;});
+    connect(ui->experimentGraph4Button, &QPushButton::toggled,
+            [=]() {mExperimentReplot = true;});
 }
 
 CarInterface::~CarInterface()
@@ -383,15 +392,21 @@ void CarInterface::disableKbBox()
 void CarInterface::timerSlot()
 {   
     if (mExperimentReplot) {
-        while (ui->experimentPlot->graphCount() < mExperimentPlots.size()) {
-            ui->experimentPlot->addGraph();
-        }
+        ui->experimentPlot->clearGraphs();
 
         for (int i = 0;i < mExperimentPlots.size();i++) {
-            ui->experimentPlot->graph(i)->setData(mExperimentPlots.at(i).xData,
-                                                  mExperimentPlots.at(i).yData);
-            ui->experimentPlot->graph(i)->setName(mExperimentPlots.at(i).label);
-            ui->experimentPlot->graph(i)->setPen(QPen(mExperimentPlots.at(i).color));
+            switch (i) {
+            case 0: if (!ui->experimentGraph1Button->isChecked()) {continue;} break;
+            case 1: if (!ui->experimentGraph2Button->isChecked()) {continue;} break;
+            case 2: if (!ui->experimentGraph3Button->isChecked()) {continue;} break;
+            case 3: if (!ui->experimentGraph4Button->isChecked()) {continue;} break;
+            default: break;
+            }
+
+            ui->experimentPlot->addGraph();
+            ui->experimentPlot->graph()->setData(mExperimentPlots.at(i).xData, mExperimentPlots.at(i).yData);
+            ui->experimentPlot->graph()->setName(mExperimentPlots.at(i).label);
+            ui->experimentPlot->graph()->setPen(QPen(mExperimentPlots.at(i).color));
         }
 
         ui->experimentPlot->legend->setVisible(mExperimentPlots.size() > 1);
