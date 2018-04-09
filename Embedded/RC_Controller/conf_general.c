@@ -120,7 +120,7 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 	conf->car.simulate_motor = false;
 
 	conf->car.gear_ratio = (1.0 / 3.0) * (21.0 / 37.0);
-	conf->car.wheel_diam = 0.12;
+	conf->car.wheel_diam = 0.11;
 	conf->car.motor_poles = 4.0;
 	conf->car.steering_max_angle_rad = 0.42041;
 	conf->car.steering_center = 0.5;
