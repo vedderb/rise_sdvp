@@ -18,6 +18,7 @@
 #include "autopilot.h"
 #include <math.h>
 #include <string.h>
+#include <stdio.h>
 #include "ch.h"
 #include "hal.h"
 #include "servo_simple.h"
@@ -46,6 +47,7 @@ static bool m_point_rx_prev_set;
 static mutex_t m_ap_lock;
 static int32_t m_start_time;
 static bool m_sync_rx;
+static int m_print_closest_point;
 
 // Private functions
 static THD_FUNCTION(ap_thread, arg);
@@ -60,6 +62,7 @@ static void steering_angle_to_point(
 static bool add_point(ROUTE_POINT *p, bool first);
 static void clear_route(void);
 static void terminal_state(int argc, const char **argv);
+static void terminal_print_closest(int argc, const char **argv);
 
 void autopilot_init(void) {
 	memset(m_route, 0, sizeof(m_route));
@@ -76,12 +79,21 @@ void autopilot_init(void) {
 	chMtxObjectInit(&m_ap_lock);
 	m_start_time = 0;
 	m_sync_rx = false;
+	m_print_closest_point = false;
 
 	terminal_register_command_callback(
 			"ap_state",
 			"Print the state of the autopilot",
 			"",
 			terminal_state);
+
+	terminal_register_command_callback(
+			"ap_print_closest",
+			"Print and plot distance to closest route point.\n"
+			"  0 - Disabled\n"
+			"  n - Print closest point every n:th iteration.",
+			"[print_rate]",
+			terminal_print_closest);
 
 	chThdCreateStatic(ap_thread_wa, sizeof(ap_thread_wa),
 			NORMALPRIO, ap_thread, NULL);
@@ -523,6 +535,29 @@ static THD_FUNCTION(ap_thread, arg) {
 				}
 			}
 
+			static int sample = 0;
+			static int print_before = 0;
+			if (m_print_closest_point) {
+				if (print_before == 0) {
+					sample = 0;
+				}
+
+				if (sample % m_print_closest_point == 0) {
+					float diff = utils_rp_distance(&closest, &car_pos) * 100.0;
+					float speed = pos_get_speed() * 3.6;
+
+					commands_plot_set_graph(0);
+					commands_send_plot_points((float)sample, diff);
+					commands_plot_set_graph(1);
+					commands_send_plot_points((float)sample, speed);
+
+					commands_printf("D: %.1f cm, S: %.2f km/h", (double)diff, (double)speed);
+				}
+
+				sample++;
+			}
+			print_before = m_print_closest_point;
+
 			if (last_point_reached) {
 				rp_now = *rp_last;
 			} else {
@@ -731,4 +766,28 @@ static void terminal_state(int argc, const char **argv) {
 			m_point_last,
 			m_point_rx_prev_set,
 			m_start_time);
+}
+
+static void terminal_print_closest(int argc, const char **argv) {
+	if (argc == 2) {
+		int n = -1;
+		sscanf(argv[1], "%d", &n);
+
+		if (n < 0) {
+			commands_printf("Invalid argument\n");
+		} else {
+			if (n > 0) {
+				commands_printf("OK. Printing closest point every %d iterations.\n", n);
+				commands_init_plot("Sample", "Value");
+				commands_plot_add_graph("Diff (cm)");
+				commands_plot_add_graph("Speed (km/h)");
+			} else {
+				commands_printf("OK. Not printing closest point.\n", n);
+			}
+
+			m_print_closest_point = n;
+		}
+	} else {
+		commands_printf("Wrong number of arguments\n");
+	}
 }

@@ -60,11 +60,13 @@ static POS_POINT m_pos_history[POS_HISTORY_LEN];
 static int m_pos_history_ptr;
 static bool m_pos_history_print;
 static bool m_gps_corr_print;
+static bool m_en_delay_comp;
 static int32_t m_pps_cnt;
 
 // Private functions
 static void cmd_terminal_delay_info(int argc, const char **argv);
 static void cmd_terminal_gps_corr_info(int argc, const char **argv);
+static void cmd_terminal_delay_comp(int argc, const char **argv);
 static void mpu9150_read(void);
 static void update_orientation_angles(float *accel, float *gyro, float *mag, float dt);
 static void init_gps_local(GPS_STATE *gps);
@@ -96,6 +98,7 @@ void pos_init(void) {
 	m_pos_history_ptr = 0;
 	m_pos_history_print = false;
 	m_gps_corr_print = false;
+	m_en_delay_comp = true;
 	m_pps_cnt = 0;
 	m_yaw_offset_gps = 0.0;
 
@@ -138,7 +141,7 @@ void pos_init(void) {
 #endif
 
 	terminal_register_command_callback(
-			"delay_info",
+			"pos_delay_info",
 			"Print and plot delay information when doing GNSS position correction.\n"
 			"  0 - Disabled\n"
 			"  1 - Enabled",
@@ -146,12 +149,20 @@ void pos_init(void) {
 			cmd_terminal_delay_info);
 
 	terminal_register_command_callback(
-			"gnss_corr_info",
+			"pos_gnss_corr_info",
 			"Print and plot correction information when doing GNSS position correction.\n"
 			"  0 - Disabled\n"
 			"  1 - Enabled",
 			"[print_en]",
 			cmd_terminal_gps_corr_info);
+
+	terminal_register_command_callback(
+			"pos_delay_comp",
+			"Enable or disable delay compensation.\n"
+			"  0 - Disabled\n"
+			"  1 - Enabled",
+			"[print_en]",
+			cmd_terminal_delay_comp);
 
 #ifdef LOG_EN_SW
 	palSetPadMode(GPIOD, 3, PAL_MODE_INPUT_PULLUP);
@@ -468,6 +479,22 @@ static void cmd_terminal_gps_corr_info(int argc, const char **argv) {
 			commands_printf("OK\n");
 		} else if (strcmp(argv[1], "1") == 0) {
 			m_gps_corr_print = 1;
+			commands_printf("OK\n");
+		} else {
+			commands_printf("Invalid argument %s\n", argv[1]);
+		}
+	} else {
+		commands_printf("Wrong number of arguments\n");
+	}
+}
+
+static void cmd_terminal_delay_comp(int argc, const char **argv) {
+	if (argc == 2) {
+		if (strcmp(argv[1], "0") == 0) {
+			m_en_delay_comp = 0;
+			commands_printf("OK\n");
+		} else if (strcmp(argv[1], "1") == 0) {
+			m_en_delay_comp = 1;
 			commands_printf("OK\n");
 		} else {
 			commands_printf("Invalid argument %s\n", argv[1]);
@@ -830,7 +857,7 @@ static void correct_pos_gps(POS_STATE *pos) {
 	float gain = main_config.gps_corr_gain_stat +
 			main_config.gps_corr_gain_dyn * pos->gps_corr_cnt;
 
-	POS_POINT closest = get_closest_point_to_time(pos->gps_ms);
+	POS_POINT closest = get_closest_point_to_time(m_en_delay_comp ? pos->gps_ms : m_ms_today);
 	POS_POINT closest_corr = closest;
 
 	static int sample = 0;

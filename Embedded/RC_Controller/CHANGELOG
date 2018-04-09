@@ -1,3 +1,7 @@
+=== FW 8.20 ===
+* Autopilot error plotting.
+* Terminal command for enabling and disabling delay compensation.
+
 === FW 8.19 ===
 * Added more experiment plot functionality.
 * Updated GNSS angle correction.
