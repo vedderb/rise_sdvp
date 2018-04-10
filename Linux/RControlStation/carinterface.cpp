@@ -86,6 +86,9 @@ CarInterface::CarInterface(QWidget *parent) :
 
     mTcpServer->setUsePacket(true);
 
+    ui->experimentPlot->xAxis->grid()->setSubGridVisible(true);
+    ui->experimentPlot->yAxis->grid()->setSubGridVisible(true);
+
     ui->dwPlot->addGraph();
     ui->dwPlot->graph()->setName("Fusion Error");
     ui->dwPlot->graph()->setPen(QPen(Qt::blue));

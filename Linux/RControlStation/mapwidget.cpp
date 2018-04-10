@@ -1315,10 +1315,14 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
                 pt_txt.setX(i);
                 pt_txt.setY(0);
                 pt_txt = drawTrans.map(pt_txt);
-                pt_txt.setX(pt_txt.x() + 5);
+                pt_txt.setX(pt_txt.x() - 5);
                 pt_txt.setY(height - 10);
                 painter.setPen(QPen(textColor));
-                painter.drawText(pt_txt, txt);
+                painter.save();
+                painter.translate(pt_txt);
+                painter.rotate(-90);
+                painter.drawText(0, 0, txt);
+                painter.restore();
 
                 if (fabs(i) < 1e-3) {
                     pen.setWidthF(zeroAxisWidth);
