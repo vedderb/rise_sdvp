@@ -1980,9 +1980,9 @@
                  <property name="geometry">
                   <rect>
                    <x>0</x>
-                   <y>-140</y>
+                   <y>-171</y>
                    <width>210</width>
-                   <height>612</height>
+                   <height>643</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_15">
@@ -2395,6 +2395,13 @@
                      <property name="horizontalSpacing">
                       <number>2</number>
                      </property>
+                     <item row="1" column="1">
+                      <widget class="QPushButton" name="mapSaveAsPdfButton">
+                       <property name="text">
+                        <string>PDF</string>
+                       </property>
+                      </widget>
+                     </item>
                      <item row="0" column="0">
                       <widget class="QSpinBox" name="mapSaveWBox">
                        <property name="prefix">
@@ -2428,10 +2435,17 @@
                        </property>
                       </widget>
                      </item>
-                     <item row="1" column="1">
-                      <widget class="QPushButton" name="mapSaveAsPdfButton">
+                     <item row="2" column="0" colspan="2">
+                      <widget class="QPushButton" name="mapSaveRetakeButton">
+                       <property name="toolTip">
+                        <string>Retake last image</string>
+                       </property>
                        <property name="text">
-                        <string>PDF</string>
+                        <string>Retake</string>
+                       </property>
+                       <property name="icon">
+                        <iconset resource="resources.qrc">
+                         <normaloff>:/models/Icons/Available Updates-96.png</normaloff>:/models/Icons/Available Updates-96.png</iconset>
                        </property>
                       </widget>
                      </item>

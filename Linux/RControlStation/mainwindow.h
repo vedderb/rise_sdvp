@@ -143,6 +143,7 @@ private slots:
     void on_actionLoadDriveFile_triggered();
     void on_mapSaveAsPdfButton_clicked();
     void on_mapSaveAsPngButton_clicked();
+    void on_mapSaveRetakeButton_clicked();
 
 private:
     Ui::MainWindow *ui;
@@ -166,6 +167,7 @@ private:
     QString mVersion;
     rtcm3_state mRtcmState;
     IntersectionTest *mIntersectionTest;
+    QString mLastImgFileName;
 
 #ifdef HAS_JOYSTICK
     Joystick *mJoystick;

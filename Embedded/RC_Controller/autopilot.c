@@ -48,6 +48,8 @@ static mutex_t m_ap_lock;
 static int32_t m_start_time;
 static bool m_sync_rx;
 static int m_print_closest_point;
+static bool m_en_dynamic_rad;
+static bool m_en_angle_dist_comp;
 
 // Private functions
 static THD_FUNCTION(ap_thread, arg);
@@ -63,6 +65,8 @@ static bool add_point(ROUTE_POINT *p, bool first);
 static void clear_route(void);
 static void terminal_state(int argc, const char **argv);
 static void terminal_print_closest(int argc, const char **argv);
+static void terminal_dynamic_rad(int argc, const char **argv);
+static void terminal_angle_dist_comp(int argc, const char **argv);
 
 void autopilot_init(void) {
 	memset(m_route, 0, sizeof(m_route));
@@ -80,6 +84,8 @@ void autopilot_init(void) {
 	m_start_time = 0;
 	m_sync_rx = false;
 	m_print_closest_point = false;
+	m_en_dynamic_rad = true;
+	m_en_angle_dist_comp = true;
 
 	terminal_register_command_callback(
 			"ap_state",
@@ -94,6 +100,22 @@ void autopilot_init(void) {
 			"  n - Print closest point every n:th iteration.",
 			"[print_rate]",
 			terminal_print_closest);
+
+	terminal_register_command_callback(
+			"ap_dynamic_rad",
+			"Enable or disable dynamic radius.\n"
+			"  0 - Disabled\n"
+			"  1 - Enabled",
+			"[enabled]",
+			terminal_dynamic_rad);
+
+	terminal_register_command_callback(
+			"ap_ang_dist_comp",
+			"Enable or disable steering angle distance compensation.\n"
+			"  0 - Disabled\n"
+			"  1 - Enabled",
+			"[enabled]",
+			terminal_angle_dist_comp);
 
 	chThdCreateStatic(ap_thread_wa, sizeof(ap_thread_wa),
 			NORMALPRIO, ap_thread, NULL);
@@ -363,12 +385,12 @@ static THD_FUNCTION(ap_thread, arg) {
 		int ms_today = pos_get_ms_today();
 
 		if (len >= 2) {
-			POS_STATE p;
-			pos_get_pos(&p);
+			POS_STATE pos_now;
+			pos_get_pos(&pos_now);
 
 			// Car center
-			const float car_cx = p.px;
-			const float car_cy = p.py;
+			const float car_cx = pos_now.px;
+			const float car_cy = pos_now.py;
 			ROUTE_POINT car_pos;
 			car_pos.px = car_cx;
 			car_pos.py = car_cy;
@@ -383,7 +405,8 @@ static THD_FUNCTION(ap_thread, arg) {
 			int end = m_point_now + add;
 
 			// Speed-dependent radius
-			m_rad_now = main_config.ap_base_rad / autopilot_get_steering_scale();
+			m_rad_now = main_config.ap_base_rad /
+					(m_en_dynamic_rad ? autopilot_get_steering_scale() : 1.0);
 
 			ROUTE_POINT rp_now; // The point we should follow now.
 			int circle_intersections = 0;
@@ -544,14 +567,19 @@ static THD_FUNCTION(ap_thread, arg) {
 
 				if (sample % m_print_closest_point == 0) {
 					float diff = utils_rp_distance(&closest, &car_pos) * 100.0;
-					float speed = pos_get_speed() * 3.6;
+					float speed = pos_now.speed * 3.6;
 
 					commands_plot_set_graph(0);
 					commands_send_plot_points((float)sample, diff);
 					commands_plot_set_graph(1);
 					commands_send_plot_points((float)sample, speed);
+					commands_plot_set_graph(2);
+					commands_send_plot_points((float)sample, pos_now.yaw * 0.1);
+					commands_plot_set_graph(3);
+					commands_send_plot_points((float)sample, m_rad_now * 10.0);
 
-					commands_printf("D: %.1f cm, S: %.2f km/h", (double)diff, (double)speed);
+					commands_printf("D: %.1f cm, S: %.2f km/h, Yaw: %.1f deg, Rad: %.2f m",
+							(double)diff, (double)speed, (double)pos_now.yaw, (double)m_rad_now);
 				}
 
 				sample++;
@@ -583,7 +611,7 @@ static THD_FUNCTION(ap_thread, arg) {
 				float distance, steering_angle;
 				float servo_pos;
 
-				steering_angle_to_point(p.px, p.py, -p.yaw * M_PI / 180.0, rp_now.px,
+				steering_angle_to_point(pos_now.px, pos_now.py, -pos_now.yaw * M_PI / 180.0, rp_now.px,
 						rp_now.py, &steering_angle, &distance);
 
 				// Scale maximum steering by speed
@@ -691,7 +719,7 @@ static void steering_angle_to_point(
 	 * Add correction if the arc is much longer than the total distance.
 	 * TODO: Find a good model.
 	 */
-	float angle_correction = 1.0 + D * 0.2;
+	float angle_correction = 1.0 + (m_en_angle_dist_comp ? D * 0.2 : 0.0);
 	if (angle_correction > 5.0) {
 		angle_correction = 5.0;
 	}
@@ -781,11 +809,45 @@ static void terminal_print_closest(int argc, const char **argv) {
 				commands_init_plot("Sample", "Value");
 				commands_plot_add_graph("Diff (cm)");
 				commands_plot_add_graph("Speed (km/h)");
+				commands_plot_add_graph("Yaw (0.1 degrees)");
+				commands_plot_add_graph("Radius (0.1 m)");
 			} else {
 				commands_printf("OK. Not printing closest point.\n", n);
 			}
 
 			m_print_closest_point = n;
+		}
+	} else {
+		commands_printf("Wrong number of arguments\n");
+	}
+}
+
+static void terminal_dynamic_rad(int argc, const char **argv) {
+	if (argc == 2) {
+		if (strcmp(argv[1], "0") == 0) {
+			m_en_dynamic_rad = 0;
+			commands_printf("OK\n");
+		} else if (strcmp(argv[1], "1") == 0) {
+			m_en_dynamic_rad = 1;
+			commands_printf("OK\n");
+		} else {
+			commands_printf("Invalid argument %s\n", argv[1]);
+		}
+	} else {
+		commands_printf("Wrong number of arguments\n");
+	}
+}
+
+static void terminal_angle_dist_comp(int argc, const char **argv) {
+	if (argc == 2) {
+		if (strcmp(argv[1], "0") == 0) {
+			m_en_angle_dist_comp = 0;
+			commands_printf("OK\n");
+		} else if (strcmp(argv[1], "1") == 0) {
+			m_en_angle_dist_comp = 1;
+			commands_printf("OK\n");
+		} else {
+			commands_printf("Invalid argument %s\n", argv[1]);
 		}
 	} else {
 		commands_printf("Wrong number of arguments\n");

@@ -161,7 +161,7 @@ void pos_init(void) {
 			"Enable or disable delay compensation.\n"
 			"  0 - Disabled\n"
 			"  1 - Enabled",
-			"[print_en]",
+			"[enabled]",
 			cmd_terminal_delay_comp);
 
 #ifdef LOG_EN_SW
@@ -817,20 +817,6 @@ static POS_POINT get_closest_point_to_time(int32_t time) {
 		cnt++;
 	}
 
-	static int sample = 0;
-	if (m_pos_history_print) {
-		commands_printf("Age: %d ms Ind: %d, Diff: %d ms PPS_CNT: %d",
-				m_ms_today - time, cnt, min_diff, m_pps_cnt);
-		if (sample == 0) {
-			commands_init_plot("Sample", "Age Difference (ms)");
-			commands_plot_add_graph("Delay");
-			commands_plot_set_graph(0);
-		}
-		commands_send_plot_points(sample++, m_ms_today - time);
-	} else {
-		sample = 0;
-	}
-
 	return m_pos_history[ind_use];
 }
 
@@ -839,6 +825,22 @@ static void correct_pos_gps(POS_STATE *pos) {
 	pos->gps_corr_cnt = sqrtf(SQ(pos->px_gps - pos->px_gps_last) +
 			SQ(pos->py_gps - pos->py_gps_last));
 #endif
+
+	{
+		static int sample = 0;
+		if (m_pos_history_print) {
+			int32_t diff = m_ms_today - pos->gps_ms;
+			commands_printf("Age: %d ms, PPS_CNT: %d", diff, m_pps_cnt);
+			if (sample == 0) {
+				commands_init_plot("Sample", "Age (ms)");
+				commands_plot_add_graph("Delay");
+				commands_plot_set_graph(0);
+			}
+			commands_send_plot_points(sample++, diff);
+		} else {
+			sample = 0;
+		}
+	}
 
 	// Angle
 	if (fabsf(pos->speed * 3.6) > 0.5 || 1) {
@@ -860,33 +862,35 @@ static void correct_pos_gps(POS_STATE *pos) {
 	POS_POINT closest = get_closest_point_to_time(m_en_delay_comp ? pos->gps_ms : m_ms_today);
 	POS_POINT closest_corr = closest;
 
-	static int sample = 0;
-	static int ms_before = 0;
-	if (m_gps_corr_print) {
-		float diff = utils_point_distance(closest.px, closest.py, pos->px_gps, pos->py_gps) * 100.0;
+	{
+		static int sample = 0;
+		static int ms_before = 0;
+		if (m_gps_corr_print) {
+			float diff = utils_point_distance(closest.px, closest.py, pos->px_gps, pos->py_gps) * 100.0;
 
-		commands_printf("Diff: %.1f cm, Speed: %.1f km/h, Yaw: %.1f",
-				(double)diff, (double)(m_pos.speed * 3.6), (double)m_pos.yaw);
+			commands_printf("Diff: %.1f cm, Speed: %.1f km/h, Yaw: %.1f",
+					(double)diff, (double)(m_pos.speed * 3.6), (double)m_pos.yaw);
 
-		if (sample == 0) {
-			commands_init_plot("Time (s)", "Value");
-			commands_plot_add_graph("Diff (cm)");
-			commands_plot_add_graph("Speed (0.1 * km/h)");
-			commands_plot_add_graph("Yaw (degrees)");
+			if (sample == 0) {
+				commands_init_plot("Time (s)", "Value");
+				commands_plot_add_graph("Diff (cm)");
+				commands_plot_add_graph("Speed (0.1 * km/h)");
+				commands_plot_add_graph("Yaw (degrees)");
+			}
+
+			sample += pos->gps_ms - ms_before;
+
+			commands_plot_set_graph(0);
+			commands_send_plot_points((float)sample / 1000.0, diff);
+			commands_plot_set_graph(1);
+			commands_send_plot_points((float)sample / 1000.0, m_pos.speed * 3.6 * 10);
+			commands_plot_set_graph(2);
+			commands_send_plot_points((float)sample / 1000.0, m_pos.yaw);
+		} else {
+			sample = 0;
 		}
-
-		sample += pos->gps_ms - ms_before;
-
-		commands_plot_set_graph(0);
-		commands_send_plot_points((float)sample / 1000.0, diff);
-		commands_plot_set_graph(1);
-		commands_send_plot_points((float)sample / 1000.0, m_pos.speed * 3.6 * 10);
-		commands_plot_set_graph(2);
-		commands_send_plot_points((float)sample / 1000.0, m_pos.yaw);
-	} else {
-		sample = 0;
+		ms_before = pos->gps_ms;
 	}
-	ms_before = pos->gps_ms;
 
 	utils_step_towards(&closest_corr.px, pos->px_gps, gain);
 	utils_step_towards(&closest_corr.py, pos->py_gps, gain);

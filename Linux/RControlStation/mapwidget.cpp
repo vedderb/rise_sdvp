@@ -1568,8 +1568,10 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
         painter.setTransform(drawTrans);
 
         for (int i = 1;i < routeNow.size();i++) {
+            painter.setOpacity(0.7);
             painter.drawLine(routeNow[i - 1].getX() * 1000.0, routeNow[i - 1].getY() * 1000.0,
                     routeNow[i].getX() * 1000.0, routeNow[i].getY() * 1000.0);
+            painter.setOpacity(1.0);
         }
 
         for (int i = 0;i < routeNow.size();i++) {

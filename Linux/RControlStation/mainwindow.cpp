@@ -1796,6 +1796,8 @@ void MainWindow::on_mapSaveAsPdfButton_clicked()
     ui->mapWidget->printPdf(filename,
                             ui->mapSaveWBox->value(),
                             ui->mapSaveHBox->value());
+
+    mLastImgFileName = filename;
 }
 
 void MainWindow::on_mapSaveAsPngButton_clicked()
@@ -1816,4 +1818,23 @@ void MainWindow::on_mapSaveAsPngButton_clicked()
     ui->mapWidget->printPng(filename,
                             ui->mapSaveWBox->value(),
                             ui->mapSaveHBox->value());
+
+    mLastImgFileName = filename;
+}
+
+void MainWindow::on_mapSaveRetakeButton_clicked()
+{
+    if (mLastImgFileName.toLower().endsWith(".pdf")) {
+        ui->mapWidget->printPdf(mLastImgFileName,
+                                ui->mapSaveWBox->value(),
+                                ui->mapSaveHBox->value());
+    } else if (mLastImgFileName.toLower().endsWith(".png")) {
+        ui->mapWidget->printPng(mLastImgFileName,
+                                ui->mapSaveWBox->value(),
+                                ui->mapSaveHBox->value());
+    } else {
+        QMessageBox::critical(this, "Retake Image",
+                              "No image has been taken yet, so a retake "
+                              "is not possible.");
+    }
 }
