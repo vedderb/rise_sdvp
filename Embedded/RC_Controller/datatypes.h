@@ -388,6 +388,25 @@ typedef struct {
 	float diff_age;
 } nmea_gga_info_t;
 
+typedef struct {
+	int prn;
+	float elevation;
+	float azimuth;
+	float snr;
+	bool lock;
+	float base_snr;
+	bool base_lock;
+	bool local_lock;
+} nmea_gsv_sat_t;
+
+typedef struct {
+	int sat_num;
+	int sentences;
+	int sat_last;
+	int sat_num_base;
+	nmea_gsv_sat_t sats[32];
+} nmea_gsv_info_t;
+
 // ============== UBLOX Datatypes ================== //
 
 typedef struct {

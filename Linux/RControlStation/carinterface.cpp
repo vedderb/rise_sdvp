@@ -551,6 +551,8 @@ void CarInterface::plotAddGraphReceived(quint8 id, QString name)
             mExperimentPlots.last().color = "magenta";
         } else if (mExperimentPlots.size() == 4) {
             mExperimentPlots.last().color = "darkgreen";
+        } else if (mExperimentPlots.size() == 5) {
+            mExperimentPlots.last().color = "cyan";
         } else {
             mExperimentPlots.last().color = "blue";
         }

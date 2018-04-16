@@ -41,5 +41,6 @@ void pos_set_ms_today(int32_t ms);
 bool pos_input_nmea(const char *data);
 void pos_reset_attitude(void);
 int pos_time_since_gps_corr(void);
+void pos_base_rtcm_obs(rtcm_obs_header_t *header, rtcm_obs_t *obs, int obs_num);
 
 #endif /* POS_H_ */

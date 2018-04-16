@@ -32,7 +32,6 @@
 #include "log.h"
 #include "radar.h"
 #include "ublox.h"
-#include "rtcm3_simple.h"
 #include "comm_cc1120.h"
 #include "mr_control.h"
 #include "adconv.h"
@@ -60,16 +59,16 @@ static void rtcm_rx(uint8_t *data, int len, int type);
 static void rtcm_base_rx(rtcm_ref_sta_pos_t *pos);
 
 // Private variables
-static rtcm3_state rtcm_state;
+static rtcm3_state m_rtcm_state;
 
 void commands_init(void) {
 	m_send_func = 0;
 	chMtxObjectInit(&m_print_gps);
 	chVTObjectInit(&vt);
 
-	rtcm3_init_state(&rtcm_state);
-	rtcm3_set_rx_callback(rtcm_rx, &rtcm_state);
-	rtcm3_set_rx_callback_1005_1006(rtcm_base_rx, &rtcm_state);
+	rtcm3_init_state(&m_rtcm_state);
+	rtcm3_set_rx_callback(rtcm_rx, &m_rtcm_state);
+	rtcm3_set_rx_callback_1005_1006(rtcm_base_rx, &m_rtcm_state);
 
 #if MAIN_MODE != MAIN_MODE_CAR
 	(void)stop_forward;
@@ -123,7 +122,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 	if (data[0] == RTCM3PREAMB) {
 		for (unsigned int i = 0;i < len;i++) {
-			rtcm3_input_data(data[i], &rtcm_state);
+			rtcm3_input_data(data[i], &m_rtcm_state);
 		}
 		return;
 	}
@@ -351,7 +350,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 		case CMD_SEND_RTCM_USB: {
 			for (unsigned int i = 0;i < len;i++) {
-				rtcm3_input_data(data[i], &rtcm_state);
+				rtcm3_input_data(data[i], &m_rtcm_state);
 			}
 		} break;
 
@@ -1199,4 +1198,8 @@ static void rtcm_base_rx(rtcm_ref_sta_pos_t *pos) {
 	if (main_config.gps_use_rtcm_base_as_enu_ref) {
 		pos_set_enu_ref(pos->lat, pos->lon, pos->height);
 	}
+}
+
+rtcm3_state* commands_get_rtcm3_state(void) {
+	return &m_rtcm_state;
 }

@@ -62,11 +62,16 @@ static bool m_pos_history_print;
 static bool m_gps_corr_print;
 static bool m_en_delay_comp;
 static int32_t m_pps_cnt;
+static nmea_gsv_info_t m_gpgsv_last;
+static nmea_gsv_info_t m_glgsv_last;
+static int m_print_sat_prn;
 
 // Private functions
 static void cmd_terminal_delay_info(int argc, const char **argv);
 static void cmd_terminal_gps_corr_info(int argc, const char **argv);
 static void cmd_terminal_delay_comp(int argc, const char **argv);
+static void cmd_terminal_print_sat_info(int argc, const char **argv);
+static void cmd_terminal_sat_info(int argc, const char **argv);
 static void mpu9150_read(void);
 static void update_orientation_angles(float *accel, float *gyro, float *mag, float dt);
 static void init_gps_local(GPS_STATE *gps);
@@ -74,6 +79,7 @@ static void ublox_relposned_rx(ubx_nav_relposned *pos);
 static void save_pos_history(void);
 static POS_POINT get_closest_point_to_time(int32_t time);
 static void correct_pos_gps(POS_STATE *pos);
+static void ubx_rx_rawx(ubx_rxm_rawx *rawx);
 
 #if MAIN_MODE == MAIN_MODE_CAR
 static void mc_values_received(mc_values *val);
@@ -101,6 +107,9 @@ void pos_init(void) {
 	m_en_delay_comp = true;
 	m_pps_cnt = 0;
 	m_yaw_offset_gps = 0.0;
+	memset(&m_gpgsv_last, 0, sizeof(m_gpgsv_last));
+	memset(&m_glgsv_last, 0, sizeof(m_glgsv_last));
+	m_print_sat_prn = 0;
 
 	m_ms_today = -1;
 	chMtxObjectInit(&m_mutex_pos);
@@ -125,6 +134,7 @@ void pos_init(void) {
 
 	mpu9150_set_read_callback(mpu9150_read);
 	ublox_set_rx_callback_relposned(ublox_relposned_rx);
+	ublox_set_rx_callback_rawx(ubx_rx_rawx);
 
 #if MAIN_MODE == MAIN_MODE_CAR
 	bldc_interface_set_rx_value_func(mc_values_received);
@@ -163,6 +173,20 @@ void pos_init(void) {
 			"  1 - Enabled",
 			"[enabled]",
 			cmd_terminal_delay_comp);
+
+	terminal_register_command_callback(
+			"pos_print_sat_info",
+			"Print all satellite information.",
+			0,
+			cmd_terminal_print_sat_info);
+
+	terminal_register_command_callback(
+			"pos_sat_info",
+			"Print and plot information about a satellite.\n"
+			"  0 - Disabled\n"
+			"  prn - satellite with prn.",
+			"[prn]",
+			cmd_terminal_sat_info);
 
 #ifdef LOG_EN_SW
 	palSetPadMode(GPIOD, 3, PAL_MODE_INPUT_PULLUP);
@@ -339,7 +363,19 @@ void pos_set_ms_today(int32_t ms) {
 
 bool pos_input_nmea(const char *data) {
 	nmea_gga_info_t gga;
-	int nmea_res = utils_decode_nmea_gga(data, &gga);
+	static nmea_gsv_info_t gpgsv;
+	static nmea_gsv_info_t glgsv;
+	int gga_res = utils_decode_nmea_gga(data, &gga);
+	int gpgsv_res = utils_decode_nmea_gsv("GP", data, &gpgsv);
+	int glgsv_res = utils_decode_nmea_gsv("GL", data, &glgsv);
+
+	if (gpgsv_res == 1) {
+		utils_sync_nmea_gsv_info(&m_gpgsv_last, &gpgsv);
+	}
+
+	if (glgsv_res == 1) {
+		utils_sync_nmea_gsv_info(&m_glgsv_last, &glgsv);
+	}
 
 	if (gga.t_tow >= 0) {
 		m_nma_last_time = gga.t_tow;
@@ -439,7 +475,7 @@ bool pos_input_nmea(const char *data) {
 		chMtxUnlock(&m_mutex_gps);
 	}
 
-	return nmea_res >= 0;
+	return gga_res >= 0;
 }
 
 void pos_reset_attitude(void) {
@@ -454,6 +490,84 @@ void pos_reset_attitude(void) {
  */
 int pos_time_since_gps_corr(void) {
 	return ST2MS(chVTTimeElapsedSinceX(m_pos.gps_corr_time));
+}
+
+void pos_base_rtcm_obs(rtcm_obs_header_t *header, rtcm_obs_t *obs, int obs_num) {
+	float snr = 0.0;
+	float snr_base = 0.0;
+	bool lock = false;
+	bool lock_base = false;
+	float elevation = 0.0;
+	bool found = false;
+
+	if (header->type == 1002 || header->type == 1004) {
+		m_gpgsv_last.sat_num_base = obs_num;
+
+		for (int i = 0;i < obs_num;i++) {
+			for (int j = 0;j < m_gpgsv_last.sat_num;j++) {
+				if (m_gpgsv_last.sats[j].prn == obs[i].prn) {
+					m_gpgsv_last.sats[j].base_snr = obs[i].cn0[0];
+					m_gpgsv_last.sats[j].base_lock = obs[i].lock[0] == 127;
+
+					if (m_gpgsv_last.sats[j].prn == m_print_sat_prn) {
+						snr = m_gpgsv_last.sats[j].snr;
+						snr_base = m_gpgsv_last.sats[j].base_snr;
+						lock = m_gpgsv_last.sats[j].local_lock;
+						lock_base = m_gpgsv_last.sats[j].base_lock;
+						elevation = m_gpgsv_last.sats[j].elevation;
+						found = true;
+					}
+				}
+			}
+		}
+	} else if (header->type == 1010 || header->type == 1012) {
+		m_glgsv_last.sat_num_base = obs_num;
+
+		for (int i = 0;i < obs_num;i++) {
+			for (int j = 0;j < m_glgsv_last.sat_num;j++) {
+				if (m_glgsv_last.sats[j].prn == (obs[i].prn + 64)) {
+					m_glgsv_last.sats[j].base_snr = obs[i].cn0[0];
+					m_glgsv_last.sats[j].base_lock = obs[i].lock[0] == 127;
+
+					if (m_glgsv_last.sats[j].prn == m_print_sat_prn) {
+						snr = m_glgsv_last.sats[j].snr;
+						snr_base = m_glgsv_last.sats[j].base_snr;
+						lock = m_glgsv_last.sats[j].local_lock;
+						lock_base = m_glgsv_last.sats[j].base_lock;
+						elevation = m_glgsv_last.sats[j].elevation;
+						found = true;
+					}
+				}
+			}
+		}
+	}
+
+	if (found) {
+		static int sample = 0;
+		static int print_before = 0;
+		if (m_print_sat_prn) {
+			if (print_before == 0) {
+				sample = 0;
+			}
+
+			commands_plot_set_graph(0);
+			commands_send_plot_points((float)sample, snr);
+			commands_plot_set_graph(1);
+			commands_send_plot_points((float)sample, snr_base);
+			commands_plot_set_graph(2);
+			commands_send_plot_points((float)sample, (float)lock * 20.0);
+			commands_plot_set_graph(3);
+			commands_send_plot_points((float)sample, (float)lock_base * 20.0);
+			commands_plot_set_graph(4);
+			commands_send_plot_points((float)sample, elevation);
+
+			commands_printf("SNR: %.0f, SNR Base: %.0f, Lock: %d. Lock Base: %d, Elevation: %.0f",
+					(double)snr, (double)snr_base, lock, lock_base, (double)elevation);
+
+			sample++;
+		}
+		print_before = m_print_sat_prn;
+	}
 }
 
 static void cmd_terminal_delay_info(int argc, const char **argv) {
@@ -498,6 +612,96 @@ static void cmd_terminal_delay_comp(int argc, const char **argv) {
 			commands_printf("OK\n");
 		} else {
 			commands_printf("Invalid argument %s\n", argv[1]);
+		}
+	} else {
+		commands_printf("Wrong number of arguments\n");
+	}
+}
+
+static void cmd_terminal_print_sat_info(int argc, const char **argv) {
+	(void)argc;
+	(void)argv;
+
+	commands_printf(
+			"=== LOCAL ===\n"
+			"Sats tot     : %d\n"
+			"Sats GPS     : %d\n"
+			"Sats GLONASS : %d\n"
+			"=== BASE ===\n"
+			"Sats tot     : %d\n"
+			"Sats GPS     : %d\n"
+			"Sats GLONASS : %d",
+			m_gpgsv_last.sat_num + m_glgsv_last.sat_num,
+			m_gpgsv_last.sat_num,
+			m_glgsv_last.sat_num,
+			m_gpgsv_last.sat_num_base + m_glgsv_last.sat_num_base,
+			m_gpgsv_last.sat_num_base,
+			m_glgsv_last.sat_num_base);
+
+	commands_printf("====== GPS ======");
+
+	for (int i = 0;i < m_gpgsv_last.sat_num;i++) {
+		commands_printf(
+				"PRN       : %d\n"
+				"Elevation : %.1f\n"
+				"Azimuth   : %.1f\n"
+				"SNR       : %.1f\n"
+				"Base SNR  : %.1f\n"
+				"Base Lock : %d\n"
+				"Local Lock: %d\n"
+				"=========",
+				m_gpgsv_last.sats[i].prn,
+				(double)m_gpgsv_last.sats[i].elevation,
+				(double)m_gpgsv_last.sats[i].azimuth,
+				(double)m_gpgsv_last.sats[i].snr,
+				(double)m_gpgsv_last.sats[i].base_snr,
+				m_gpgsv_last.sats[i].base_lock,
+				m_gpgsv_last.sats[i].local_lock);
+	}
+
+	commands_printf("====== GLONASS ======");
+
+	for (int i = 0;i < m_glgsv_last.sat_num;i++) {
+		commands_printf(
+				"PRN       : %d\n"
+				"Elevation : %.1f\n"
+				"Azimuth   : %.1f\n"
+				"SNR       : %.1f\n"
+				"Base SNR  : %.1f\n"
+				"Base Lock : %d\n"
+				"Local Lock: %d\n"
+				"=========",
+				m_glgsv_last.sats[i].prn,
+				(double)m_glgsv_last.sats[i].elevation,
+				(double)m_glgsv_last.sats[i].azimuth,
+				(double)m_glgsv_last.sats[i].snr,
+				(double)m_glgsv_last.sats[i].base_snr,
+				m_glgsv_last.sats[i].base_lock,
+				m_glgsv_last.sats[i].local_lock);
+	}
+}
+
+static void cmd_terminal_sat_info(int argc, const char **argv) {
+	if (argc == 2) {
+		int n = -1;
+		sscanf(argv[1], "%d", &n);
+
+		if (n < 0) {
+			commands_printf("Invalid argument\n");
+		} else {
+			if (n > 0) {
+				commands_printf("OK. Printing and plotting information satellite %d\n", n);
+				commands_init_plot("Sample", "Value");
+				commands_plot_add_graph("SNR");
+				commands_plot_add_graph("Base SNR");
+				commands_plot_add_graph("Lock");
+				commands_plot_add_graph("Base Lock");
+				commands_plot_add_graph("Elevation");
+			} else {
+				commands_printf("OK. Not printing satellite information.\n", n);
+			}
+
+			m_print_sat_prn = n;
 		}
 	} else {
 		commands_printf("Wrong number of arguments\n");
@@ -968,6 +1172,26 @@ static void correct_pos_gps(POS_STATE *pos) {
 	utils_truncate_number_abs(&pos->tilt_roll_err, main_config.mr.max_tilt_error);
 	utils_truncate_number_abs(&pos->tilt_pitch_err, main_config.mr.max_tilt_error);
 #endif
+}
+
+static void ubx_rx_rawx(ubx_rxm_rawx *rawx) {
+	for (int i = 0;i < rawx->num_meas;i++) {
+		ubx_rxm_rawx_obs *raw_obs = &rawx->obs[i];
+
+		if (raw_obs->gnss_id == 0) {
+			for (int j = 0;j < m_gpgsv_last.sat_num;j++) {
+				if (m_gpgsv_last.sats[j].prn == raw_obs->sv_id) {
+					m_gpgsv_last.sats[j].local_lock = raw_obs->locktime > 2000;
+				}
+			}
+		} else if (raw_obs->gnss_id == 6) {
+			for (int j = 0;j < m_glgsv_last.sat_num;j++) {
+				if (m_glgsv_last.sats[j].prn == (raw_obs->sv_id + 64)) {
+					m_glgsv_last.sats[j].local_lock = raw_obs->locktime > 2000;
+				}
+			}
+		}
+	}
 }
 
 #if MAIN_MODE == MAIN_MODE_CAR

@@ -33,7 +33,7 @@
 #include <math.h>
 
 // Settings
-#define CALLBACK_LEN						25
+#define CALLBACK_LEN						40
 
 // Private types
 typedef struct _terminal_callback_struct {

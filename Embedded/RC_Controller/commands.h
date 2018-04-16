@@ -26,6 +26,7 @@
 #define COMMANDS_H_
 
 #include "conf_general.h"
+#include "rtcm3_simple.h"
 
 // Functions
 void commands_init(void);
@@ -43,5 +44,6 @@ void commands_plot_set_graph(int graph);
 void commands_send_plot_points(float x, float y);
 void commands_send_radar_samples(float *dists, int num);
 void commands_send_dw_sample(DW_LOG_INFO *dw);
+rtcm3_state* commands_get_rtcm3_state(void);
 
 #endif /* COMMANDS_H_ */

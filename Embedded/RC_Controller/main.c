@@ -136,6 +136,10 @@ int main(void) {
 	motor_sim_set_running(main_config.car.simulate_motor);
 #endif
 
+#if MAIN_MODE_IS_VEHICLE
+	rtcm3_set_rx_callback_obs(pos_base_rtcm_obs, commands_get_rtcm3_state());
+#endif
+
 	timeout_configure(2000, 20.0);
 	log_set_rate(main_config.log_rate_hz);
 	log_set_enabled(main_config.log_en);

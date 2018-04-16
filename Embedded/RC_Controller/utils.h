@@ -58,6 +58,8 @@ void utils_byte_to_binary(int x, char *b);
 bool utils_time_before(int32_t t1, int32_t t2);
 void utils_ms_to_hhmmss(int ms, int *hh, int *mm, int *ss);
 int utils_decode_nmea_gga(const char *data, nmea_gga_info_t *gga);
+int utils_decode_nmea_gsv(const char *system_str, const char *data, nmea_gsv_info_t *gsv_info);
+void utils_sync_nmea_gsv_info(nmea_gsv_info_t *old_info, nmea_gsv_info_t *new_info);
 void utils_sys_lock_cnt(void);
 void utils_sys_unlock_cnt(void);
 

@@ -844,7 +844,7 @@ void utils_ms_to_hhmmss(int ms, int *hh, int *mm, int *ss) {
  * Decode NMEA GGA message.
  *
  * @param data
- * NMEA string
+ * NMEA string.
  *
  * @param gga
  * GGA struct to fill.
@@ -1008,6 +1008,175 @@ int utils_decode_nmea_gga(const char *data, nmea_gga_info_t *gga) {
 	gga->diff_age = diff_age;
 
 	return dec_fields;
+}
+
+/**
+ * Decode NMEA GSV message.
+ *
+ * @param system_str
+ * Satellite system string:
+ * GP: GPS
+ * GN: GLONASS
+ * GA: GALILEO
+ *
+ * @param data
+ * NMEA string.
+ *
+ * @param gsv_info
+ * GSV struct to fill.
+ *
+ * @return
+ * -2: Unknown error
+ * -1: Wrong type (not gsv)
+ * 0: Decode ok, waiting for more sentences
+ * 1: All sentences decoded, data ready to be used
+ */
+int utils_decode_nmea_gsv(const char *system_str, const char *data, nmea_gsv_info_t *gsv_info) {
+	int retval = -2;
+	static char nmea_str[1024];
+
+	bool found = false;
+	int len = strlen(data);
+
+	for (int i = 0;i < 10;i++) {
+		if ((i + 7) >= len) {
+			break;
+		}
+
+		if (    data[i] == system_str[0] &&
+				data[i + 1] == system_str[1] &&
+				data[i + 2] == 'G' &&
+				data[i + 3] == 'S' &&
+				data[i + 4] == 'V' &&
+				data[i + 5] == ',') {
+			found = true;
+			strcpy(nmea_str, data + i + 6);
+			break;
+		}
+	}
+
+	if (found) {
+		char *gsv, *str;
+		int ind = 0;
+
+		str = nmea_str;
+		gsv = strsep(&str, ",");
+
+		while (gsv != 0) {
+			if (gsv[0] == '*') {
+				break;
+			}
+
+			switch (ind) {
+			case 0: {
+				// Number of sentences
+				if (sscanf(gsv, "%d", &(gsv_info->sentences)) != 1) {
+					gsv_info->sentences = 0;
+				}
+			} break;
+
+			case 1: {
+				// Sentence now
+				int sentence = 0;
+				if (sscanf(gsv, "%d", &sentence) != 1) {
+					sentence = 0;
+				}
+
+				if (sentence == 1) {
+					gsv_info->sat_last = 0;
+				}
+			} break;
+
+			case 2: {
+				// Sats
+				if (sscanf(gsv, "%d", &(gsv_info->sat_num)) != 1) {
+					gsv_info->sat_num = 0;
+				}
+			} break;
+
+			case 3: {
+				// PRN
+				if (gsv_info->sat_last < 32) {
+					int prn = 0;
+					sscanf(gsv, "%d", &prn);
+					gsv_info->sats[gsv_info->sat_last].prn = prn;
+				}
+			} break;
+
+			case 4: {
+				// Elevation
+				if (gsv_info->sat_last < 32) {
+					float elev = 0.0;
+					sscanf(gsv, "%f", &elev);
+					gsv_info->sats[gsv_info->sat_last].elevation = elev;
+				}
+			} break;
+
+			case 5: {
+				// Azimuth
+				if (gsv_info->sat_last < 32) {
+					float azimuth = 0.0;
+					sscanf(gsv, "%f", &azimuth);
+					gsv_info->sats[gsv_info->sat_last].azimuth = azimuth;
+				}
+			} break;
+
+			case 6: {
+				// SNR
+				if (gsv_info->sat_last < 32) {
+					float snr = 0.0;
+					sscanf(gsv, "%f", &snr);
+					gsv_info->sats[gsv_info->sat_last].snr = snr;
+					gsv_info->sat_last++;
+					ind = 2;
+				}
+			} break;
+
+			default:
+				break;
+			}
+
+			gsv = strsep(&str, ",");
+			ind++;
+		}
+
+		if (gsv_info->sat_last == gsv_info->sat_num) {
+			retval = 1;
+		} else {
+			retval = 0;
+		}
+	} else {
+		retval = -1;
+	}
+
+	return retval;
+}
+
+/**
+ * Synchronize nmea gsv info structs.
+ *
+ * @param old_info
+ * The info struct to update.
+ *
+ * @param new_info
+ * The new info struct to take data from.
+ */
+void utils_sync_nmea_gsv_info(nmea_gsv_info_t *old_info, nmea_gsv_info_t *new_info) {
+	for (int i = 0;i < new_info->sat_num;i++) {
+		for (int j = 0;j < old_info->sat_num;j++) {
+			if (new_info->sats[i].prn == old_info->sats[j].prn) {
+				new_info->sats[i].base_lock = old_info->sats[j].base_lock;
+				new_info->sats[i].base_snr = old_info->sats[j].base_snr;
+				new_info->sats[i].local_lock = old_info->sats[j].local_lock;
+			}
+		}
+
+		old_info->sats[i] = new_info->sats[i];
+	}
+
+	old_info->sentences = new_info->sentences;
+	old_info->sat_num = new_info->sat_num;
+	old_info->sat_last = new_info->sat_last;
 }
 
 /**

@@ -295,8 +295,9 @@ void ublox_init(void) {
 	tp5.ant_cable_delay = 50;
 	ublox_cfg_tp5(&tp5);
 
-	// Switch in RELPOSNED messages
+	// Switch on RELPOSNED and RAWX messages
 	ublox_cfg_msg(UBX_CLASS_NAV, UBX_NAV_RELPOSNED, 1);
+	ublox_cfg_msg(UBX_CLASS_RXM, UBX_RXM_RAWX, 1);
 }
 
 void ublox_send(unsigned char *data, unsigned int len) {
