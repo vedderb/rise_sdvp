@@ -503,6 +503,11 @@ void pos_base_rtcm_obs(rtcm_obs_header_t *header, rtcm_obs_t *obs, int obs_num) 
 	if (header->type == 1002 || header->type == 1004) {
 		m_gpgsv_last.sat_num_base = obs_num;
 
+		for (int j = 0;j < m_gpgsv_last.sat_num;j++) {
+			m_gpgsv_last.sats[j].base_snr = -1;
+			m_gpgsv_last.sats[j].base_lock = false;
+		}
+
 		for (int i = 0;i < obs_num;i++) {
 			for (int j = 0;j < m_gpgsv_last.sat_num;j++) {
 				if (m_gpgsv_last.sats[j].prn == obs[i].prn) {
@@ -522,6 +527,11 @@ void pos_base_rtcm_obs(rtcm_obs_header_t *header, rtcm_obs_t *obs, int obs_num) 
 		}
 	} else if (header->type == 1010 || header->type == 1012) {
 		m_glgsv_last.sat_num_base = obs_num;
+
+		for (int j = 0;j < m_glgsv_last.sat_num;j++) {
+			m_glgsv_last.sats[j].base_snr = -1;
+			m_glgsv_last.sats[j].base_lock = false;
+		}
 
 		for (int i = 0;i < obs_num;i++) {
 			for (int j = 0;j < m_glgsv_last.sat_num;j++) {
