@@ -552,14 +552,14 @@ void pos_base_rtcm_obs(rtcm_obs_header_t *header, rtcm_obs_t *obs, int obs_num) 
 		}
 	}
 
-	if (found) {
-		static int sample = 0;
-		static int print_before = 0;
-		if (m_print_sat_prn) {
-			if (print_before == 0) {
-				sample = 0;
-			}
+	static int print_before = 0;
+	static int sample = 0;
+	if (print_before == 0) {
+		sample = 0;
+	}
 
+	if (found) {
+		if (m_print_sat_prn) {
 			commands_plot_set_graph(0);
 			commands_send_plot_points((float)sample, snr);
 			commands_plot_set_graph(1);
@@ -576,8 +576,9 @@ void pos_base_rtcm_obs(rtcm_obs_header_t *header, rtcm_obs_t *obs, int obs_num) 
 
 			sample++;
 		}
-		print_before = m_print_sat_prn;
 	}
+
+	print_before = m_print_sat_prn;
 }
 
 static void cmd_terminal_delay_info(int argc, const char **argv) {
