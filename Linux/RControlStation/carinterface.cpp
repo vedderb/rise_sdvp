@@ -114,6 +114,8 @@ CarInterface::CarInterface(QWidget *parent) :
             [=]() {mExperimentReplot = true;});
     connect(ui->experimentGraph4Button, &QPushButton::toggled,
             [=]() {mExperimentReplot = true;});
+    connect(ui->experimentGraph5Button, &QPushButton::toggled,
+            [=]() {mExperimentReplot = true;});
 }
 
 CarInterface::~CarInterface()
@@ -403,6 +405,7 @@ void CarInterface::timerSlot()
             case 1: if (!ui->experimentGraph2Button->isChecked()) {continue;} break;
             case 2: if (!ui->experimentGraph3Button->isChecked()) {continue;} break;
             case 3: if (!ui->experimentGraph4Button->isChecked()) {continue;} break;
+            case 4: if (!ui->experimentGraph5Button->isChecked()) {continue;} break;
             default: break;
             }
 
