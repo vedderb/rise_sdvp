@@ -275,7 +275,7 @@ void NetworkInterface::processData(const QByteArray &data)
     }
 
     // Clear buffer if no message part is present
-    if (mRxBuffer.indexOf("<message>") < 0) {
+    if (mRxBuffer.size() > 9 && mRxBuffer.indexOf("<message>") < 0) {
         mRxBuffer.clear();
     }
 }
