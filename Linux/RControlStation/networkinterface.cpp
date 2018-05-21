@@ -141,6 +141,35 @@ void NetworkInterface::sendEnuRef(quint8 id, double lat, double lon, double heig
     sendData(data);
 }
 
+void NetworkInterface::sendRoute(quint8 id, QList<LocPoint> route)
+{
+    if (ui->noForwardStateBox->isChecked()) {
+        return;
+    }
+
+    QByteArray data;
+    QXmlStreamWriter stream(&data);
+    stream.setAutoFormatting(true);
+
+    stream.writeStartDocument();
+    stream.writeStartElement("message");
+    stream.writeStartElement("getRoute");
+
+    stream.writeTextElement("id", QString::number(id));
+
+    for (LocPoint p: route) {
+        stream.writeStartElement("point");
+        stream.writeTextElement("px", QString::number(p.getX()));
+        stream.writeTextElement("py", QString::number(p.getY()));
+        stream.writeTextElement("speed", QString::number(p.getSpeed()));
+        stream.writeTextElement("time", QString::number(p.getTime()));
+        stream.writeEndElement();
+    }
+
+    stream.writeEndDocument();
+    sendData(data);
+}
+
 void NetworkInterface::sendError(const QString &txt, const QString &cmd)
 {
     QByteArray data;
@@ -159,6 +188,21 @@ void NetworkInterface::sendError(const QString &txt, const QString &cmd)
     sendData(data);
 
     qWarning() << "NetworkIf:" << cmd << ":" << txt;
+}
+
+void NetworkInterface::sendAck(const QString &cmd)
+{
+    QByteArray data;
+    QXmlStreamWriter stream(&data);
+    stream.setAutoFormatting(true);
+
+    stream.writeStartDocument();
+    stream.writeStartElement("message");
+    stream.writeStartElement("ack");
+    stream.writeTextElement("command", cmd);
+
+    stream.writeEndDocument();
+    sendData(data);
 }
 
 void NetworkInterface::tcpDataRx(const QByteArray &data)
@@ -325,6 +369,8 @@ void NetworkInterface::processXml(const QByteArray &xml)
         } else if (name == "addRoutePoint" || name == "replaceRoute") {
             quint8 id = 0;
             bool ok = true;
+            bool mapOnly = false;
+            int mapRoute = -1;
 
             QList<LocPoint> route;
             LocPoint p;
@@ -342,6 +388,10 @@ void NetworkInterface::processXml(const QByteArray &xml)
                     p.setSpeed(stream.readElementText().toDouble());
                 } else if (name2 == "time") {
                     p.setTime(stream.readElementText().toInt());
+                } else if (name2 == "mapOnly") {
+                    mapOnly = stream.readElementText().toInt();
+                } else if (name2 == "mapRoute") {
+                    mapRoute = stream.readElementText().toInt();
                 } else if (name2 == "point") {
                     while (stream.readNextStartElement()) {
                         QString name3 = stream.name().toString();
@@ -385,27 +435,84 @@ void NetworkInterface::processXml(const QByteArray &xml)
                 route.append(p);
             }
 
-            if (!ui->disableSendCarBox->isChecked() && mPacketInterface) {
+            if (!mapOnly && !ui->disableSendCarBox->isChecked() && mPacketInterface) {
                 if (name == "addRoutePoint") {
                     if (!mPacketInterface->setRoutePoints(id, route)) {
+                        ok = false;
                         sendError("No ACK received from car. Make sure that the car connection "
                                   "works.", name);
                     }
                 } else {
                     if (!mPacketInterface->replaceRoute(id, route)) {
+                        ok = false;
                         sendError("No ACK received from car. Make sure that the car connection "
                                   "works.", name);
                     }
                 }
             }
 
-            if (mMap && ui->plotRouteMapBox->isChecked()) {
+            if (mMap && (ui->plotRouteMapBox->isChecked() || mapOnly) && mapRoute != -2) {
+                int mapRouteLast = mMap->getRouteNow();
+                if (mapRoute >= 0) {
+                    mMap->setRouteNow(mapRoute);
+                }
+
                 if (name == "replaceRoute") {
                     mMap->clearRoute();
                 }
 
                 for (LocPoint p: route) {
                     mMap->addRoutePoint(p.getX(), p.getY(), p.getSpeed(), p.getTime());
+                }
+
+                mMap->setRouteNow(mapRouteLast);
+            }
+
+            if (ok) {
+                sendAck(name);
+            }
+        } else if (name == "getRoute") {
+            quint8 id = 0;
+            bool ok = true;
+            int mapRoute = -1;
+
+            while (stream.readNextStartElement()) {
+                QString name2 = stream.name().toString();
+
+                if (name2 == "id") {
+                    id = stream.readElementText().toInt();
+                } else if (name2 == "mapRoute") {
+                    mapRoute = stream.readElementText().toInt();
+                } else {
+                    QString str;
+                    str += "argument not found: " + name2;
+                    sendError(str, name);
+                    stream.skipCurrentElement();
+                    ok = false;
+                }
+            }
+
+            if (stream.hasError()) {
+                break;
+            }
+
+            if (!ok) {
+                continue;
+            }
+            if (mapRoute >= 0) {
+                if (mMap) {
+                    sendRoute(id, mMap->getRoute(mapRoute));
+                }
+            } else {
+                if (!ui->disableSendCarBox->isChecked() && mPacketInterface) {
+                    QList<LocPoint> route;
+                    if (mPacketInterface->getRoute(id, route)) {
+                        sendRoute(id, route);
+                    } else {
+                        ok = false;
+                        sendError("Route not received from car. Make sure that the car connection "
+                                  "works.", name);
+                    }
                 }
             }
         } else if (name == "removeLastPoint") {
@@ -436,9 +543,14 @@ void NetworkInterface::processXml(const QByteArray &xml)
 
             if (!ui->disableSendCarBox->isChecked() && mPacketInterface) {
                 if (!mPacketInterface->removeLastRoutePoint(id)) {
+                    ok = false;
                     sendError("No ACK received from car. Make sure that the car connection "
                               "works.", name);
                 }
+            }
+
+            if (ok) {
+                sendAck("removeLastPoint");
             }
         } else if (name == "clearRoute") {
             quint8 id = 0;
@@ -468,9 +580,14 @@ void NetworkInterface::processXml(const QByteArray &xml)
 
             if (!ui->disableSendCarBox->isChecked() && mPacketInterface) {
                 if (!mPacketInterface->clearRoute(id)) {
+                    ok = false;
                     sendError("No ACK received from car. Make sure that the car connection "
                               "works.", name);
                 }
+            }
+
+            if (ok) {
+                sendAck("clearRoute");
             }
         } else if (name == "setAutopilotActive") {
             quint8 id = 0;
@@ -511,9 +628,14 @@ void NetworkInterface::processXml(const QByteArray &xml)
                 }
 
                 if (!mPacketInterface->setApActive(id, enabled)) {
+                    ok = false;
                     sendError("No ACK received from car. Make sure that the car connection "
                               "works.", name);
                 }
+            }
+
+            if (ok) {
+                sendAck("setAutopilotActive");
             }
         } else if (name == "getEnuRef") {
             quint8 id = 0;
@@ -596,9 +718,14 @@ void NetworkInterface::processXml(const QByteArray &xml)
                 llh[2] = height;
 
                 if (!mPacketInterface->setEnuRef(id, llh)) {
+                    ok = false;
                     sendError("No ACK received from car. Make sure that the car connection "
                               "works.", name);
                 }
+            }
+
+            if (ok) {
+                sendAck("setEnuRef");
             }
 
             if (mMap && ui->plotRouteMapBox->isChecked()) {

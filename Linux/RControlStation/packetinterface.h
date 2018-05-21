@@ -60,6 +60,9 @@ public:
                       QList<LocPoint> &points,
                       int &routeLen,
                       int retries = 10);
+    bool getRoute(quint8 id,
+                  QList<LocPoint> &points,
+                  int retries = 10);
     bool setSyncPoint(quint8 id, int point, int time, int min_time_diff,
                       bool ack = true, int retries = 10);
 

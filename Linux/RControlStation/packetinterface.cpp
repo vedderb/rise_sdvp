@@ -1064,6 +1064,22 @@ bool PacketInterface::getRoutePart(quint8 id,
     return res;
 }
 
+bool PacketInterface::getRoute(quint8 id, QList<LocPoint> &points, int retries)
+{
+    int routeLen;
+    bool ok = getRoutePart(id, points.size(), 10, points, routeLen, retries);
+
+    while (points.size() < routeLen && ok) {
+        ok = getRoutePart(id, points.size(), 10, points, routeLen, retries);
+    }
+
+    while (points.size() > routeLen) {
+        points.removeLast();
+    }
+
+    return ok;
+}
+
 bool PacketInterface::setSyncPoint(quint8 id, int point, int time, int min_time_diff,
                                    bool ack, int retries)
 {

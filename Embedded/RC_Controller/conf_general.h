@@ -65,7 +65,7 @@
 #endif
 
 // CAN settings
-#define CAN_EN_DW					0
+#define CAN_EN_DW					1
 
 // Log configuration to enable. Choose one only.
 //#define LOG_EN_CARREL

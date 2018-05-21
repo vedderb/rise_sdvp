@@ -37,4 +37,18 @@ typedef struct {
     int32_t ms_today;
 } CAR_STATE;
 
+typedef struct {
+    double px;
+    double py;
+    double speed;
+    int time;
+} ROUTE_POINT;
+
+typedef enum {
+    RC_MODE_CURRENT = 0,
+    RC_MODE_DUTY,
+    RC_MODE_PID,
+    RC_MODE_CURRENT_BRAKE
+} RC_MODE;
+
 #endif // RCONTROLSTATIONCOMM_TYPES_H

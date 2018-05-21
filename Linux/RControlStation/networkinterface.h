@@ -44,7 +44,9 @@ public:
 
     void sendState(quint8 id, const CAR_STATE &state);
     void sendEnuRef(quint8 id, double lat, double lon, double height);
+    void sendRoute(quint8 id, QList<LocPoint> route);
     void sendError(const QString &txt, const QString &cmd = "");
+    void sendAck(const QString &cmd);
 
 private slots:
     void tcpDataRx(const QByteArray &data);
