@@ -35,6 +35,7 @@ typedef struct {
     double ap_goal_py;
     double ap_rad;
     int32_t ms_today;
+    int16_t ap_route_left;
 } CAR_STATE;
 
 typedef struct {

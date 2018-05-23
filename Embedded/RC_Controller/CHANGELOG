@@ -1,3 +1,7 @@
+=== FW 8.21 ===
+* Autopilot look ahead terminal command.
+* Inclide autopilot route left in CMD_GET_STATE.
+
 === FW 8.20 ===
 * Autopilot error plotting.
 * Terminal command for enabling and disabling delay compensation.

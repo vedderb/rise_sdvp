@@ -442,6 +442,7 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         conf.car.yaw_use_odometry = data[ind++];
         conf.car.yaw_imu_gain = utility::buffer_get_double32_auto(data, &ind);
         conf.car.disable_motor = data[ind++];
+        conf.car.simulate_motor = data[ind++];
 
         conf.car.gear_ratio = utility::buffer_get_double32_auto(data, &ind);
         conf.car.wheel_diam = utility::buffer_get_double32_auto(data, &ind);
@@ -528,6 +529,14 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         double x = utility::buffer_get_double32_auto(data, &ind);
         double y = utility::buffer_get_double32_auto(data, &ind);
         emit plotDataReceived(id, x, y);
+    } break;
+
+    case CMD_PLOT_ADD_GRAPH: {
+        emit plotAddGraphReceived(id, QString::fromLocal8Bit((const char*)data));
+    } break;
+
+    case CMD_PLOT_SET_GRAPH: {
+        emit plotSetGraphReceived(id, data[0]);
     } break;
 
     case CMD_RADAR_SETUP_GET: {
@@ -630,6 +639,7 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         state.ap_goal_py = utility::buffer_get_double32(data, 1e4, &ind);
         state.ap_rad = utility::buffer_get_double32(data, 1e6, &ind);
         state.ms_today = utility::buffer_get_int32(data, &ind);
+        state.ap_route_left = utility::buffer_get_int16(data, &ind);
         emit stateReceived(id, state);
     } break;
 
@@ -873,6 +883,7 @@ bool PacketInterface::setConfiguration(quint8 id, MAIN_CONFIG &conf, int retries
     mSendBuffer[send_index++] = conf.car.yaw_use_odometry;
     utility::buffer_append_double32_auto(mSendBuffer, conf.car.yaw_imu_gain, &send_index);
     mSendBuffer[send_index++] = conf.car.disable_motor;
+    mSendBuffer[send_index++] = conf.car.simulate_motor;
 
     utility::buffer_append_double32_auto(mSendBuffer, conf.car.gear_ratio, &send_index);
     utility::buffer_append_double32_auto(mSendBuffer, conf.car.wheel_diam, &send_index);
@@ -1054,7 +1065,24 @@ bool PacketInterface::getRoutePart(quint8 id,
     return res;
 }
 
-bool PacketInterface::setSyncPoint(quint8 id, int point, int time, int min_time_diff, int retries)
+bool PacketInterface::getRoute(quint8 id, QList<LocPoint> &points, int retries)
+{
+    int routeLen;
+    bool ok = getRoutePart(id, points.size(), 10, points, routeLen, retries);
+
+    while (points.size() < routeLen && ok) {
+        ok = getRoutePart(id, points.size(), 10, points, routeLen, retries);
+    }
+
+    while (points.size() > routeLen) {
+        points.removeLast();
+    }
+
+    return ok;
+}
+
+bool PacketInterface::setSyncPoint(quint8 id, int point, int time, int min_time_diff,
+                                   bool ack, int retries)
 {
     qint32 send_index = 0;
     mSendBuffer[send_index++] = id;
@@ -1062,7 +1090,12 @@ bool PacketInterface::setSyncPoint(quint8 id, int point, int time, int min_time_
     utility::buffer_append_int32(mSendBuffer, point, &send_index);
     utility::buffer_append_int32(mSendBuffer, time, &send_index);
     utility::buffer_append_int32(mSendBuffer, min_time_diff, &send_index);
-    return sendPacketAck(mSendBuffer, send_index, retries);
+
+    if (ack) {
+        return sendPacketAck(mSendBuffer, send_index, retries);
+    } else {
+        return sendPacket(mSendBuffer, send_index);
+    }
 }
 
 bool PacketInterface::sendMoteUbxBase(int mode,

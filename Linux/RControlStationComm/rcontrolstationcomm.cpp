@@ -166,6 +166,8 @@ bool RControlStationComm::getState(int car, CAR_STATE *state, int timeoutMs)
                         state->ap_rad = stream.readElementText().toDouble();
                     } else if (name2 == "ms_today") {
                         state->ms_today = stream.readElementText().toInt();
+                    } else if (name2 == "ap_route_left") {
+                        state->ap_route_left = stream.readElementText().toInt();
                     } else {
                         qWarning() << "libRControlStation: argument not found:" << name2;
                         stream.skipCurrentElement();
@@ -341,7 +343,7 @@ bool RControlStationComm::addRoutePoints(int car, ROUTE_POINT *route, int len, b
     return waitForAck(cmd, timeoutMs);
 }
 
-bool RControlStationComm::clearRoute(int car, int timeoutMs)
+bool RControlStationComm::clearRoute(int car, int mapRoute, int timeoutMs)
 {
     if (!isTcpConnected()) {
         qWarning() << "libRControlStation: not connected";
@@ -357,6 +359,7 @@ bool RControlStationComm::clearRoute(int car, int timeoutMs)
     stream.writeStartElement("message");
     stream.writeStartElement(cmd);
     stream.writeTextElement("id", QString::number(car));
+    stream.writeTextElement("mapRoute", QString::number(mapRoute));
     stream.writeEndDocument();
 
     sendData(str.toLocal8Bit());

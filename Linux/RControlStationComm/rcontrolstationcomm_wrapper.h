@@ -20,7 +20,7 @@ bool rcsc_setEnuRef(int car, double *llh, int timeoutMs);
 bool rcsc_addRoutePoints(int car, ROUTE_POINT *route, int len,
                          bool replace, bool mapOnly,
                          int mapRoute, int timeoutMs);
-bool rcsc_clearRoute(int car, int timeoutMs);
+bool rcsc_clearRoute(int car, int mapRoute, int timeoutMs);
 bool rcsc_setAutopilotActive(int car, bool active, int timeoutMs);
 bool rcsc_rcControl(int car, int mode, double value, double steering);
 bool rcsc_getRoutePoints(int car, ROUTE_POINT *route, int *len,

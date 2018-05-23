@@ -23,7 +23,7 @@ public:
     bool addRoutePoints(int car, ROUTE_POINT *route, int len,
                         bool replace = false, bool mapOnly = false,
                         int mapRoute = -1, int timeoutMs = 1000);
-    bool clearRoute(int car, int timeoutMs = 1000);
+    bool clearRoute(int car, int mapRoute = -1, int timeoutMs = 1000);
     bool setAutopilotActive(int car, bool active, int timeoutMs = 1000);
     bool rcControl(int car, int mode, double value, double steering);
     bool getRoutePoints(int car, ROUTE_POINT *route, int *len,

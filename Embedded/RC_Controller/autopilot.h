@@ -30,6 +30,8 @@ void autopilot_sync_point(int32_t point, int32_t time, int32_t min_time_diff);
 void autopilot_set_active(bool active);
 bool autopilot_is_active(void);
 int autopilot_get_route_len(void);
+int autopilot_get_point_now(void);
+int autopilot_get_route_left(void);
 ROUTE_POINT autopilot_get_route_point(int ind);
 void autopilot_set_speed_override(bool is_override, float speed);
 void autopilot_set_motor_speed(float speed);

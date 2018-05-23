@@ -50,9 +50,9 @@ bool rcsc_addRoutePoints(int car, ROUTE_POINT *route, int len,
     return rcsc.addRoutePoints(car, route, len, replace, mapOnly, mapRoute, timeoutMs);
 }
 
-bool rcsc_clearRoute(int car, int timeoutMs)
+bool rcsc_clearRoute(int car, int mapRoute, int timeoutMs)
 {
-    return rcsc.clearRoute(car, timeoutMs);
+    return rcsc.clearRoute(car, mapRoute, timeoutMs);
 }
 
 bool rcsc_setAutopilotActive(int car, bool active, int timeoutMs)

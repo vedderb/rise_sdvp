@@ -113,6 +113,7 @@ void NetworkInterface::sendState(quint8 id, const CAR_STATE &state)
     stream.writeTextElement("ap_goal_py", QString::number(state.ap_goal_py));
     stream.writeTextElement("ap_rad", QString::number(state.ap_rad));
     stream.writeTextElement("ms_today", QString::number(state.ms_today));
+    stream.writeTextElement("ap_route_left", QString::number(state.ap_route_left));
 
     stream.writeEndDocument();
     sendData(data);
@@ -553,14 +554,17 @@ void NetworkInterface::processXml(const QByteArray &xml)
                 sendAck("removeLastPoint");
             }
         } else if (name == "clearRoute") {
-            quint8 id = 0;
+            int id = 0;
             bool ok = true;
+            int mapRoute = -1;
 
             while (stream.readNextStartElement()) {
                 QString name2 = stream.name().toString();
 
                 if (name2 == "id") {
                     id = stream.readElementText().toInt();
+                } else if (name2 == "mapRoute") {
+                    mapRoute = stream.readElementText().toInt();
                 } else {
                     QString str;
                     str += "argument not found: " + name2;
@@ -578,12 +582,19 @@ void NetworkInterface::processXml(const QByteArray &xml)
                 continue;
             }
 
-            if (!ui->disableSendCarBox->isChecked() && mPacketInterface) {
+            if (id >= 0 && !ui->disableSendCarBox->isChecked() && mPacketInterface) {
                 if (!mPacketInterface->clearRoute(id)) {
                     ok = false;
                     sendError("No ACK received from car. Make sure that the car connection "
                               "works.", name);
                 }
+            }
+
+            if (mapRoute >= 0 && mMap) {
+                int lastRoute = mMap->getRouteNow();
+                mMap->setRouteNow(mapRoute);
+                mMap->clearRoute();
+                mMap->setRouteNow(lastRoute);
             }
 
             if (ok) {

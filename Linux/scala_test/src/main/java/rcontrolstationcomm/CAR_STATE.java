@@ -216,6 +216,15 @@ public class CAR_STATE extends StructObject {
 		this.io.setIntField(this, 19, ms_today);
 		return this;
 	}
+	@Field(20) 
+	public short ap_route_left() {
+		return this.io.getShortField(this, 20);
+	}
+	@Field(20) 
+	public CAR_STATE ap_route_left(short ap_route_left) {
+		this.io.setShortField(this, 20, ap_route_left);
+		return this;
+	}
 	public CAR_STATE() {
 		super();
 	}

@@ -12,7 +12,7 @@ int main(void) {
 	}
 	
 	CAR_STATE state;
-	bool ok = rcsc_getState(0, &state, 200);
+	bool ok = rcsc_getState(0, &state, 5000);
 	printf("OK: %d\r\n", ok);
 	printf("PX: %.2f, PY: %.2f\r\n", state.px, state.py);
 	

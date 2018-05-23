@@ -833,6 +833,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			buffer_append_float32(m_send_buffer, rp_goal.py, 1e4, &send_index); // 89
 			buffer_append_float32(m_send_buffer, autopilot_get_rad_now(), 1e6, &send_index); // 93
 			buffer_append_int32(m_send_buffer, pos_get_ms_today(), &send_index); // 97
+			buffer_append_int16(m_send_buffer, autopilot_get_route_left(), &send_index); // 99
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
 

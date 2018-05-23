@@ -1,0 +1,4 @@
+(sym_lib_table
+  (lib (name crf_1)(type Legacy)(uri ${KIPRJMOD}/Lib/crf_1.lib)(options "")(descr ""))
+  (lib (name uwb_pcb-rescue)(type Legacy)(uri ${KIPRJMOD}/uwb_pcb-rescue.lib)(options "")(descr ""))
+)

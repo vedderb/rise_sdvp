@@ -50,6 +50,8 @@ static bool m_sync_rx;
 static int m_print_closest_point;
 static bool m_en_dynamic_rad;
 static bool m_en_angle_dist_comp;
+static int m_route_look_ahead;
+static int m_route_left;
 
 // Private functions
 static THD_FUNCTION(ap_thread, arg);
@@ -67,6 +69,7 @@ static void terminal_state(int argc, const char **argv);
 static void terminal_print_closest(int argc, const char **argv);
 static void terminal_dynamic_rad(int argc, const char **argv);
 static void terminal_angle_dist_comp(int argc, const char **argv);
+static void terminal_look_ahead(int argc, const char **argv);
 
 void autopilot_init(void) {
 	memset(m_route, 0, sizeof(m_route));
@@ -86,6 +89,8 @@ void autopilot_init(void) {
 	m_print_closest_point = false;
 	m_en_dynamic_rad = true;
 	m_en_angle_dist_comp = true;
+	m_route_look_ahead = 8;
+	m_route_left = 0;
 
 	terminal_register_command_callback(
 			"ap_state",
@@ -116,6 +121,12 @@ void autopilot_init(void) {
 			"  1 - Enabled",
 			"[enabled]",
 			terminal_angle_dist_comp);
+
+	terminal_register_command_callback(
+			"ap_set_look_ahead",
+			"Set the look-ahead distance along the route in points",
+			"[points]",
+			terminal_look_ahead);
 
 	chThdCreateStatic(ap_thread_wa, sizeof(ap_thread_wa),
 			NORMALPRIO, ap_thread, NULL);
@@ -282,6 +293,14 @@ int autopilot_get_route_len(void) {
 	return m_point_last;
 }
 
+int autopilot_get_point_now(void) {
+	return m_point_now;
+}
+
+int autopilot_get_route_left(void) {
+	return m_route_left;
+}
+
 ROUTE_POINT autopilot_get_route_point(int ind) {
 	ROUTE_POINT res;
 	memset(&res, 0, sizeof(ROUTE_POINT));
@@ -381,6 +400,11 @@ static THD_FUNCTION(ap_thread, arg) {
 			len = AP_ROUTE_SIZE + m_point_last - m_point_now;
 		}
 
+		m_route_left = len - m_point_now;
+		if (m_route_left < 0) {
+			m_route_left += AP_ROUTE_SIZE;
+		}
+
 		// Time of today according to our clock
 		int ms_today = pos_get_ms_today();
 
@@ -395,8 +419,8 @@ static THD_FUNCTION(ap_thread, arg) {
 			car_pos.px = car_cx;
 			car_pos.py = car_cy;
 
-			// Look 8 points ahead, or less than that if the route is shorter
-			int add = 8;
+			// Look m_route_look_ahead points ahead, or less than that if the route is shorter
+			int add = m_route_look_ahead;
 			if (add > len) {
 				add = len;
 			}
@@ -599,7 +623,7 @@ static THD_FUNCTION(ap_thread, arg) {
 			}
 
 			// Check if the end of route is reached
-			if (!main_config.ap_repeat_routes &&
+			if (!main_config.ap_repeat_routes && m_route_left < 3 &&
 					utils_rp_distance(&m_route[last_point_ind], &car_pos) < m_rad_now) {
 				route_end = true;
 			}
@@ -786,14 +810,16 @@ static void terminal_state(int argc, const char **argv) {
 			"m_point_now: %i\n"
 			"m_point_last: %i\n"
 			"m_point_rx_prev_set: %i\n"
-			"m_start_time: %i\n",
+			"m_start_time: %i\n"
+			"m_route_left: %i\n",
 
 			m_is_active,
 			m_has_prev_point,
 			m_point_now,
 			m_point_last,
 			m_point_rx_prev_set,
-			m_start_time);
+			m_start_time,
+			m_route_left);
 }
 
 static void terminal_print_closest(int argc, const char **argv) {
@@ -848,6 +874,22 @@ static void terminal_angle_dist_comp(int argc, const char **argv) {
 			commands_printf("OK\n");
 		} else {
 			commands_printf("Invalid argument %s\n", argv[1]);
+		}
+	} else {
+		commands_printf("Wrong number of arguments\n");
+	}
+}
+
+static void terminal_look_ahead(int argc, const char **argv) {
+	if (argc == 2) {
+		int n = -1;
+		sscanf(argv[1], "%d", &n);
+
+		if (n < 1) {
+			commands_printf("Invalid argument\n");
+		} else {
+			m_route_look_ahead = n;
+			commands_printf("Now looking %d points ahead along the route", n);
 		}
 	} else {
 		commands_printf("Wrong number of arguments\n");

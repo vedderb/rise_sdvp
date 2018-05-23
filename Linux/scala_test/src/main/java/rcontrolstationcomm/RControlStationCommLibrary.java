@@ -111,10 +111,10 @@ public class RControlStationCommLibrary {
 	 */
 	native public static boolean rcsc_addRoutePoints(int car, Pointer<ROUTE_POINT > route, int len, boolean replace, boolean mapOnly, int mapRoute, int timeoutMs);
 	/**
-	 * Original signature : <code>bool rcsc_clearRoute(int, int)</code><br>
+	 * Original signature : <code>bool rcsc_clearRoute(int, int, int)</code><br>
 	 * <i>native declaration : line 37</i>
 	 */
-	native public static boolean rcsc_clearRoute(int car, int timeoutMs);
+	native public static boolean rcsc_clearRoute(int car, int mapRoute, int timeoutMs);
 	/**
 	 * Original signature : <code>bool rcsc_setAutopilotActive(int, bool, int)</code><br>
 	 * <i>native declaration : line 38</i>

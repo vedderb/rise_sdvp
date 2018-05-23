@@ -60,7 +60,11 @@ public:
                       QList<LocPoint> &points,
                       int &routeLen,
                       int retries = 10);
-    bool setSyncPoint(quint8 id, int point, int time, int min_time_diff, int retries = 10);
+    bool getRoute(quint8 id,
+                  QList<LocPoint> &points,
+                  int retries = 10);
+    bool setSyncPoint(quint8 id, int point, int time, int min_time_diff,
+                      bool ack = true, int retries = 10);
 
     bool sendMoteUbxBase(int mode,
                          double pos_acc = 10.0,
@@ -86,6 +90,8 @@ signals:
     void logLineUsbReceived(quint8 id, QString str);
     void plotInitReceived(quint8 id, QString xLabel, QString yLabel);
     void plotDataReceived(quint8 id, double x, double y);
+    void plotAddGraphReceived(quint8 id, QString name);
+    void plotSetGraphReceived(quint8 id, int graph);
     void radarSetupReceived(quint8 id, radar_settings_t s);
     void radarSamplesReceived(quint8 id, QVector<QPair<double, double> > samples);
     void systemTimeReceived(quint8 id, qint32 sec, qint32 usec);
