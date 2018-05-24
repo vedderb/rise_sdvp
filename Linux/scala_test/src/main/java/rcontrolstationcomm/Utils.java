@@ -16,6 +16,8 @@ public class Utils {
 		
 		int lenRes = len.get(0);
 		for (int i = 0;i < lenRes;i++) {
+			// Creating a new object here is necessary for some reason, otherwise
+			// bridj crashes in some situation where a route is used.
 			ROUTE_POINT a = new ROUTE_POINT();
 			a.px(route.get(i).px());
 			a.py(route.get(i).py());
@@ -61,6 +63,9 @@ public class Utils {
 	}
 	
 	public static void followRecoveryRoute(int car, int recoveryRoute) {
+		// TODO: Make sure that the route does not cross the edge when
+		// the edges are defined by a convex polygon.
+		
 		List<ROUTE_POINT> rec = getRoute(car, recoveryRoute, 1000);
 		CAR_STATE st = getCarState(car, 1000);
 		ROUTE_POINT first = new ROUTE_POINT();
