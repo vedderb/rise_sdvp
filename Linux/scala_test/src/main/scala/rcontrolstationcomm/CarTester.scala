@@ -5,28 +5,44 @@ import CAR_STATE._
 import org.bridj.Pointer._
 import Utils._
 import scala.collection.JavaConverters._
+import scala.collection.mutable.ArrayBuffer
 
+import org.scalatest.prop.Checkers
 import org.scalacheck.Gen
 import org.scalacheck.commands.Commands
+import org.scalacheck.Prop
 import util.{Try,Success,Failure}
+import org.scalactic.anyvals.{PosZInt, PosZDouble, PosInt}
 
 case class CarState (
-    id: Int,
-    connected: Boolean
+    route: List[ROUTE_POINT],
+    startRoute: List[ROUTE_POINT],
+    routeInfo: RouteInfo
 )
 
 class Car {
-  def connect () {
-    rcsc_connectTcp(pointerToCString("localhost"), 65191)
+  def clearRoute() {
+    rcsc_clearRoute(0, 3, 1000)
   }
   
-  def disconnect() {
-    rcsc_disconnectTcp()
-  }
-  
-  def followRecoveryRoute() : Boolean = {
-    // TODO
+  def runRecoveryRoute() : Boolean = {
+    followRecoveryRoute(0, 1)
     true
+  }
+  
+  def activateAutopilot(active: Boolean) {
+    rcsc_setAutopilotActive(0, active, 2000)
+  }
+  
+  def runSegments(route: List[ROUTE_POINT]) : Boolean = {
+    println("runSegments")
+    addRoute(0, route.asJava, false, false, 3, 2000)
+    waitUntilRouteAlmostEnded(0)
+    true
+  }
+  
+  def waitCarPolling(ms: Int) {
+    waitPolling(0, ms)
   }
 }
 
@@ -40,31 +56,62 @@ object CarSpec extends Commands {
   }
   
   def initialPreCondition(state: State): Boolean = {
-    state.connected == true
+    true
   }
   
   def newSut(state: State): Sut = {
+    println("New SUT created")
     val sut = new Sut
-    sut.connect()
+    sut.clearRoute()
+    sut.runRecoveryRoute()
+    sut.activateAutopilot(true)
     sut
   }
   
-  def destroySut(sut: Sut): Unit = sut.disconnect()
-  
-  def genInitialState: Gen[State] = {
-    new State(0, true)
+  def destroySut(sut: Sut) = {
+    sut.activateAutopilot(false)
   }
   
-  def genCommand(state: State): Gen[Command] = Gen.oneOf(
-    FollowRecovery, FollowRecovery
-  )
+  def genInitialState: Gen[State] = {
+    println("New initial state created")
+    new State(List.empty,
+        getRoute(0, 0, 1000).asScala.toList,
+        new RouteInfo(getRoute(0, 2, 1000)))
+  }
   
-  case object FollowRecovery extends Command {
+  def genCommand(state: State): Gen[Command] = Gen.frequency(
+    (0, genRunSegment(state)),
+    (1, genRunSegment(state)))
+
+  def genRunSegment(state: State): Gen[RunSegment] = for {
+    seed <- Gen.choose(-12000, 12000)
+    points <- Gen.choose(4, 7)
+    speed <- Gen.choose(20, 40)
+  } yield {
+    state.routeInfo.setRandomSeed(seed)
+
+    val r = state.routeInfo.generateRouteWithin(
+      points,
+      (state.route.size match {
+        case 0 => state.startRoute
+        case _ => state.route
+      }).asJava, speed / 10, 25)
+      
+    println("Segment size: " + r.size)
+    
+    RunSegment(r.subList(state.route.size, r.size).asScala.toList)
+  }
+
+  case class RunSegment(route: List[ROUTE_POINT]) extends Command {
     type Result = Boolean
     
-    def run(sut: Sut): Result = sut.followRecoveryRoute()
+    def run(sut: Sut) = {      
+      sut.runSegments(route)
+    }
 
-    def nextState(state: State): State = state
+    def nextState(state: State) = {
+      new State(state.route ++ route, state.startRoute, state.routeInfo)
+    }
 
     // This command has no preconditions
     def preCondition(state: State): Boolean = true
@@ -75,16 +122,35 @@ object CarSpec extends Commands {
   }
 }
 
-object CarTester {
-  def main(args: Array[String]): Unit = {
+/*
+ * This class is used to gain a bit more control of the generated tests.
+ */
+class TestSuite(numTests: PosInt) extends Checkers {
+  implicit override val generatorDrivenConfig =
+    PropertyCheckConfiguration(
+      minSuccessful = numTests,
+      sizeRange = 15)
+
+  def myCheck(prop: Prop) = {
+    check(prop)
+  }
+}
+
+object CarTester {  
+  def main(args: Array[String]): Unit = {    
     rcsc_connectTcp(pointerToCString("localhost"), 65191)
-
-    randomDrivingTest()
-//    randomGenTest()
-
-    rcsc_disconnectTcp()
     
+//    randomDrivingTest()
+//    randomGenTest()
+    testScala()
+    
+    rcsc_disconnectTcp()
+  }
+  
+  def testScala() {
 //    CarSpec.property().check()
+    val suite = new TestSuite(3)
+    suite.myCheck(CarSpec.property())
   }
   
   def randomDrivingTest() {
