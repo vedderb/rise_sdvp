@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# See https://stackoverflow.com/questions/21698205/how-to-display-classpath-used-for-run-task
+# start sbt and run
+# export runtime:fullClasspath
+# For some reason sbt console won't work with deserialization, and thus tests cannot be re-run
+
+DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+IVY=/home/benjamin/.ivy2
+
+scala -classpath $DIR/target/scala-2.12/classes:$IVY/cache/org.scala-lang/scala-library/jars/scala-library-2.12.6.jar:$IVY/cache/org.scalacheck/scalacheck_2.12/jars/scalacheck_2.12-1.14.0.jar:$IVY/cache/org.scala-sbt/test-interface/jars/test-interface-1.0.jar:$IVY/cache/org.scalatest/scalatest_2.12/bundles/scalatest_2.12-3.0.5.jar:$IVY/cache/org.scalactic/scalactic_2.12/bundles/scalactic_2.12-3.0.5.jar:$IVY/cache/org.scala-lang/scala-reflect/jars/scala-reflect-2.12.6.jar:$IVY/cache/org.scala-lang.modules/scala-xml_2.12/bundles/scala-xml_2.12-1.0.6.jar:$IVY/cache/com.nativelibs4java/bridj/bundles/bridj-0.6.2.jar:$IVY/cache/com.google.android.tools/dx/jars/dx-1.7.jar
+

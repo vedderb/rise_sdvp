@@ -5,18 +5,54 @@ import CAR_STATE._
 import org.bridj.Pointer._
 import Utils._
 import scala.collection.JavaConverters._
+import scala.collection.mutable.Buffer
 import scala.collection.mutable.ArrayBuffer
+import java.io._
 
 import org.scalatest.prop.Checkers
 import org.scalacheck.Gen
-import org.scalacheck.commands.Commands
+//import org.scalacheck.commands.Commands
 import org.scalacheck.Prop
 import util.{Try,Success,Failure}
 import org.scalactic.anyvals.{PosZInt, PosZDouble, PosInt}
+import junit.framework.TestResult
+
+object TestData {
+  val commands = Buffer.empty[CarSpec.Command]
+}
+
+@SerialVersionUID(1L)
+class Rp(p: ROUTE_POINT) extends Serializable {
+  val px = p.px()
+  val py = p.py()
+  val speed = p.speed()
+  val time = p.time()
+  def toRoutePoint() : ROUTE_POINT = {
+    val rp = new ROUTE_POINT()
+    rp.px(px)
+    rp.py(py)
+    rp.speed(speed)
+    rp.time(time)
+    rp
+  }
+}
+
+@SerialVersionUID(1L)
+class RpList(r: Buffer[ROUTE_POINT]) extends Serializable {
+  val route = r.map(new Rp(_)).toBuffer
+  def toRoutePoints() = route.map(_.toRoutePoint())
+  def size() = route.size
+  def ++(that: RpList): RpList = {
+    val newList = new RpList(Buffer.empty[ROUTE_POINT])
+    newList.route.appendAll(route)
+    newList.route.appendAll(that.route)
+    newList
+  }
+}
 
 case class CarState (
-    route: List[ROUTE_POINT],
-    startRoute: List[ROUTE_POINT],
+    route: RpList,
+    startRoute: RpList,
     routeInfo: RouteInfo
 )
 
@@ -46,7 +82,7 @@ class Car {
   }
 }
 
-object CarSpec extends Commands {
+object CarSpec extends Commands2 {
   type State = CarState
   type Sut = Car
 
@@ -65,6 +101,7 @@ object CarSpec extends Commands {
     sut.clearRoute()
     sut.runRecoveryRoute()
     sut.activateAutopilot(true)
+    TestData.commands.clear()
     sut
   }
   
@@ -74,8 +111,8 @@ object CarSpec extends Commands {
   
   def genInitialState: Gen[State] = {
     println("New initial state created")
-    new State(List.empty,
-        getRoute(0, 0, 1000).asScala.toList,
+    new State(new RpList(Buffer.empty[ROUTE_POINT]),
+        new RpList(getRoute(0, 0, 1000).asScala),
         new RouteInfo(getRoute(0, 2, 1000)))
   }
   
@@ -93,20 +130,21 @@ object CarSpec extends Commands {
     val r = state.routeInfo.generateRouteWithin(
       points,
       (state.route.size match {
-        case 0 => state.startRoute
-        case _ => state.route
+        case 0 => state.startRoute.toRoutePoints()
+        case _ => state.route.toRoutePoints()
       }).asJava, speed / 10, 25)
       
     println("Segment size: " + r.size)
     
-    RunSegment(r.subList(state.route.size, r.size).asScala.toList)
+    RunSegment(new RpList(r.subList(state.route.size, r.size).asScala))
   }
 
-  case class RunSegment(route: List[ROUTE_POINT]) extends Command {
+  case class RunSegment(route: RpList) extends Command {
     type Result = Boolean
     
-    def run(sut: Sut) = {      
-      sut.runSegments(route)
+    def run(sut: Sut) = {
+      TestData.commands += this
+      sut.runSegments(route.toRoutePoints().toList)
     }
 
     def nextState(state: State) = {
@@ -138,19 +176,69 @@ class TestSuite(numTests: PosInt) extends Checkers {
 
 object CarTester {  
   def main(args: Array[String]): Unit = {    
-    rcsc_connectTcp(pointerToCString("localhost"), 65191)
+    connect("localhost", 65191)
     
 //    randomDrivingTest()
 //    randomGenTest()
-    testScala()
     
+    testScala(2)
+//    runLastTest()
+    runLastTestHdd()
+    
+    disconnect()
+  }
+  
+  def connect(host: String, port: Int) {
+    rcsc_connectTcp(pointerToCString(host), port)
+  }
+  
+  def disconnect() {
     rcsc_disconnectTcp()
   }
   
-  def testScala() {
-//    CarSpec.property().check()
-    val suite = new TestSuite(3)
-    suite.myCheck(CarSpec.property())
+  def testScala(tests: PosInt) {
+    val suite = new TestSuite(tests)
+    suite.myCheck(CarSpec.propertyNoShrink())
+    
+    // Save last test to disk to make re-running it possible
+    val oos = new ObjectOutputStream(new FileOutputStream("last_test.bin"))
+    oos.writeObject(TestData.commands.toList)
+    oos.close
+  }
+  
+  def runLastTestHdd() {
+    val ois = new ObjectInputStream(new FileInputStream("last_test.bin"))
+    val cmds = ois.readObject.asInstanceOf[List[CarSpec.Command]].toBuffer
+    ois.close
+    rerunTest(cmds)
+  }
+  
+  def runLastTest() {
+    val cmds = TestData.commands.clone()
+    rerunTest(cmds)
+  }
+  
+  def rerunTest(cmds: Buffer[CarSpec.Command]) {
+    println("Re-running test...")
+    
+    var state = CarSpec.genInitialState.sample.get
+    val sut = CarSpec.newSut(state)
+    var ok = true
+    
+    for (cmd <- cmds) {
+      val res = cmd.run(sut)
+      state = cmd.nextState(state)
+      if (cmd.postCondition(state, Try(res)) != Prop(true)) {
+        ok = false
+        println("Postcondition failed")
+      }
+    }
+    
+    if (ok) {
+      println("Test sequence successful")
+    } else {
+      println("Test sequence failed")
+    }
   }
   
   def randomDrivingTest() {

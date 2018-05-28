@@ -9,3 +9,6 @@ libraryDependencies ++= Seq(
   "org.scalatest" % "scalatest_2.12" % "3.0.5",
   "com.nativelibs4java" % "bridj" % "0.6.2"
 )
+
+fork := true
+
