@@ -1,3 +1,20 @@
+/*
+    Copyright 2018 Benjamin Vedder	benjamin@vedder.se
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    */
+
 package rcontrolstationcomm
 
 import RControlStationCommLibrary._
@@ -11,7 +28,6 @@ import java.io._
 
 import org.scalatest.prop.Checkers
 import org.scalacheck.Gen
-//import org.scalacheck.commands.Commands
 import org.scalacheck.Prop
 import util.{Try,Success,Failure}
 import org.scalactic.anyvals.{PosZInt, PosZDouble, PosInt}
@@ -38,61 +54,50 @@ class Rp(p: ROUTE_POINT) extends Serializable {
 }
 
 @SerialVersionUID(1L)
-class RpList(r: Buffer[ROUTE_POINT]) extends Serializable {
-  val route = r.map(new Rp(_)).toBuffer
-  def toRoutePoints() = route.map(_.toRoutePoint())
-  def size() = route.size
-  def ++(that: RpList): RpList = {
-    val newList = new RpList(Buffer.empty[ROUTE_POINT])
-    newList.route.appendAll(route)
-    newList.route.appendAll(that.route)
-    newList
-  }
+class RpList(r: List[Rp]) extends Serializable {
+  val route = r
+  def this (r: Buffer[ROUTE_POINT]) {this(r.map(new Rp(_)).toList)}
+  def toRoutePoints(): List[ROUTE_POINT] = route.map(_.toRoutePoint())
+  def size(): Int = route.size
+  def ++(other: RpList): RpList = new RpList(route ++ other.route)
 }
 
-case class CarState (
-    route: RpList,
-    startRoute: RpList,
-    routeInfo: RouteInfo
-)
-
 class Car {
-  def clearRoute() {
-    rcsc_clearRoute(0, 3, 1000)
-  }
-  
-  def runRecoveryRoute() : Boolean = {
-    followRecoveryRoute(0, 1)
-    true
-  }
-  
-  def activateAutopilot(active: Boolean) {
-    rcsc_setAutopilotActive(0, active, 2000)
-  }
-  
-  def runSegments(route: List[ROUTE_POINT]) : Boolean = {
+  def clearRoute(): Boolean = rcsc_clearRoute(0, 3, 1000)
+  def activateAutopilot(active: Boolean): Boolean = rcsc_setAutopilotActive(0, active, 2000)
+  def waitCarPolling(ms: Int): Unit = waitPolling(0, ms)
+  def runSegments(route: List[ROUTE_POINT]): Boolean = {
     println("runSegments")
     addRoute(0, route.asJava, false, false, 3, 2000)
     waitUntilRouteAlmostEnded(0)
     true
   }
-  
-  def waitCarPolling(ms: Int) {
-    waitPolling(0, ms)
+  def runRecoveryRoute(): Boolean = {
+    followRecoveryRoute(0, 1)
+    true
   }
 }
 
 object CarSpec extends Commands2 {
-  type State = CarState
+  case class State(
+    route:      RpList,
+    startRoute: RpList,
+    routeInfo:  RouteInfo)
+    
   type Sut = Car
 
   def canCreateNewSut(newState: State, initSuts: Traversable[State],
-                      runningSuts: Traversable[Sut]) = {
+                      runningSuts: Traversable[Sut]): Boolean = {
     initSuts.isEmpty && runningSuts.isEmpty
   }
   
-  def initialPreCondition(state: State): Boolean = {
-    true
+  def initialPreCondition(state: State): Boolean = true
+  
+  def genInitialState: Gen[State] = {
+    println("New initial state created")
+    State(new RpList(Buffer.empty[ROUTE_POINT]),
+        new RpList(getRoute(0, 0, 1000).asScala),
+        new RouteInfo(getRoute(0, 2, 1000)))
   }
   
   def newSut(state: State): Sut = {
@@ -105,16 +110,7 @@ object CarSpec extends Commands2 {
     sut
   }
   
-  def destroySut(sut: Sut) = {
-    sut.activateAutopilot(false)
-  }
-  
-  def genInitialState: Gen[State] = {
-    println("New initial state created")
-    new State(new RpList(Buffer.empty[ROUTE_POINT]),
-        new RpList(getRoute(0, 0, 1000).asScala),
-        new RouteInfo(getRoute(0, 2, 1000)))
-  }
+  def destroySut(sut: Sut): Unit = sut.activateAutopilot(false)
   
   def genCommand(state: State): Gen[Command] = Gen.frequency(
     (0, genRunSegment(state)),
@@ -142,13 +138,13 @@ object CarSpec extends Commands2 {
   case class RunSegment(route: RpList) extends Command {
     type Result = Boolean
     
-    def run(sut: Sut) = {
+    def run(sut: Sut): Result = {
       TestData.commands += this
       sut.runSegments(route.toRoutePoints().toList)
     }
 
-    def nextState(state: State) = {
-      new State(state.route ++ route, state.startRoute, state.routeInfo)
+    def nextState(state: State): State = {
+      state.copy(route = state.route ++ route)
     }
 
     // This command has no preconditions
@@ -168,10 +164,8 @@ class TestSuite(numTests: PosInt) extends Checkers {
     PropertyCheckConfiguration(
       minSuccessful = numTests,
       sizeRange = 15)
-
-  def myCheck(prop: Prop) = {
-    check(prop)
-  }
+      
+  def myCheck(prop: Prop) = check(prop)
 }
 
 object CarTester {  
@@ -188,13 +182,11 @@ object CarTester {
     disconnect()
   }
   
-  def connect(host: String, port: Int) {
+  def connect(host: String, port: Int): Boolean =
     rcsc_connectTcp(pointerToCString(host), port)
-  }
   
-  def disconnect() {
+  def disconnect(): Unit =
     rcsc_disconnectTcp()
-  }
   
   def testScala(tests: PosInt) {
     val suite = new TestSuite(tests)
@@ -206,15 +198,12 @@ object CarTester {
     oos.close
   }
   
+  def runLastTest() = rerunTest(TestData.commands.clone())
+  
   def runLastTestHdd() {
     val ois = new ObjectInputStream(new FileInputStream("last_test.bin"))
     val cmds = ois.readObject.asInstanceOf[List[CarSpec.Command]].toBuffer
     ois.close
-    rerunTest(cmds)
-  }
-  
-  def runLastTest() {
-    val cmds = TestData.commands.clone()
     rerunTest(cmds)
   }
   
@@ -244,16 +233,16 @@ object CarTester {
   def randomDrivingTest() {
     val edgeRoute = getRoute(0, 2, 5000);
     val startRoute = getRoute(0, 0, 5000);
-
     val r = new RouteInfo(edgeRoute);
 
     for (i <- 0 to 5) {
       var rGen = startRoute
-      
       var indLast = 0
+      
       rcsc_clearRoute(0, 3, 5000)
       followRecoveryRoute(0, 1)
       rcsc_setAutopilotActive(0, true, 2000)
+      
       for (i <- 0 to 8) {
         rGen = r.generateRouteWithin(5, rGen, r.randInRange(1.0, 5.0), 25)
 
@@ -271,18 +260,17 @@ object CarTester {
   def randomGenTest() {
     val edgeRoute = getRoute(0, 2, 5000);
     val startRoute = getRoute(0, 0, 5000);
-    
     var maxAttempts = 0
     var genPoints = 0
     var usedPoints = 0
-
     val r = new RouteInfo(edgeRoute);
 
     for (i <- 0 to 5) {
       var rGen = startRoute
-      
       var indLast = 0
+      
       rcsc_clearRoute(-1, 3, 5000)
+      
       for (i <- 0 to 200) {
         rGen = r.generateRouteWithin(5, rGen, r.randInRange(1.0, 5.0), 25)
         
