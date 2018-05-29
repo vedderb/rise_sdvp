@@ -12,8 +12,6 @@ import org.bridj.ann.Library;
  */
 @Library("RControlStationComm") 
 public class ROUTE_POINT extends StructObject {
-	private static final long serialVersionUID = 1L;
-	
 	@Field(0) 
 	public double px() {
 		return this.io.getDoubleField(this, 0);
