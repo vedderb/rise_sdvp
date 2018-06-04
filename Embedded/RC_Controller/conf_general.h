@@ -39,8 +39,8 @@
 #define MAIN_MODE_IS_BASE			(MAIN_MODE == MAIN_MODE_M8T_BASE_2400 || MAIN_MODE == MAIN_MODE_M8T_BASE_400)
 
 // Firmware version
-#define FW_VERSION_MAJOR			8
-#define FW_VERSION_MINOR			21
+#define FW_VERSION_MAJOR			9
+#define FW_VERSION_MINOR			0
 
 // Default car settings
 //#define CAR_TERO // Benjamins tero car

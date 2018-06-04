@@ -25,13 +25,14 @@
 class LocPoint
 {
 public:
-    LocPoint(double x = 0, double y = 0, double roll = 0, double pitch = 0, double yaw = 0,
+    LocPoint(double x = 0, double y = 0, double height = 0, double roll = 0, double pitch = 0, double yaw = 0,
              double speed = 0.5, double radius = 5.0, double sigma = 0.0,
              QColor color = Qt::darkGreen, qint32 time = 0, int id = 0, bool drawLine = true);
     LocPoint(const LocPoint &point);
 
     double getX() const;
     double getY() const;
+    double getHeight() const;
     double getRoll() const;
     double getPitch() const;
     double getYaw() const;
@@ -45,9 +46,12 @@ public:
     qint32 getTime() const;
     int getId() const;
     bool getDrawLine() const;
+    double getDistanceTo(const LocPoint &point) const;
+    double getDistanceTo3d(const LocPoint &point) const;
 
     void setX(double x);
     void setY(double y);
+    void setHeight(double height);
     void setXY(double x, double y);
     void scaleXY(double scalefactor);
     void setRoll(double roll);
@@ -56,7 +60,6 @@ public:
     void setSpeed(double speed);
     void setRadius(double radius);
     void setSigma(double sigma);
-    double getDistanceTo(const LocPoint &point) const;
     void setInfo(const QString &info);
     void setColor(const QColor &color);
     void setTime(const qint32 &time);
@@ -71,6 +74,7 @@ public:
 private:
     double mX;
     double mY;
+    double mHeight;
     double mRoll;
     double mPitch;
     double mYaw;

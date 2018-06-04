@@ -37,6 +37,7 @@
 #include "adconv.h"
 #include "motor_sim.h"
 #include "m8t_base.h"
+#include "pos_uwb.h"
 
 #include <math.h>
 #include <string.h>
@@ -782,6 +783,34 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			buffer_append_uint16(m_send_buffer, main_cfg_tmp.mr.motor_pwm_min_us, &send_index);
 			buffer_append_uint16(m_send_buffer, main_cfg_tmp.mr.motor_pwm_max_us, &send_index);
 
+			commands_send_packet(m_send_buffer, send_index);
+		} break;
+
+		case CMD_ADD_UWB_ANCHOR: {
+			int32_t ind = 0;
+			UWB_ANCHOR a;
+
+			a.id = buffer_get_int16(data, &ind);
+			a.px = buffer_get_float32_auto(data, &ind);
+			a.py = buffer_get_float32_auto(data, &ind);
+			a.height = buffer_get_float32_auto(data, &ind);
+			a.dist_last = 0.0;
+			pos_uwb_add_anchor(a);
+
+			// Send ack
+			int32_t send_index = 0;
+			m_send_buffer[send_index++] = main_id;
+			m_send_buffer[send_index++] = packet_id;
+			commands_send_packet(m_send_buffer, send_index);
+		} break;
+
+		case CMD_CLEAR_UWB_ANCHORS: {
+			pos_uwb_clear_anchors();
+
+			// Send ack
+			int32_t send_index = 0;
+			m_send_buffer[send_index++] = main_id;
+			m_send_buffer[send_index++] = packet_id;
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
 

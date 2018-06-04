@@ -277,6 +277,8 @@ typedef enum {
     CMD_SET_MAIN_CONFIG,
     CMD_GET_MAIN_CONFIG,
     CMD_GET_MAIN_CONFIG_DEFAULT,
+    CMD_ADD_UWB_ANCHOR,
+    CMD_CLEAR_UWB_ANCHORS,
 
     // Car commands
     CMD_GET_STATE = 120,
@@ -414,6 +416,14 @@ typedef struct {
     void(*rx_rtcm_1019)(rtcm_ephemeris_t *eph);
     void(*rx_rtcm)(uint8_t *data, int len, int type);
 } rtcm3_state;
+
+typedef struct {
+    int id;
+    float px;
+    float py;
+    float height;
+    float dist_last;
+} UWB_ANCHOR;
 
 // ============== UBLOX Datatypes ================== //
 

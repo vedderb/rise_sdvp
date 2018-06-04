@@ -727,6 +727,12 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
     case CMD_MOTE_UBX_START_BASE_ACK:
         emit ackReceived(id, cmd, "CMD_MOTE_UBX_START_BASE_ACK");
         break;
+    case CMD_ADD_UWB_ANCHOR:
+        emit ackReceived(id, cmd, "CMD_ADD_UWB_ANCHOR");
+        break;
+    case CMD_CLEAR_UWB_ANCHORS:
+        emit ackReceived(id, cmd, "CMD_CLEAR_UWB_ANCHORS");
+        break;
 
     default:
         break;
@@ -1096,6 +1102,28 @@ bool PacketInterface::setSyncPoint(quint8 id, int point, int time, int min_time_
     } else {
         return sendPacket(mSendBuffer, send_index);
     }
+}
+
+bool PacketInterface::addUwbAnchor(quint8 id, UWB_ANCHOR a, int retries)
+{
+    qint32 send_index = 0;
+    mSendBuffer[send_index++] = id;
+    mSendBuffer[send_index++] = CMD_ADD_UWB_ANCHOR;
+    utility::buffer_append_int16(mSendBuffer, a.id, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, a.px, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, a.py, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, a.height, &send_index);
+
+    return sendPacketAck(mSendBuffer, send_index, retries);
+}
+
+bool PacketInterface::clearUwbAnchors(quint8 id, int retries)
+{
+    qint32 send_index = 0;
+    mSendBuffer[send_index++] = id;
+    mSendBuffer[send_index++] = CMD_CLEAR_UWB_ANCHORS;
+
+    return sendPacketAck(mSendBuffer, send_index, retries);
 }
 
 bool PacketInterface::sendMoteUbxBase(int mode,

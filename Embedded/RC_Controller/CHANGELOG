@@ -1,3 +1,6 @@
+=== FW 9.0 ===
+* Initial UWB positioning support.
+
 === FW 8.21 ===
 * Autopilot look ahead terminal command.
 * Inclide autopilot route left in CMD_GET_STATE.

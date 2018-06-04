@@ -144,6 +144,11 @@ private slots:
     void on_mapSaveAsPdfButton_clicked();
     void on_mapSaveAsPngButton_clicked();
     void on_mapSaveRetakeButton_clicked();
+    void on_modeRouteButton_toggled(bool checked);
+    void on_uploadAnchorButton_clicked();
+    void on_anchorIdBox_valueChanged(int arg1);
+    void on_anchorHeightBox_valueChanged(double arg1);
+    void on_removeAnchorsButton_clicked();
 
 private:
     Ui::MainWindow *ui;

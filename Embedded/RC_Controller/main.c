@@ -50,6 +50,7 @@
 #include "radar_cont.h"
 #include "motor_sim.h"
 #include "m8t_base.h"
+#include "pos_uwb.h"
 
 /*
  * Timers used:
@@ -88,6 +89,7 @@ int main(void) {
 	adconv_init();
 	servo_simple_init();
 	pos_init();
+	pos_uwb_init();
 	comm_can_init();
 	autopilot_init();
 	timeout_init();
@@ -108,6 +110,7 @@ int main(void) {
 	srf10_init();
 	pwm_esc_init();
 	pos_init();
+	pos_uwb_init();
 	mr_control_init();
 #endif
 

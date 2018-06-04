@@ -18,9 +18,9 @@
 #include "locpoint.h"
 #include <cmath>
 
-LocPoint::LocPoint(double x, double y, double roll, double pitch, double yaw, double speed,
+LocPoint::LocPoint(double x, double y, double height, double roll, double pitch, double yaw, double speed,
                    double radius, double sigma, QColor color, qint32 time, int id, bool drawLine) :
-    mX(x), mY(y), mRoll(roll), mPitch(pitch), mYaw(yaw), mSpeed(speed),
+    mX(x), mY(y), mHeight(height), mRoll(roll), mPitch(pitch), mYaw(yaw), mSpeed(speed),
     mRadius(radius), mSigma(sigma), mColor(color), mTime(time), mId(id), mDrawLine(drawLine)
 {
 
@@ -39,6 +39,11 @@ double LocPoint::getX() const
 double LocPoint::getY() const
 {
     return mY;
+}
+
+double LocPoint::getHeight() const
+{
+    return mHeight;
 }
 
 double LocPoint::getRoll() const
@@ -91,6 +96,11 @@ void LocPoint::setY(double y)
     mY = y;
 }
 
+void LocPoint::setHeight(double height)
+{
+    mHeight = height;
+}
+
 void LocPoint::setXY(double x, double y)
 {
     mX = x;
@@ -131,6 +141,7 @@ LocPoint &LocPoint::operator =(const LocPoint &point)
 {
     mX = point.mX;
     mY = point.mY;
+    mHeight = point.mHeight;
     mRoll = point.mRoll;
     mPitch = point.mPitch;
     mYaw = point.mYaw;
@@ -150,10 +161,24 @@ bool LocPoint::getDrawLine() const
     return mDrawLine;
 }
 
+double LocPoint::getDistanceTo(const LocPoint &point) const
+{
+    return sqrt((point.mX - mX) * (point.mX - mX) +
+                (point.mY - mY) * (point.mY - mY));
+}
+
+double LocPoint::getDistanceTo3d(const LocPoint &point) const
+{
+    return sqrt((point.mX - mX) * (point.mX - mX) +
+                (point.mY - mY) * (point.mY - mY) +
+                (point.mHeight - mHeight) * (point.mHeight - mHeight));
+}
+
 bool LocPoint::operator ==(const LocPoint &point)
 {
     if (    mX == point.mX &&
             mY == point.mY &&
+            mHeight == point.mHeight &&
             mRoll == point.mRoll &&
             mPitch == point.mPitch &&
             mYaw == point.mYaw &&
@@ -219,9 +244,4 @@ void LocPoint::setColor(const QColor &color)
 void LocPoint::setDrawLine(bool drawLine)
 {
     mDrawLine = drawLine;
-}
-
-double LocPoint::getDistanceTo(const LocPoint &point) const
-{
-    return sqrt((point.mX - mX) * (point.mX - mX) + (point.mY - mY) * (point.mY - mY));
 }

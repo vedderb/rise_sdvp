@@ -53,6 +53,8 @@ public:
     LocPoint* getAnchor(int id);
     void addAnchor(const LocPoint &anchor);
     bool removeAnchor(int id);
+    void clearAnchors();
+    QList<LocPoint> getAnchors();
     void setScaleFactor(double scale);
     void setRotation(double rotation);
     void setXOffset(double offset);
@@ -87,6 +89,10 @@ public:
     int getInfoTraceNum();
     int getInfoPointsInTrace(int trace);
     int setNextEmptyOrCreateNewInfoTrace();
+    void setAnchorMode(bool anchorMode);
+    bool getAnchorMode();
+    void setAnchorId(int id);
+    void setAnchorHeight(double height);
 
     int getOsmMaxZoomLevel() const;
     void setOsmMaxZoomLevel(int osmMaxZoomLevel);
@@ -148,6 +154,8 @@ private:
     QList<PerspectivePixmap> mPerspectivePixmaps;
     double mRoutePointSpeed;
     qint32 mRoutePointTime;
+    qint32 mAnchorId;
+    double mAnchorHeight;
     double mScaleFactor;
     double mRotation;
     double mXOffset;
@@ -174,11 +182,13 @@ private:
     LocPoint mClosestInfo;
     bool mDrawGrid;
     int mRoutePointSelected;
+    int mAnchorSelected;
     int mRouteNow;
     int mInfoTraceNow;
     double mTraceMinSpaceCar;
     double mTraceMinSpaceGps;
     QList<QPixmap> mPixmaps;
+    bool mAnchorMode;
 
     void updateClosestInfoPoint();
     int drawInfoPoints(QPainter &painter, const QList<LocPoint> &pts,

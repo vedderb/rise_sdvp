@@ -180,6 +180,8 @@ typedef enum {
 	CMD_SET_MAIN_CONFIG,
 	CMD_GET_MAIN_CONFIG,
 	CMD_GET_MAIN_CONFIG_DEFAULT,
+	CMD_ADD_UWB_ANCHOR,
+	CMD_CLEAR_UWB_ANCHORS,
 
 	// Car commands
 	CMD_GET_STATE = 120,
@@ -406,6 +408,14 @@ typedef struct {
 	int sat_num_base;
 	nmea_gsv_sat_t sats[32];
 } nmea_gsv_info_t;
+
+typedef struct {
+	int id;
+	float px;
+	float py;
+	float height;
+	float dist_last;
+} UWB_ANCHOR;
 
 // ============== UBLOX Datatypes ================== //
 

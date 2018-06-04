@@ -151,15 +151,19 @@ MapWidget::MapWidget(QWidget *parent) : QWidget(parent)
     mAnchors.clear();
     mRoutePointSpeed = 1.0;
     mRoutePointTime = 0.0;
+    mAnchorId = 0;
+    mAnchorHeight = 1.0;
     mAntialiasDrawings = false;
     mAntialiasOsm = true;
     mInfoTraceTextZoom = 0.5;
     mDrawGrid = true;
     mRoutePointSelected = -1;
+    mAnchorSelected = -1;
     mRouteNow = 0;
     mTraceMinSpaceCar = 0.05;
     mTraceMinSpaceGps = 0.05;
     mInfoTraceNow = 0;
+    mAnchorMode = false;
 
     mOsm = new OsmClient(this);
     mDrawOpenStreetmap = true;
@@ -327,6 +331,17 @@ bool MapWidget::removeAnchor(int id)
     }
 
     return found;
+}
+
+void MapWidget::clearAnchors()
+{
+    mAnchors.clear();
+    update();
+}
+
+QList<LocPoint> MapWidget::getAnchors()
+{
+    return mAnchors;
 }
 
 void MapWidget::setScaleFactor(double scale)
@@ -563,12 +578,17 @@ void MapWidget::mouseMoveEvent(QMouseEvent *e)
         mMouseLastY = y;
     }
 
-    if (mRoutePointSelected >= 0) {
-        LocPoint pos;
-        QPoint p = getMousePosRelative();
-        pos.setXY(p.x() / 1000.0, p.y() / 1000.0);
+    LocPoint pos;
+    QPoint p = getMousePosRelative();
+    pos.setXY(p.x() / 1000.0, p.y() / 1000.0);
 
+    if (mRoutePointSelected >= 0) {
         mRoutes[mRouteNow][mRoutePointSelected].setXY(pos.getX(), pos.getY());
+        update();
+    }
+
+    if (mAnchorSelected >= 0) {
+        mAnchors[mAnchorSelected].setXY(pos.getX(), pos.getY());
         update();
     }
 
@@ -586,9 +606,14 @@ void MapWidget::mousePressEvent(QMouseEvent *e)
     pos.setXY(p.x() / 1000.0, p.y() / 1000.0);
     pos.setSpeed(mRoutePointSpeed);
     pos.setTime(mRoutePointTime);
+    pos.setId(mAnchorId);
+    pos.setHeight(mAnchorHeight);
     double routeDist = 0.0;
+    double anchorDist = 0.0;
     int routeInd = getClosestPoint(pos, mRoutes[mRouteNow], routeDist);
+    int anchorInd = getClosestPoint(pos, mAnchors, anchorDist);
     bool routeFound = (routeDist * mScaleFactor * 1000.0) < 20 && routeDist >= 0.0;
+    bool anchorFound = (anchorDist * mScaleFactor * 1000.0) < 20 && anchorDist >= 0.0;
 
     if (ctrl) {
         if (e->buttons() & Qt::LeftButton) {
@@ -616,31 +641,53 @@ void MapWidget::mousePressEvent(QMouseEvent *e)
                 }
             }
         } else if (e->buttons() & Qt::RightButton) {
-            if (routeFound) {
-                mRoutes[mRouteNow][routeInd].setSpeed(mRoutePointSpeed);
-                mRoutes[mRouteNow][routeInd].setTime(mRoutePointTime);
+            if (mAnchorMode) {
+                if (anchorFound) {
+                    mAnchors[anchorInd].setId(mAnchorId);
+                    mAnchors[anchorInd].setHeight(mAnchorHeight);
+                }
+            } else {
+                if (routeFound) {
+                    mRoutes[mRouteNow][routeInd].setSpeed(mRoutePointSpeed);
+                    mRoutes[mRouteNow][routeInd].setTime(mRoutePointTime);
+                }
             }
         }
         update();
     } else if (shift) {
-        if (e->buttons() & Qt::LeftButton) {
-            if (routeFound) {
-                mRoutePointSelected = routeInd;
-                mRoutes[mRouteNow][routeInd].setXY(pos.getX(), pos.getY());
-            } else {
-                mRoutes[mRouteNow].append(pos);
-                emit routePointAdded(pos);
-            }
-        } else if (e->buttons() & Qt::RightButton) {
-            if (routeFound) {
-                mRoutes[mRouteNow].removeAt(routeInd);
-            } else {
-                LocPoint pos;
-                if (mRoutes[mRouteNow].size() > 0) {
-                    pos = mRoutes[mRouteNow].last();
-                    mRoutes[mRouteNow].removeLast();
+        if (mAnchorMode) {
+            if (e->buttons() & Qt::LeftButton) {
+                if (anchorFound) {
+                    mAnchorSelected = anchorInd;
+                    mAnchors[anchorInd].setXY(pos.getX(), pos.getY());
+                } else {
+                    mAnchors.append(pos);
                 }
-                emit lastRoutePointRemoved(pos);
+            } else if (e->buttons() & Qt::RightButton) {
+                if (anchorFound) {
+                    mAnchors.removeAt(anchorInd);
+                }
+            }
+        } else {
+            if (e->buttons() & Qt::LeftButton) {
+                if (routeFound) {
+                    mRoutePointSelected = routeInd;
+                    mRoutes[mRouteNow][routeInd].setXY(pos.getX(), pos.getY());
+                } else {
+                    mRoutes[mRouteNow].append(pos);
+                    emit routePointAdded(pos);
+                }
+            } else if (e->buttons() & Qt::RightButton) {
+                if (routeFound) {
+                    mRoutes[mRouteNow].removeAt(routeInd);
+                } else {
+                    LocPoint pos;
+                    if (mRoutes[mRouteNow].size() > 0) {
+                        pos = mRoutes[mRouteNow].last();
+                        mRoutes[mRouteNow].removeLast();
+                    }
+                    emit lastRoutePointRemoved(pos);
+                }
             }
         }
         update();
@@ -670,6 +717,7 @@ void MapWidget::mouseReleaseEvent(QMouseEvent *e)
         mMouseLastX = 1000000;
         mMouseLastY = 1000000;
         mRoutePointSelected = -1;
+        mAnchorSelected = -1;
     }
 }
 
@@ -1045,6 +1093,26 @@ int MapWidget::setNextEmptyOrCreateNewInfoTrace()
     setInfoTraceNow(next);
 
     return next;
+}
+
+void MapWidget::setAnchorMode(bool anchorMode)
+{
+    mAnchorMode = anchorMode;
+}
+
+bool MapWidget::getAnchorMode()
+{
+    return mAnchorMode;
+}
+
+void MapWidget::setAnchorId(int id)
+{
+    mAnchorId = id;
+}
+
+void MapWidget::setAnchorHeight(double height)
+{
+    mAnchorHeight = height;
 }
 
 double MapWidget::getOsmRes() const
@@ -1836,15 +1904,18 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
                                 20, 20, 10, 10);
 
         // Print data
-        txt.sprintf("%s\n(%.3f, %.3f)",
-                    anchor.getInfo().toLocal8Bit().data(),
-                    anchor.getX(), anchor.getY());
+        txt.sprintf("Anchor %d\n"
+                    "Pos    : (%.3f, %.3f)\n"
+                    "Height : %.2f m",
+                    anchor.getId(),
+                    anchor.getX(), anchor.getY(),
+                    anchor.getHeight());
         pt_txt.setX(x);
         pt_txt.setY(y);
         painter.setTransform(txtTrans);
         pt_txt = drawTrans.map(pt_txt);
         rect_txt.setCoords(pt_txt.x() + 15, pt_txt.y() - 20,
-                           pt_txt.x() + 300, pt_txt.y() + 25);
+                           pt_txt.x() + 500, pt_txt.y() + 500);
         painter.drawText(rect_txt, txt);
     }
 

@@ -34,6 +34,7 @@
 #include "srf10.h"
 #include "terminal.h"
 #include "log.h"
+#include "pos_uwb.h"
 
 // Defines
 #define ITERATION_TIMER_FREQ			50000
@@ -1218,14 +1219,17 @@ static void mc_values_received(mc_values *val) {
 		last_tacho = val->tachometer;
 	}
 
-	float distance = (float)(val->tachometer - last_tacho) * main_config.car.gear_ratio
-			* (2.0 / main_config.car.motor_poles) * (1.0 / 6.0) * main_config.car.wheel_diam * M_PI;
+	float distance = (float) (val->tachometer - last_tacho)
+			* main_config.car.gear_ratio * (2.0 / main_config.car.motor_poles)
+			* (1.0 / 6.0) * main_config.car.wheel_diam * M_PI;
 	last_tacho = val->tachometer;
 
 	float steering_angle = (servo_simple_get_pos_now()
 			- main_config.car.steering_center)
-													* ((2.0 * main_config.car.steering_max_angle_rad)
-															/ main_config.car.steering_range);
+			* ((2.0 * main_config.car.steering_max_angle_rad)
+					/ main_config.car.steering_range);
+
+	pos_uwb_update_dr(m_imu_yaw, distance, steering_angle);
 
 	chMtxLock(&m_mutex_pos);
 
