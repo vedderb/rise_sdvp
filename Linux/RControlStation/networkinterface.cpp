@@ -114,6 +114,8 @@ void NetworkInterface::sendState(quint8 id, const CAR_STATE &state)
     stream.writeTextElement("ap_rad", QString::number(state.ap_rad));
     stream.writeTextElement("ms_today", QString::number(state.ms_today));
     stream.writeTextElement("ap_route_left", QString::number(state.ap_route_left));
+    stream.writeTextElement("px_uwb", QString::number(state.px_uwb));
+    stream.writeTextElement("py_uwb", QString::number(state.py_uwb));
 
     stream.writeEndDocument();
     sendData(data);

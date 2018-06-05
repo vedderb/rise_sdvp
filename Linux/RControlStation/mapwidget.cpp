@@ -148,6 +148,7 @@ MapWidget::MapWidget(QWidget *parent) : QWidget(parent)
     mCopterInfo.clear();
     mCarTrace.clear();
     mCarTraceGps.clear();
+    mCarTraceUwb.clear();
     mAnchors.clear();
     mRoutePointSpeed = 1.0;
     mRoutePointTime = 0.0;
@@ -384,6 +385,7 @@ void MapWidget::clearTrace()
 {
     mCarTrace.clear();
     mCarTraceGps.clear();
+    mCarTraceUwb.clear();
     update();
 }
 
@@ -1465,6 +1467,13 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
                 if (mCarTraceGps.last().getDistanceTo(carInfo.getLocationGps()) > mTraceMinSpaceGps) {
                     mCarTraceGps.append(carInfo.getLocationGps());
                 }
+                // UWB trace
+                if (mCarTraceUwb.isEmpty()) {
+                    mCarTraceUwb.append(carInfo.getLocationUwb());
+                }
+                if (mCarTraceUwb.last().getDistanceTo(carInfo.getLocationUwb()) > mTraceMinSpaceCar) {
+                    mCarTraceUwb.append(carInfo.getLocationUwb());
+                }
             }
         }
 
@@ -1495,6 +1504,10 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
 
     while (mCarTraceGps.size() > 1800) {
         mCarTraceGps.removeFirst();
+    }
+
+    while (mCarTraceUwb.size() > 5000) {
+        mCarTraceUwb.removeFirst();
     }
 
     // Draw info trace
@@ -1617,6 +1630,16 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
     for (int i = 1;i < mCarTraceGps.size();i++) {
         painter.drawLine(mCarTraceGps[i - 1].getX() * 1000.0, mCarTraceGps[i - 1].getY() * 1000.0,
                 mCarTraceGps[i].getX() * 1000.0, mCarTraceGps[i].getY() * 1000.0);
+    }
+
+    // Draw UWB trace for the selected car
+    pen.setWidthF(2.5 / mScaleFactor);
+    pen.setColor(Qt::green);
+    painter.setPen(pen);
+    painter.setTransform(drawTrans);
+    for (int i = 1;i < mCarTraceUwb.size();i++) {
+        painter.drawLine(mCarTraceUwb[i - 1].getX() * 1000.0, mCarTraceUwb[i - 1].getY() * 1000.0,
+                mCarTraceUwb[i].getX() * 1000.0, mCarTraceUwb[i].getY() * 1000.0);
     }
 
     // Draw routes

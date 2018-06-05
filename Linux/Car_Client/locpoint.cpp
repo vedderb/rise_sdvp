@@ -18,10 +18,10 @@
 #include "locpoint.h"
 #include <cmath>
 
-LocPoint::LocPoint(double x, double y, double alpha, double speed,
-                   double radius, double sigma, quint32 color, qint32 time) :
-    mX(x), mY(y), mAlpha(alpha), mSpeed(speed),
-    mRadius(radius), mSigma(sigma), mColor(color), mTime(time)
+LocPoint::LocPoint(double x, double y, double height, double roll, double pitch, double yaw, double speed,
+                   double radius, double sigma, qint32 time, int id, bool drawLine) :
+    mX(x), mY(y), mHeight(height), mRoll(roll), mPitch(pitch), mYaw(yaw), mSpeed(speed),
+    mRadius(radius), mSigma(sigma), mTime(time), mId(id), mDrawLine(drawLine)
 {
 
 }
@@ -41,9 +41,24 @@ double LocPoint::getY() const
     return mY;
 }
 
-double LocPoint::getAlpha() const
+double LocPoint::getHeight() const
 {
-    return mAlpha;
+    return mHeight;
+}
+
+double LocPoint::getRoll() const
+{
+    return mRoll;
+}
+
+double LocPoint::getPitch() const
+{
+    return mPitch;
+}
+
+double LocPoint::getYaw() const
+{
+    return mYaw;
 }
 
 double LocPoint::getSpeed() const
@@ -81,6 +96,11 @@ void LocPoint::setY(double y)
     mY = y;
 }
 
+void LocPoint::setHeight(double height)
+{
+    mHeight = height;
+}
+
 void LocPoint::setXY(double x, double y)
 {
     mX = x;
@@ -92,14 +112,14 @@ void LocPoint::setTime(const qint32 &time)
     mTime = time;
 }
 
+void LocPoint::setId(int id)
+{
+    mId = id;
+}
+
 QString LocPoint::getInfo() const
 {
     return mInfo;
-}
-
-quint32 LocPoint::getColor() const
-{
-    return mColor;
 }
 
 qint32 LocPoint::getTime() const
@@ -107,31 +127,62 @@ qint32 LocPoint::getTime() const
     return mTime;
 }
 
+int LocPoint::getId() const
+{
+    return mId;
+}
+
 LocPoint &LocPoint::operator =(const LocPoint &point)
 {
     mX = point.mX;
     mY = point.mY;
-    mAlpha = point.mAlpha;
+    mHeight = point.mHeight;
+    mRoll = point.mRoll;
+    mPitch = point.mPitch;
+    mYaw = point.mYaw;
     mSpeed = point.mSpeed;
     mRadius = point.mRadius;
     mSigma = point.mSigma;
     mInfo = point.mInfo;
-    mColor = point.mColor;
     mTime = point.mTime;
+    mId = point.mId;
+    mDrawLine = point.mDrawLine;
     return *this;
+}
+
+bool LocPoint::getDrawLine() const
+{
+    return mDrawLine;
+}
+
+double LocPoint::getDistanceTo(const LocPoint &point) const
+{
+    return sqrt((point.mX - mX) * (point.mX - mX) +
+                (point.mY - mY) * (point.mY - mY));
+}
+
+double LocPoint::getDistanceTo3d(const LocPoint &point) const
+{
+    return sqrt((point.mX - mX) * (point.mX - mX) +
+                (point.mY - mY) * (point.mY - mY) +
+                (point.mHeight - mHeight) * (point.mHeight - mHeight));
 }
 
 bool LocPoint::operator ==(const LocPoint &point)
 {
     if (    mX == point.mX &&
             mY == point.mY &&
-            mAlpha == point.mAlpha &&
+            mHeight == point.mHeight &&
+            mRoll == point.mRoll &&
+            mPitch == point.mPitch &&
+            mYaw == point.mYaw &&
             mSpeed == point.mSpeed &&
             mRadius == point.mRadius &&
             mSigma == point.mSigma &&
             mInfo == point.mInfo &&
-            mColor == point.mColor &&
-            mTime == point.mTime) {
+            mTime == point.mTime &&
+            mId == point.mId &&
+            mDrawLine == point.mDrawLine) {
         return true;
     } else {
         return false;
@@ -148,9 +199,19 @@ void LocPoint::setInfo(const QString &info)
     mInfo = info;
 }
 
-void LocPoint::setAlpha(double alpha)
+void LocPoint::setRoll(double roll)
 {
-    mAlpha = alpha;
+    mRoll = roll;
+}
+
+void LocPoint::setPitch(double pitch)
+{
+    mPitch = pitch;
+}
+
+void LocPoint::setYaw(double alpha)
+{
+    mYaw = alpha;
 }
 
 void LocPoint::setSpeed(double speed)
@@ -168,12 +229,7 @@ void LocPoint::setSigma(double sigma)
     mSigma = sigma;
 }
 
-void LocPoint::setColor(const quint32 &color)
+void LocPoint::setDrawLine(bool drawLine)
 {
-    mColor = color;
-}
-
-double LocPoint::getDistanceTo(const LocPoint &point) const
-{
-    return sqrt((point.mX - mX) * (point.mX - mX) + (point.mY - mY) * (point.mY - mY));
+    mDrawLine = drawLine;
 }

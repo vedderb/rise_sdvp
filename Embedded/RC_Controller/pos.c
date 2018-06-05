@@ -1229,8 +1229,6 @@ static void mc_values_received(mc_values *val) {
 			* ((2.0 * main_config.car.steering_max_angle_rad)
 					/ main_config.car.steering_range);
 
-	pos_uwb_update_dr(m_imu_yaw, distance, steering_angle);
-
 	chMtxLock(&m_mutex_pos);
 
 	if (fabsf(distance) > 1e-6) {
@@ -1265,6 +1263,10 @@ static void mc_values_received(mc_values *val) {
 	m_pos.speed = val->rpm * main_config.car.gear_ratio
 			* (2.0 / main_config.car.motor_poles) * (1.0 / 60.0)
 			* main_config.car.wheel_diam * M_PI;
+
+	// TODO: eventually use yaw from IMU and implement yaw correction
+	pos_uwb_update_dr(m_pos.yaw, distance, steering_angle, m_pos.speed);
+//	pos_uwb_update_dr(m_imu_yaw, distance, steering_angle, m_pos.speed);
 
 	save_pos_history();
 

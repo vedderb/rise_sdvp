@@ -34,6 +34,8 @@ public:
     void setLocation(LocPoint &point);
     LocPoint getLocationGps() const;
     void setLocationGps(LocPoint &point);
+    LocPoint getLocationUwb() const;
+    void setLocationUwb(const LocPoint &locationUwb);
     Qt::GlobalColor getColor() const;
     void setColor(Qt::GlobalColor color);
     LocPoint getApGoal() const;
@@ -46,6 +48,7 @@ private:
     QString mName;
     LocPoint mLocation;
     LocPoint mLocationGps;
+    LocPoint mLocationUwb;
     LocPoint mApGoal;
     Qt::GlobalColor mColor;
     qint32 mTime;

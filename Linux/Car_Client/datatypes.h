@@ -74,6 +74,8 @@ typedef struct {
     double ap_rad;
     int32_t ms_today;
     int16_t ap_route_left;
+    double px_uwb;
+    double py_uwb;
 } CAR_STATE;
 
 typedef struct {
@@ -277,6 +279,8 @@ typedef enum {
     CMD_SET_MAIN_CONFIG,
     CMD_GET_MAIN_CONFIG,
     CMD_GET_MAIN_CONFIG_DEFAULT,
+    CMD_ADD_UWB_ANCHOR,
+    CMD_CLEAR_UWB_ANCHORS,
 
     // Car commands
     CMD_GET_STATE = 120,
@@ -414,6 +418,14 @@ typedef struct {
     void(*rx_rtcm_1019)(rtcm_ephemeris_t *eph);
     void(*rx_rtcm)(uint8_t *data, int len, int type);
 } rtcm3_state;
+
+typedef struct {
+    int id;
+    float px;
+    float py;
+    float height;
+    float dist_last;
+} UWB_ANCHOR;
 
 // ============== UBLOX Datatypes ================== //
 

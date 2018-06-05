@@ -162,6 +162,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			y = buffer_get_float32(data, 1e4, &ind);
 			angle = buffer_get_float32(data, 1e6, &ind);
 			pos_set_xya(x, y, angle);
+			pos_uwb_set_xya(x, y, angle);
 
 			if (packet_id == CMD_SET_POS_ACK) {
 				commands_set_send_func(func);
@@ -819,7 +820,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 		case CMD_GET_STATE: {
 			timeout_reset();
 
-			POS_STATE pos;
+			POS_STATE pos, pos_uwb;
 			mc_values mcval;
 			float accel[3];
 			float gyro[3];
@@ -832,6 +833,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			pos_get_pos(&pos);
 			pos_get_mc_val(&mcval);
 			autopilot_get_goal_now(&rp_goal);
+			pos_uwb_get_pos(&pos_uwb);
 
 			int32_t send_index = 0;
 			m_send_buffer[send_index++] = main_id; // 1
@@ -863,6 +865,8 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			buffer_append_float32(m_send_buffer, autopilot_get_rad_now(), 1e6, &send_index); // 93
 			buffer_append_int32(m_send_buffer, pos_get_ms_today(), &send_index); // 97
 			buffer_append_int16(m_send_buffer, autopilot_get_route_left(), &send_index); // 99
+			buffer_append_float32(m_send_buffer, pos_uwb.px, 1e4, &send_index); // 103
+			buffer_append_float32(m_send_buffer, pos_uwb.py, 1e4, &send_index); // 107
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
 

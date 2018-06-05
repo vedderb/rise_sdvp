@@ -65,6 +65,8 @@ public:
                   int retries = 10);
     bool setSyncPoint(quint8 id, int point, int time, int min_time_diff,
                       bool ack = true, int retries = 10);
+    bool addUwbAnchor(quint8 id, UWB_ANCHOR a, int retries = 10);
+    bool clearUwbAnchors(quint8 id, int retries = 10);
 
     bool sendMoteUbxBase(int mode,
                          double pos_acc = 10.0,

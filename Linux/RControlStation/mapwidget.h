@@ -147,6 +147,7 @@ private:
     QList<CopterInfo> mCopterInfo;
     QVector<LocPoint> mCarTrace;
     QVector<LocPoint> mCarTraceGps;
+    QVector<LocPoint> mCarTraceUwb;
     QList<LocPoint> mAnchors;
     QList<QList<LocPoint> > mRoutes;
     QList<QList<LocPoint> > mInfoTraces;

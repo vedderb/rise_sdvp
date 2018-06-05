@@ -23,9 +23,11 @@
 #include "hal.h"
 
 void pos_uwb_init(void);
-void pos_uwb_update_dr(float imu_yaw, float travel_dist, float steering_angle);
+void pos_uwb_update_dr(float imu_yaw, float travel_dist,
+		float steering_angle, float speed);
 void pos_uwb_add_anchor(UWB_ANCHOR a);
 void pos_uwb_clear_anchors(void);
-
+void pos_uwb_get_pos(POS_STATE *p);
+void pos_uwb_set_xya(float x, float y, float angle);
 
 #endif /* POS_UWB_H_ */

@@ -225,6 +225,24 @@ public class CAR_STATE extends StructObject {
 		this.io.setShortField(this, 20, ap_route_left);
 		return this;
 	}
+	@Field(21) 
+	public double px_uwb() {
+		return this.io.getDoubleField(this, 21);
+	}
+	@Field(21) 
+	public CAR_STATE px_uwb(double px_uwb) {
+		this.io.setDoubleField(this, 21, px_uwb);
+		return this;
+	}
+	@Field(22) 
+	public double py_uwb() {
+		return this.io.getDoubleField(this, 22);
+	}
+	@Field(22) 
+	public CAR_STATE py_uwb(double py_uwb) {
+		this.io.setDoubleField(this, 22, py_uwb);
+		return this;
+	}
 	public CAR_STATE() {
 		super();
 	}

@@ -24,35 +24,44 @@
 class LocPoint
 {
 public:
-    LocPoint(double x = 0, double y = 0, double alpha = 0,
+    LocPoint(double x = 0, double y = 0, double height = 0, double roll = 0, double pitch = 0, double yaw = 0,
              double speed = 0.5, double radius = 5.0, double sigma = 0.0,
-             quint32 color = Qt::darkGreen, qint32 time = 0);
+             qint32 time = 0, int id = 0, bool drawLine = true);
     LocPoint(const LocPoint &point);
 
     double getX() const;
     double getY() const;
-    double getAlpha() const;
+    double getHeight() const;
+    double getRoll() const;
+    double getPitch() const;
+    double getYaw() const;
     double getSpeed() const;
     QPointF getPoint() const;
     QPointF getPointMm() const;
     double getRadius() const;
     double getSigma() const;
     QString getInfo() const;
-    quint32 getColor() const;
     qint32 getTime() const;
+    int getId() const;
+    bool getDrawLine() const;
+    double getDistanceTo(const LocPoint &point) const;
+    double getDistanceTo3d(const LocPoint &point) const;
 
     void setX(double x);
     void setY(double y);
+    void setHeight(double height);
     void setXY(double x, double y);
     void scaleXY(double scalefactor);
-    void setAlpha(double alpha);
+    void setRoll(double roll);
+    void setPitch(double pitch);
+    void setYaw(double alpha);
     void setSpeed(double speed);
     void setRadius(double radius);
     void setSigma(double sigma);
-    double getDistanceTo(const LocPoint &point) const;
     void setInfo(const QString &info);
-    void setColor(const quint32 &color);
     void setTime(const qint32 &time);
+    void setId(int id);
+    void setDrawLine(bool drawLine);
 
     // Operators
     LocPoint& operator=(const LocPoint& point);
@@ -62,13 +71,17 @@ public:
 private:
     double mX;
     double mY;
-    double mAlpha;
+    double mHeight;
+    double mRoll;
+    double mPitch;
+    double mYaw;
     double mSpeed;
     double mRadius;
     double mSigma;
     QString mInfo;
-    quint32 mColor;
     qint32 mTime;
+    int mId;
+    bool mDrawLine;
 
 };
 

@@ -168,6 +168,10 @@ bool RControlStationComm::getState(int car, CAR_STATE *state, int timeoutMs)
                         state->ms_today = stream.readElementText().toInt();
                     } else if (name2 == "ap_route_left") {
                         state->ap_route_left = stream.readElementText().toInt();
+                    } else if (name2 == "px_uwb") {
+                        state->px_uwb = stream.readElementText().toDouble();
+                    } else if (name2 == "py_uwb") {
+                        state->py_uwb = stream.readElementText().toDouble();
                     } else {
                         qWarning() << "libRControlStation: argument not found:" << name2;
                         stream.skipCurrentElement();

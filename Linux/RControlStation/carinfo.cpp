@@ -96,8 +96,17 @@ void CarInfo::setTime(const qint32 &time)
     mTime = time;
 }
 
+LocPoint CarInfo::getLocationUwb() const
+{
+    return mLocationUwb;
+}
+
+void CarInfo::setLocationUwb(const LocPoint &locationUwb)
+{
+    mLocationUwb = locationUwb;
+}
+
 LocPoint CarInfo::getLocation() const
 {
     return mLocation;
 }
-
