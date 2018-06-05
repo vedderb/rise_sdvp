@@ -1512,69 +1512,12 @@ void MainWindow::on_actionExit_triggered()
 
 void MainWindow::on_actionSaveRoutes_triggered()
 {
-    QString filename = QFileDialog::getSaveFileName(this,
-                                                    tr("Save Routes"), "",
-                                                    tr("Xml files (*.xml)"));
+    saveRoutes(false);
+}
 
-    // Cancel pressed
-    if (filename.isEmpty()) {
-        return;
-    }
-
-    if (!filename.toLower().endsWith(".xml")) {
-        filename.append(".xml");
-    }
-
-    QFile file(filename);
-    if (!file.open(QIODevice::WriteOnly)) {
-        QMessageBox::critical(this, "Save Routes",
-                              "Could not open\n" + filename + "\nfor writing");
-        showStatusInfo("Could not save routes", false);
-        return;
-    }
-
-
-    QXmlStreamWriter stream(&file);
-    stream.setCodec("UTF-8");
-    stream.setAutoFormatting(true);
-    stream.writeStartDocument();
-
-    stream.writeStartElement("routes");
-
-    QList<LocPoint> anchors = ui->mapWidget->getAnchors();
-    QList<QList<LocPoint> > routes = ui->mapWidget->getRoutes();
-
-    if (!anchors.isEmpty()) {
-        stream.writeStartElement("anchors");
-        for (LocPoint p: anchors) {
-            stream.writeStartElement("anchor");
-            stream.writeTextElement("x", QString::number(p.getX()));
-            stream.writeTextElement("y", QString::number(p.getY()));
-            stream.writeTextElement("height", QString::number(p.getHeight()));
-            stream.writeTextElement("id", QString::number(p.getId()));
-            stream.writeEndElement();
-        }
-        stream.writeEndElement();
-    }
-
-    for (QList<LocPoint> route: routes) {
-        if (!route.isEmpty()) {
-            stream.writeStartElement("route");
-            for (LocPoint p: route) {
-                stream.writeStartElement("point");
-                stream.writeTextElement("x", QString::number(p.getX()));
-                stream.writeTextElement("y", QString::number(p.getY()));
-                stream.writeTextElement("speed", QString::number(p.getSpeed()));
-                stream.writeTextElement("time", QString::number(p.getTime()));
-                stream.writeEndElement();
-            }
-            stream.writeEndElement();
-        }
-    }
-
-    stream.writeEndDocument();
-    file.close();
-    showStatusInfo("Saved routes", true);
+void MainWindow::on_actionSaveRouteswithIDs_triggered()
+{
+    saveRoutes(true);
 }
 
 void MainWindow::on_actionLoadRoutes_triggered()
@@ -1603,19 +1546,22 @@ void MainWindow::on_actionLoadRoutes_triggered()
         }
 
         if (routes_found) {
-            QList<QList<LocPoint> > routes;
+            QList<QPair<int, QList<LocPoint> > > routes;
             QList<LocPoint> anchors;
 
             while (stream.readNextStartElement()) {
                 QString name = stream.name().toString();
 
                 if (name == "route") {
+                    int id = -1;
                     QList<LocPoint> route;
 
                     while (stream.readNextStartElement()) {
                         QString name2 = stream.name().toString();
 
-                        if (name2 == "point") {
+                        if (name2 == "id") {
+                            id = stream.readElementText().toInt();
+                        } else if (name2 == "point") {
                             LocPoint p;
 
                             while (stream.readNextStartElement()) {
@@ -1646,7 +1592,7 @@ void MainWindow::on_actionLoadRoutes_triggered()
                         }
                     }
 
-                    routes.append(route);
+                    routes.append(QPair<int, QList<LocPoint> >(id, route));
                 } else if (name == "anchors") {
                     while (stream.readNextStartElement()) {
                         QString name2 = stream.name().toString();
@@ -1689,8 +1635,15 @@ void MainWindow::on_actionLoadRoutes_triggered()
                 }
             }
 
-            for (QList<LocPoint> r: routes) {
-                ui->mapWidget->addRoute(r);
+            for (QPair<int, QList<LocPoint> > r: routes) {
+                if (r.first >= 0) {
+                    int routeLast = ui->mapWidget->getRouteNow();
+                    ui->mapWidget->setRouteNow(r.first);
+                    ui->mapWidget->setRoute(r.second);
+                    ui->mapWidget->setRouteNow(routeLast);
+                } else {
+                    ui->mapWidget->addRoute(r.second);
+                }
             }
 
             for (LocPoint p: anchors) {
@@ -1954,4 +1907,76 @@ void MainWindow::on_anchorHeightBox_valueChanged(double arg1)
 void MainWindow::on_removeAnchorsButton_clicked()
 {
     ui->mapWidget->clearAnchors();
+}
+
+void MainWindow::saveRoutes(bool withId)
+{
+    QString filename = QFileDialog::getSaveFileName(this,
+                                                    tr("Save Routes"), "",
+                                                    tr("Xml files (*.xml)"));
+
+    // Cancel pressed
+    if (filename.isEmpty()) {
+        return;
+    }
+
+    if (!filename.toLower().endsWith(".xml")) {
+        filename.append(".xml");
+    }
+
+    QFile file(filename);
+    if (!file.open(QIODevice::WriteOnly)) {
+        QMessageBox::critical(this, "Save Routes",
+                              "Could not open\n" + filename + "\nfor writing");
+        showStatusInfo("Could not save routes", false);
+        return;
+    }
+
+
+    QXmlStreamWriter stream(&file);
+    stream.setCodec("UTF-8");
+    stream.setAutoFormatting(true);
+    stream.writeStartDocument();
+
+    stream.writeStartElement("routes");
+
+    QList<LocPoint> anchors = ui->mapWidget->getAnchors();
+    QList<QList<LocPoint> > routes = ui->mapWidget->getRoutes();
+
+    if (!anchors.isEmpty()) {
+        stream.writeStartElement("anchors");
+        for (LocPoint p: anchors) {
+            stream.writeStartElement("anchor");
+            stream.writeTextElement("x", QString::number(p.getX()));
+            stream.writeTextElement("y", QString::number(p.getY()));
+            stream.writeTextElement("height", QString::number(p.getHeight()));
+            stream.writeTextElement("id", QString::number(p.getId()));
+            stream.writeEndElement();
+        }
+        stream.writeEndElement();
+    }
+
+    for (int i = 0;i < routes.size();i++) {
+        if (!routes.at(i).isEmpty()) {
+            stream.writeStartElement("route");
+
+            if (withId) {
+                stream.writeTextElement("id", QString::number(i));
+            }
+
+            for (const LocPoint p: routes.at(i)) {
+                stream.writeStartElement("point");
+                stream.writeTextElement("x", QString::number(p.getX()));
+                stream.writeTextElement("y", QString::number(p.getY()));
+                stream.writeTextElement("speed", QString::number(p.getSpeed()));
+                stream.writeTextElement("time", QString::number(p.getTime()));
+                stream.writeEndElement();
+            }
+            stream.writeEndElement();
+        }
+    }
+
+    stream.writeEndDocument();
+    file.close();
+    showStatusInfo("Saved routes", true);
 }

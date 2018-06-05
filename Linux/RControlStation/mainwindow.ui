@@ -2784,6 +2784,7 @@
      <string>File</string>
     </property>
     <addaction name="actionSaveRoutes"/>
+    <addaction name="actionSaveRouteswithIDs"/>
     <addaction name="actionLoadRoutes"/>
     <addaction name="actionExit"/>
    </widget>
@@ -2891,6 +2892,15 @@
    </property>
    <property name="text">
     <string>Load drive file...</string>
+   </property>
+  </action>
+  <action name="actionSaveRouteswithIDs">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/models/Icons/Save as-96.png</normaloff>:/models/Icons/Save as-96.png</iconset>
+   </property>
+   <property name="text">
+    <string>Save Routes with IDs...</string>
    </property>
   </action>
  </widget>

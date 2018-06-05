@@ -137,6 +137,7 @@ private slots:
     void on_actionAboutLibrariesUsed_triggered();
     void on_actionExit_triggered();
     void on_actionSaveRoutes_triggered();
+    void on_actionSaveRouteswithIDs_triggered();
     void on_actionLoadRoutes_triggered();
     void on_actionTestIntersection_triggered();
     void on_actionSaveSelectedRouteAsDriveFile_triggered();
@@ -178,6 +179,8 @@ private:
     Joystick *mJoystick;
     JS_TYPE mJsType;
 #endif
+
+    void saveRoutes(bool withId);
 
 };
 
