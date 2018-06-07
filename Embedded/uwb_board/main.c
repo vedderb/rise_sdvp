@@ -33,7 +33,7 @@
 #include "mpu9150.h"
 
 // Settings
-#define TEST_MODE		1
+#define TEST_MODE		0
 
 #if TEST_MODE
 static void range_func(float dist, uint8_t id) {
@@ -94,6 +94,7 @@ int main(void) {
 	 * Module 1: 38
 	 * Module 2: 131
 	 * Module 3: 35
+	 * Module 4: 189
 	 */
 
 	deca_range_configure(main_id);
