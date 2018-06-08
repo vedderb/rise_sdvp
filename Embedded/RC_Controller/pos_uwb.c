@@ -29,6 +29,8 @@
 #define MAX_POINT_DISTANCE		80
 #define AVG_SAMPLES				5
 #define CORR_STEP				0.2
+#define OFFSET_X				0.085
+#define OFFSET_Y				0.0
 
 // Private variables
 static UWB_ANCHOR m_anchors[MAX_ANCHORS];
@@ -114,8 +116,14 @@ static void dw_range(uint8_t id, uint8_t dest, float range) {
 	if (a) {
 		chMtxLock(&m_mutex_pos);
 
-		const float dx = a->px - m_pos.px;
-		const float dy = a->py - m_pos.py;
+		// Apply antenna offset
+		const float s_yaw = sinf(-m_pos.yaw * M_PI / 180.0);
+		const float c_yaw = cosf(-m_pos.yaw * M_PI / 180.0);
+		const float px = m_pos.px + (c_yaw * OFFSET_X - s_yaw * OFFSET_Y);
+		const float py = m_pos.py + (s_yaw * OFFSET_X + c_yaw * OFFSET_Y);
+
+		const float dx = a->px - px;
+		const float dy = a->py - py;
 		float d = sqrtf(SQ(dx) * SQ(dy));
 
 		// Avoid divide by 0
