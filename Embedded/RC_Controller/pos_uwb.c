@@ -124,62 +124,26 @@ static void dw_range(uint8_t id, uint8_t dest, float range) {
 	if (a) {
 		chMtxLock(&m_mutex_pos);
 
-		// NOTE: This is work in progress, it does not fully work yet.
-
 		// Apply antenna offset
 		const float s_yaw = sinf(-m_pos.yaw * M_PI / 180.0);
 		const float c_yaw = cosf(-m_pos.yaw * M_PI / 180.0);
 		const float px = m_pos.px + (c_yaw * OFFSET_X - s_yaw * OFFSET_Y);
 		const float py = m_pos.py + (s_yaw * OFFSET_X + c_yaw * OFFSET_Y);
 
-		// Quadcopter adaption attempt...
-		const float anchor_pos_gain_p = 0.05;
-		const float anchor_pos_gain_i = 0.0;
-		const float anchor_pos_gain_d = 0.005;
-		const float da_x = px - a->px;
-		const float da_y = py - a->py;
-		float dist = sqrtf(SQ(da_x) * SQ(da_y));
-		dist = dist < 0.01 ? 0.01 : dist; // Avoid divide by 0
-		const float error = dist - a->dist_last;
-		const float comp_factor = error / dist;
-		float pcx = da_x * comp_factor;
-		float pcy = da_y * comp_factor;
-		utils_truncate_number(&pcx, 0.0, 5.0);
-		utils_truncate_number(&pcy, 0.0, 5.0);
+		const float dx = a->px - px;
+		const float dy = a->py - py;
+		float d = sqrtf(SQ(dx) + SQ(dy));
+		d = d < 0.01 ? 0.01 : d; // Avoid divide by 0
 
-		const float pcx_p = pcx * anchor_pos_gain_p;
-		const float pcy_p = pcy * anchor_pos_gain_p;
+		const float diff = d - a->dist_last;
+		if (diff < 8.0) {
+			const float ca = dx / d;
+			const float sa = dy / d;
+			const float corr_step = SIGN(diff) * MIN(fabsf(diff), CORR_STEP);
 
-		a->corr_pcxI += pcx * anchor_pos_gain_i * dt;
-		a->corr_pcyI += pcy * anchor_pos_gain_i * dt;
-		utils_truncate_number(&a->corr_pcxI, -0.2, 0.2);
-		utils_truncate_number(&a->corr_pcyI, -0.2, 0.2);
-
-		const float pcx_d = (pcx - a->corr_pcxLast) * anchor_pos_gain_d / dt;
-		const float pcy_d = (pcy - a->corr_pcyLast) * anchor_pos_gain_d / dt;
-		a->corr_pcxLast = pcx;
-		a->corr_pcyLast = pcy;
-
-		const float pcx_out = pcx_p + a->corr_pcxI + pcx_d;
-		const float pcy_out = pcy_p + a->corr_pcyI + pcy_d;
-
-		m_pos.px -= pcx_out;
-		m_pos.py -= pcy_out;
-
-//		const float dx = a->px - px;
-//		const float dy = a->py - py;
-//		float d = sqrtf(SQ(dx) * SQ(dy));
-//		d = d < 0.01 ? 0.01 : d; // Avoid divide by 0
-//
-//		const float diff = d - a->dist_last;
-//		if (diff < 8.0) {
-//			const float ca = dx / d;
-//			const float sa = dy / d;
-//			const float corr_step = SIGN(diff) * MIN(fabsf(diff), CORR_STEP);
-//
-//			m_pos.px += corr_step * ca;
-//			m_pos.py += corr_step * sa;
-//		}
+			m_pos.px += corr_step * ca;
+			m_pos.py += corr_step * sa;
+		}
 
 		chMtxUnlock(&m_mutex_pos);
 	}

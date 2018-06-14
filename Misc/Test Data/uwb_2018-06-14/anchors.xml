@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes>
+    <anchors>
+        <anchor>
+            <x>-51.461</x>
+            <y>-138.729</y>
+            <height>1</height>
+            <id>50</id>
+        </anchor>
+        <anchor>
+            <x>-51.431</x>
+            <y>-124.265</y>
+            <height>1</height>
+            <id>234</id>
+        </anchor>
+        <anchor>
+            <x>-63.864</x>
+            <y>-138.802</y>
+            <height>1</height>
+            <id>35</id>
+        </anchor>
+    </anchors>
+</routes>
