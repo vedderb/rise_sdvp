@@ -415,6 +415,11 @@ typedef struct {
 	float py;
 	float height;
 	float dist_last;
+	uint32_t timestamp;
+	float corr_pcxI;
+	float corr_pcyI;
+	float corr_pcxLast;
+	float corr_pcyLast;
 } UWB_ANCHOR;
 
 // ============== UBLOX Datatypes ================== //
