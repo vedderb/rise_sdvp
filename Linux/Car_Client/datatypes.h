@@ -29,6 +29,14 @@
 #define ID_MOTE						254
 #define ID_RTCM						211 // Same as RTCM3PREAMB
 
+// External log mode
+typedef enum {
+    LOG_EXT_OFF = 0,
+    LOG_EXT_UART,
+    LOG_EXT_UART_POLLED,
+    LOG_EXT_ETHERNET
+} LOG_EXT_MODE;
+
 // Orientation data
 typedef struct {
     float q0;
@@ -231,7 +239,7 @@ typedef struct {
     int log_rate_hz;
     bool log_en;
     char log_name[LOG_NAME_MAX_LEN + 1];
-    int log_en_uart;
+    LOG_EXT_MODE log_mode_ext;
     int log_uart_baud;
 
     MAIN_CONFIG_CAR car;
@@ -281,6 +289,7 @@ typedef enum {
     CMD_GET_MAIN_CONFIG_DEFAULT,
     CMD_ADD_UWB_ANCHOR,
     CMD_CLEAR_UWB_ANCHORS,
+    CMD_LOG_ETHERNET,
 
     // Car commands
     CMD_GET_STATE = 120,

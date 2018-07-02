@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>615</width>
-    <height>327</height>
+    <width>591</width>
+    <height>259</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -767,21 +767,6 @@
        <string>Logging</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_2">
-       <property name="spacing">
-        <number>3</number>
-       </property>
-       <property name="leftMargin">
-        <number>3</number>
-       </property>
-       <property name="topMargin">
-        <number>3</number>
-       </property>
-       <property name="rightMargin">
-        <number>3</number>
-       </property>
-       <property name="bottomMargin">
-        <number>3</number>
-       </property>
        <item>
         <layout class="QGridLayout" name="gridLayout">
          <property name="spacing">
@@ -789,20 +774,6 @@
          </property>
          <item row="1" column="1" colspan="2">
           <widget class="QLineEdit" name="confLogNameEdit"/>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label">
-           <property name="text">
-            <string>Log name</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="0">
-          <widget class="QLabel" name="label_2">
-           <property name="text">
-            <string>UART baud rate</string>
-           </property>
-          </widget>
          </item>
          <item row="0" column="1" colspan="2">
           <widget class="QSpinBox" name="confLogRateBox">
@@ -820,6 +791,27 @@
            </property>
           </widget>
          </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>Log name</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>UART baud rate</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QCheckBox" name="confLogEnBox">
+           <property name="text">
+            <string>Enable logging</string>
+           </property>
+          </widget>
+         </item>
          <item row="3" column="1" colspan="2">
           <widget class="QSpinBox" name="confLogUartBaudBox">
            <property name="sizePolicy">
@@ -833,36 +825,47 @@
            </property>
           </widget>
          </item>
-         <item row="2" column="2">
-          <widget class="QRadioButton" name="confLogUartPolledButton">
-           <property name="text">
-            <string>Log Uart Polled</string>
-           </property>
-          </widget>
-         </item>
          <item row="2" column="0">
-          <widget class="QRadioButton" name="confLogUartOffButton">
+          <widget class="QLabel" name="label_3">
            <property name="text">
-            <string>Log Uart Off</string>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
+            <string>Log External Mode</string>
            </property>
           </widget>
          </item>
-         <item row="2" column="1">
-          <widget class="QRadioButton" name="confLogUartContButton">
-           <property name="text">
-            <string>Log Uart Cont</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0">
-          <widget class="QCheckBox" name="confLogEnBox">
-           <property name="text">
-            <string>Enable logging</string>
-           </property>
-          </widget>
+         <item row="2" column="1" colspan="2">
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <item>
+            <widget class="QRadioButton" name="confLogUartOffButton">
+             <property name="text">
+              <string>Off</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="confLogUartContButton">
+             <property name="text">
+              <string>UART</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="confLogUartPolledButton">
+             <property name="text">
+              <string>UART Polled</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="confLogEthernetButton">
+             <property name="text">
+              <string>Ethernet</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </item>
         </layout>
        </item>

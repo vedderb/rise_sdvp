@@ -147,7 +147,7 @@ int main(void) {
 	log_set_rate(main_config.log_rate_hz);
 	log_set_enabled(main_config.log_en);
 	log_set_name(main_config.log_name);
-	log_set_uart(main_config.log_en_uart, main_config.log_uart_baud);
+	log_set_ext(main_config.log_mode_ext, main_config.log_uart_baud);
 
 	for(;;) {
 		chThdSleepMilliseconds(2);

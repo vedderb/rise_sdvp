@@ -110,7 +110,7 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 	conf->log_rate_hz = 50;
 	conf->log_en = false;
 	strcpy(conf->log_name, "New Log");
-	conf->log_en_uart = 0;
+	conf->log_mode_ext = 0;
 	conf->log_uart_baud = 115200;
 
 	// Default car settings

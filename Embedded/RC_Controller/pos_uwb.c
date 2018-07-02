@@ -121,6 +121,9 @@ static void dw_range(uint8_t id, uint8_t dest, float range) {
 		}
 	}
 
+	// Unused
+	(void)dt;
+
 	if (a) {
 		chMtxLock(&m_mutex_pos);
 

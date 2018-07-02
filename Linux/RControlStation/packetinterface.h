@@ -100,6 +100,7 @@ signals:
     void rebootSystemReceived(quint8 id, bool powerOff);
     void dwSampleReceived(quint8 id, DW_LOG_INFO dw);
     void routePartReceived(quint8 id, int len, const QList<LocPoint> &route);
+    void logEthernetReceived(quint8 id, QByteArray data);
     
 public slots:
     void timerSlot();

@@ -50,6 +50,7 @@ CarClient::CarClient(QObject *parent) : QObject(parent)
     mPacketInterface = new PacketInterface(this);
     mRtcmBroadcaster = new TcpBroadcast(this);
     mUbxBroadcaster = new TcpBroadcast(this);
+    mLogBroadcaster = new TcpBroadcast(this);
     mUblox = new Ublox(this);
     mTcpSocket = new QTcpSocket(this);
     mTcpServer = new TcpServerSimple(this);
@@ -112,6 +113,8 @@ CarClient::CarClient(QObject *parent) : QObject(parent)
             this, SLOT(tcpRx(QByteArray&)));
     connect(mRtcmClient, SIGNAL(rtcmReceived(QByteArray,int,bool)),
             this, SLOT(rtcmReceived(QByteArray,int,bool)));
+    connect(mPacketInterface, SIGNAL(logEthernetReceived(quint8,QByteArray)),
+            this, SLOT(logEthernetReceived(quint8,QByteArray)));
 }
 
 CarClient::~CarClient()
@@ -174,6 +177,11 @@ void CarClient::startRtcmServer(int port)
 void CarClient::startUbxServer(int port)
 {
     mUbxBroadcaster->startTcpServer(port);
+}
+
+void CarClient::startLogServer(int port)
+{
+    mLogBroadcaster->startTcpServer(port);
 }
 
 void CarClient::connectNmea(QString server, int port)
@@ -622,6 +630,12 @@ void CarClient::rtcmReceived(QByteArray data, int type, bool sync)
     (void)type;
     (void)sync;
     mPacketInterface->sendRtcmUsb(255, data);
+}
+
+void CarClient::logEthernetReceived(quint8 id, QByteArray data)
+{
+    (void)id;
+    mLogBroadcaster->broadcastData(data);
 }
 
 void CarClient::rebootSystem(bool powerOff)

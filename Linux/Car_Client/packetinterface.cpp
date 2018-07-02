@@ -435,7 +435,7 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         conf.log_en = data[ind++];
         strcpy(conf.log_name, (const char*)(data + ind));
         ind += strlen(conf.log_name) + 1;
-        conf.log_en_uart = data[ind++];
+        conf.log_mode_ext = (LOG_EXT_MODE)data[ind++];
         conf.log_uart_baud = utility::buffer_get_uint32(data, &ind);
 
         // Car settings
@@ -602,6 +602,11 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         int32_t ind = 0;
         bool power_off = data[ind++];
         emit rebootSystemReceived(id, power_off);
+    } break;
+
+    case CMD_LOG_ETHERNET: {
+        QByteArray tmpArray((char*)data, len);
+        emit logEthernetReceived(id, tmpArray);
     } break;
 
         // Car commands
@@ -884,7 +889,7 @@ bool PacketInterface::setConfiguration(quint8 id, MAIN_CONFIG &conf, int retries
     mSendBuffer[send_index++] = conf.log_en;
     strcpy((char*)(mSendBuffer + send_index), conf.log_name);
     send_index += strlen(conf.log_name) + 1;
-    mSendBuffer[send_index++] = conf.log_en_uart;
+    mSendBuffer[send_index++] = conf.log_mode_ext;
     utility::buffer_append_uint32(mSendBuffer, conf.log_uart_baud, &send_index);
 
     // Car settings

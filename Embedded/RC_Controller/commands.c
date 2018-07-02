@@ -559,13 +559,13 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			main_config.log_en = data[ind++];
 			strcpy(main_config.log_name, (const char*)(data + ind));
 			ind += strlen(main_config.log_name) + 1;
-			main_config.log_en_uart = data[ind++];
+			main_config.log_mode_ext = data[ind++];
 			main_config.log_uart_baud = buffer_get_uint32(data, &ind);
 
 			log_set_rate(main_config.log_rate_hz);
 			log_set_enabled(main_config.log_en);
 			log_set_name(main_config.log_name);
-			log_set_uart(main_config.log_en_uart, main_config.log_uart_baud);
+			log_set_ext(main_config.log_mode_ext, main_config.log_uart_baud);
 
 			// Car settings
 			main_config.car.yaw_use_odometry = data[ind++];
@@ -710,7 +710,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			m_send_buffer[send_index++] = main_cfg_tmp.log_en;
 			strcpy((char*)(m_send_buffer + send_index), main_cfg_tmp.log_name);
 			send_index += strlen(main_config.log_name) + 1;
-			m_send_buffer[send_index++] = main_cfg_tmp.log_en_uart;
+			m_send_buffer[send_index++] = main_cfg_tmp.log_mode_ext;
 			buffer_append_uint32(m_send_buffer, main_cfg_tmp.log_uart_baud, &send_index);
 
 			// Car settings
@@ -1205,6 +1205,15 @@ void commands_send_dw_sample(DW_LOG_INFO *dw) {
 #else
 	commands_send_packet(m_send_buffer, ind);
 #endif
+}
+
+void commands_send_log_ethernet(unsigned char *data, int len) {
+	int32_t ind = 0;
+	m_send_buffer[ind++] = main_id;
+	m_send_buffer[ind++] = CMD_LOG_ETHERNET;
+	memcpy(m_send_buffer, data, len);
+	ind += len;
+	commands_send_packet((unsigned char*)m_send_buffer, ind);
 }
 
 static void stop_forward(void *p) {

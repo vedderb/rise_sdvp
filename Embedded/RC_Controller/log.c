@@ -37,12 +37,15 @@
 #define UART_ALT_PIN_FUNCTION		7
 #define UART_LOG_RX_BUFFER_SIZE		256
 
+// Defines
+#define LOG_MODE_IS_UART(mode)		(mode == LOG_EXT_UART || mode == LOG_EXT_UART_POLLED)
+
 // private variables
 static int m_log_rate_hz;
 static bool m_log_en;
 static bool m_write_split;
 static char m_log_name[LOG_NAME_MAX_LEN + 1];
-static int m_log_uart;
+static LOG_EXT_MODE m_log_ext_mode;
 static int m_log_uart_baud;
 static char m_log_uart_rx_buffer[UART_LOG_RX_BUFFER_SIZE];
 static int m_log_uart_rx_ptr;
@@ -66,14 +69,14 @@ static thread_t *log_uart_tp;
 #ifdef LOG_EN_DW
 static void range_callback(uint8_t id, uint8_t dest, float range);
 #endif
-static void print_log_uart(void);
+static void print_log_ext(void);
 static void txend1(UARTDriver *uartp);
 static void txend2(UARTDriver *uartp);
 static void rxerr(UARTDriver *uartp, uartflags_t e);
 static void rxchar(UARTDriver *uartp, uint16_t c);
 static void rxend(UARTDriver *uartp);
 static void set_baudrate(uint32_t baud);
-static void printf_blocking(char* format, ...);
+static void printf_blocking(bool ethernet, char* format, ...);
 static void write_blocking(unsigned char *data, unsigned int len);
 
 // Configuration structures
@@ -94,7 +97,7 @@ void log_init(void) {
 	m_log_en = false;
 	m_write_split = true;
 	strcpy(m_log_name, "Undefined");
-	m_log_uart = 0;
+	m_log_ext_mode = LOG_EXT_OFF;
 	m_log_uart_baud = 115200;
 	m_log_uart_rx_ptr = 0;
 	memset(&m_pos_last_sw, 0, sizeof(m_pos_last_sw));
@@ -125,20 +128,20 @@ void log_set_name(char *name) {
 	strcpy(m_log_name, name);
 }
 
-void log_set_uart(int mode, int baud) {
-	if (mode > 0 && m_log_uart == 0) {
+void log_set_ext(LOG_EXT_MODE mode, int baud) {
+	if (LOG_MODE_IS_UART(mode) && !LOG_MODE_IS_UART(m_log_ext_mode)) {
 		palSetPadMode(UART_TX_PORT, UART_TX_PIN, PAL_MODE_ALTERNATE(UART_ALT_PIN_FUNCTION));
 		palSetPadMode(UART_RX_PORT, UART_RX_PIN, PAL_MODE_ALTERNATE(UART_ALT_PIN_FUNCTION));
 		uartStart(&UART_DEV, &uart_cfg);
-	} else if (mode == 0 && m_log_uart != 0) {
+	} else if (!LOG_MODE_IS_UART(mode) && LOG_MODE_IS_UART(m_log_ext_mode)) {
 		uartStop(&UART_DEV);
 		palSetPadMode(UART_TX_PORT, UART_TX_PIN, PAL_MODE_RESET);
 		palSetPadMode(UART_RX_PORT, UART_RX_PIN, PAL_MODE_RESET);
 	}
 
-	m_log_uart = mode;
+	m_log_ext_mode = mode;
 
-	if (m_log_uart > 0) {
+	if (LOG_MODE_IS_UART(m_log_ext_mode) > 0) {
 		set_baudrate(baud);
 	}
 }
@@ -161,8 +164,8 @@ static THD_FUNCTION(log_thread, arg) {
 	systime_t time_p = chVTGetSystemTimeX(); // T0
 
 	for(;;) {
-		if (m_log_uart == 1) {
-			print_log_uart();
+		if (m_log_ext_mode == LOG_EXT_UART) {
+			print_log_ext();
 		}
 
 		if (m_log_en) {
@@ -409,12 +412,12 @@ static THD_FUNCTION(log_uart_thread, arg) {
 		chEvtWaitAny((eventmask_t) 1);
 
 		if (strcmp(m_log_uart_rx_buffer, "READ_POS") == 0) {
-			print_log_uart();
+			print_log_ext();
 		}
 	}
 }
 
-static void print_log_uart(void) {
+static void print_log_ext(void) {
 	static mc_values val;
 	static POS_STATE pos;
 	static GPS_STATE gps;
@@ -424,7 +427,7 @@ static void print_log_uart(void) {
 	pos_get_gps(&gps);
 	uint32_t time = ST2MS(chVTGetSystemTimeX());
 
-	printf_blocking(
+	printf_blocking(m_log_ext_mode == LOG_EXT_ETHERNET,
 			"%u,"     // timestamp (ms)
 			"%.3f,"   // car x
 			"%.3f,"   // car y
@@ -505,7 +508,7 @@ static void rxerr(UARTDriver *uartp, uartflags_t e) {
 static void rxchar(UARTDriver *uartp, uint16_t c) {
 	(void)uartp;
 
-	if (m_log_uart == 2) {
+	if (m_log_ext_mode == LOG_EXT_UART_POLLED) {
 		if (c == '\n' || c == '\r') {
 			if (m_log_uart_rx_ptr > 0) {
 				m_log_uart_rx_buffer[m_log_uart_rx_ptr] = '\0';
@@ -540,7 +543,7 @@ static void set_baudrate(uint32_t baud) {
 	}
 }
 
-static void printf_blocking(char* format, ...) {
+static void printf_blocking(bool ethernet, char* format, ...) {
 	va_list arg;
 	va_start (arg, format);
 	int len;
@@ -552,7 +555,11 @@ static void printf_blocking(char* format, ...) {
 	print_buffer[len] = '\0';
 
 	if(len > 0) {
-		write_blocking((unsigned char*)print_buffer, (len < 511) ? len : 511);
+		if (ethernet) {
+			commands_send_log_ethernet((unsigned char*)print_buffer, (len < 511) ? len : 511);
+		} else {
+			write_blocking((unsigned char*)print_buffer, (len < 511) ? len : 511);
+		}
 	}
 }
 

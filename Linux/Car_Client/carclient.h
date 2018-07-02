@@ -57,6 +57,7 @@ public:
     void connectSerialRtcm(QString port, int baudrate = 9600);
     void startRtcmServer(int port = 8200);
     void startUbxServer(int port = 8210);
+    void startLogServer(int port = 8410);
     void connectNmea(QString server, int port = 2948);
     void startUdpServer(int port = 8300);
     bool startTcpServer(int port = 8300);
@@ -93,11 +94,13 @@ public slots:
     void rxRawx(ubx_rxm_rawx rawx);
     void tcpRx(QByteArray &data);
     void rtcmReceived(QByteArray data, int type, bool sync = false);
+    void logEthernetReceived(quint8 id, QByteArray data);
 
 private:
     PacketInterface *mPacketInterface;
     TcpBroadcast *mRtcmBroadcaster;
     TcpBroadcast *mUbxBroadcaster;
+    TcpBroadcast *mLogBroadcaster;
     SerialPort *mSerialPort;
     QSerialPort *mSerialPortRtcm;
     QTcpSocket *mTcpSocket;

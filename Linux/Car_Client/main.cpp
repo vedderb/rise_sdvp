@@ -32,6 +32,7 @@ void showHelp()
     qDebug() << "-l, --log : Log to file, e.g. /tmp/logfile.bin (TODO!)";
     qDebug() << "--tcprtcmport : TCP server port for RTCM data";
     qDebug() << "--tcpubxport : TCP server port for UBX data";
+    qDebug() << "--tcplogport : TCP server port for log data";
     qDebug() << "--tcpnmeasrv : NMEA server address";
     qDebug() << "--tcpnmeaport : NMEA server port";
     qDebug() << "--useudp : Use UDP server";
@@ -65,6 +66,7 @@ int main(int argc, char *argv[])
     int baudrate = 115200;
     int tcpRtcmPort = 8200;
     int tcpUbxPort = 8210;
+    int tcpLogPort = 8410;
     QString tcpNmeaServer = "127.0.0.1";
     int tcpNmeaPort = 2948;
     bool useUdp = false;
@@ -152,6 +154,15 @@ int main(int argc, char *argv[])
                 i++;
                 bool ok;
                 tcpUbxPort = args.at(i).toInt(&ok);
+                found = ok;
+            }
+        }
+
+        if (str == "--tcplogport") {
+            if ((i - 1) < args.size()) {
+                i++;
+                bool ok;
+                tcpLogPort = args.at(i).toInt(&ok);
                 found = ok;
             }
         }
@@ -293,6 +304,7 @@ int main(int argc, char *argv[])
     car.connectSerial(ttyPort, baudrate);
     car.startRtcmServer(tcpRtcmPort);
     car.startUbxServer(tcpUbxPort);
+    car.startLogServer(tcpLogPort);
     car.restartRtklib();
 
     if (car.isRtklibRunning()) {
