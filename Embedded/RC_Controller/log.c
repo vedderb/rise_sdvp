@@ -164,7 +164,7 @@ static THD_FUNCTION(log_thread, arg) {
 	systime_t time_p = chVTGetSystemTimeX(); // T0
 
 	for(;;) {
-		if (m_log_ext_mode == LOG_EXT_UART) {
+		if (m_log_ext_mode == LOG_EXT_UART || m_log_ext_mode == LOG_EXT_ETHERNET) {
 			print_log_ext();
 		}
 

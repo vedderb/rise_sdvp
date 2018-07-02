@@ -1211,9 +1211,9 @@ void commands_send_log_ethernet(unsigned char *data, int len) {
 	int32_t ind = 0;
 	m_send_buffer[ind++] = main_id;
 	m_send_buffer[ind++] = CMD_LOG_ETHERNET;
-	memcpy(m_send_buffer, data, len);
+	memcpy(m_send_buffer + ind, data, len);
 	ind += len;
-	commands_send_packet((unsigned char*)m_send_buffer, ind);
+	comm_usb_send_packet(m_send_buffer, ind);
 }
 
 static void stop_forward(void *p) {
