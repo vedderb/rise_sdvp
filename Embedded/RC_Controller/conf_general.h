@@ -40,7 +40,7 @@
 
 // Firmware version
 #define FW_VERSION_MAJOR			9
-#define FW_VERSION_MINOR			1
+#define FW_VERSION_MINOR			2
 
 // Default car settings
 //#define CAR_TERO // Benjamins tero car
@@ -71,8 +71,6 @@
 //#define LOG_EN_CARREL
 //#define LOG_EN_ITRANSIT
 //#define LOG_EN_DW
-#define LOG_EN_SW
-#define LOG_EN_CORR
 
 // Anchor IDs to range against in DW logging mode. -1 to disable.
 #define LOG_DW_ANCHOR0				122

@@ -33,7 +33,6 @@
 #include "mr_control.h"
 #include "srf10.h"
 #include "terminal.h"
-#include "log.h"
 #include "pos_uwb.h"
 
 // Defines
@@ -188,10 +187,6 @@ void pos_init(void) {
 			"  prn - satellite with prn.",
 			"[prn]",
 			cmd_terminal_sat_info);
-
-#ifdef LOG_EN_SW
-	palSetPadMode(GPIOD, 3, PAL_MODE_INPUT_PULLUP);
-#endif
 
 	(void)save_pos_history();
 }
@@ -448,7 +443,6 @@ bool pos_input_nmea(const char *data) {
 
 				m_pos.gps_last_corr_diff = sqrtf(SQ(m_pos.px - m_pos.px_gps) +
 						SQ(m_pos.py - m_pos.py_gps));
-				log_update_corr_pos(&m_pos);
 
 				correct_pos_gps(&m_pos);
 				m_pos.gps_corr_time = chVTGetSystemTimeX();
@@ -769,15 +763,6 @@ static void mpu9150_read(void) {
 
 #if MAIN_MODE == MAIN_MODE_MULTIROTOR
 	mr_control_run_iteration(dt);
-#endif
-
-#ifdef LOG_EN_SW
-	static int sw_cnt = 0;
-	if (!palReadPad(GPIOD, 3) && sw_cnt > 100) {
-		sw_cnt = 0;
-		log_update_sw_pos(&m_pos);
-	}
-	sw_cnt++;
 #endif
 }
 

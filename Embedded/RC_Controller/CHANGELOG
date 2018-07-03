@@ -1,3 +1,7 @@
+=== FW 9.2 ===
+* Removed unused logging code.
+* Log more data.
+
 === FW 9.1 ===
 * Ethernet logging support.
 

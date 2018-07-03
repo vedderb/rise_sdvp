@@ -49,10 +49,6 @@ static LOG_EXT_MODE m_log_ext_mode;
 static int m_log_uart_baud;
 static char m_log_uart_rx_buffer[UART_LOG_RX_BUFFER_SIZE];
 static int m_log_uart_rx_ptr;
-static POS_STATE m_pos_last_sw;
-static bool m_pos_last_sw_updated;
-static POS_STATE m_pos_last_corr;
-static bool m_pos_last_corr_updated;
 #ifdef LOG_EN_DW
 static int m_dw_anchor_now = 0;
 static DW_LOG_INFO m_dw_anchor_info[3];
@@ -100,10 +96,6 @@ void log_init(void) {
 	m_log_ext_mode = LOG_EXT_OFF;
 	m_log_uart_baud = 115200;
 	m_log_uart_rx_ptr = 0;
-	memset(&m_pos_last_sw, 0, sizeof(m_pos_last_sw));
-	m_pos_last_sw_updated = false;
-	memset(&m_pos_last_corr, 0, sizeof(m_pos_last_corr));
-	m_pos_last_corr_updated = false;
 	memset(m_log_uart_rx_buffer, 0, sizeof(m_log_uart_rx_buffer));
 
 	chThdCreateStatic(log_thread_wa, sizeof(log_thread_wa),
@@ -144,16 +136,6 @@ void log_set_ext(LOG_EXT_MODE mode, int baud) {
 	if (LOG_MODE_IS_UART(m_log_ext_mode) > 0) {
 		set_baudrate(baud);
 	}
-}
-
-void log_update_sw_pos(const POS_STATE *pos) {
-	m_pos_last_sw = *pos;
-	m_pos_last_sw_updated = true;
-}
-
-void log_update_corr_pos(const POS_STATE *pos) {
-	m_pos_last_corr = *pos;
-	m_pos_last_corr_updated = true;
 }
 
 static THD_FUNCTION(log_thread, arg) {
@@ -349,46 +331,6 @@ static THD_FUNCTION(log_thread, arg) {
 
 			m_dw_anchor_now++;
 #endif
-
-#ifdef LOG_EN_SW
-			if (m_pos_last_sw_updated) {
-				m_pos_last_sw_updated = false;
-				commands_printf_log_usb(
-						"SW "
-						"%u "     // gps ms
-						"%u "     // fix type
-						"%.3f "   // x
-						"%.3f\n", // y
-
-						m_pos_last_sw.gps_ms,
-						m_pos_last_sw.gps_fix_type,
-						(double)m_pos_last_sw.px,
-						(double)m_pos_last_sw.py);
-			}
-#endif
-
-#ifdef LOG_EN_CORR
-			if (m_pos_last_corr_updated) {
-				m_pos_last_corr_updated = false;
-				commands_printf_log_usb(
-						"CORR "
-						"%u "     // gps ms
-						"%u "     // fix type
-						"%.3f "   // x
-						"%.3f "   // y
-						"%.3f "   // yaw
-						"%.3f "   // speed
-						"%.3f\n", // corr_diff
-
-						m_pos_last_corr.gps_ms,
-						m_pos_last_corr.gps_fix_type,
-						(double)m_pos_last_corr.px,
-						(double)m_pos_last_corr.py,
-						(double)m_pos_last_corr.yaw,
-						(double)m_pos_last_corr.speed,
-						(double)m_pos_last_corr.gps_last_corr_diff);
-			}
-#endif
 		}
 
 		time_p += CH_CFG_ST_FREQUENCY / m_log_rate_hz;
@@ -421,33 +363,59 @@ static void print_log_ext(void) {
 	static mc_values val;
 	static POS_STATE pos;
 	static GPS_STATE gps;
+	float accel[3];
+	float mag[3];
 
 	pos_get_mc_val(&val);
 	pos_get_pos(&pos);
 	pos_get_gps(&gps);
+	pos_get_imu(accel, 0, mag);
 	uint32_t time = ST2MS(chVTGetSystemTimeX());
+	uint32_t ms_today = pos_get_ms_today();
 
 	printf_blocking(m_log_ext_mode == LOG_EXT_ETHERNET,
 			"%u,"     // timestamp (ms)
+			"%u,"     // timestamp pos today (ms)
 			"%.3f,"   // car x
 			"%.3f,"   // car y
 			"%.2f,"   // roll
 			"%.2f,"   // pitch
 			"%.2f,"   // yaw
+			"%.2f,"   // roll rate
+			"%.2f,"   // pitch rate
+			"%.2f,"   // yaw rate
+			"%.2f,"   // accel_x
+			"%.2f,"   // accel_y
+			"%.2f,"   // accel_z
+			"%.2f,"   // mag_x
+			"%.2f,"   // mag_y
+			"%.2f,"   // mag_z
 			"%.3f,"   // speed
 			"%d,"     // tachometer
+			"%u,"     // timestamp gps sample today (ms)
 			"%.7f,"   // lat
 			"%.7f,"   // lon
 			"%.3f\r\n",  // height
 
 			time,
+			ms_today,
 			(double)pos.px,
 			(double)pos.py,
 			(double)pos.roll,
 			(double)pos.pitch,
 			(double)pos.yaw,
+			(double)pos.roll_rate,
+			(double)pos.pitch_rate,
+			(double)pos.yaw_rate,
+			(double)accel[0],
+			(double)accel[1],
+			(double)accel[2],
+			(double)mag[0],
+			(double)mag[1],
+			(double)mag[2],
 			(double)pos.speed,
 			val.tachometer,
+			gps.ms,
 			gps.lat,
 			gps.lon,
 			gps.height);
