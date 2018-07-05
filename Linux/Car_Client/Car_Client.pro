@@ -1,7 +1,9 @@
-QT += core
-QT -= gui
+QT += core gui
+QT += widgets
 QT += network
 QT += serialport
+QT += quick
+QT += quickcontrols2
 
 CONFIG += c++11
 
@@ -43,4 +45,7 @@ HEADERS += \
     chronos.h \
     vbytearray.h \
     rtcmclient.h
+
+RESOURCES += \
+    res.qrc
 

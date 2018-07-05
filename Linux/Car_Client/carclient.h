@@ -65,7 +65,7 @@ public:
     void logStop();
     void rtcmRx(QByteArray data, int type);
     void restartRtklib();
-    PacketInterface* packetInterface();
+    Q_INVOKABLE PacketInterface* packetInterface();
     bool isRtklibRunning();
     quint8 carId();
     void connectNtrip(QString server, QString stream, QString user = "", QString pass = "", int port = 80);

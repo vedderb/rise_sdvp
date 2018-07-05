@@ -10,6 +10,8 @@ QT       += printsupport
 QT       += serialport
 QT       += network
 QT       += opengl
+QT       += quick
+QT       += quickcontrols2
 
 CONFIG   += c++11
 

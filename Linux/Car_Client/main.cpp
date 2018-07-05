@@ -15,10 +15,12 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
     */
 
-#include <QCoreApplication>
+#include <QApplication>
 #include <QDebug>
 #include <signal.h>
 #include <QDir>
+#include <QQmlApplicationEngine>
+#include <QQmlContext>
 
 #include "carclient.h"
 #include "chronos.h"
@@ -47,6 +49,7 @@ void showHelp()
     qDebug() << "--chronos : Run CHRONOS client";
     qDebug() << "--ntrip [server]:[stream]:[user]:[password]:[port] : Connect to ntrip server";
     qDebug() << "--rtcmbasepos [lat]:[lon]:[height] : Inject RTCM base position message";
+    qDebug() << "--usegui : Use QML GUI";
 }
 
 static void m_cleanup(int sig)
@@ -58,7 +61,7 @@ static void m_cleanup(int sig)
 
 int main(int argc, char *argv[])
 {
-    QCoreApplication a(argc, argv);
+    QApplication a(argc, argv);
 
     QStringList args = QCoreApplication::arguments();
     QString ttyPort = "/dev/ttyACM0";
@@ -89,6 +92,7 @@ int main(int argc, char *argv[])
     double rtcmBaseLat = 0.0;
     double rtcmBaseLon = 0.0;
     double rtcmBaseHeight = 0.0;
+    bool useGui = false;
 
     signal(SIGINT, m_cleanup);
     signal(SIGTERM, m_cleanup);
@@ -286,6 +290,11 @@ int main(int argc, char *argv[])
             }
         }
 
+        if (str == "--usegui") {
+            useGui = true;
+            found = true;
+        }
+
         if (!found) {
             if (dash) {
                 qCritical() << "At least one of the flags is invalid:" << str;
@@ -300,6 +309,7 @@ int main(int argc, char *argv[])
 
     CarClient car;
     Chronos chronos;
+    QQmlApplicationEngine qmlEngine;
 
     car.connectSerial(ttyPort, baudrate);
     car.startRtcmServer(tcpRtcmPort);
@@ -337,6 +347,16 @@ int main(int argc, char *argv[])
 
     if (sendRtcmBase) {
         car.setSendRtcmBasePos(true, rtcmBaseLat, rtcmBaseLon, rtcmBaseHeight);
+    }
+
+    if (useGui) {
+        qmlRegisterType<PacketInterface>("Car.packetInterface", 1, 0, "PacketInterface");
+        qmlEngine.rootContext()->setContextProperty("carClient", &car);
+        qmlEngine.load(QUrl(QLatin1String("qrc:/res/main.qml")));
+
+        if (!qmlEngine.rootObjects().isEmpty()) {
+            qWarning() << "Could not start QML GUI";
+        }
     }
 
     return a.exec();

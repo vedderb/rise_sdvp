@@ -21,6 +21,13 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#ifdef __cplusplus
+extern "C++" {
+#include <QObject>
+#include <QQmlListProperty>
+}
+#endif
+
 // Sizes
 #define LOG_NAME_MAX_LEN			20
 
@@ -60,7 +67,36 @@ typedef enum {
     FAULT_CODE_OVER_TEMP_MOTOR
 } mc_fault_code;
 
-typedef struct {
+#ifdef __cplusplus
+extern "C++" {
+struct CAR_STATE {
+    Q_GADGET
+
+    Q_PROPERTY(uint8_t fw_major MEMBER fw_major)
+    Q_PROPERTY(uint8_t fw_minor MEMBER fw_minor)
+    Q_PROPERTY(double roll MEMBER roll)
+    Q_PROPERTY(double pitch MEMBER pitch)
+    Q_PROPERTY(double yaw MEMBER yaw)
+    Q_PROPERTY(QList<double> accel READ accelList)
+    Q_PROPERTY(QList<double> gyro READ gyroList)
+    Q_PROPERTY(QList<double> mag READ magList)
+    Q_PROPERTY(double px MEMBER px)
+    Q_PROPERTY(double py MEMBER py)
+    Q_PROPERTY(double speed MEMBER speed)
+    Q_PROPERTY(double vin MEMBER vin)
+    Q_PROPERTY(double temp_fet MEMBER temp_fet)
+    Q_PROPERTY(mc_fault_code mc_fault MEMBER mc_fault)
+    Q_PROPERTY(double px_gps MEMBER px_gps)
+    Q_PROPERTY(double py_gps MEMBER py_gps)
+    Q_PROPERTY(double ap_goal_px MEMBER ap_goal_px)
+    Q_PROPERTY(double ap_goal_py MEMBER ap_goal_py)
+    Q_PROPERTY(double ap_rad MEMBER ap_rad)
+    Q_PROPERTY(int32_t ms_today MEMBER ms_today)
+    Q_PROPERTY(int16_t ap_route_left MEMBER ap_route_left)
+    Q_PROPERTY(double px_uwb MEMBER px_uwb)
+    Q_PROPERTY(double py_uwb MEMBER py_uwb)
+
+public:
     uint8_t fw_major;
     uint8_t fw_minor;
     double roll;
@@ -84,7 +120,34 @@ typedef struct {
     int16_t ap_route_left;
     double px_uwb;
     double py_uwb;
-} CAR_STATE;
+
+    QList<double> accelList() {
+        QList<double> a;
+        a.append(accel[0]);
+        a.append(accel[1]);
+        a.append(accel[2]);
+        return a;
+    }
+
+    QList<double> gyroList() {
+        QList<double> a;
+        a.append(gyro[0]);
+        a.append(gyro[1]);
+        a.append(gyro[2]);
+        return a;
+    }
+
+    QList<double> magList() {
+        QList<double> a;
+        a.append(mag[0]);
+        a.append(mag[1]);
+        a.append(mag[2]);
+        return a;
+    }
+};
+Q_DECLARE_METATYPE(CAR_STATE)
+}
+#endif
 
 typedef struct {
     uint8_t fw_major;
