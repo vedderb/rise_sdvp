@@ -40,7 +40,7 @@
 
 // Firmware version
 #define FW_VERSION_MAJOR			9
-#define FW_VERSION_MINOR			2
+#define FW_VERSION_MINOR			3
 
 // Default car settings
 //#define CAR_TERO // Benjamins tero car
@@ -86,6 +86,7 @@
 
 // General settings
 #define ID_ALL						255
+#define ID_CAR_CLIENT				254 // Packet for car client only
 #define VESC_ID						ID_ALL // id, or ID_ALL for any VESC
 #define ID_MOTE						254 // If the packet is for the mote and not to be forwarded in mote mode
 

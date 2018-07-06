@@ -139,7 +139,13 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 	data++;
 	len--;
 
-	if (id == main_id || id == ID_ALL) {
+	if (id == main_id || id == ID_ALL || id == ID_CAR_CLIENT) {
+		int id_ret = main_id;
+
+		if (id == ID_CAR_CLIENT) {
+			id_ret = ID_CAR_CLIENT;
+		}
+
 		switch (packet_id) {
 		// ==================== General commands ==================== //
 		case CMD_TERMINAL_CMD: {
@@ -168,7 +174,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 				commands_set_send_func(func);
 				// Send ack
 				int32_t send_index = 0;
-				m_send_buffer[send_index++] = main_id;
+				m_send_buffer[send_index++] = id_ret;
 				m_send_buffer[send_index++] = packet_id;
 				commands_send_packet(m_send_buffer, send_index);
 			}
@@ -187,7 +193,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 			// Send ack
 			int32_t send_index = 0;
-			m_send_buffer[send_index++] = main_id;
+			m_send_buffer[send_index++] = id_ret;
 			m_send_buffer[send_index++] = packet_id;
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
@@ -200,7 +206,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			pos_get_enu_ref(llh);
 
 			int32_t send_index = 0;
-			m_send_buffer[send_index++] = main_id;
+			m_send_buffer[send_index++] = id_ret;
 			m_send_buffer[send_index++] = CMD_GET_ENU_REF;
 			buffer_append_double64(m_send_buffer, llh[0], D(1e16), &send_index);
 			buffer_append_double64(m_send_buffer, llh[1], D(1e16), &send_index);
@@ -231,7 +237,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 			// Send ack
 			int32_t send_index = 0;
-			m_send_buffer[send_index++] = main_id;
+			m_send_buffer[send_index++] = id_ret;
 			m_send_buffer[send_index++] = packet_id;
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
@@ -244,7 +250,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 			// Send ack
 			int32_t send_index = 0;
-			m_send_buffer[send_index++] = main_id;
+			m_send_buffer[send_index++] = id_ret;
 			m_send_buffer[send_index++] = packet_id;
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
@@ -257,7 +263,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 			// Send ack
 			int32_t send_index = 0;
-			m_send_buffer[send_index++] = main_id;
+			m_send_buffer[send_index++] = id_ret;
 			m_send_buffer[send_index++] = packet_id;
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
@@ -272,7 +278,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			}
 
 			int32_t send_index = 0;
-			m_send_buffer[send_index++] = main_id;
+			m_send_buffer[send_index++] = id_ret;
 			m_send_buffer[send_index++] = CMD_AP_GET_ROUTE_PART;
 
 			int route_len = autopilot_get_route_len();
@@ -297,7 +303,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 			// Send ack
 			int32_t send_index = 0;
-			m_send_buffer[send_index++] = main_id;
+			m_send_buffer[send_index++] = id_ret;
 			m_send_buffer[send_index++] = packet_id;
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
@@ -327,7 +333,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 			// Send ack
 			int32_t send_index = 0;
-			m_send_buffer[send_index++] = main_id;
+			m_send_buffer[send_index++] = id_ret;
 			m_send_buffer[send_index++] = packet_id;
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
@@ -345,7 +351,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 			// Send ack
 			int32_t send_index = 0;
-			m_send_buffer[send_index++] = main_id;
+			m_send_buffer[send_index++] = id_ret;
 			m_send_buffer[send_index++] = packet_id;
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
@@ -371,7 +377,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 				// Only send the lines that pos decoded
 				if (found && main_config.gps_send_nmea) {
 					int32_t send_index = 0;
-					m_send_buffer[send_index++] = main_id;
+					m_send_buffer[send_index++] = id_ret;
 					m_send_buffer[send_index++] = packet_id;
 					int len_line = strlen(curLine);
 					memcpy(m_send_buffer + send_index, curLine, len_line);
@@ -402,7 +408,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 				commands_set_send_func(func);
 				// Send ack
 				int32_t send_index = 0;
-				m_send_buffer[send_index++] = main_id;
+				m_send_buffer[send_index++] = id_ret;
 				m_send_buffer[send_index++] = packet_id;
 				commands_send_packet(m_send_buffer, send_index);
 			}
@@ -433,7 +439,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 			// Send ack
 			int32_t send_index = 0;
-			m_send_buffer[send_index++] = main_id;
+			m_send_buffer[send_index++] = id_ret;
 			m_send_buffer[send_index++] = packet_id;
 			commands_send_packet(m_send_buffer, send_index);
 
@@ -451,7 +457,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			const radar_settings_t *s = radar_get_settings();
 			int32_t send_index = 0;
 
-			m_send_buffer[send_index++] = main_id;
+			m_send_buffer[send_index++] = id_ret;
 			m_send_buffer[send_index++] = packet_id;
 			buffer_append_float32_auto(m_send_buffer, s->f_center, &send_index);
 			buffer_append_float32_auto(m_send_buffer, s->f_span, &send_index);
@@ -485,7 +491,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			commands_set_send_func(func);
 
 			int32_t send_index = 0;
-			m_send_buffer[send_index++] = main_id;
+			m_send_buffer[send_index++] = id_ret;
 			m_send_buffer[send_index++] = packet_id;
 			memcpy(m_send_buffer + send_index, data, len);
 			send_index += len;
@@ -493,7 +499,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 			// Send ack
 			send_index = 0;
-			m_send_buffer[send_index++] = main_id;
+			m_send_buffer[send_index++] = id_ret;
 			m_send_buffer[send_index++] = CMD_SET_SYSTEM_TIME_ACK;
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
@@ -502,7 +508,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			commands_set_send_func(func);
 
 			int32_t send_index = 0;
-			m_send_buffer[send_index++] = main_id;
+			m_send_buffer[send_index++] = id_ret;
 			m_send_buffer[send_index++] = packet_id;
 			memcpy(m_send_buffer + send_index, data, len);
 			send_index += len;
@@ -510,7 +516,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 			// Send ack
 			send_index = 0;
-			m_send_buffer[send_index++] = main_id;
+			m_send_buffer[send_index++] = id_ret;
 			m_send_buffer[send_index++] = CMD_REBOOT_SYSTEM_ACK;
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
@@ -649,7 +655,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 			// Send ack
 			int32_t send_index = 0;
-			m_send_buffer[send_index++] = main_id;
+			m_send_buffer[send_index++] = id_ret;
 			m_send_buffer[send_index++] = packet_id;
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
@@ -668,7 +674,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			}
 
 			int32_t send_index = 0;
-			m_send_buffer[send_index++] = main_id;
+			m_send_buffer[send_index++] = id_ret;
 			m_send_buffer[send_index++] = packet_id;
 
 			m_send_buffer[send_index++] = main_cfg_tmp.mag_use;
@@ -800,7 +806,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 			// Send ack
 			int32_t send_index = 0;
-			m_send_buffer[send_index++] = main_id;
+			m_send_buffer[send_index++] = id_ret;
 			m_send_buffer[send_index++] = packet_id;
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
@@ -810,7 +816,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 			// Send ack
 			int32_t send_index = 0;
-			m_send_buffer[send_index++] = main_id;
+			m_send_buffer[send_index++] = id_ret;
 			m_send_buffer[send_index++] = packet_id;
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
@@ -836,7 +842,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			pos_uwb_get_pos(&pos_uwb);
 
 			int32_t send_index = 0;
-			m_send_buffer[send_index++] = main_id; // 1
+			m_send_buffer[send_index++] = id_ret; // 1
 			m_send_buffer[send_index++] = CMD_GET_STATE; // 2
 			m_send_buffer[send_index++] = FW_VERSION_MAJOR; // 3
 			m_send_buffer[send_index++] = FW_VERSION_MINOR; // 4
@@ -953,7 +959,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			autopilot_get_goal_now(&rp_goal);
 
 			int32_t send_index = 0;
-			m_send_buffer[send_index++] = main_id; // 1
+			m_send_buffer[send_index++] = id_ret; // 1
 			m_send_buffer[send_index++] = CMD_MR_GET_STATE; // 2
 			m_send_buffer[send_index++] = FW_VERSION_MAJOR; // 3
 			m_send_buffer[send_index++] = FW_VERSION_MINOR; // 4
@@ -1060,7 +1066,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 			// Send ack
 			int32_t send_index = 0;
-			m_send_buffer[send_index++] = main_id;
+			m_send_buffer[send_index++] = id_ret;
 			m_send_buffer[send_index++] = CMD_MOTE_UBX_START_BASE_ACK;
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
@@ -1100,7 +1106,7 @@ void commands_printf_log_usb(char* format, ...) {
 	int len;
 	static char print_buffer[255];
 
-	print_buffer[0] = main_id;
+	print_buffer[0] = ID_CAR_CLIENT;
 	print_buffer[1] = CMD_LOG_LINE_USB;
 	len = vsnprintf(print_buffer + 2, 253, format, arg);
 	va_end (arg);
@@ -1209,7 +1215,7 @@ void commands_send_dw_sample(DW_LOG_INFO *dw) {
 
 void commands_send_log_ethernet(unsigned char *data, int len) {
 	int32_t ind = 0;
-	m_send_buffer[ind++] = main_id;
+	m_send_buffer[ind++] = ID_CAR_CLIENT;
 	m_send_buffer[ind++] = CMD_LOG_ETHERNET;
 	memcpy(m_send_buffer + ind, data, len);
 	ind += len;

@@ -354,7 +354,7 @@ int main(int argc, char *argv[])
         qmlEngine.rootContext()->setContextProperty("carClient", &car);
         qmlEngine.load(QUrl(QLatin1String("qrc:/res/main.qml")));
 
-        if (!qmlEngine.rootObjects().isEmpty()) {
+        if (qmlEngine.rootObjects().isEmpty()) {
             qWarning() << "Could not start QML GUI";
         }
     }

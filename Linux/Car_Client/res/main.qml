@@ -64,6 +64,7 @@ ApplicationWindow {
     Connections {
         target: mPacket
         onStateReceived: {
+            stateTimer.restart() // Only poll data if no one else does
             testLabel.text = "Input voltage " + parseFloat(state.vin).toFixed(2) + " V"
             batteryBar.value = ((state.vin - 30.0) / 12.0) * 100.0
             gyroZBar.value = state.gyro[2] * 180.0 / Math.PI
@@ -71,12 +72,13 @@ ApplicationWindow {
     }
 
     Timer {
+        id: stateTimer
         interval: 20
         running: pollBox.checked
         repeat: true
 
         onTriggered: {
-            mPacket.getState(255)
+            mPacket.getState(254)
         }
     }
 }

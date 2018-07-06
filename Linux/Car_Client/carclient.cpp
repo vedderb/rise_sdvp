@@ -526,15 +526,17 @@ void CarClient::readPendingDatagrams()
 
 void CarClient::carPacketRx(quint8 id, CMD_PACKET cmd, const QByteArray &data)
 {
-    mCarId = id;
+    (void)cmd;
 
-    if (QString::compare(mHostAddress.toString(), "0.0.0.0") != 0) {
-        if (cmd != CMD_LOG_LINE_USB) {
+    if (id != 254) {
+        mCarId = id;
+
+        if (QString::compare(mHostAddress.toString(), "0.0.0.0") != 0) {
             mUdpSocket->writeDatagram(data, mHostAddress, mUdpPort);
         }
-    }
 
-    mTcpServer->packet()->sendPacket(data);
+        mTcpServer->packet()->sendPacket(data);
+    }
 }
 
 void CarClient::logLineUsbReceived(quint8 id, QString str)
