@@ -1,15 +1,20 @@
+# Build GUI
+#DEFINES += HAS_GUI
+
 QT += core gui
 QT += widgets
 QT += network
 QT += serialport
-QT += quick
-QT += quickcontrols2
+
+contains(DEFINES, HAS_GUI) {
+    QT += quick
+    QT += quickcontrols2
+}
 
 CONFIG += c++11
 
 TARGET = Car_Client
 CONFIG += console
-CONFIG -= app_bundle
 
 TEMPLATE = app
 

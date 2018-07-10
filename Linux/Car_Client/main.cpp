@@ -19,8 +19,11 @@
 #include <QDebug>
 #include <signal.h>
 #include <QDir>
+
+#ifdef HAS_GUI
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#endif
 
 #include "carclient.h"
 #include "chronos.h"
@@ -49,7 +52,9 @@ void showHelp()
     qDebug() << "--chronos : Run CHRONOS client";
     qDebug() << "--ntrip [server]:[stream]:[user]:[password]:[port] : Connect to ntrip server";
     qDebug() << "--rtcmbasepos [lat]:[lon]:[height] : Inject RTCM base position message";
+#ifdef HAS_GUI
     qDebug() << "--usegui : Use QML GUI";
+#endif
 }
 
 static void m_cleanup(int sig)
@@ -92,7 +97,10 @@ int main(int argc, char *argv[])
     double rtcmBaseLat = 0.0;
     double rtcmBaseLon = 0.0;
     double rtcmBaseHeight = 0.0;
+
+#ifdef HAS_GUI
     bool useGui = false;
+#endif
 
     signal(SIGINT, m_cleanup);
     signal(SIGTERM, m_cleanup);
@@ -290,10 +298,12 @@ int main(int argc, char *argv[])
             }
         }
 
+#ifdef HAS_GUI
         if (str == "--usegui") {
             useGui = true;
             found = true;
         }
+#endif
 
         if (!found) {
             if (dash) {
@@ -309,7 +319,9 @@ int main(int argc, char *argv[])
 
     CarClient car;
     Chronos chronos;
+#ifdef HAS_GUI
     QQmlApplicationEngine qmlEngine;
+#endif
 
     car.connectSerial(ttyPort, baudrate);
     car.startRtcmServer(tcpRtcmPort);
@@ -349,6 +361,7 @@ int main(int argc, char *argv[])
         car.setSendRtcmBasePos(true, rtcmBaseLat, rtcmBaseLon, rtcmBaseHeight);
     }
 
+#ifdef HAS_GUI
     if (useGui) {
         qmlRegisterType<PacketInterface>("Car.packetInterface", 1, 0, "PacketInterface");
         qmlEngine.rootContext()->setContextProperty("carClient", &car);
@@ -358,6 +371,7 @@ int main(int argc, char *argv[])
             qWarning() << "Could not start QML GUI";
         }
     }
+#endif
 
     return a.exec();
 }
