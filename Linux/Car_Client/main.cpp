@@ -15,15 +15,17 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
     */
 
+#ifdef HAS_GUI
 #include <QApplication>
+#include <QQmlApplicationEngine>
+#include <QQmlContext>
+#else
+#include <QCoreApplication>
+#endif
+
 #include <QDebug>
 #include <signal.h>
 #include <QDir>
-
-#ifdef HAS_GUI
-#include <QQmlApplicationEngine>
-#include <QQmlContext>
-#endif
 
 #include "carclient.h"
 #include "chronos.h"
@@ -66,7 +68,11 @@ static void m_cleanup(int sig)
 
 int main(int argc, char *argv[])
 {
+#ifdef HAS_GUI
     QApplication a(argc, argv);
+#else
+    QCoreApplication a(argc, argv);
+#endif
 
     QStringList args = QCoreApplication::arguments();
     QString ttyPort = "/dev/ttyACM0";

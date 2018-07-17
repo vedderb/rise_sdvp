@@ -13,7 +13,7 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-    */
+ */
 
 package rcontrolstationcomm
 
@@ -26,12 +26,14 @@ import scala.collection.mutable.Buffer
 import scala.collection.mutable.ArrayBuffer
 import java.io._
 
-import org.scalatest.prop.Checkers
 import org.scalacheck.Gen
 import org.scalacheck.Prop
-import util.{Try,Success,Failure}
-import org.scalactic.anyvals.{PosZInt, PosZDouble, PosInt}
-import junit.framework.TestResult
+import org.scalacheck.Test
+import util.{ Try, Success, Failure }
+
+object TestSettins {
+  val carId = 0 
+}
 
 object TestData {
   val commands = Buffer.empty[CarSpec.Command]
@@ -43,7 +45,7 @@ class Rp(p: ROUTE_POINT) extends Serializable {
   val py = p.py()
   val speed = p.speed()
   val time = p.time()
-  def toRoutePoint() : ROUTE_POINT = {
+  def toRoutePoint(): ROUTE_POINT = {
     val rp = new ROUTE_POINT()
     rp.px(px)
     rp.py(py)
@@ -56,25 +58,60 @@ class Rp(p: ROUTE_POINT) extends Serializable {
 @SerialVersionUID(1L)
 class RpList(r: List[Rp]) extends Serializable {
   val route = r
-  def this (r: Buffer[ROUTE_POINT]) {this(r.map(new Rp(_)).toList)}
+  def this(r: Buffer[ROUTE_POINT]) { this(r.map(new Rp(_)).toList) }
   def toRoutePoints(): List[ROUTE_POINT] = route.map(_.toRoutePoint())
   def size(): Int = route.size
   def ++(other: RpList): RpList = new RpList(route ++ other.route)
 }
 
 class Car {
-  def clearRoute(): Boolean = rcsc_clearRoute(0, 3, 1000)
-  def activateAutopilot(active: Boolean): Boolean = rcsc_setAutopilotActive(0, active, 2000)
-  def waitCarPolling(ms: Int): Unit = waitPolling(0, ms)
+  def clearRoute(): Boolean = {
+    println("[CarCmd] Clearing route")
+    rcsc_clearRoute(TestSettins.carId, 3, 1000)
+  }
+  
+  def activateAutopilot(active: Boolean): Boolean = {
+    if (active) {
+      println("[CarCmd] Activating autopilot")
+    } else {
+      println("[CarCmd] Deactivating autopilot")
+    }
+    rcsc_setAutopilotActive(TestSettins.carId, active, 2000)
+  }
+  
+  def waitCarPolling(ms: Int): Unit = {
+    println("[CarCmd] Waiting for " + ms + " ms while polling the car position")
+    waitPolling(TestSettins.carId, ms)
+  }
+  
   def runSegments(route: List[ROUTE_POINT]): Boolean = {
-    println("runSegments")
-    addRoute(0, route.asJava, false, false, 3, 2000)
-    waitUntilRouteAlmostEnded(0)
+    println("[CarCmd] Running generated segments")
+    addRoute(TestSettins.carId, route.asJava, false, false, 3, 2000)
+    waitUntilRouteAlmostEnded(TestSettins.carId)
+  }
+  
+  def runRecoveryRoute(): Boolean = {
+    println("[CarCmd] Following recovery route")
+    followRecoveryRoute(TestSettins.carId, 1)
     true
   }
-  def runRecoveryRoute(): Boolean = {
-    followRecoveryRoute(0, 1)
-    true
+
+  def addFault(probe: String, faultType: String,
+               param: Double, start: Int, duration: Int): Boolean = {
+    println("[CarCmd] Adding fault; Probe: " + probe + " Type: " + faultType +
+      " Param: " + param + " Start: " + start + " Duration: " + duration)
+    fiSetEnabled(TestSettins.carId, true, 1000)
+    fiAddFault(TestSettins.carId, probe, faultType, param, start, duration, 1000)
+  }
+
+  def clearFaults(): Boolean = {
+    println("[CarCmd] Clearing faults")
+    fiClearFaults(TestSettins.carId, 1000)
+  }
+  
+  def resetUwbPosNow(): Boolean = {
+    println("[CarCmd] Resetting UWB position")
+    resetUwbPos(TestSettins.carId, 1000)
   }
 }
 
@@ -82,39 +119,45 @@ object CarSpec extends Commands2 {
   case class State(
     route:      RpList,
     startRoute: RpList,
-    routeInfo:  RouteInfo)
-    
+    routeInfo:  RouteInfo,
+    faultNum:   Int)
+
   type Sut = Car
 
   def canCreateNewSut(newState: State, initSuts: Traversable[State],
                       runningSuts: Traversable[Sut]): Boolean = {
     initSuts.isEmpty && runningSuts.isEmpty
   }
-  
+
   def initialPreCondition(state: State): Boolean = true
-  
+
   def genInitialState: Gen[State] = {
     println("New initial state created")
-    State(new RpList(Buffer.empty[ROUTE_POINT]),
-        new RpList(getRoute(0, 0, 1000).asScala),
-        new RouteInfo(getRoute(0, 2, 1000)))
+    State(
+      new RpList(Buffer.empty[ROUTE_POINT]),
+      new RpList(getRoute(0, 0, 1000).asScala),
+      new RouteInfo(getRoute(0, 2, 1000)),
+      0)
   }
-  
+
   def newSut(state: State): Sut = {
     println("New SUT created")
     val sut = new Sut
+    sut.clearFaults()
     sut.clearRoute()
     sut.runRecoveryRoute()
+    sut.resetUwbPosNow()
     sut.activateAutopilot(true)
     TestData.commands.clear()
     sut
   }
-  
+
   def destroySut(sut: Sut): Unit = sut.activateAutopilot(false)
-  
+
   def genCommand(state: State): Gen[Command] = Gen.frequency(
-    (0, genRunSegment(state)),
-    (1, genRunSegment(state)))
+    (3, genRunSegment(state)),
+    (0, genFaultAnchor(state)),
+    (1, genFaultTest(state)))
 
   def genRunSegment(state: State): Gen[RunSegment] = for {
     seed <- Gen.choose(-12000, 12000)
@@ -129,15 +172,31 @@ object CarSpec extends Commands2 {
         case 0 => state.startRoute.toRoutePoints()
         case _ => state.route.toRoutePoints()
       }).asJava, speed / 10, 25)
-      
+
     println("Segment size: " + r.size)
-    
+
     RunSegment(new RpList(r.subList(state.route.size, r.size).asScala))
   }
 
+  def genFaultAnchor(state: State): Gen[AddFault] = for {
+    probe <- Gen.oneOf("uwb_range_35", "uwb_range_50", "uwb_range_234")
+    faultType <- Gen.oneOf("OFFSET", "AMPLIFICATION")
+    param <- Gen.choose(0, 5)
+    start <- Gen.choose(0, 100)
+    duration <- Gen.choose(1, 10)
+  } yield AddFault(probe, faultType, param, start, duration)
+
+  def genFaultTest(state: State): Gen[AddFault] = for {
+    probe <- Gen.oneOf("px", "px")
+    faultType <- Gen.oneOf("OFFSET", "AMPLIFICATION")
+    param <- Gen.choose(0, 7)
+    start <- Gen.choose(0, 100)
+    duration <- Gen.choose(1, 10)
+  } yield AddFault(probe, faultType, param, start, duration)
+
   case class RunSegment(route: RpList) extends Command {
     type Result = Boolean
-    
+
     def run(sut: Sut): Result = {
       TestData.commands += this
       sut.runSegments(route.toRoutePoints().toList)
@@ -154,66 +213,96 @@ object CarSpec extends Commands2 {
     def postCondition(state: State, result: Try[Result]) =
       result == Success(true)
   }
+
+  case class AddFault(probe: String, fault: String, param: Double,
+                      start: Int, duration: Int) extends Command {
+    type Result = Boolean
+
+    def run(sut: Sut): Result = {
+      TestData.commands += this
+      sut.addFault(probe, fault, param, start, duration)
+    }
+
+    def nextState(state: State): State = {
+      state.copy(faultNum = state.faultNum + 1)
+    }
+
+    def preCondition(state: State): Boolean = state.faultNum < 4
+
+    // This command should always succeed (never throw an exception)
+    def postCondition(state: State, result: Try[Result]) =
+      result == Success(true)
+  }
 }
 
-/*
- * This class is used to gain a bit more control of the generated tests.
- */
-class TestSuite(numTests: PosInt) extends Checkers {
-  implicit override val generatorDrivenConfig =
-    PropertyCheckConfiguration(
-      minSuccessful = numTests,
-      sizeRange = 15)
-      
-  def myCheck(prop: Prop) = check(prop)
-}
-
-object CarTester {  
-  def main(args: Array[String]): Unit = {    
+object CarTester {
+  def main(args: Array[String]): Unit = {
     connect("localhost", 65191)
-    
-//    randomDrivingTest()
-//    randomGenTest()
-    
+
+    //    randomDrivingTest()
+    //    randomGenTest()
+
     testScala(2)
-//    runLastTest()
-    runLastTestHdd()
     
+    //    runLastTest()
+    //    runLastTestHdd()
+
     disconnect()
   }
-  
+
   def connect(host: String, port: Int): Boolean =
     rcsc_connectTcp(pointerToCString(host), port)
-  
+
   def disconnect(): Unit =
     rcsc_disconnectTcp()
-  
-  def testScala(tests: PosInt) {
-    val suite = new TestSuite(tests)
-    suite.myCheck(CarSpec.propertyNoShrink())
+
+  def testScala(tests: Int) {
+    val params = Test.Parameters.default.
+      withMinSuccessfulTests(tests).
+      withMaxSize(20).
+      withMinSize(5)
+
+    // Interactive way
+//    CarSpec.propertyNoShrink().check(params)
+
+    val res = Test.check(params, CarSpec.propertyNoShrink())
     
+    println("Tests passed: " + res.succeeded)
+    println("Time: " + res.time + " ms")
+    
+    if (res.passed) {
+      println("All tests passed")
+    } else {
+      println("Tests failed. Failing command sequence:")
+      for (cmd <- TestData.commands) println(cmd.toString())
+    }
+
     // Save last test to disk to make re-running it possible
     val oos = new ObjectOutputStream(new FileOutputStream("last_test.bin"))
     oos.writeObject(TestData.commands.toList)
     oos.close
   }
-  
+
   def runLastTest() = rerunTest(TestData.commands.clone())
-  
+
   def runLastTestHdd() {
     val ois = new ObjectInputStream(new FileInputStream("last_test.bin"))
     val cmds = ois.readObject.asInstanceOf[List[CarSpec.Command]].toBuffer
     ois.close
     rerunTest(cmds)
   }
-  
+
   def rerunTest(cmds: Buffer[CarSpec.Command]) {
     println("Re-running test...")
     
+    println("Commands to re-run")
+    for (cmd <- cmds) println(cmd.toString())
+    println("")
+
     var state = CarSpec.genInitialState.sample.get
     val sut = CarSpec.newSut(state)
     var ok = true
-    
+
     for (cmd <- cmds) {
       val res = cmd.run(sut)
       state = cmd.nextState(state)
@@ -222,14 +311,14 @@ object CarTester {
         println("Postcondition failed")
       }
     }
-    
+
     if (ok) {
       println("Test sequence successful")
     } else {
       println("Test sequence failed")
     }
   }
-  
+
   def randomDrivingTest() {
     val edgeRoute = getRoute(0, 2, 5000);
     val startRoute = getRoute(0, 0, 5000);
@@ -238,11 +327,11 @@ object CarTester {
     for (i <- 0 to 5) {
       var rGen = startRoute
       var indLast = 0
-      
+
       rcsc_clearRoute(0, 3, 5000)
       followRecoveryRoute(0, 1)
       rcsc_setAutopilotActive(0, true, 2000)
-      
+
       for (i <- 0 to 8) {
         rGen = r.generateRouteWithin(5, rGen, r.randInRange(1.0, 5.0), 25)
 
@@ -256,7 +345,7 @@ object CarTester {
       rcsc_setAutopilotActive(0, false, 2000)
     }
   }
-  
+
   def randomGenTest() {
     val edgeRoute = getRoute(0, 2, 5000);
     val startRoute = getRoute(0, 0, 5000);
@@ -268,19 +357,19 @@ object CarTester {
     for (i <- 0 to 5) {
       var rGen = startRoute
       var indLast = 0
-      
+
       rcsc_clearRoute(-1, 3, 5000)
-      
+
       for (i <- 0 to 200) {
         rGen = r.generateRouteWithin(5, rGen, r.randInRange(1.0, 5.0), 25)
-        
+
         if (r.getLastOuterAttempts() > maxAttempts) {
           maxAttempts = r.getLastOuterAttempts()
         }
-        
+
         genPoints += r.getLastGeneratedPoints()
         usedPoints += 5
-        
+
         var start = indLast - 20
         if (start < 0) {
           start = 0
@@ -294,14 +383,14 @@ object CarTester {
         indLast = rGen.size()
       }
     }
-    
+
     println("Maximum outer loop attempts during this run: " + maxAttempts)
     println("Total amount of generated points: " + genPoints)
     println("Used points: " + usedPoints)
-    println("Point usage average: " + 
-        (usedPoints.toDouble / genPoints.toDouble) * 100.0 + " %")
+    println("Point usage average: " +
+      (usedPoints.toDouble / genPoints.toDouble) * 100.0 + " %")
   }
-  
+
   def getPrintRouteTest() {
     val edgeRoute = getRoute(0, 2, 5000);
     for (r <- edgeRoute.asScala) {
@@ -315,7 +404,7 @@ object CarTester {
     println("YMax: " + r.yMax())
     println("Len: " + r.length())
   }
-  
+
   def carStateTest() {
     val st = getCarState(0, 5000)
     println("px: " + st.px() + ", py: " + st.py())

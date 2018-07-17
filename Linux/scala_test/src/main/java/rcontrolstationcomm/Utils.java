@@ -64,19 +64,148 @@ public class Utils {
 		return st;
 	}
 	
-	public static void waitUntilRouteAlmostEnded(int car) {
+	public static String terminalCmd(int car, String cmd, int timeoutMs) {
+		String res = new String();
+		
+		Pointer<Byte> cmdPtr = Pointer.allocateBytes(cmd.length() + 1);
+		for (int i = 0;i < cmd.length();i++) {
+			cmdPtr.set(i, (byte)cmd.charAt(i));
+		}
+		cmdPtr.set(cmd.length(), (byte)0);
+		
+		Pointer<Byte> reply = Pointer.allocateBytes(500);
+		reply.set(0, (byte)0);
+		RControlStationCommLibrary.rcsc_sendTerminalCmd(car, cmdPtr, reply, timeoutMs);
+		
+		for (int i = 0;i < 500;i++) {
+			if (reply.get(i) == 0) {
+				break;
+			}
+			
+			res += (char)reply.get(i).byteValue();
+		}
+		
+		return res;
+	}
+	
+	/**
+	 * Add a fault
+	 * 
+	 * @param car
+	 * The ID of the car
+	 * 
+	 * @param probe
+	 * The probe to inject on
+	 * 
+	 * @param type
+	 * The fault type. Can be
+	 * NONE
+	 * BITFLIP
+	 * OFFSET
+	 * AMPLIFICATION
+	 * SET_TO
+	 * 
+	 * @param param
+	 * The fault parameter, e.g. amplification factor, the bit to flip.
+	 * 
+	 * @param start
+	 * The iteration where the fault should be triggered. Iterations are
+	 * counted up when the fault injection function is called, usually
+	 * before the variable to inject the fault on is used.
+	 * 
+	 * @param duration
+	 * The duration of the fault in iterations.
+	 * 
+	 * @timeoutMs
+	 * Timeout for acknowledgement in milliseconds.
+	 * 
+	 * @return
+	 * true for success, false otherwise.
+	 */
+	public static boolean fiAddFault(int car, String probe, String type,
+			double param, int start, int duration, int timeoutMs) {
+		terminalCmd(car,
+				"fi_add_fault " +
+						probe + " " +
+						type + " " +
+						param + " " +
+						start + " " +
+						duration,
+				timeoutMs);
+		
+		return true;
+	}
+	
+	public static boolean fiSetEnabled(int car, boolean enabled, int timeoutMs) {
+		String en = "0";
+		if (enabled) {
+			en = "1";
+		}
+		terminalCmd(car, "fi_set_enabled " + en, timeoutMs);
+		return true;
+	}
+	
+	public static boolean fiClearFaults(int car, int timeoutMs) {
+		terminalCmd(car, "fi_clear_faults", timeoutMs);
+		return true;
+	}
+	
+	/**
+	 * Reset fault iteration counter.
+	 * 
+	 * @param car
+	 * Car ID.
+	 * 
+	 * @param timeoutMs
+	 * Timeout in milliseconds.
+	 * 
+	 * @return
+	 * true for success, false otherwise
+	 */
+	public static boolean fiResetCnt(int car, int timeoutMs) {
+		terminalCmd(car, "fi_reset_cnt", timeoutMs);
+		return true;
+	}
+	
+	public static boolean resetUwbPos(int car, int timeoutMs) {
+		terminalCmd(car, "pos_uwb_reset_pos", timeoutMs);
+		return true;
+	}
+	
+	public static boolean waitUntilRouteAlmostEnded(int car) {
+		boolean res = true;
+		double maxUwbDiff = 0.0;
+		
 		CAR_STATE st = getCarState(car, 1000);
+		double uwbDiff = Math.sqrt(Math.pow((st.px() - st.px_uwb()), 2) +
+				Math.pow((st.py() - st.py_uwb()), 2));
+		if (uwbDiff > maxUwbDiff) {
+			maxUwbDiff = uwbDiff;
+		}
 		
 		while (st.ap_route_left() > 4) {
 			try {
 				Thread.sleep(50);
 				st = getCarState(car, 1000);
+				uwbDiff = Math.sqrt(Math.pow((st.px() - st.px_uwb()), 2) +
+						Math.pow((st.py() - st.py_uwb()), 2));
+				if (uwbDiff > maxUwbDiff) {
+					maxUwbDiff = uwbDiff;
+				}
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 				break;
 			}
 		}
+		
+		if (maxUwbDiff > 5.0) {
+			res = false;
+			out.println("[Error] Too large difference between the UWB-based"
+					+ " and RTKGNSS-based positions.");
+		}
+		
+		return res;
 	}
 	
 	public static void followRecoveryRoute(int car, int recoveryRoute) {

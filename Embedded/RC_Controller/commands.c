@@ -38,6 +38,7 @@
 #include "motor_sim.h"
 #include "m8t_base.h"
 #include "pos_uwb.h"
+#include "fi.h"
 
 #include <math.h>
 #include <string.h>
@@ -840,6 +841,8 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			pos_get_mc_val(&mcval);
 			autopilot_get_goal_now(&rp_goal);
 			pos_uwb_get_pos(&pos_uwb);
+
+			fi_inject_fault_float("px", &pos.px);
 
 			int32_t send_index = 0;
 			m_send_buffer[send_index++] = id_ret; // 1

@@ -51,6 +51,7 @@
 #include "motor_sim.h"
 #include "m8t_base.h"
 #include "pos_uwb.h"
+#include "fi.h"
 
 /*
  * Timers used:
@@ -142,6 +143,8 @@ int main(void) {
 #if MAIN_MODE_IS_VEHICLE
 	rtcm3_set_rx_callback_obs(pos_base_rtcm_obs, commands_get_rtcm3_state());
 #endif
+
+	fi_init();
 
 	timeout_configure(2000, 20.0);
 	log_set_rate(main_config.log_rate_hz);

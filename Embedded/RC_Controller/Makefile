@@ -160,7 +160,8 @@ CSRC = $(STARTUPSRC) \
        radar_cont.c \
        motor_sim.c \
        m8t_base.c \
-       pos_uwb.c
+       pos_uwb.c \
+       fi.c
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.

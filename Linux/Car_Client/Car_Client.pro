@@ -1,7 +1,7 @@
 # Build GUI
 #DEFINES += HAS_GUI
 
-QT += core gui
+QT += core
 QT += widgets
 QT += network
 QT += serialport
@@ -9,6 +9,7 @@ QT += serialport
 contains(DEFINES, HAS_GUI) {
     QT += quick
     QT += quickcontrols2
+    QT += gui
 }
 
 CONFIG += c++11

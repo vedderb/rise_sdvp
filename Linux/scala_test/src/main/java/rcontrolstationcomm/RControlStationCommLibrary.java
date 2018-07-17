@@ -130,4 +130,9 @@ public class RControlStationCommLibrary {
 	 * <i>native declaration : line 40</i>
 	 */
 	native public static boolean rcsc_getRoutePoints(int car, Pointer<ROUTE_POINT > route, Pointer<Integer > len, int maxLen, int mapRoute, int timeoutMs);
+	/**
+	 * Original signature : <code>bool rcsc_sendTerminalCmd(int, char*, char*, int)</code><br>
+	 * <i>native declaration : /usr/include/rcontrolstationcomm_types.h:74</i>
+	 */
+	native public static boolean rcsc_sendTerminalCmd(int car, Pointer<Byte > cmd, Pointer<Byte > reply, int timeoutMs);
 }

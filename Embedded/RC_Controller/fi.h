@@ -1,7 +1,7 @@
 /*
-    Copyright 2018 Benjamin Vedder	benjamin@vedder.se
+	Copyright 2018 Benjamin Vedder	benjamin@vedder.se
 
-    This program is free software: you can redistribute it and/or modify
+	This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
@@ -13,17 +13,23 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-    */
+ */
 
-#ifndef RCONTROLSTATIONCOMM_GLOBAL_H
-#define RCONTROLSTATIONCOMM_GLOBAL_H
+/*
+ * This is a simple fault injection library that uses terminal callbacks for configuration
+ * and activation.
+ */
 
-#include <QtCore/qglobal.h>
+#ifndef FI_H_
+#define FI_H_
 
-#if defined(RCONTROLSTATIONCOMM_LIBRARY)
-#  define RCONTROLSTATIONCOMMSHARED_EXPORT Q_DECL_EXPORT
-#else
-#  define RCONTROLSTATIONCOMMSHARED_EXPORT Q_DECL_IMPORT
-#endif
+#include <stdint.h>
+#include <stdbool.h>
 
-#endif // RCONTROLSTATIONCOMM_GLOBAL_H
+// Functions
+void fi_init(void);
+bool fi_is_active(void);
+void fi_inject_fault_float(const char* id, float *value);
+void fi_inject_fault_int(const char* id, int *value);
+
+#endif /* FI_H_ */

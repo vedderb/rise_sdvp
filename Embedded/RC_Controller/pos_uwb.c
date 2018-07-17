@@ -17,12 +17,15 @@
 
 #include <string.h>
 #include <math.h>
+#include <stdio.h>
 
 #include "pos_uwb.h"
 #include "comm_can.h"
 #include "terminal.h"
 #include "commands.h"
 #include "utils.h"
+#include "fi.h"
+#include "pos.h"
 
 // Defines
 #define MAX_ANCHORS				20
@@ -45,6 +48,7 @@ static THD_FUNCTION(uwb_thread, arg);
 // Private functions
 static void dw_range(uint8_t id, uint8_t dest, float range);
 static void cmd_terminal_list_anchors(int argc, const char **argv);
+static void cmd_terminal_reset_pos(int argc, const char **argv);
 
 void pos_uwb_init(void) {
 	m_anchor_last = 0;
@@ -60,11 +64,19 @@ void pos_uwb_init(void) {
 			"List UWB anchors.",
 			0,
 			cmd_terminal_list_anchors);
+
+	terminal_register_command_callback(
+			"pos_uwb_reset_pos",
+			"Reset position to the sensor fusion position.",
+			0,
+			cmd_terminal_reset_pos);
 }
 
 void pos_uwb_update_dr(float imu_yaw, float travel_dist,
 		float steering_angle, float speed) {
 	(void)steering_angle;
+
+	chMtxLock(&m_mutex_pos);
 
 	// TODO: Implement yaw correction
 
@@ -74,6 +86,8 @@ void pos_uwb_update_dr(float imu_yaw, float travel_dist,
 
 	m_pos.px += cosf(angle_rad) * travel_dist;
 	m_pos.py += sinf(angle_rad) * travel_dist;
+
+	chMtxUnlock(&m_mutex_pos);
 }
 
 void pos_uwb_add_anchor(UWB_ANCHOR a) {
@@ -104,6 +118,15 @@ void pos_uwb_set_xya(float x, float y, float angle) {
 
 static void dw_range(uint8_t id, uint8_t dest, float range) {
 	(void)id;
+
+	// Fault injection on the measured range
+	// fi_is_active is not necessary, but it minimizes runtime overhead
+	// when fault injection is disabled (sprintf).
+	if (fi_is_active()) {
+		char id_str[20];
+		sprintf(id_str, "uwb_range_%d", id);
+		fi_inject_fault_float(id_str, &range);
+	}
 
 	float dt = 1.0;
 
@@ -210,4 +233,20 @@ static void cmd_terminal_list_anchors(int argc, const char **argv) {
 				(double)m_anchors[i].dist_last,
 				(double)age);
 	}
+}
+
+static void cmd_terminal_reset_pos(int argc, const char **argv) {
+	(void)argc;
+	(void)argv;
+
+	POS_STATE p;
+	pos_get_pos(&p);
+
+	chMtxLock(&m_mutex_pos);
+	m_pos.yaw = p.yaw;
+	m_pos.px = p.px;
+	m_pos.py = p.py;
+	chMtxUnlock(&m_mutex_pos);
+
+	commands_printf("UWB Position Reset\n");
 }
