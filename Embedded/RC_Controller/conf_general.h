@@ -39,8 +39,8 @@
 #define MAIN_MODE_IS_BASE			(MAIN_MODE == MAIN_MODE_M8T_BASE_2400 || MAIN_MODE == MAIN_MODE_M8T_BASE_400)
 
 // Firmware version
-#define FW_VERSION_MAJOR			9
-#define FW_VERSION_MINOR			3
+#define FW_VERSION_MAJOR			10
+#define FW_VERSION_MINOR			0
 
 // Default car settings
 //#define CAR_TERO // Benjamins tero car
@@ -49,6 +49,17 @@
 // Defaults for different cars
 #ifdef CAR_TERO
 #define BOARD_YAW_ROT				180.0
+#endif
+
+// Differential steering
+#ifndef HAS_DIFF_STEERING
+#define HAS_DIFF_STEERING			1
+#endif
+#ifndef DIFF_STEERING_VESC_LEFT
+#define DIFF_STEERING_VESC_LEFT		0
+#endif
+#ifndef DIFF_STEERING_VESC_RIGHT
+#define DIFF_STEERING_VESC_RIGHT	1
 #endif
 
 // Ublox settings
@@ -87,7 +98,7 @@
 // General settings
 #define ID_ALL						255
 #define ID_CAR_CLIENT				254 // Packet for car client only
-#define VESC_ID						ID_ALL // id, or ID_ALL for any VESC
+#define VESC_ID						ID_ALL // id, or ID_ALL for any VESC (not used in diff steering mode)
 #define ID_MOTE						254 // If the packet is for the mote and not to be forwarded in mote mode
 
 // Car parameters

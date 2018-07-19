@@ -27,6 +27,7 @@
 #include "bldc_interface.h"
 #include "commands.h"
 #include "terminal.h"
+#include "comm_can.h"
 
 // Defines
 #define AP_HZ						100 // Hz
@@ -53,6 +54,10 @@ static bool m_en_angle_dist_comp;
 static int m_route_look_ahead;
 static int m_route_left;
 
+#if HAS_DIFF_STEERING
+static float m_turn_rad_now;
+#endif
+
 // Private functions
 static THD_FUNCTION(ap_thread, arg);
 static void steering_angle_to_point(
@@ -62,7 +67,8 @@ static void steering_angle_to_point(
 		float goal_x,
 		float goal_y,
 		float *steering_angle,
-		float *distance);
+		float *distance,
+		float *circle_radius);
 static bool add_point(ROUTE_POINT *p, bool first);
 static void clear_route(void);
 static void terminal_state(int argc, const char **argv);
@@ -91,6 +97,10 @@ void autopilot_init(void) {
 	m_en_angle_dist_comp = true;
 	m_route_look_ahead = 8;
 	m_route_left = 0;
+
+#if HAS_DIFF_STEERING
+	m_turn_rad_now = 1e6;
+#endif
 
 	terminal_register_command_callback(
 			"ap_state",
@@ -334,11 +344,37 @@ void autopilot_set_speed_override(bool is_override, float speed) {
  * Speed in m/s.
  */
 void autopilot_set_motor_speed(float speed) {
-	float rpm = speed / (main_config.car.gear_ratio
-			* (2.0 / main_config.car.motor_poles) * (1.0 / 60.0)
-			* main_config.car.wheel_diam * M_PI);
 	if (!main_config.car.disable_motor) {
+#if HAS_DIFF_STEERING
+		float diff_speed_half = 0.0;
+
+//		m_turn_rad_now = -2.5;
+
+		if (fabsf(m_turn_rad_now) > 0.1) {
+			diff_speed_half = ((speed / m_turn_rad_now) * main_config.car.axis_distance);
+		}
+
+		float rpm_r = (speed + diff_speed_half) / (main_config.car.gear_ratio
+				* (2.0 / main_config.car.motor_poles) * (1.0 / 60.0)
+				* main_config.car.wheel_diam * M_PI);
+
+		float rpm_l = (speed - diff_speed_half) / (main_config.car.gear_ratio
+				* (2.0 / main_config.car.motor_poles) * (1.0 / 60.0)
+				* main_config.car.wheel_diam * M_PI);
+
+		comm_can_lock_vesc();
+		comm_can_set_vesc_id(DIFF_STEERING_VESC_LEFT);
+		bldc_interface_set_rpm((int)rpm_l);
+		comm_can_set_vesc_id(DIFF_STEERING_VESC_RIGHT);
+		bldc_interface_set_rpm((int)rpm_r);
+		comm_can_unlock_vesc();
+#else
+		float rpm = speed / (main_config.car.gear_ratio
+					* (2.0 / main_config.car.motor_poles) * (1.0 / 60.0)
+					* main_config.car.wheel_diam * M_PI);
+
 		bldc_interface_set_rpm((int)rpm);
+#endif
 	}
 }
 
@@ -372,6 +408,12 @@ float autopilot_get_rad_now(void) {
 void autopilot_get_goal_now(ROUTE_POINT *rp) {
 	*rp = m_rp_now;
 }
+
+#if HAS_DIFF_STEERING
+void autopilot_set_turn_rad(float rad) {
+	m_turn_rad_now = rad;
+}
+#endif
 
 static THD_FUNCTION(ap_thread, arg) {
 	(void)arg;
@@ -632,12 +674,14 @@ static THD_FUNCTION(ap_thread, arg) {
 			m_rp_now = rp_now;
 
 			if (!route_end) {
-				float distance, steering_angle;
-				float servo_pos;
+				float distance = 0.0;
+				float steering_angle = 0.0;
+				float circle_radius = 1000.0;
 
 				steering_angle_to_point(pos_now.px, pos_now.py, -pos_now.yaw * M_PI / 180.0, rp_now.px,
-						rp_now.py, &steering_angle, &distance);
+						rp_now.py, &steering_angle, &distance, &circle_radius);
 
+#if !HAS_DIFF_STEERING
 				// Scale maximum steering by speed
 				float max_rad = main_config.car.steering_max_angle_rad * autopilot_get_steering_scale();
 
@@ -647,10 +691,11 @@ static THD_FUNCTION(ap_thread, arg) {
 					steering_angle = -max_rad;
 				}
 
-				servo_pos = steering_angle
+				float servo_pos = steering_angle
 						/ ((2.0 * main_config.car.steering_max_angle_rad)
 								/ main_config.car.steering_range)
 								+ main_config.car.steering_center;
+#endif
 
 				float speed = 0.0;
 
@@ -698,7 +743,11 @@ static THD_FUNCTION(ap_thread, arg) {
 
 				utils_truncate_number_abs(&speed, main_config.ap_max_speed);
 
+#if HAS_DIFF_STEERING
+				autopilot_set_turn_rad(circle_radius);
+#else
 				servo_simple_set_pos_ramp(servo_pos);
+#endif
 				autopilot_set_motor_speed(speed);
 			}
 		} else {
@@ -724,7 +773,8 @@ static void steering_angle_to_point(
 		float goal_x,
 		float goal_y,
 		float *steering_angle,
-		float *distance) {
+		float *distance,
+		float *circle_radius) {
 
 	const float D = utils_point_distance(goal_x, goal_y, current_x, current_y);
 	*distance = D;
@@ -732,12 +782,14 @@ static void steering_angle_to_point(
 	const float dx = D * cosf(gamma);
 	const float dy = D * sinf(gamma);
 
-	if (dy == 0.0) {
+	if (fabsf(dy) <= 0.000001) {
 		*steering_angle = 0.0;
+		*circle_radius = 9000;
 		return;
 	}
 
-	float circle_radius = -(dx * dx + dy * dy) / (2.0 * dy);
+	float R = -(dx * dx + dy * dy) / (2.0 * dy);
+	*circle_radius = R;
 
 	/*
 	 * Add correction if the arc is much longer than the total distance.
@@ -748,7 +800,7 @@ static void steering_angle_to_point(
 		angle_correction = 5.0;
 	}
 
-	*steering_angle = atanf(main_config.car.axis_distance / circle_radius) * angle_correction;
+	*steering_angle = atanf(main_config.car.axis_distance / R) * angle_correction;
 }
 
 static bool add_point(ROUTE_POINT *p, bool first) {

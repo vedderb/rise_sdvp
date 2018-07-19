@@ -34,6 +34,7 @@
 #include "srf10.h"
 #include "terminal.h"
 #include "pos_uwb.h"
+#include "comm_can.h"
 
 // Defines
 #define ITERATION_TIMER_FREQ			50000
@@ -65,6 +66,10 @@ static int32_t m_pps_cnt;
 static nmea_gsv_info_t m_gpgsv_last;
 static nmea_gsv_info_t m_glgsv_last;
 static int m_print_sat_prn;
+#if HAS_DIFF_STEERING
+static bool m_vesc_left_now;
+static mc_values m_mc_val_right;
+#endif
 
 // Private functions
 static void cmd_terminal_delay_info(int argc, const char **argv);
@@ -110,6 +115,11 @@ void pos_init(void) {
 	memset(&m_gpgsv_last, 0, sizeof(m_gpgsv_last));
 	memset(&m_glgsv_last, 0, sizeof(m_glgsv_last));
 	m_print_sat_prn = 0;
+
+#if HAS_DIFF_STEERING
+	m_vesc_left_now = true;
+	memset(&m_mc_val, 0, sizeof(m_mc_val));
+#endif
 
 	m_ms_today = -1;
 	chMtxObjectInit(&m_mutex_pos);
@@ -730,10 +740,29 @@ static void mpu9150_read(void) {
 	// Read MC values every 10 iterations (should be 100 Hz)
 	static int mc_read_cnt = 0;
 	mc_read_cnt++;
+
+#if HAS_DIFF_STEERING
+	if (mc_read_cnt >= 5) {
+		mc_read_cnt = 0;
+
+		comm_can_lock_vesc();
+		if (m_vesc_left_now) {
+			m_vesc_left_now = false;
+			comm_can_set_vesc_id(DIFF_STEERING_VESC_RIGHT);
+		} else {
+			m_vesc_left_now = true;
+			comm_can_set_vesc_id(DIFF_STEERING_VESC_LEFT);
+		}
+
+		bldc_interface_get_values();
+		comm_can_unlock_vesc();
+	}
+#else
 	if (mc_read_cnt >= 10) {
 		mc_read_cnt = 0;
 		bldc_interface_get_values();
 	}
+#endif
 #endif
 
 #if MAIN_MODE == MAIN_MODE_MULTIROTOR
@@ -1046,7 +1075,7 @@ static void correct_pos_gps(POS_STATE *pos) {
 	// Angle
 	if (fabsf(pos->speed * 3.6) > 0.5 || 1) {
 		float yaw_gps = -atan2f(pos->py_gps - pos->gps_ang_corr_y_last_gps,
-						pos->px_gps - pos->gps_ang_corr_x_last_gps) * 180.0 / M_PI;
+				pos->px_gps - pos->gps_ang_corr_x_last_gps) * 180.0 / M_PI;
 		POS_POINT closest = get_closest_point_to_time(
 				(pos->gps_ms + pos->gps_ang_corr_last_gps_ms) / 2.0);
 		float yaw_diff = utils_angle_difference(yaw_gps, closest.yaw);
@@ -1193,26 +1222,77 @@ static void ubx_rx_rawx(ubx_rxm_rawx *rawx) {
 
 #if MAIN_MODE == MAIN_MODE_CAR
 static void mc_values_received(mc_values *val) {
+#if HAS_DIFF_STEERING
+	if (!m_vesc_left_now) {
+		m_mc_val_right = *val;
+		return;
+	}
+#endif
+
 	m_mc_val = *val;
 
 	static int32_t last_tacho = 0;
-
-	// Reset tacho the first time.
 	static bool tacho_read = false;
+
+#if HAS_DIFF_STEERING
+	static int32_t last_tacho_diff = 0;
+	int tacho_diff = m_mc_val_right.tachometer - m_mc_val.tachometer;
+
 	if (!tacho_read) {
-		tacho_read = true;
-		last_tacho = val->tachometer;
+		last_tacho_diff = 0;
 	}
 
-	float distance = (float) (val->tachometer - last_tacho)
+	int32_t tacho = (m_mc_val.tachometer + m_mc_val_right.tachometer) / 2;
+	float rpm = (m_mc_val.rpm + m_mc_val_right.rpm) / 2.0;
+#else
+	int32_t tacho = m_mc_val.tachometer;
+	float rpm = m_mc_val.rpm;
+#endif
+
+	// Reset tacho the first time.
+	if (!tacho_read) {
+		tacho_read = true;
+		last_tacho = tacho;
+	}
+
+	float distance = (float) (tacho - last_tacho) * main_config.car.gear_ratio
+			* (2.0 / main_config.car.motor_poles) * (1.0 / 6.0)
+			* main_config.car.wheel_diam * M_PI;
+	last_tacho = tacho;
+
+	float angle_diff = 0.0;
+
+#if HAS_DIFF_STEERING
+	float distance_diff = (float) (tacho_diff - last_tacho_diff)
 			* main_config.car.gear_ratio * (2.0 / main_config.car.motor_poles)
 			* (1.0 / 6.0) * main_config.car.wheel_diam * M_PI;
-	last_tacho = val->tachometer;
+	last_tacho_diff = tacho_diff;
 
+	angle_diff = 2.0 * M_PI * (distance_diff / (main_config.car.axis_distance * 2.0 * M_PI));
+	utils_norm_angle_rad(&angle_diff);
+
+	float steering_angle = 0.0; // TODO: Calculate from both tachometers
+#else
 	float steering_angle = (servo_simple_get_pos_now()
 			- main_config.car.steering_center)
 			* ((2.0 * main_config.car.steering_max_angle_rad)
 					/ main_config.car.steering_range);
+
+	float turn_rad_rear = 0.0;
+
+	if (fabsf(steering_angle) >= 0.00001) {
+		turn_rad_rear = main_config.car.axis_distance / tanf(steering_angle);
+		float turn_rad_front = sqrtf(
+				main_config.car.axis_distance * main_config.car.axis_distance
+				+ turn_rad_rear * turn_rad_rear);
+
+		if (turn_rad_rear < 0) {
+			turn_rad_front = -turn_rad_front;
+		}
+
+		angle_diff = (distance * 2.0) / (turn_rad_rear + turn_rad_front);
+	}
+#endif
 
 	chMtxLock(&m_mutex_pos);
 
@@ -1221,37 +1301,34 @@ static void mc_values_received(mc_values *val) {
 
 		m_pos.gps_corr_cnt += fabsf(distance);
 
-		if (!main_config.car.yaw_use_odometry || fabsf(steering_angle) < 0.00001) {
+		if (!main_config.car.yaw_use_odometry || fabsf(angle_diff) < 0.0001) {
 			m_pos.px += cosf(angle_rad) * distance;
 			m_pos.py += sinf(angle_rad) * distance;
 		} else {
-			const float turn_rad_rear = main_config.car.axis_distance / tanf(steering_angle);
-			float turn_rad_front = sqrtf(
-					main_config.car.axis_distance * main_config.car.axis_distance
-					+ turn_rad_rear * turn_rad_rear);
-
-			if (turn_rad_rear < 0) {
-				turn_rad_front = -turn_rad_front;
-			}
-
-			const float angle_diff = (distance * 2.0) / (turn_rad_rear + turn_rad_front);
-
+#if HAS_DIFF_STEERING
+			angle_rad += angle_diff;
+			utils_norm_angle_rad(&angle_rad);
+			m_pos.px += cosf(angle_rad) * distance;
+			m_pos.py += sinf(angle_rad) * distance;
+#else
 			m_pos.px += turn_rad_rear * (sinf(angle_rad + angle_diff) - sinf(angle_rad));
 			m_pos.py += turn_rad_rear * (cosf(angle_rad - angle_diff) - cosf(angle_rad));
 			angle_rad += angle_diff;
 			utils_norm_angle_rad(&angle_rad);
+#endif
+
 			m_pos.yaw = -angle_rad * 180.0 / M_PI;
 			utils_norm_angle(&m_pos.yaw);
 		}
 	}
 
-	m_pos.speed = val->rpm * main_config.car.gear_ratio
+	m_pos.speed = rpm * main_config.car.gear_ratio
 			* (2.0 / main_config.car.motor_poles) * (1.0 / 60.0)
 			* main_config.car.wheel_diam * M_PI;
 
 	// TODO: eventually use yaw from IMU and implement yaw correction
 	pos_uwb_update_dr(m_pos.yaw, distance, steering_angle, m_pos.speed);
-//	pos_uwb_update_dr(m_imu_yaw, distance, steering_angle, m_pos.speed);
+	//	pos_uwb_update_dr(m_imu_yaw, distance, steering_angle, m_pos.speed);
 
 	save_pos_history();
 

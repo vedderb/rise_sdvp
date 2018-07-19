@@ -43,12 +43,14 @@ static THD_FUNCTION(cancom_process_thread, arg);
 // Variables
 static can_status_msg stat_msgs[CAN_STATUS_MSGS_TO_STORE];
 static mutex_t can_mtx;
+static mutex_t vesc_mtx_ext;
 static uint8_t rx_buffer[RX_BUFFER_SIZE];
 static unsigned int rx_buffer_last_id;
 static CANRxFrame rx_frames[RX_FRAMES_SIZE];
 static int rx_frame_read;
 static int rx_frame_write;
 static thread_t *process_tp;
+static int vesc_id = VESC_ID;
 
 /*
  * 500KBaud, automatic wakeup, automatic recover
@@ -75,8 +77,10 @@ void comm_can_init(void) {
 
 	rx_frame_read = 0;
 	rx_frame_write = 0;
+	vesc_id = VESC_ID;
 
 	chMtxObjectInit(&can_mtx);
+	chMtxObjectInit(&vesc_mtx_ext);
 
 	palSetPadMode(GPIOD, 0, PAL_MODE_ALTERNATE(GPIO_AF_CAN1));
 	palSetPadMode(GPIOD, 1, PAL_MODE_ALTERNATE(GPIO_AF_CAN1));
@@ -90,6 +94,18 @@ void comm_can_init(void) {
 			cancom_read_thread, NULL);
 	chThdCreateStatic(cancom_process_thread_wa, sizeof(cancom_process_thread_wa), NORMALPRIO,
 			cancom_process_thread, NULL);
+}
+
+void comm_can_set_vesc_id(int id) {
+	vesc_id = id;
+}
+
+void comm_can_lock_vesc(void) {
+	chMtxLock(&vesc_mtx_ext);
+}
+
+void comm_can_unlock_vesc(void) {
+	chMtxUnlock(&vesc_mtx_ext);
 }
 
 static THD_FUNCTION(cancom_read_thread, arg) {
@@ -428,7 +444,7 @@ can_status_msg *comm_can_get_status_msg_id(int id) {
 }
 
 static void send_packet_wrapper(unsigned char *data, unsigned int len) {
-	comm_can_send_buffer(VESC_ID, data, len, false);
+	comm_can_send_buffer(vesc_id, data, len, false);
 }
 
 static void printf_wrapper(char *str) {

@@ -39,6 +39,7 @@
 #include "m8t_base.h"
 #include "pos_uwb.h"
 #include "fi.h"
+#include "comm_can.h"
 
 #include <math.h>
 #include <string.h>
@@ -898,29 +899,64 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			throttle = buffer_get_float32(data, 1e4, &ind);
 			steering = buffer_get_float32(data, 1e6, &ind);
 
+			utils_truncate_number(&steering, -1.0, 1.0);
+			steering *= autopilot_get_steering_scale();
+
 			autopilot_set_active(false);
 
 			switch (mode) {
 			case RC_MODE_CURRENT:
 				if (!main_config.car.disable_motor) {
+#if HAS_DIFF_STEERING
+					comm_can_lock_vesc();
+					comm_can_set_vesc_id(DIFF_STEERING_VESC_LEFT);
+					bldc_interface_set_current(throttle + throttle * steering);
+					comm_can_set_vesc_id(DIFF_STEERING_VESC_RIGHT);
+					bldc_interface_set_current(throttle - throttle * steering);
+					comm_can_unlock_vesc();
+#else
 					bldc_interface_set_current(throttle);
+#endif
 				}
 				break;
 
 			case RC_MODE_DUTY:
 				utils_truncate_number(&throttle, -1.0, 1.0);
 				if (!main_config.car.disable_motor) {
+#if HAS_DIFF_STEERING
+					comm_can_lock_vesc();
+					comm_can_set_vesc_id(DIFF_STEERING_VESC_LEFT);
+					bldc_interface_set_duty_cycle(throttle + throttle * steering);
+					comm_can_set_vesc_id(DIFF_STEERING_VESC_RIGHT);
+					bldc_interface_set_duty_cycle(throttle - throttle * steering);
+					comm_can_unlock_vesc();
+#else
 					bldc_interface_set_duty_cycle(throttle);
+#endif
 				}
 				break;
 
 			case RC_MODE_PID: // In m/s
+#if HAS_DIFF_STEERING
+				if (steering < 0.001) {
+					autopilot_set_turn_rad(1e6);
+				} else {
+					autopilot_set_turn_rad(1.0 / steering);
+				}
+#endif
 				autopilot_set_motor_speed(throttle);
 				break;
 
 			case RC_MODE_CURRENT_BRAKE:
 				if (!main_config.car.disable_motor) {
+#if HAS_DIFF_STEERING
+					comm_can_lock_vesc();
+					comm_can_set_vesc_id(ID_ALL);
 					bldc_interface_set_current_brake(throttle);
+					comm_can_unlock_vesc();
+#else
+					bldc_interface_set_current_brake(throttle);
+#endif
 				}
 				break;
 
@@ -928,12 +964,12 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 				break;
 			}
 
-			utils_truncate_number(&steering, -1.0, 1.0);
-			steering *= autopilot_get_steering_scale();
+#if !HAS_DIFF_STEERING
 			steering = utils_map(steering, -1.0, 1.0,
 					main_config.car.steering_center + (main_config.car.steering_range / 2.0),
 					main_config.car.steering_center - (main_config.car.steering_range / 2.0));
 			servo_simple_set_pos_ramp(steering);
+#endif
 		} break;
 
 		case CMD_SET_SERVO_DIRECT: {

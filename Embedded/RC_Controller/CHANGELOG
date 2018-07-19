@@ -1,3 +1,7 @@
+=== FW 10.0 ===
+* Fault injection support.
+* First differential steering implementation.
+
 === FW 9.3 ===
 * Added ID_CAR_CLIENT for packets not to be forwarded.
 

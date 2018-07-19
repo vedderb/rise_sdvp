@@ -39,4 +39,8 @@ float autopilot_get_steering_scale(void);
 float autopilot_get_rad_now(void);
 void autopilot_get_goal_now(ROUTE_POINT *rp);
 
+#if HAS_DIFF_STEERING
+void autopilot_set_turn_rad(float rad);
+#endif
+
 #endif /* AUTOPILOT_H_ */

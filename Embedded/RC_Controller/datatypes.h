@@ -229,6 +229,8 @@ typedef struct {
 	float steering_center;
 	float steering_range;
 	float steering_ramp_time; // Ramp time constant for the steering servo in seconds
+	// Distance between front and rear wheels in ackermann mode, distance between drive wheels
+	// in differential mode.
 	float axis_distance;
 } MAIN_CONFIG_CAR;
 

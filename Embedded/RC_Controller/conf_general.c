@@ -236,6 +236,15 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 	conf->mag_cal_zz = 0.9869;
 #endif
 
+	// Only the SLU testbot for not
+#if HAS_DIFF_STEERING
+	conf->car.gear_ratio = 1.0;
+	conf->car.axis_distance = 0.5;
+	conf->car.wheel_diam = 0.3;
+	conf->car.motor_poles = 22.0;
+	conf->gps_ant_x = 0.5;
+#endif
+
 }
 
 /**
