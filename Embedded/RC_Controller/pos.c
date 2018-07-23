@@ -1222,9 +1222,8 @@ static void ubx_rx_rawx(ubx_rxm_rawx *rawx) {
 
 #if MAIN_MODE == MAIN_MODE_CAR
 static void mc_values_received(mc_values *val) {
-	// TODO: Include VESC ID in values struct and use it here.
 #if HAS_DIFF_STEERING
-	if (!m_vesc_left_now) {
+	if (val->vesc_id == DIFF_STEERING_VESC_RIGHT || !m_vesc_left_now) {
 		m_mc_val_right = *val;
 		return;
 	}
