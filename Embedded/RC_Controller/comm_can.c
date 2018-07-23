@@ -27,6 +27,7 @@
 #include "bldc_interface.h"
 #include "commands.h"
 #include "radar_cont.h"
+#include "motor_sim.h"
 
 // Settings
 #define CANDx						CAND1
@@ -98,6 +99,12 @@ void comm_can_init(void) {
 
 void comm_can_set_vesc_id(int id) {
 	vesc_id = id;
+
+	if (vesc_id == DIFF_STEERING_VESC_LEFT) {
+		motor_sim_set_motor(0);
+	} else if (vesc_id == DIFF_STEERING_VESC_RIGHT) {
+		motor_sim_set_motor(1);
+	}
 }
 
 void comm_can_lock_vesc(void) {

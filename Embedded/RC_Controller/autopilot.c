@@ -348,10 +348,8 @@ void autopilot_set_motor_speed(float speed) {
 #if HAS_DIFF_STEERING
 		float diff_speed_half = 0.0;
 
-//		m_turn_rad_now = -2.5;
-
 		if (fabsf(m_turn_rad_now) > 0.1) {
-			diff_speed_half = ((speed / m_turn_rad_now) * main_config.car.axis_distance);
+			diff_speed_half = speed * (main_config.car.axis_distance / (2.0 * m_turn_rad_now));
 		}
 
 		float rpm_r = (speed + diff_speed_half) / (main_config.car.gear_ratio
@@ -784,12 +782,11 @@ static void steering_angle_to_point(
 
 	if (fabsf(dy) <= 0.000001) {
 		*steering_angle = 0.0;
-		*circle_radius = 9000;
+		*circle_radius = 9000.0;
 		return;
 	}
 
 	float R = -(dx * dx + dy * dy) / (2.0 * dy);
-	*circle_radius = R;
 
 	/*
 	 * Add correction if the arc is much longer than the total distance.
@@ -800,7 +797,10 @@ static void steering_angle_to_point(
 		angle_correction = 5.0;
 	}
 
-	*steering_angle = atanf(main_config.car.axis_distance / R) * angle_correction;
+	R /= angle_correction;
+
+	*circle_radius = R;
+	*steering_angle = atanf(main_config.car.axis_distance / R);
 }
 
 static bool add_point(ROUTE_POINT *p, bool first) {
@@ -920,10 +920,10 @@ static void terminal_angle_dist_comp(int argc, const char **argv) {
 	if (argc == 2) {
 		if (strcmp(argv[1], "0") == 0) {
 			m_en_angle_dist_comp = 0;
-			commands_printf("OK\n");
+			commands_printf("Angle distance compensation disabled\n");
 		} else if (strcmp(argv[1], "1") == 0) {
 			m_en_angle_dist_comp = 1;
-			commands_printf("OK\n");
+			commands_printf("Angle distance compensation enabled\n");
 		} else {
 			commands_printf("Invalid argument %s\n", argv[1]);
 		}

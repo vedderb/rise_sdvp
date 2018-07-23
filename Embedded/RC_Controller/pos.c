@@ -1222,6 +1222,7 @@ static void ubx_rx_rawx(ubx_rxm_rawx *rawx) {
 
 #if MAIN_MODE == MAIN_MODE_CAR
 static void mc_values_received(mc_values *val) {
+	// TODO: Include VESC ID in values struct and use it here.
 #if HAS_DIFF_STEERING
 	if (!m_vesc_left_now) {
 		m_mc_val_right = *val;
@@ -1231,21 +1232,21 @@ static void mc_values_received(mc_values *val) {
 
 	m_mc_val = *val;
 
-	static int32_t last_tacho = 0;
+	static float last_tacho = 0;
 	static bool tacho_read = false;
 
 #if HAS_DIFF_STEERING
-	static int32_t last_tacho_diff = 0;
-	int tacho_diff = m_mc_val_right.tachometer - m_mc_val.tachometer;
+	static float last_tacho_diff = 0;
+	float tacho_diff = m_mc_val_right.tachometer - m_mc_val.tachometer;
 
 	if (!tacho_read) {
 		last_tacho_diff = 0;
 	}
 
-	int32_t tacho = (m_mc_val.tachometer + m_mc_val_right.tachometer) / 2;
+	float tacho = (m_mc_val.tachometer + m_mc_val_right.tachometer) / 2.0;
 	float rpm = (m_mc_val.rpm + m_mc_val_right.rpm) / 2.0;
 #else
-	int32_t tacho = m_mc_val.tachometer;
+	float tacho = m_mc_val.tachometer;
 	float rpm = m_mc_val.rpm;
 #endif
 
@@ -1255,32 +1256,35 @@ static void mc_values_received(mc_values *val) {
 		last_tacho = tacho;
 	}
 
-	float distance = (float) (tacho - last_tacho) * main_config.car.gear_ratio
+	float distance = (tacho - last_tacho) * main_config.car.gear_ratio
 			* (2.0 / main_config.car.motor_poles) * (1.0 / 6.0)
 			* main_config.car.wheel_diam * M_PI;
 	last_tacho = tacho;
 
 	float angle_diff = 0.0;
+	float turn_rad_rear = 0.0;
 
 #if HAS_DIFF_STEERING
-	float distance_diff = (float) (tacho_diff - last_tacho_diff)
+	float distance_diff = (tacho_diff - last_tacho_diff)
 			* main_config.car.gear_ratio * (2.0 / main_config.car.motor_poles)
 			* (1.0 / 6.0) * main_config.car.wheel_diam * M_PI;
 	last_tacho_diff = tacho_diff;
 
-	angle_diff = 2.0 * M_PI * (distance_diff / (main_config.car.axis_distance * 2.0 * M_PI));
-	utils_norm_angle_rad(&angle_diff);
+	const float d1 = distance - distance_diff / 2.0;
+	const float d2 = distance + distance_diff / 2.0;
 
-	float steering_angle = 0.0; // TODO: Calculate from both tachometers
+	if (fabsf(d2 - d1) > 1e-6) {
+		turn_rad_rear = main_config.car.axis_distance * (d2 + d1) / (2 * (d2 - d1));
+		angle_diff = (d2 - d1) / main_config.car.axis_distance;
+		utils_norm_angle_rad(&angle_diff);
+	}
 #else
 	float steering_angle = (servo_simple_get_pos_now()
 			- main_config.car.steering_center)
 			* ((2.0 * main_config.car.steering_max_angle_rad)
 					/ main_config.car.steering_range);
 
-	float turn_rad_rear = 0.0;
-
-	if (fabsf(steering_angle) >= 0.00001) {
+	if (fabsf(steering_angle) >= 1e-6) {
 		turn_rad_rear = main_config.car.axis_distance / tanf(steering_angle);
 		float turn_rad_front = sqrtf(
 				main_config.car.axis_distance * main_config.car.axis_distance
@@ -1301,21 +1305,14 @@ static void mc_values_received(mc_values *val) {
 
 		m_pos.gps_corr_cnt += fabsf(distance);
 
-		if (!main_config.car.yaw_use_odometry || fabsf(angle_diff) < 0.0001) {
+		if (!main_config.car.yaw_use_odometry || fabsf(angle_diff) < 1e-6) {
 			m_pos.px += cosf(angle_rad) * distance;
 			m_pos.py += sinf(angle_rad) * distance;
 		} else {
-#if HAS_DIFF_STEERING
-			angle_rad += angle_diff;
-			utils_norm_angle_rad(&angle_rad);
-			m_pos.px += cosf(angle_rad) * distance;
-			m_pos.py += sinf(angle_rad) * distance;
-#else
 			m_pos.px += turn_rad_rear * (sinf(angle_rad + angle_diff) - sinf(angle_rad));
 			m_pos.py += turn_rad_rear * (cosf(angle_rad - angle_diff) - cosf(angle_rad));
 			angle_rad += angle_diff;
 			utils_norm_angle_rad(&angle_rad);
-#endif
 
 			m_pos.yaw = -angle_rad * 180.0 / M_PI;
 			utils_norm_angle(&m_pos.yaw);
@@ -1327,7 +1324,7 @@ static void mc_values_received(mc_values *val) {
 			* main_config.car.wheel_diam * M_PI;
 
 	// TODO: eventually use yaw from IMU and implement yaw correction
-	pos_uwb_update_dr(m_pos.yaw, distance, steering_angle, m_pos.speed);
+	pos_uwb_update_dr(m_pos.yaw, distance, turn_rad_rear, m_pos.speed);
 	//	pos_uwb_update_dr(m_imu_yaw, distance, steering_angle, m_pos.speed);
 
 	save_pos_history();

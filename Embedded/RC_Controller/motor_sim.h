@@ -23,5 +23,6 @@
 // Fucntions
 void motor_sim_init(void);
 void motor_sim_set_running(bool running);
+void motor_sim_set_motor(int motor);
 
 #endif /* MOTOR_SIM_H_ */

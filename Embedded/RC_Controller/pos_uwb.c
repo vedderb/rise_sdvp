@@ -73,8 +73,8 @@ void pos_uwb_init(void) {
 }
 
 void pos_uwb_update_dr(float imu_yaw, float travel_dist,
-		float steering_angle, float speed) {
-	(void)steering_angle;
+		float turn_rad, float speed) {
+	(void)turn_rad;
 
 	chMtxLock(&m_mutex_pos);
 

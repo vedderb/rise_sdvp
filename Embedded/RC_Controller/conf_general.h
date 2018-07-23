@@ -40,7 +40,7 @@
 
 // Firmware version
 #define FW_VERSION_MAJOR			10
-#define FW_VERSION_MINOR			0
+#define FW_VERSION_MINOR			1
 
 // Default car settings
 //#define CAR_TERO // Benjamins tero car
@@ -53,7 +53,7 @@
 
 // Differential steering
 #ifndef HAS_DIFF_STEERING
-#define HAS_DIFF_STEERING			1
+#define HAS_DIFF_STEERING			0
 #endif
 #ifndef DIFF_STEERING_VESC_LEFT
 #define DIFF_STEERING_VESC_LEFT		0

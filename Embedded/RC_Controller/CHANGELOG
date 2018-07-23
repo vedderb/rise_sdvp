@@ -1,3 +1,9 @@
+=== FW 10.1 ===
+* Multiple motor simulation support.
+* Differential steering fixes.
+* AP angle correction update.
+* Motor simulation bug fixes.
+
 === FW 10.0 ===
 * Fault injection support.
 * First differential steering implementation.
