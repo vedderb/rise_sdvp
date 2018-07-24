@@ -124,7 +124,7 @@ static void dw_range(uint8_t id, uint8_t dest, float range) {
 	// when fault injection is disabled (sprintf).
 	if (fi_is_active()) {
 		char id_str[20];
-		sprintf(id_str, "uwb_range_%d", id);
+		sprintf(id_str, "uwb_range_%d", dest);
 		fi_inject_fault_float(id_str, &range);
 	}
 

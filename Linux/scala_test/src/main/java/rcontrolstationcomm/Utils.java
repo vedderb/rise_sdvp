@@ -54,13 +54,13 @@ public class Utils {
 			routePtr.set(i, route.get(i));
 		}
 		
-		return RControlStationCommLibrary.rcsc_addRoutePoints(car,  routePtr,  route.size(), 
+		return RControlStationCommLibrary.rcsc_addRoutePoints(car, routePtr, route.size(), 
 				replace, mapOnly, mapRoute, timeoutMs);
 	}
 	
 	public static CAR_STATE getCarState(int car, int timeoutMs) {
 		CAR_STATE st = new CAR_STATE();
-		RControlStationCommLibrary.rcsc_getState(0, Pointer.pointerTo(st), timeoutMs);
+		RControlStationCommLibrary.rcsc_getState(car, Pointer.pointerTo(st), timeoutMs);
 		return st;
 	}
 	
@@ -199,7 +199,9 @@ public class Utils {
 			}
 		}
 		
-		if (maxUwbDiff > 5.0) {
+		out.println("Max UWB diff: " + maxUwbDiff + " m");
+		
+		if (maxUwbDiff > 1.0) {
 			res = false;
 			out.println("[Error] Too large difference between the UWB-based"
 					+ " and RTKGNSS-based positions.");
@@ -220,14 +222,14 @@ public class Utils {
 		first.speed(rec.get(0).speed());
 		rec.add(0, first);
 				
-		RControlStationCommLibrary.rcsc_setAutopilotActive(0, false, 1000);
+		RControlStationCommLibrary.rcsc_setAutopilotActive(car, false, 1000);
 		addRoute(car, rec, false, false, -2, 1000);
-		RControlStationCommLibrary.rcsc_setAutopilotActive(0, true, 1000);
+		RControlStationCommLibrary.rcsc_setAutopilotActive(car, true, 1000);
 		waitPolling(car, 500);
 		waitUntilRouteAlmostEnded(car);
 		waitPolling(car, 3000);
 		
-		RControlStationCommLibrary.rcsc_setAutopilotActive(0, false, 1000);
+		RControlStationCommLibrary.rcsc_setAutopilotActive(car, false, 1000);
 	}
 	
 	public static void waitPolling(int car, int ms) {

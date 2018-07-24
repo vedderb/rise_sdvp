@@ -32,7 +32,7 @@ import org.scalacheck.Test
 import util.{ Try, Success, Failure }
 
 object TestSettins {
-  val carId = 0 
+  val carId = 1
 }
 
 object TestData {
@@ -156,13 +156,13 @@ object CarSpec extends Commands2 {
 
   def genCommand(state: State): Gen[Command] = Gen.frequency(
     (3, genRunSegment(state)),
-    (0, genFaultAnchor(state)),
-    (1, genFaultTest(state)))
+    (2, genFaultAnchor(state)),
+    (0, genFaultTest(state)))
 
   def genRunSegment(state: State): Gen[RunSegment] = for {
     seed <- Gen.choose(-12000, 12000)
     points <- Gen.choose(4, 7)
-    speed <- Gen.choose(20, 40)
+    speed <- Gen.choose(9, 15)
   } yield {
     state.routeInfo.setRandomSeed(seed)
 
@@ -171,7 +171,7 @@ object CarSpec extends Commands2 {
       (state.route.size match {
         case 0 => state.startRoute.toRoutePoints()
         case _ => state.route.toRoutePoints()
-      }).asJava, speed / 10, 25)
+      }).asJava, speed.toDouble / 10.0, 20)
 
     println("Segment size: " + r.size)
 
@@ -179,11 +179,11 @@ object CarSpec extends Commands2 {
   }
 
   def genFaultAnchor(state: State): Gen[AddFault] = for {
-    probe <- Gen.oneOf("uwb_range_35", "uwb_range_50", "uwb_range_234")
+    probe <- Gen.oneOf("uwb_range_50", "uwb_range_234")
     faultType <- Gen.oneOf("OFFSET", "AMPLIFICATION")
     param <- Gen.choose(0, 5)
     start <- Gen.choose(0, 100)
-    duration <- Gen.choose(1, 10)
+    duration <- Gen.choose(1, 8)
   } yield AddFault(probe, faultType, param, start, duration)
 
   def genFaultTest(state: State): Gen[AddFault] = for {
@@ -242,7 +242,7 @@ object CarTester {
     //    randomDrivingTest()
     //    randomGenTest()
 
-    testScala(2)
+    testScala(3)
     
     //    runLastTest()
     //    runLastTestHdd()
