@@ -1,0 +1,9 @@
+* Consistency between reruns: fi_3
+* The reason that fi_3 failed is that I was standing in front of the anchor.
+ - All reruns passed.
+ - Confirmed by standing in front of the anchor again.
+
+* fi_4 is even better for showing consistence.
+* fi_4 shows the same test with and without injected faults, and the fault is just big enough to cause a failure.
+* The failure is very consistent and repeatable.
+

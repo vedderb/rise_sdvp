@@ -1,0 +1,351 @@
+[info] Loading settings from plugins.sbt ...
+[info] Loading project definition from /home/benjamin/Dokument/rise_sdvp/Linux/scala_test/project
+[info] Loading settings from build.sbt ...
+[info] Set current project to RcCar Test (in build file:/home/benjamin/Dokument/rise_sdvp/Linux/scala_test/)
+[info] Running (fork) rcontrolstationcomm.CarTester 
+[error] Java HotSpot(TM) 64-Bit Server VM warning: You have loaded library /tmp/BridJExtractedLibraries1586367544650496937/libbridj.so which might have disabled stack guard. The VM will try to fix the stack guard now.
+[error] It's highly recommended that you fix the library with 'execstack -c <libfile>', or link it with '-z noexecstack'.
+[error] libRControlStation: TCP connected
+[info] New initial state created
+[info] Generated points: 72195, Outer loops: 2280
+[info] Segment size: 10
+[info] Generated points: 20511, Outer loops: 662
+[info] Segment size: 16
+[info] Generated points: 120243, Outer loops: 2950
+[info] Segment size: 22
+[info] New SUT created
+[info] [CarCmd] Clearing faults
+[info] [CarCmd] Clearing route
+[info] [CarCmd] Following recovery route
+[info] Max UWB diff: 0.48224087342323224 m
+[info] [CarCmd] Resetting UWB position
+[info] [CarCmd] Activating autopilot
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.3427925320073332 m
+[info] [CarCmd] Adding fault; Probe: uwb_range_234 Type: AMPLIFICATION Param: 0.0 Start: 27 Duration: 8
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.39808181319924435 m
+[info] [CarCmd] Adding fault; Probe: uwb_range_234 Type: AMPLIFICATION Param: 5.0 Start: 89 Duration: 4
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.40203405328404834 m
+[info] [CarCmd] Deactivating autopilot
+[info] Generated points: 13205, Outer loops: 408
+[info] Segment size: 7
+[info] Generated points: 6760, Outer loops: 219
+[info] Segment size: 12
+[info] Generated points: 32544, Outer loops: 1227
+[info] Segment size: 18
+[info] Generated points: 177718, Outer loops: 5000
+[info] Segment size: 25
+[info] Generated points: 9831, Outer loops: 182
+[info] Segment size: 32
+[info] Generated points: 12498, Outer loops: 393
+[info] Segment size: 37
+[info] Generated points: 6758, Outer loops: 303
+[info] Segment size: 44
+[info] New SUT created
+[info] [CarCmd] Clearing faults
+[info] [CarCmd] Clearing route
+[info] [CarCmd] Following recovery route
+[info] Max UWB diff: 0.5549331491269888 m
+[info] [CarCmd] Resetting UWB position
+[info] [CarCmd] Activating autopilot
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.3065261652779377 m
+[info] [CarCmd] Adding fault; Probe: uwb_range_50 Type: OFFSET Param: 4.0 Start: 20 Duration: 1
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.3671032688495212 m
+[info] [CarCmd] Adding fault; Probe: uwb_range_50 Type: AMPLIFICATION Param: 5.0 Start: 29 Duration: 7
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.3884887900570648 m
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 1.0513725552819067 m
+[info] [Error] Too large difference between the UWB-based and RTKGNSS-based positions.
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.36249999999999694 m
+[info] [CarCmd] Adding fault; Probe: uwb_range_50 Type: OFFSET Param: 0.0 Start: 3 Duration: 6
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.2665573484261896 m
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.48260647529845724 m
+[info] [CarCmd] Deactivating autopilot
+[info] Tests passed: 1
+[info] Time: 106382 ms
+[info] Tests failed. Failing command sequence:
+[info] RunSegment(rcontrolstationcomm.RpList@20d3d15a)
+[info] AddFault(uwb_range_50,OFFSET,4.0,20,1)
+[info] RunSegment(rcontrolstationcomm.RpList@2893de87)
+[info] AddFault(uwb_range_50,AMPLIFICATION,5.0,29,7)
+[info] RunSegment(rcontrolstationcomm.RpList@55ca8de8)
+[info] RunSegment(rcontrolstationcomm.RpList@2c34f934)
+[info] RunSegment(rcontrolstationcomm.RpList@12d3a4e9)
+[info] AddFault(uwb_range_50,OFFSET,0.0,3,6)
+[info] RunSegment(rcontrolstationcomm.RpList@240237d2)
+[info] RunSegment(rcontrolstationcomm.RpList@25a65b77)
+[error] libRControlStation: TCP disconnected
+[success] Total time: 109 s, completed 2018-jul-24 15:47:41
+
+RERUN 1
+
+scala> CarTester.runLastTestHdd
+Re-running test...
+Commands to re-run
+RunSegment(rcontrolstationcomm.RpList@bdd2027)
+AddFault(uwb_range_50,OFFSET,4.0,20,1)
+RunSegment(rcontrolstationcomm.RpList@31f20c9f)
+AddFault(uwb_range_50,AMPLIFICATION,5.0,29,7)
+RunSegment(rcontrolstationcomm.RpList@f446158)
+RunSegment(rcontrolstationcomm.RpList@32f0c7f8)
+RunSegment(rcontrolstationcomm.RpList@504e1599)
+AddFault(uwb_range_50,OFFSET,0.0,3,6)
+RunSegment(rcontrolstationcomm.RpList@71f96dfb)
+RunSegment(rcontrolstationcomm.RpList@5d1b9c3d)
+
+New initial state created
+New SUT created
+[CarCmd] Clearing faults
+[CarCmd] Clearing route
+[CarCmd] Following recovery route
+Max UWB diff: 0.4959991633057443 m
+[CarCmd] Resetting UWB position
+[CarCmd] Activating autopilot
+[CarCmd] Running generated segments
+Max UWB diff: 0.29221439047384623 m
+[CarCmd] Adding fault; Probe: uwb_range_50 Type: OFFSET Param: 4.0 Start: 20 Duration: 1
+[CarCmd] Running generated segments
+Max UWB diff: 0.29247750340838186 m
+[CarCmd] Adding fault; Probe: uwb_range_50 Type: AMPLIFICATION Param: 5.0 Start: 29 Duration: 7
+[CarCmd] Running generated segments
+Max UWB diff: 0.3818522881953188 m
+[CarCmd] Running generated segments
+Max UWB diff: 1.0383722357613352 m
+[Error] Too large difference between the UWB-based and RTKGNSS-based positions.
+Postcondition failed
+[CarCmd] Running generated segments
+Max UWB diff: 0.37172000215215834 m
+[CarCmd] Adding fault; Probe: uwb_range_50 Type: OFFSET Param: 0.0 Start: 3 Duration: 6
+[CarCmd] Running generated segments
+Max UWB diff: 0.2651401327600188 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.510858111416464 m
+Test sequence failed
+
+RERUN 2
+
+scala> CarTester.runLastTestHdd
+Re-running test...
+Commands to re-run
+RunSegment(rcontrolstationcomm.RpList@1108adc8)
+AddFault(uwb_range_50,OFFSET,4.0,20,1)
+RunSegment(rcontrolstationcomm.RpList@8a98f38)
+AddFault(uwb_range_50,AMPLIFICATION,5.0,29,7)
+RunSegment(rcontrolstationcomm.RpList@20011bf)
+RunSegment(rcontrolstationcomm.RpList@51d9b06c)
+RunSegment(rcontrolstationcomm.RpList@5eb2172)
+AddFault(uwb_range_50,OFFSET,0.0,3,6)
+RunSegment(rcontrolstationcomm.RpList@41ffaeb8)
+RunSegment(rcontrolstationcomm.RpList@43f0c2d1)
+
+New initial state created
+New SUT created
+[CarCmd] Clearing faults
+[CarCmd] Clearing route
+[CarCmd] Following recovery route
+Max UWB diff: 0.516707460755114 m
+[CarCmd] Resetting UWB position
+[CarCmd] Activating autopilot
+[CarCmd] Running generated segments
+Max UWB diff: 0.27073243248639567 m
+[CarCmd] Adding fault; Probe: uwb_range_50 Type: OFFSET Param: 4.0 Start: 20 Duration: 1
+[CarCmd] Running generated segments
+Max UWB diff: 0.32241688851547645 m
+[CarCmd] Adding fault; Probe: uwb_range_50 Type: AMPLIFICATION Param: 5.0 Start: 29 Duration: 7
+[CarCmd] Running generated segments
+Max UWB diff: 0.39604006110493306 m
+[CarCmd] Running generated segments
+Max UWB diff: 1.052817515051872 m
+[Error] Too large difference between the UWB-based and RTKGNSS-based positions.
+Postcondition failed
+[CarCmd] Running generated segments
+Max UWB diff: 0.378093586298418 m
+[CarCmd] Adding fault; Probe: uwb_range_50 Type: OFFSET Param: 0.0 Start: 3 Duration: 6
+[CarCmd] Running generated segments
+Max UWB diff: 0.2720571998679644 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.47496374598489144 m
+Test sequence failed
+
+RERUN 3
+
+scala> CarTester.runLastTestHdd
+Re-running test...
+Commands to re-run
+RunSegment(rcontrolstationcomm.RpList@52d6cd34)
+AddFault(uwb_range_50,OFFSET,4.0,20,1)
+RunSegment(rcontrolstationcomm.RpList@715d6168)
+AddFault(uwb_range_50,AMPLIFICATION,5.0,29,7)
+RunSegment(rcontrolstationcomm.RpList@27b2faa6)
+RunSegment(rcontrolstationcomm.RpList@6428591a)
+RunSegment(rcontrolstationcomm.RpList@7397c6)
+AddFault(uwb_range_50,OFFSET,0.0,3,6)
+RunSegment(rcontrolstationcomm.RpList@1abfe081)
+RunSegment(rcontrolstationcomm.RpList@2a685eba)
+
+New initial state created
+New SUT created
+[CarCmd] Clearing faults
+[CarCmd] Clearing route
+[CarCmd] Following recovery route
+Max UWB diff: 0.49552422746017233 m
+[CarCmd] Resetting UWB position
+[CarCmd] Activating autopilot
+[CarCmd] Running generated segments
+Max UWB diff: 0.2465594046066813 m
+[CarCmd] Adding fault; Probe: uwb_range_50 Type: OFFSET Param: 4.0 Start: 20 Duration: 1
+[CarCmd] Running generated segments
+Max UWB diff: 0.2892000172890738 m
+[CarCmd] Adding fault; Probe: uwb_range_50 Type: AMPLIFICATION Param: 5.0 Start: 29 Duration: 7
+[CarCmd] Running generated segments
+Max UWB diff: 0.3633095099223211 m
+[CarCmd] Running generated segments
+Max UWB diff: 1.0176149566510888 m
+[Error] Too large difference between the UWB-based and RTKGNSS-based positions.
+Postcondition failed
+[CarCmd] Running generated segments
+Max UWB diff: 0.3687629048589366 m
+[CarCmd] Adding fault; Probe: uwb_range_50 Type: OFFSET Param: 0.0 Start: 3 Duration: 6
+[CarCmd] Running generated segments
+Max UWB diff: 0.233872486624651 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.5057531512506873 m
+Test sequence failed
+
+RERUN NO FAULT 1
+
+scala> CarTester.runLastTestHdd
+Re-running test...
+Commands to re-run
+RunSegment(rcontrolstationcomm.RpList@30c0d731)
+AddFault(uwb_range_50,OFFSET,4.0,20,1)
+RunSegment(rcontrolstationcomm.RpList@6d5037a9)
+AddFault(uwb_range_50,AMPLIFICATION,5.0,29,7)
+RunSegment(rcontrolstationcomm.RpList@422b8438)
+RunSegment(rcontrolstationcomm.RpList@30669dac)
+RunSegment(rcontrolstationcomm.RpList@629adce)
+AddFault(uwb_range_50,OFFSET,0.0,3,6)
+RunSegment(rcontrolstationcomm.RpList@6a282fdd)
+RunSegment(rcontrolstationcomm.RpList@743c6ce4)
+
+New initial state created
+New SUT created
+[CarCmd] Clearing faults
+[CarCmd] Clearing route
+[CarCmd] Following recovery route
+Max UWB diff: 0.4935148731294721 m
+[CarCmd] Resetting UWB position
+[CarCmd] Activating autopilot
+[CarCmd] Running generated segments
+Max UWB diff: 0.3125882275454412 m
+[CarCmd] Adding fault; Probe: uwb_range_50 Type: OFFSET Param: 4.0 Start: 20 Duration: 1
+[CarCmd] Running generated segments
+Max UWB diff: 0.21833868186833255 m
+[CarCmd] Adding fault; Probe: uwb_range_50 Type: AMPLIFICATION Param: 5.0 Start: 29 Duration: 7
+[CarCmd] Running generated segments
+Max UWB diff: 0.37350535471395846 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.40975126601390477 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.3692638216776746 m
+[CarCmd] Adding fault; Probe: uwb_range_50 Type: OFFSET Param: 0.0 Start: 3 Duration: 6
+[CarCmd] Running generated segments
+Max UWB diff: 0.27024289074829805 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.5019404845198276 m
+Test sequence successful
+
+RERUN NO FAULT 2
+
+scala> CarTester.runLastTestHdd
+Re-running test...
+Commands to re-run
+RunSegment(rcontrolstationcomm.RpList@6ab7ce48)
+AddFault(uwb_range_50,OFFSET,4.0,20,1)
+RunSegment(rcontrolstationcomm.RpList@2c6aed22)
+AddFault(uwb_range_50,AMPLIFICATION,5.0,29,7)
+RunSegment(rcontrolstationcomm.RpList@e322ec9)
+RunSegment(rcontrolstationcomm.RpList@7acfb656)
+RunSegment(rcontrolstationcomm.RpList@2e5ee2c9)
+AddFault(uwb_range_50,OFFSET,0.0,3,6)
+RunSegment(rcontrolstationcomm.RpList@55a609dd)
+RunSegment(rcontrolstationcomm.RpList@4afd21c6)
+
+New initial state created
+New SUT created
+[CarCmd] Clearing faults
+[CarCmd] Clearing route
+[CarCmd] Following recovery route
+Max UWB diff: 0.5022471304049375 m
+[CarCmd] Resetting UWB position
+[CarCmd] Activating autopilot
+[CarCmd] Running generated segments
+Max UWB diff: 0.2850821109785695 m
+[CarCmd] Adding fault; Probe: uwb_range_50 Type: OFFSET Param: 4.0 Start: 20 Duration: 1
+[CarCmd] Running generated segments
+Max UWB diff: 0.3065606954585011 m
+[CarCmd] Adding fault; Probe: uwb_range_50 Type: AMPLIFICATION Param: 5.0 Start: 29 Duration: 7
+[CarCmd] Running generated segments
+Max UWB diff: 0.3947804453110665 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.4151965558624045 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.3647261575483703 m
+[CarCmd] Adding fault; Probe: uwb_range_50 Type: OFFSET Param: 0.0 Start: 3 Duration: 6
+[CarCmd] Running generated segments
+Max UWB diff: 0.24788771651697777 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.4886496188476934 m
+Test sequence successful
+
+RERUN NO FAULT 3
+
+scala> CarTester.runLastTestHdd
+Re-running test...
+Commands to re-run
+RunSegment(rcontrolstationcomm.RpList@3964d79)
+AddFault(uwb_range_50,OFFSET,4.0,20,1)
+RunSegment(rcontrolstationcomm.RpList@62db0521)
+AddFault(uwb_range_50,AMPLIFICATION,5.0,29,7)
+RunSegment(rcontrolstationcomm.RpList@1b4ae4e0)
+RunSegment(rcontrolstationcomm.RpList@6ef1a1b9)
+RunSegment(rcontrolstationcomm.RpList@5fbdc49b)
+AddFault(uwb_range_50,OFFSET,0.0,3,6)
+RunSegment(rcontrolstationcomm.RpList@65753040)
+RunSegment(rcontrolstationcomm.RpList@2954b5ea)
+
+New initial state created
+New SUT created
+[CarCmd] Clearing faults
+[CarCmd] Clearing route
+[CarCmd] Following recovery route
+Max UWB diff: 0.5018850266744369 m
+[CarCmd] Resetting UWB position
+[CarCmd] Activating autopilot
+[CarCmd] Running generated segments
+Max UWB diff: 0.27669654858707443 m
+[CarCmd] Adding fault; Probe: uwb_range_50 Type: OFFSET Param: 4.0 Start: 20 Duration: 1
+[CarCmd] Running generated segments
+Max UWB diff: 0.24805563891998014 m
+[CarCmd] Adding fault; Probe: uwb_range_50 Type: AMPLIFICATION Param: 5.0 Start: 29 Duration: 7
+[CarCmd] Running generated segments
+Max UWB diff: 0.39034090228926716 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.40782707119562445 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.3793007382012334 m
+[CarCmd] Adding fault; Probe: uwb_range_50 Type: OFFSET Param: 0.0 Start: 3 Duration: 6
+[CarCmd] Running generated segments
+Max UWB diff: 0.28222808152272744 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.496280021761908 m
+Test sequence successful
+
