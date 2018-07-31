@@ -31,8 +31,13 @@ import org.scalacheck.Prop
 import org.scalacheck.Test
 import util.{ Try, Success, Failure }
 
-object TestSettins {
+object TestSettings {
   val carId = 1
+  val carRoute = 3
+  val startRoute = 0
+  val recoveryRoute = 1
+  val outerRoute = 2
+  val cutouts = List(4, 5, 6, 7)
 }
 
 object TestData {
@@ -67,7 +72,7 @@ class RpList(r: List[Rp]) extends Serializable {
 class Car {
   def clearRoute(): Boolean = {
     println("[CarCmd] Clearing route")
-    rcsc_clearRoute(TestSettins.carId, 3, 1000)
+    rcsc_clearRoute(TestSettings.carId, TestSettings.carRoute, 1000)
   }
   
   def activateAutopilot(active: Boolean): Boolean = {
@@ -76,23 +81,28 @@ class Car {
     } else {
       println("[CarCmd] Deactivating autopilot")
     }
-    rcsc_setAutopilotActive(TestSettins.carId, active, 2000)
+    rcsc_setAutopilotActive(TestSettings.carId, active, 2000)
+  }
+  
+  def brakeCar(timeMs: Int): Unit = {
+    rcsc_rcControl(TestSettings.carId, 3, 50.0, 0.0);
+    waitPolling(TestSettings.carId, timeMs)
   }
   
   def waitCarPolling(ms: Int): Unit = {
     println("[CarCmd] Waiting for " + ms + " ms while polling the car position")
-    waitPolling(TestSettins.carId, ms)
+    waitPolling(TestSettings.carId, ms)
   }
   
   def runSegments(route: List[ROUTE_POINT]): Boolean = {
     println("[CarCmd] Running generated segments")
-    addRoute(TestSettins.carId, route.asJava, false, false, 3, 2000)
-    waitUntilRouteAlmostEnded(TestSettins.carId)
+    addRoute(TestSettings.carId, route.asJava, false, false, TestSettings.carRoute, 2000)
+    waitUntilRouteAlmostEnded(TestSettings.carId, 4)
   }
   
   def runRecoveryRoute(): Boolean = {
     println("[CarCmd] Following recovery route")
-    followRecoveryRoute(TestSettins.carId, 1)
+    followRecoveryRoute(TestSettings.carId, TestSettings.recoveryRoute)
     true
   }
 
@@ -100,18 +110,18 @@ class Car {
                param: Double, start: Int, duration: Int): Boolean = {
     println("[CarCmd] Adding fault; Probe: " + probe + " Type: " + faultType +
       " Param: " + param + " Start: " + start + " Duration: " + duration)
-    fiSetEnabled(TestSettins.carId, true, 1000)
-    fiAddFault(TestSettins.carId, probe, faultType, param, start, duration, 1000)
+    fiSetEnabled(TestSettings.carId, true, 1000)
+    fiAddFault(TestSettings.carId, probe, faultType, param, start, duration, 1000)
   }
 
   def clearFaults(): Boolean = {
     println("[CarCmd] Clearing faults")
-    fiClearFaults(TestSettins.carId, 1000)
+    fiClearFaults(TestSettings.carId, 1000)
   }
   
   def resetUwbPosNow(): Boolean = {
     println("[CarCmd] Resetting UWB position")
-    resetUwbPos(TestSettins.carId, 1000)
+    resetUwbPos(TestSettings.carId, 1000)
   }
 }
 
@@ -133,11 +143,13 @@ object CarSpec extends Commands2 {
 
   def genInitialState: Gen[State] = {
     println("New initial state created")
-    State(
+    val s = State(
       new RpList(Buffer.empty[ROUTE_POINT]),
-      new RpList(getRoute(0, 0, 1000).asScala),
-      new RouteInfo(getRoute(0, 2, 1000)),
+      new RpList(getRoute(0, TestSettings.startRoute, 1000).asScala),
+      new RouteInfo(getRoute(0, TestSettings.outerRoute, 1000)),
       0)
+    for (ind <- TestSettings.cutouts) s.routeInfo.addCutout(getRoute(0, ind, 1000))
+    s
   }
 
   def newSut(state: State): Sut = {
@@ -152,7 +164,10 @@ object CarSpec extends Commands2 {
     sut
   }
 
-  def destroySut(sut: Sut): Unit = sut.activateAutopilot(false)
+  def destroySut(sut: Sut): Unit = {
+    sut.activateAutopilot(false)
+    sut.brakeCar(2000)
+  }
 
   def genCommand(state: State): Gen[Command] = Gen.frequency(
     (3, genRunSegment(state)),
@@ -239,10 +254,10 @@ object CarTester {
   def main(args: Array[String]): Unit = {
     connect("localhost", 65191)
 
-    //    randomDrivingTest()
+    randomDrivingTest()
     //    randomGenTest()
 
-    testScala(3)
+//    testScala(3)
     
     //    runLastTest()
     //    runLastTestHdd()
@@ -320,39 +335,54 @@ object CarTester {
   }
 
   def randomDrivingTest() {
-    val edgeRoute = getRoute(0, 2, 5000);
-    val startRoute = getRoute(0, 0, 5000);
+    val edgeRoute = getRoute(0, TestSettings.outerRoute, 5000);
+    val startRoute = getRoute(0, TestSettings.startRoute, 5000);
     val r = new RouteInfo(edgeRoute);
+    for (ind <- TestSettings.cutouts) r.addCutout(getRoute(0, ind, 1000))
 
-    for (i <- 0 to 5) {
+    for (i <- 0 to 2) {
       var rGen = startRoute
       var indLast = 0
 
-      rcsc_clearRoute(0, 3, 5000)
-      followRecoveryRoute(0, 1)
-      rcsc_setAutopilotActive(0, true, 2000)
+      rcsc_clearRoute(TestSettings.carId, TestSettings.carRoute, 5000)
+      followRecoveryRouteV2(TestSettings.carId, TestSettings.recoveryRoute, r, TestSettings.carRoute)
+      rcsc_setAutopilotActive(TestSettings.carId, true, 2000)
 
-      for (i <- 0 to 8) {
+      for (i <- 0 to 4) {
         rGen = r.generateRouteWithin(5, rGen, r.randInRange(1.0, 5.0), 25)
 
         val subRoute = rGen.subList(indLast, rGen.size())
         if (subRoute.size() > 0) {
-          addRoute(0, subRoute, false, false, 3, 2000)
+          addRoute(TestSettings.carId, subRoute, false, false, TestSettings.carRoute, 2000)
         }
-        waitUntilRouteAlmostEnded(0)
+        waitUntilRouteAlmostEnded(TestSettings.carId, 4)
         indLast = rGen.size()
       }
-      rcsc_setAutopilotActive(0, false, 2000)
+      rcsc_setAutopilotActive(TestSettings.carId, false, 2000)
+      rcsc_rcControl(TestSettings.carId, 3, 50.0, 0.0);
+      waitPolling(TestSettings.carId, 2000)
     }
+  }
+  
+  def recoveryTest() {
+    val edgeRoute = getRoute(0, TestSettings.outerRoute, 5000);
+    val r = new RouteInfo(edgeRoute);
+    for (ind <- TestSettings.cutouts) r.addCutout(getRoute(0, ind, 1000))
+    rcsc_clearRoute(TestSettings.carId, TestSettings.carRoute, 5000)
+    followRecoveryRouteV2(TestSettings.carId, TestSettings.recoveryRoute, r, TestSettings.carRoute)
+    rcsc_setAutopilotActive(TestSettings.carId, false, 2000)
+    rcsc_rcControl(TestSettings.carId, 3, 50.0, 0.0);
+    waitPolling(TestSettings.carId, 2000)
   }
 
   def randomGenTest() {
-    val edgeRoute = getRoute(0, 2, 5000);
-    val startRoute = getRoute(0, 0, 5000);
+    val edgeRoute = getRoute(0, TestSettings.outerRoute, 5000);
+    val startRoute = getRoute(0, TestSettings.startRoute, 5000);
     var maxAttempts = 0
     var genPoints = 0
     var usedPoints = 0
     val r = new RouteInfo(edgeRoute);
+    for (ind <- TestSettings.cutouts) r.addCutout(getRoute(0, ind, 1000))
 
     for (i <- 0 to 5) {
       var rGen = startRoute
@@ -377,7 +407,7 @@ object CarTester {
 
         val subRoute = rGen.subList(start, rGen.size())
         if (subRoute.size() > 0) {
-          addRoute(0, subRoute, true, true, 3, 2000)
+          addRoute(0, subRoute, true, true, TestSettings.carRoute, 2000)
         }
         Thread.sleep(40)
         indLast = rGen.size()
@@ -392,7 +422,7 @@ object CarTester {
   }
 
   def getPrintRouteTest() {
-    val edgeRoute = getRoute(0, 2, 5000);
+    val edgeRoute = getRoute(0, TestSettings.outerRoute, 5000);
     for (r <- edgeRoute.asScala) {
       println("[" + r.px() + ", " + r.py() + "]")
     }
@@ -406,8 +436,8 @@ object CarTester {
   }
 
   def carStateTest() {
-    val st = getCarState(0, 5000)
-    println("px: " + st.px() + ", py: " + st.py())
+    val st = getCarState(TestSettings.carId, 5000)
+    println("px: " + st.px() + ", py: " + st.py() + ", yaw: " + st.yaw())
     println("ap_route_left: " + st.ap_route_left())
   }
 
@@ -428,6 +458,6 @@ object CarTester {
     a(2).speed(2.1)
     a(2).time(2980)
 
-    addRoute(0, a.asJava, true, true, 3, 5000)
+    addRoute(0, a.asJava, true, true, TestSettings.carRoute, 5000)
   }
 }

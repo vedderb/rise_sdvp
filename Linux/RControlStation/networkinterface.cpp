@@ -18,6 +18,7 @@
 #include "networkinterface.h"
 #include "ui_networkinterface.h"
 #include <QMessageBox>
+#include "utility.h"
 
 NetworkInterface::NetworkInterface(QWidget *parent) :
     QWidget(parent),
@@ -468,13 +469,13 @@ void NetworkInterface::processXml(const QByteArray &xml)
 
             if (!mapOnly && !ui->disableSendCarBox->isChecked() && mPacketInterface) {
                 if (name == "addRoutePoint") {
-                    if (!mPacketInterface->setRoutePoints(id, route)) {
+                    if (!utility::uploadRouteHelper(mPacketInterface, id, route)) {
                         ok = false;
                         sendError("No ACK received from car. Make sure that the car connection "
                                   "works.", name);
                     }
                 } else {
-                    if (!mPacketInterface->replaceRoute(id, route)) {
+                    if (!utility::replaceRouteHelper(mPacketInterface, id, route)) {
                         ok = false;
                         sendError("No ACK received from car. Make sure that the car connection "
                                   "works.", name);

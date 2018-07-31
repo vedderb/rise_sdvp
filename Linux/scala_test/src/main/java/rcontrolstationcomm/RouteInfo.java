@@ -31,6 +31,7 @@ public class RouteInfo {
 	private double mYMax;
 	private double mLength;
 	private List<ROUTE_POINT> mRoute;
+	private List<List<ROUTE_POINT>> mCutouts;
 	private Random mRandom;
 	private int mLastOuterAttempts;
 	private int mLastGeneratedPoints;
@@ -62,6 +63,7 @@ public class RouteInfo {
 		mYMax = 0.0;
 		mLength = 0.0;
 		mRoute = null;
+		mCutouts = null;
 		mRandom = new Random();
 		mLastOuterAttempts = 0;
 		mLastGeneratedPoints = 0;
@@ -77,6 +79,7 @@ public class RouteInfo {
 		}
 
 		mRoute = route;
+		mCutouts = null;
 		mXMin = route.get(0).px();
 		mXMax = route.get(0).px();
 		mYMin = route.get(0).py();
@@ -107,6 +110,14 @@ public class RouteInfo {
 				mYMax = p.py();
 			}
 		}
+	}
+	
+	public void addCutout(List<ROUTE_POINT> route) {
+		if (mCutouts == null) {
+			mCutouts = new ArrayList<List<ROUTE_POINT>>();
+		}
+		
+		mCutouts.add(route);
 	}
 
 	public boolean hasRoute() {
@@ -153,6 +164,33 @@ public class RouteInfo {
 				c = !c;
 			}
 		}
+		
+		// Should not be within any of the cutouts
+		if (c && mCutouts != null) {
+			for (List<ROUTE_POINT> r: mCutouts) {
+				nVert = r.size();
+				c = false;
+
+				for (i = 0, j = nVert - 1;i < nVert;j = i++) {
+					double vxi = r.get(i).px();
+					double vyi = r.get(i).py();
+					double vxj = r.get(j).px();
+					double vyj = r.get(j).py();
+
+					if (((vyi > py) != (vyj > py)) && 
+							(px < (vxj-vxi) * (py-vyi) / (vyj-vyi) + vxi)) {
+						c = !c;
+					}
+				}
+				
+				if (c) {
+					c = false;
+					break;
+				} else {
+					c = true;
+				}
+			}
+		}
 
 		return c;
 	}
@@ -170,6 +208,20 @@ public class RouteInfo {
 			}
 		}
 
+		if (mCutouts != null) {			
+			for (List<ROUTE_POINT> r: mCutouts) {
+				for (int j = 1;j < r.size();j++) {
+					ROUTE_POINT q1 = r.get(j - 1);
+					ROUTE_POINT q2 = r.get(j);
+
+					if (lineIntersect(p1, p2, q1, q2)) {
+						res = false;
+						break;
+					}
+				}
+			}
+		}
+
 		if (res) {
 			res = isPointWithinRoutePolygon(p1.px(), p1.py());
 		}
@@ -177,9 +229,67 @@ public class RouteInfo {
 		return res;
 	}
 	
+	public boolean closestLineIntersection(double p0_x, double p0_y,
+			double p1_x, double p1_y, Point coll) {
+		if (mRoute == null || mRoute.size() < 2) {
+			return false;
+		}
+		
+		boolean res = false;
+		Point collLast = new Point();
+		double lastDist = 0.0;
+		Point pStart = new Point(p0_x, p0_y);
+		
+		for (int i = 1;i < mRoute.size();i++) {
+			if (getLineIntersection(p0_x, p0_y, p1_x, p1_y,
+					mRoute.get(i - 1).px(), mRoute.get(i - 1).py(),
+					mRoute.get(i).px(), mRoute.get(i).py(), collLast)) {
+				
+				if (res) {
+					double dist = lastDist = pointDistance(pStart, collLast);
+					if (dist < lastDist) {
+						coll.setTo(collLast);
+						lastDist = dist;
+					}
+				} else {
+					coll.setTo(collLast);
+					lastDist = pointDistance(pStart, collLast);
+				}
+				
+				res = true;
+			}
+		}
+
+		if (mCutouts != null) {			
+			for (List<ROUTE_POINT> r: mCutouts) {
+				for (int i = 1;i < r.size();i++) {
+					if (getLineIntersection(p0_x, p0_y, p1_x, p1_y,
+							r.get(i - 1).px(), r.get(i - 1).py(),
+							r.get(i).px(), r.get(i).py(), collLast)) {
+
+						if (res) {
+							double dist = lastDist = pointDistance(pStart, collLast);
+							if (dist < lastDist) {
+								coll.setTo(collLast);
+								lastDist = dist;
+							}
+						} else {
+							coll.setTo(collLast);
+							lastDist = pointDistance(pStart, collLast);
+						}
+
+						res = true;
+					}
+				}
+			}
+		}
+
+		return res;
+	}
+
 	public List<ROUTE_POINT> generateRouteWithin(int length,
 			List<ROUTE_POINT> previous, double speed) {
-		
+
 		List<ROUTE_POINT> r = new ArrayList<ROUTE_POINT>();
 		List<ROUTE_POINT> rLargest = new ArrayList<ROUTE_POINT>();
 
@@ -379,6 +489,43 @@ public class RouteInfo {
 		return res.subList(0, end);
 	}
 	
+	boolean isRouteOk(List<ROUTE_POINT> r) {
+		boolean res = true;
+		
+		double maxAng = PI / 6;
+		
+		if (r.size() == 1) {
+			res = isPointWithinRoutePolygon(r.get(0).px(), r.get(0).py());
+		} else if (r.size() > 1) {
+			for (int i = 1;i < r.size();i++) {
+				ROUTE_POINT p1 = r.get(i - 1);
+				ROUTE_POINT p2 = r.get(i);
+
+				if (!isSegmentWithinRoutePolygon(p1, p2)) {
+					res = false;
+				}
+
+				if (i > 1) {
+					double px1 = r.get(i - 2).px();
+					double py1 = r.get(i - 2).py();
+					double px2 = r.get(i - 1).px();
+					double py2 = r.get(i - 1).py();
+					double qx1 = r.get(i - 1).px();
+					double qy1 = r.get(i - 1).py();
+					double qx2 = p2.px();
+					double qy2 = p2.py();
+
+					if (abs(angleBetweenLines(px1, py1, px2, py2,
+							qx1, qy1, qx2, qy2)) > maxAng) {
+						res = false;
+					}
+				}
+			}
+		}
+		
+		return res;
+	}
+	
 	public void setRandomSeed(long seed) {
 		mRandom = new Random(seed);
 	}
@@ -421,41 +568,6 @@ public class RouteInfo {
 	
 	public double randInRange(double min, double max) {
 	    return mRandom.nextDouble() * (max - min) + min;
-	}
-	
-	public boolean closestLineIntersection(double p0_x, double p0_y,
-			double p1_x, double p1_y, Point coll) {
-		if (mRoute == null || mRoute.size() < 2) {
-			return false;
-		}
-		
-		boolean res = false;
-		Point collLast = new Point();
-		double lastDist = 0.0;
-		Point pStart = new Point(p0_x, p0_y);
-		
-		for (int i = 1;i < mRoute.size();i++) {
-			if (getLineIntersection(p0_x, p0_y, p1_x, p1_y,
-					mRoute.get(i - 1).px(), mRoute.get(i - 1).py(),
-					mRoute.get(i).px(), mRoute.get(i).py(), collLast)) {
-				
-				if (res) {
-					double dist = lastDist = pointDistance(pStart, collLast);
-					if (dist < lastDist) {
-						coll.setTo(collLast);
-						lastDist = dist;
-					}
-				} else {
-					coll.setTo(collLast);
-					lastDist = pointDistance(pStart, collLast);
-				}
-				
-				res = true;
-			}
-			
-		}
-		
-		return res;
 	}
 	
 	private static double minFrom4(double a, double b, double c, double d) {

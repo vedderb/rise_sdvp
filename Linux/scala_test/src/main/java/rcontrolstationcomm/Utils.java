@@ -172,7 +172,7 @@ public class Utils {
 		return true;
 	}
 	
-	public static boolean waitUntilRouteAlmostEnded(int car) {
+	public static boolean waitUntilRouteAlmostEnded(int car, int points_left) {
 		boolean res = true;
 		double maxUwbDiff = 0.0;
 		
@@ -183,7 +183,7 @@ public class Utils {
 			maxUwbDiff = uwbDiff;
 		}
 		
-		while (st.ap_route_left() > 4) {
+		while (st.ap_route_left() > points_left) {
 			try {
 				Thread.sleep(50);
 				st = getCarState(car, 1000);
@@ -212,7 +212,8 @@ public class Utils {
 	
 	public static void followRecoveryRoute(int car, int recoveryRoute) {
 		// TODO: Make sure that the route does not cross the edge when
-		// the edges are defined by a convex polygon.
+		// the edges are defined by a convex polygon, or when there are
+		// cutout areas.
 		
 		List<ROUTE_POINT> rec = getRoute(car, recoveryRoute, 1000);
 		CAR_STATE st = getCarState(car, 1000);
@@ -226,10 +227,125 @@ public class Utils {
 		addRoute(car, rec, false, false, -2, 1000);
 		RControlStationCommLibrary.rcsc_setAutopilotActive(car, true, 1000);
 		waitPolling(car, 500);
-		waitUntilRouteAlmostEnded(car);
-		waitPolling(car, 3000);
+		waitUntilRouteAlmostEnded(car, 2);
 		
 		RControlStationCommLibrary.rcsc_setAutopilotActive(car, false, 1000);
+	}
+	
+	public static boolean followRecoveryRouteV2(int car, int recoveryRoute, RouteInfo ri, int carRoute) {
+		// Attempt to generate valid route that connects with recovery route. May connect anywhere on
+		// the recovery route as long as there are at least 3 points left.
+		
+		boolean res = false;
+		List<ROUTE_POINT> rec = getRoute(car, recoveryRoute, 1000);
+		CAR_STATE st = getCarState(car, 1000);
+		
+		double ang = -st.yaw() * Math.PI / 180.0;
+		double speed = rec.get(0).speed();
+		int validRoutes = 0;
+		
+		ROUTE_POINT r0 = new ROUTE_POINT();
+		r0.px(st.px());
+		r0.py(st.py());
+		r0.speed(speed);
+		
+		ROUTE_POINT r1 = new ROUTE_POINT();
+		r1.px(st.px() + 0.01 * Math.cos(ang));
+		r1.py(st.py() + 0.01 * Math.sin(ang));
+		r1.speed(speed);
+		
+		List<ROUTE_POINT> recStart = new ArrayList<ROUTE_POINT>();
+		recStart.add(r0);
+		recStart.add(r1);
+		
+		RControlStationCommLibrary.rcsc_setAutopilotActive(car, false, 1000);
+		
+		if (ri.isRouteOk(recStart)) {
+			int attempts = 20;
+			int maxParts = 40;
+			
+			List<ROUTE_POINT> recStartNow = new ArrayList<ROUTE_POINT>();
+			List<ROUTE_POINT> recStartBest = new ArrayList<ROUTE_POINT>();
+			int recIndexNow = 0;
+			int recIndexBest = 0;
+			double recLenLeftNow = 0.0;
+			double recLenLeftBest = 0.0;
+			
+			for (int i = 0;i < attempts;i++) {
+				recStartNow.clear();
+				recStartNow.addAll(recStart);
+				boolean ok = false;
+
+				for (int j = 0;j < maxParts;j++) {
+					for (int k = 0;k < rec.size() - 3;k++) {
+						List<ROUTE_POINT> test = new ArrayList<ROUTE_POINT>();
+						test.addAll(recStartNow);
+						test.add(rec.get(k));
+						test.add(rec.get(k + 1));
+
+						if (ri.isRouteOk(test)) {
+							ok = true;
+							recIndexNow = k;
+							
+							test.clear();
+							test.add(recStartNow.get(recStartNow.size() - 1));
+							for (int l = k;l < rec.size();l++) {
+								test.add(rec.get(l));
+							}
+							recLenLeftNow = routeLen(test);
+							validRoutes++;
+							
+							break;
+						}
+					}
+					
+					if (ok) {
+						break;
+					}
+
+					recStartNow = ri.generateRouteWithin(3, recStartNow, speed, 25);
+				}
+				
+				if (ok) {
+					if (recStartBest.isEmpty()) {
+						recStartBest.addAll(recStartNow);
+						recIndexBest = recIndexNow;
+						recLenLeftBest = recLenLeftNow;
+					} else {
+						if ((routeLen(recStartNow) + recLenLeftNow) < (routeLen(recStartBest) + recLenLeftBest)) {
+							recStartBest.clear();
+							recStartBest.addAll(recStartNow);
+							recIndexBest = recIndexNow;
+							recLenLeftBest = recLenLeftNow;
+						}
+					}
+				}
+			}
+			
+			if (!recStartBest.isEmpty()) {
+				addRoute(car, recStartBest, false, false, carRoute, 1000);
+				for (int i = 0;i < recIndexBest;i++) {
+					rec.remove(0);
+				}
+				res = true;
+			} else {
+				out.println("[ERROR] Unable to generate valid recovery route start");
+			}
+		} else {
+			out.println("[ERROR] Car seems to be outside of valid polygon");
+		}
+
+		if (res) {
+			out.println("Found " + validRoutes + " valid routes. Using shortest one.");
+			addRoute(car, rec, false, false, -2, 1000);
+			RControlStationCommLibrary.rcsc_setAutopilotActive(car, true, 2000);
+			waitPolling(car, 500);
+			waitUntilRouteAlmostEnded(car, 2);
+			RControlStationCommLibrary.rcsc_clearRoute(car, carRoute, 2000);
+			RControlStationCommLibrary.rcsc_setAutopilotActive(car, false, 2000);
+		}
+		
+		return res;
 	}
 	
 	public static void waitPolling(int car, int ms) {
@@ -250,5 +366,19 @@ public class Utils {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	public static double routeLen(List<ROUTE_POINT> r) {
+		double res = 0.0;
+		
+		for (int i = 1;i < r.size();i++) {
+			double x0 = r.get(i - 1).px();
+			double y0 = r.get(i - 1).py();
+			double x1 = r.get(i).px();
+			double y1 = r.get(i).py();
+			res += Math.sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0));
+		}
+		
+		return res;
 	}
 }
