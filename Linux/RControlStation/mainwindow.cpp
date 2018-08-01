@@ -1980,3 +1980,8 @@ void MainWindow::saveRoutes(bool withId)
     file.close();
     showStatusInfo("Saved routes", true);
 }
+
+void MainWindow::on_mapDrawRouteTextBox_toggled(bool checked)
+{
+    ui->mapWidget->setDrawRouteText(checked);
+}

@@ -150,6 +150,7 @@ private slots:
     void on_anchorIdBox_valueChanged(int arg1);
     void on_anchorHeightBox_valueChanged(double arg1);
     void on_removeAnchorsButton_clicked();
+    void on_mapDrawRouteTextBox_toggled(bool checked);
 
 private:
     Ui::MainWindow *ui;

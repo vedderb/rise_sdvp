@@ -227,12 +227,16 @@ public class Utils {
 		addRoute(car, rec, false, false, -2, 1000);
 		RControlStationCommLibrary.rcsc_setAutopilotActive(car, true, 1000);
 		waitPolling(car, 500);
-		waitUntilRouteAlmostEnded(car, 2);
+		waitUntilRouteAlmostEnded(car, 3);
 		
 		RControlStationCommLibrary.rcsc_setAutopilotActive(car, false, 1000);
 	}
 	
-	public static boolean followRecoveryRouteV2(int car, int recoveryRoute, RouteInfo ri, int carRoute) {
+	public static boolean followRecoveryRouteV2(int car, int recoveryRoute, RouteInfo ri, int carRoute, int aheadMargin) {
+		return followRecoveryRouteV2(car, recoveryRoute, ri, carRoute, aheadMargin, false);
+	}
+	
+	public static boolean followRecoveryRouteV2(int car, int recoveryRoute, RouteInfo ri, int carRoute, int aheadMargin, boolean genOnly) {
 		// Attempt to generate valid route that connects with recovery route. May connect anywhere on
 		// the recovery route as long as there are at least 3 points left.
 		
@@ -243,6 +247,7 @@ public class Utils {
 		double ang = -st.yaw() * Math.PI / 180.0;
 		double speed = rec.get(0).speed();
 		int validRoutes = 0;
+		int discardedRoutes = 0;
 		
 		ROUTE_POINT r0 = new ROUTE_POINT();
 		r0.px(st.px());
@@ -255,17 +260,20 @@ public class Utils {
 		r1.speed(speed);
 		
 		List<ROUTE_POINT> recStart = new ArrayList<ROUTE_POINT>();
+		List<ROUTE_POINT> recStartNow = new ArrayList<ROUTE_POINT>();
+		List<ROUTE_POINT> recStartNew = new ArrayList<ROUTE_POINT>();
+		List<ROUTE_POINT> recStartBest = new ArrayList<ROUTE_POINT>();
+		
 		recStart.add(r0);
 		recStart.add(r1);
 		
 		RControlStationCommLibrary.rcsc_setAutopilotActive(car, false, 1000);
 		
 		if (ri.isRouteOk(recStart)) {
-			int attempts = 20;
-			int maxParts = 40;
+			int attempts = 30;
+			int maxParts = 30;
+			int genPoints = 4;
 			
-			List<ROUTE_POINT> recStartNow = new ArrayList<ROUTE_POINT>();
-			List<ROUTE_POINT> recStartBest = new ArrayList<ROUTE_POINT>();
 			int recIndexNow = 0;
 			int recIndexBest = 0;
 			double recLenLeftNow = 0.0;
@@ -275,58 +283,91 @@ public class Utils {
 				recStartNow.clear();
 				recStartNow.addAll(recStart);
 				boolean ok = false;
+				boolean discarded = false;
 
 				for (int j = 0;j < maxParts;j++) {
 					for (int k = 0;k < rec.size() - 3;k++) {
-						List<ROUTE_POINT> test = new ArrayList<ROUTE_POINT>();
-						test.addAll(recStartNow);
-						test.add(rec.get(k));
-						test.add(rec.get(k + 1));
-
-						if (ri.isRouteOk(test)) {
-							ok = true;
-							recIndexNow = k;
+						for (int add = 0;add < genPoints;add++) {
+							List<ROUTE_POINT> test = new ArrayList<ROUTE_POINT>();
+							test.addAll(recStartNow);
 							
-							test.clear();
-							test.add(recStartNow.get(recStartNow.size() - 1));
-							for (int l = k;l < rec.size();l++) {
-								test.add(rec.get(l));
+							for (int rem = 0;rem < (genPoints - add - 1);rem++) {
+								if (test.size() > 2) {
+									test.remove(test.size() - 1);
+								}
 							}
-							recLenLeftNow = routeLen(test);
-							validRoutes++;
 							
-							break;
+							test.add(rec.get(k));
+							test.add(rec.get(k + 1));
+
+							if (ri.isRouteOk(test)) {
+								recStartNew.clear();
+								recStartNew.addAll(test.subList(0, test.size() - 2));
+								
+								ok = true;
+								recIndexNow = k;
+								recLenLeftNow = routeLen(rec.subList(k, rec.size()));
+								break;
+							}
 						}
 					}
-					
+
 					if (ok) {
+						validRoutes++;
 						break;
 					}
-
-					recStartNow = ri.generateRouteWithin(3, recStartNow, speed, 25);
+					
+					double minLenLeft = routeLen(rec.subList(rec.size() - 3, rec.size()));
+					if (!recStartBest.isEmpty() &&
+							(routeLen(recStartNow) + minLenLeft) > (routeLen(recStartBest) + recLenLeftBest)) {
+						// Already longer than the best attempt so far, discard...
+						discardedRoutes++;
+						discarded = true;
+						break;
+					}
+					
+					boolean debug  = ri.debugEnabled();
+					ri.setDebug(false);
+					int sizeOld = recStartNow.size();
+					recStartNow = ri.generateRouteWithin(genPoints, recStartNow, speed, aheadMargin);
+					ri.setDebug(debug);
+					if (sizeOld == recStartNow.size()) {
+						// No new points added, most likely stuck. Start over...
+						break;
+					}
 				}
 				
 				if (ok) {
 					if (recStartBest.isEmpty()) {
-						recStartBest.addAll(recStartNow);
+						recStartBest.addAll(recStartNew);
 						recIndexBest = recIndexNow;
 						recLenLeftBest = recLenLeftNow;
 					} else {
-						if ((routeLen(recStartNow) + recLenLeftNow) < (routeLen(recStartBest) + recLenLeftBest)) {
+						if ((routeLen(recStartNew) + recLenLeftNow) < (routeLen(recStartBest) + recLenLeftBest)) {
 							recStartBest.clear();
-							recStartBest.addAll(recStartNow);
+							recStartBest.addAll(recStartNew);
 							recIndexBest = recIndexNow;
 							recLenLeftBest = recLenLeftNow;
 						}
 					}
 				}
+				
+				String okTxt = "" + ok;
+				if (discarded) {
+					okTxt = "discarded";
+				}
+				out.println("Attempt " + i + "/" + attempts + " OK: " + okTxt);
 			}
 			
 			if (!recStartBest.isEmpty()) {
-				addRoute(car, recStartBest, false, false, carRoute, 1000);
 				for (int i = 0;i < recIndexBest;i++) {
 					rec.remove(0);
 				}
+				
+				recStartBest.add(rec.get(0));
+				rec.remove(0);
+				addRoute(car, recStartBest, false, false, carRoute, 1000);
+				
 				res = true;
 			} else {
 				out.println("[ERROR] Unable to generate valid recovery route start");
@@ -336,13 +377,16 @@ public class Utils {
 		}
 
 		if (res) {
-			out.println("Found " + validRoutes + " valid routes. Using shortest one.");
-			addRoute(car, rec, false, false, -2, 1000);
-			RControlStationCommLibrary.rcsc_setAutopilotActive(car, true, 2000);
-			waitPolling(car, 500);
-			waitUntilRouteAlmostEnded(car, 2);
-			RControlStationCommLibrary.rcsc_clearRoute(car, carRoute, 2000);
-			RControlStationCommLibrary.rcsc_setAutopilotActive(car, false, 2000);
+			out.println("Found " + validRoutes + " valid recovery routes (" + discardedRoutes +
+					" discarded). Using the shortest one (" + 
+					(routeLen(recStartBest) + routeLen(rec)) + " m).");
+			if (!genOnly) {
+				addRoute(car, rec, false, false, -2, 1000);
+				RControlStationCommLibrary.rcsc_setAutopilotActive(car, true, 2000);
+				waitPolling(car, 500);
+				waitUntilRouteAlmostEnded(car, 3);
+				RControlStationCommLibrary.rcsc_setAutopilotActive(car, false, 2000);
+			}
 		}
 		
 		return res;

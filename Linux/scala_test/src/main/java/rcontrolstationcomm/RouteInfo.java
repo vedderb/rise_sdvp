@@ -35,6 +35,7 @@ public class RouteInfo {
 	private Random mRandom;
 	private int mLastOuterAttempts;
 	private int mLastGeneratedPoints;
+	private boolean mDebugEn;
 	
 	public static class Point {
 		public Point() {
@@ -67,6 +68,15 @@ public class RouteInfo {
 		mRandom = new Random();
 		mLastOuterAttempts = 0;
 		mLastGeneratedPoints = 0;
+		mDebugEn = true;
+	}
+	
+	public void setDebug(boolean enabled) {
+		mDebugEn = enabled;
+	}
+	
+	public boolean debugEnabled() {
+		return mDebugEn;
 	}
 
 	public RouteInfo(List<ROUTE_POINT> route) {
@@ -88,6 +98,7 @@ public class RouteInfo {
 		mRandom = new Random();
 		mLastOuterAttempts = 0;
 		mLastGeneratedPoints = 0;
+		mDebugEn = true;
 
 		for (int i = 0;i < route.size();i++) {
 			ROUTE_POINT p = route.get(i);
@@ -465,8 +476,10 @@ public class RouteInfo {
 		mLastOuterAttempts = attemptOuter;
 		mLastGeneratedPoints = genPoints;
 		
-		out.println("Generated points: " + genPoints +
-				", Outer loops: " + attemptOuter);
+		if (mDebugEn) {
+			out.println("Generated points: " + genPoints +
+					", Outer loops: " + attemptOuter);
+		}
 
 		return rLargest;
 	}

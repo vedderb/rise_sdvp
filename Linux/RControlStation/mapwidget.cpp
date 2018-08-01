@@ -165,6 +165,7 @@ MapWidget::MapWidget(QWidget *parent) : QWidget(parent)
     mTraceMinSpaceGps = 0.05;
     mInfoTraceNow = 0;
     mAnchorMode = false;
+    mDrawRouteText = true;
 
     mOsm = new OsmClient(this);
     mDrawOpenStreetmap = true;
@@ -778,6 +779,17 @@ void MapWidget::wheelEvent(QWheelEvent *e)
     }
 
     updateClosestInfoPoint();
+}
+
+bool MapWidget::getDrawRouteText() const
+{
+    return mDrawRouteText;
+}
+
+void MapWidget::setDrawRouteText(bool drawRouteText)
+{
+    mDrawRouteText = drawRouteText;
+    update();
 }
 
 double MapWidget::getTraceMinSpaceGps() const
@@ -1689,7 +1701,7 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
             }
 
             // Draw text only for selected route
-            if (mRouteNow == rn) {
+            if (mRouteNow == rn && mDrawRouteText) {
                 QTime t = QTime::fromMSecsSinceStartOfDay(routeNow[i].getTime());
                 txt.sprintf("P: %d\n"
                             "%.1f km/h\n"

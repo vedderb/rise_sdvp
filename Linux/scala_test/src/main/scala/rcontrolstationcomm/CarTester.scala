@@ -31,13 +31,18 @@ import org.scalacheck.Prop
 import org.scalacheck.Test
 import util.{ Try, Success, Failure }
 
+// Var so that they can be changed from the interactive console.
 object TestSettings {
-  val carId = 1
-  val carRoute = 3
-  val startRoute = 0
-  val recoveryRoute = 1
-  val outerRoute = 2
-  val cutouts = List(4, 5, 6, 7)
+  var carId = 1
+  var carRoute = 3
+  var startRoute = 0
+  var recoveryRoute = 1
+  var outerRoute = 2
+  var cutouts = List(4, 5, 6, 7)
+  var minKmh = 8.0
+  var maxKmh = 20.0
+  var aheadMargin = 20
+  var aheadMarginRecovery = 5
 }
 
 object TestData {
@@ -70,6 +75,8 @@ class RpList(r: List[Rp]) extends Serializable {
 }
 
 class Car {
+  var recoveryOk = true
+  
   def clearRoute(): Boolean = {
     println("[CarCmd] Clearing route")
     rcsc_clearRoute(TestSettings.carId, TestSettings.carRoute, 1000)
@@ -96,14 +103,27 @@ class Car {
   
   def runSegments(route: List[ROUTE_POINT]): Boolean = {
     println("[CarCmd] Running generated segments")
-    addRoute(TestSettings.carId, route.asJava, false, false, TestSettings.carRoute, 2000)
-    waitUntilRouteAlmostEnded(TestSettings.carId, 4)
+    if (recoveryOk) {
+      addRoute(TestSettings.carId, route.asJava, false, false, TestSettings.carRoute, 2000)
+      waitUntilRouteAlmostEnded(TestSettings.carId, 4)
+    } else {
+      println("[ERROR] Cannot run segments because following the recovery route failed")
+      false
+    }
   }
   
   def runRecoveryRoute(): Boolean = {
     println("[CarCmd] Following recovery route")
     followRecoveryRoute(TestSettings.carId, TestSettings.recoveryRoute)
+    recoveryOk = true
     true
+  }
+  
+  def runRecoveryRouteV2(ri: RouteInfo, carRoute: Int): Boolean = {
+    println("[CarCmd] Following recovery route (V2)")
+    recoveryOk = followRecoveryRouteV2(TestSettings.carId, TestSettings.recoveryRoute, ri,
+        carRoute, TestSettings.aheadMarginRecovery)
+    recoveryOk
   }
 
   def addFault(probe: String, faultType: String,
@@ -157,7 +177,8 @@ object CarSpec extends Commands2 {
     val sut = new Sut
     sut.clearFaults()
     sut.clearRoute()
-    sut.runRecoveryRoute()
+    sut.runRecoveryRouteV2(state.routeInfo, TestSettings.carRoute)
+    sut.clearRoute()
     sut.resetUwbPosNow()
     sut.activateAutopilot(true)
     TestData.commands.clear()
@@ -177,7 +198,7 @@ object CarSpec extends Commands2 {
   def genRunSegment(state: State): Gen[RunSegment] = for {
     seed <- Gen.choose(-12000, 12000)
     points <- Gen.choose(4, 7)
-    speed <- Gen.choose(9, 15)
+    speed <- Gen.choose(TestSettings.minKmh / 3.6 * 10.0, TestSettings.maxKmh / 3.6 * 10.0)
   } yield {
     state.routeInfo.setRandomSeed(seed)
 
@@ -186,7 +207,7 @@ object CarSpec extends Commands2 {
       (state.route.size match {
         case 0 => state.startRoute.toRoutePoints()
         case _ => state.route.toRoutePoints()
-      }).asJava, speed.toDouble / 10.0, 20)
+      }).asJava, speed.toDouble / 10.0, TestSettings.aheadMargin)
 
     println("Segment size: " + r.size)
 
@@ -242,7 +263,7 @@ object CarSpec extends Commands2 {
       state.copy(faultNum = state.faultNum + 1)
     }
 
-    def preCondition(state: State): Boolean = state.faultNum < 4
+    def preCondition(state: State): Boolean = true
 
     // This command should always succeed (never throw an exception)
     def postCondition(state: State, result: Try[Result]) =
@@ -254,10 +275,10 @@ object CarTester {
   def main(args: Array[String]): Unit = {
     connect("localhost", 65191)
 
-    randomDrivingTest()
+    //randomDrivingTest()
     //    randomGenTest()
 
-//    testScala(3)
+    testScala(3)
     
     //    runLastTest()
     //    runLastTestHdd()
@@ -275,16 +296,19 @@ object CarTester {
     val params = Test.Parameters.default.
       withMinSuccessfulTests(tests).
       withMaxSize(20).
-      withMinSize(5)
+      withMinSize(5).
+      withMaxDiscardRatio(10)
 
     // Interactive way
 //    CarSpec.propertyNoShrink().check(params)
 
+    // NOTE: If a command cannot be generated because the precondition always fails
+    // the entire test will fail.
     val res = Test.check(params, CarSpec.propertyNoShrink())
-    
+
     println("Tests passed: " + res.succeeded)
     println("Time: " + res.time + " ms")
-    
+
     if (res.passed) {
       println("All tests passed")
     } else {
@@ -345,11 +369,13 @@ object CarTester {
       var indLast = 0
 
       rcsc_clearRoute(TestSettings.carId, TestSettings.carRoute, 5000)
-      followRecoveryRouteV2(TestSettings.carId, TestSettings.recoveryRoute, r, TestSettings.carRoute)
+      followRecoveryRouteV2(TestSettings.carId, TestSettings.recoveryRoute, r,
+          TestSettings.carRoute, TestSettings.aheadMarginRecovery)
+      rcsc_clearRoute(TestSettings.carId, TestSettings.carRoute, 5000)
       rcsc_setAutopilotActive(TestSettings.carId, true, 2000)
 
       for (i <- 0 to 4) {
-        rGen = r.generateRouteWithin(5, rGen, r.randInRange(1.0, 5.0), 25)
+        rGen = r.generateRouteWithin(5, rGen, r.randInRange(1.0, 5.0), TestSettings.aheadMargin)
 
         val subRoute = rGen.subList(indLast, rGen.size())
         if (subRoute.size() > 0) {
@@ -369,10 +395,20 @@ object CarTester {
     val r = new RouteInfo(edgeRoute);
     for (ind <- TestSettings.cutouts) r.addCutout(getRoute(0, ind, 1000))
     rcsc_clearRoute(TestSettings.carId, TestSettings.carRoute, 5000)
-    followRecoveryRouteV2(TestSettings.carId, TestSettings.recoveryRoute, r, TestSettings.carRoute)
+    followRecoveryRouteV2(TestSettings.carId, TestSettings.recoveryRoute, r,
+        TestSettings.carRoute, TestSettings.aheadMarginRecovery)
     rcsc_setAutopilotActive(TestSettings.carId, false, 2000)
     rcsc_rcControl(TestSettings.carId, 3, 50.0, 0.0);
     waitPolling(TestSettings.carId, 2000)
+  }
+  
+  def recoveryTestGenOnly() {
+    val edgeRoute = getRoute(0, TestSettings.outerRoute, 5000);
+    val r = new RouteInfo(edgeRoute);
+    for (ind <- TestSettings.cutouts) r.addCutout(getRoute(0, ind, 1000))
+    rcsc_clearRoute(TestSettings.carId, TestSettings.carRoute, 5000)
+    followRecoveryRouteV2(TestSettings.carId, TestSettings.recoveryRoute, r,
+        TestSettings.carRoute, TestSettings.aheadMarginRecovery, true)
   }
 
   def randomGenTest() {
@@ -391,7 +427,7 @@ object CarTester {
       rcsc_clearRoute(-1, 3, 5000)
 
       for (i <- 0 to 200) {
-        rGen = r.generateRouteWithin(5, rGen, r.randInRange(1.0, 5.0), 25)
+        rGen = r.generateRouteWithin(5, rGen, r.randInRange(1.0, 5.0), TestSettings.aheadMargin)
 
         if (r.getLastOuterAttempts() > maxAttempts) {
           maxAttempts = r.getLastOuterAttempts()

@@ -123,6 +123,9 @@ public:
     void printPdf(QString path, int width = 0, int height = 0);
     void printPng(QString path, int width = 0, int height = 0);
 
+    bool getDrawRouteText() const;
+    void setDrawRouteText(bool drawRouteText);
+
 signals:
     void scaleChanged(double newScale);
     void offsetChanged(double newXOffset, double newYOffset);
@@ -190,6 +193,7 @@ private:
     double mTraceMinSpaceGps;
     QList<QPixmap> mPixmaps;
     bool mAnchorMode;
+    bool mDrawRouteText;
 
     void updateClosestInfoPoint();
     int drawInfoPoints(QPainter &painter, const QList<LocPoint> &pts,
