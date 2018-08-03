@@ -76,9 +76,10 @@ void pos_uwb_update_dr(float imu_yaw, float travel_dist,
 		float turn_rad, float speed) {
 	(void)turn_rad;
 
-	chMtxLock(&m_mutex_pos);
+	fi_inject_fault_float("uwb_travel_dist", &travel_dist);
+	fi_inject_fault_float("uwb_yaw", &imu_yaw);
 
-	// TODO: Implement yaw correction
+	chMtxLock(&m_mutex_pos);
 
 	m_pos.yaw = imu_yaw;
 	m_pos.speed = speed;

@@ -191,9 +191,11 @@ object CarSpec extends Commands2 {
   }
 
   def genCommand(state: State): Gen[Command] = Gen.frequency(
-    (3, genRunSegment(state)),
+    (4, genRunSegment(state)),
+    (0, genFaultTest(state)),
     (2, genFaultAnchor(state)),
-    (0, genFaultTest(state)))
+    (1, genFaultWheelSlip(state)),
+    (1, genFaultYaw(state)))
 
   def genRunSegment(state: State): Gen[RunSegment] = for {
     seed <- Gen.choose(-12000, 12000)
@@ -213,6 +215,14 @@ object CarSpec extends Commands2 {
 
     RunSegment(new RpList(r.subList(state.route.size, r.size).asScala))
   }
+  
+  def genFaultTest(state: State): Gen[AddFault] = for {
+    probe <- Gen.oneOf("px", "px")
+    faultType <- Gen.oneOf("OFFSET", "AMPLIFICATION")
+    param <- Gen.choose(0, 7)
+    start <- Gen.choose(0, 100)
+    duration <- Gen.choose(1, 10)
+  } yield AddFault(probe, faultType, param, start, duration)
 
   def genFaultAnchor(state: State): Gen[AddFault] = for {
     probe <- Gen.oneOf("uwb_range_50", "uwb_range_234")
@@ -221,14 +231,18 @@ object CarSpec extends Commands2 {
     start <- Gen.choose(0, 100)
     duration <- Gen.choose(1, 8)
   } yield AddFault(probe, faultType, param, start, duration)
-
-  def genFaultTest(state: State): Gen[AddFault] = for {
-    probe <- Gen.oneOf("px", "px")
-    faultType <- Gen.oneOf("OFFSET", "AMPLIFICATION")
-    param <- Gen.choose(0, 7)
+  
+  def genFaultWheelSlip(state: State): Gen[AddFault] = for {
+    param <- Gen.choose(10, 50)
     start <- Gen.choose(0, 100)
     duration <- Gen.choose(1, 10)
-  } yield AddFault(probe, faultType, param, start, duration)
+  } yield AddFault("uwb_travel_dist", "AMPLIFICATION", param.toDouble / 10.0, start, duration)
+  
+  def genFaultYaw(state: State): Gen[AddFault] = for {
+    param <- Gen.choose(-20, 20)
+    start <- Gen.choose(0, 100)
+    duration <- Gen.choose(1, 10)
+  } yield AddFault("uwb_yaw", "OFFSET", param, start, duration)
 
   case class RunSegment(route: RpList) extends Command {
     type Result = Boolean
