@@ -19,7 +19,8 @@ package rcontrolstationcomm;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
+import java.util.SplittableRandom;
+import rcontrolstationcomm.Utils.RpPoint;
 
 import static java.lang.Math.*;
 import static java.lang.System.out;
@@ -30,32 +31,12 @@ public class RouteInfo {
 	private double mYMin;
 	private double mYMax;
 	private double mLength;
-	private List<ROUTE_POINT> mRoute;
-	private List<List<ROUTE_POINT>> mCutouts;
-	private Random mRandom;
+	private List<RpPoint> mRoute;
+	private List<List<RpPoint>> mCutouts;
+	private SplittableRandom mRandom;
 	private int mLastOuterAttempts;
 	private int mLastGeneratedPoints;
 	private boolean mDebugEn;
-	
-	public static class Point {
-		public Point() {
-			x = 0.0;
-			y = 0.0;
-		}
-		
-		public Point(double nX, double nY) {
-			x = nX;
-			y = nY;
-		}
-		
-		void setTo(Point other) {
-			x = other.x;
-			y = other.y;
-		}
-		
-		public double x;
-		public double y;
-	}
 
 	public RouteInfo() {
 		mXMin = 0.0;
@@ -65,7 +46,7 @@ public class RouteInfo {
 		mLength = 0.0;
 		mRoute = null;
 		mCutouts = null;
-		mRandom = new Random();
+		mRandom = new SplittableRandom();
 		mLastOuterAttempts = 0;
 		mLastGeneratedPoints = 0;
 		mDebugEn = true;
@@ -79,11 +60,11 @@ public class RouteInfo {
 		return mDebugEn;
 	}
 
-	public RouteInfo(List<ROUTE_POINT> route) {
+	public RouteInfo(List<RpPoint> route) {
 		setRoute(route);
 	}
 
-	public void setRoute(List<ROUTE_POINT> route) {
+	public void setRoute(List<RpPoint> route) {
 		if (route == null || route.size() == 0) {
 			return;
 		}
@@ -95,14 +76,14 @@ public class RouteInfo {
 		mYMin = route.get(0).py();
 		mYMax = route.get(0).py();
 		mLength = 0.0;
-		mRandom = new Random();
+		mRandom = new SplittableRandom();
 		mLastOuterAttempts = 0;
 		mLastGeneratedPoints = 0;
 		mDebugEn = true;
 
 		for (int i = 0;i < route.size();i++) {
-			ROUTE_POINT p = route.get(i);
-			ROUTE_POINT pp = i > 0 ? route.get(i - 1) : p;
+			RpPoint p = route.get(i);
+			RpPoint pp = i > 0 ? route.get(i - 1) : p;
 			mLength += pointDistance(p, pp);
 
 			if (p.px() < mXMin) {
@@ -123,9 +104,9 @@ public class RouteInfo {
 		}
 	}
 	
-	public void addCutout(List<ROUTE_POINT> route) {
+	public void addCutout(List<RpPoint> route) {
 		if (mCutouts == null) {
-			mCutouts = new ArrayList<List<ROUTE_POINT>>();
+			mCutouts = new ArrayList<List<RpPoint>>();
 		}
 		
 		mCutouts.add(route);
@@ -178,7 +159,7 @@ public class RouteInfo {
 		
 		// Should not be within any of the cutouts
 		if (c && mCutouts != null) {
-			for (List<ROUTE_POINT> r: mCutouts) {
+			for (List<RpPoint> r: mCutouts) {
 				nVert = r.size();
 				c = false;
 
@@ -206,12 +187,12 @@ public class RouteInfo {
 		return c;
 	}
 
-	public boolean isSegmentWithinRoutePolygon(ROUTE_POINT p1, ROUTE_POINT p2) {
+	public boolean isSegmentWithinRoutePolygon(RpPoint p1, RpPoint p2) {
 		boolean res = true;
 
 		for (int j = 1;j < mRoute.size();j++) {
-			ROUTE_POINT q1 = mRoute.get(j - 1);
-			ROUTE_POINT q2 = mRoute.get(j);
+			RpPoint q1 = mRoute.get(j - 1);
+			RpPoint q2 = mRoute.get(j);
 
 			if (lineIntersect(p1, p2, q1, q2)) {
 				res = false;
@@ -220,10 +201,10 @@ public class RouteInfo {
 		}
 
 		if (mCutouts != null) {			
-			for (List<ROUTE_POINT> r: mCutouts) {
+			for (List<RpPoint> r: mCutouts) {
 				for (int j = 1;j < r.size();j++) {
-					ROUTE_POINT q1 = r.get(j - 1);
-					ROUTE_POINT q2 = r.get(j);
+					RpPoint q1 = r.get(j - 1);
+					RpPoint q2 = r.get(j);
 
 					if (lineIntersect(p1, p2, q1, q2)) {
 						res = false;
@@ -241,15 +222,15 @@ public class RouteInfo {
 	}
 	
 	public boolean closestLineIntersection(double p0_x, double p0_y,
-			double p1_x, double p1_y, Point coll) {
+			double p1_x, double p1_y, RpPoint coll) {
 		if (mRoute == null || mRoute.size() < 2) {
 			return false;
 		}
 		
 		boolean res = false;
-		Point collLast = new Point();
+		RpPoint collLast = new RpPoint();
 		double lastDist = 0.0;
-		Point pStart = new Point(p0_x, p0_y);
+		RpPoint pStart = new RpPoint(p0_x, p0_y);
 		
 		for (int i = 1;i < mRoute.size();i++) {
 			if (getLineIntersection(p0_x, p0_y, p1_x, p1_y,
@@ -272,7 +253,7 @@ public class RouteInfo {
 		}
 
 		if (mCutouts != null) {			
-			for (List<ROUTE_POINT> r: mCutouts) {
+			for (List<RpPoint> r: mCutouts) {
 				for (int i = 1;i < r.size();i++) {
 					if (getLineIntersection(p0_x, p0_y, p1_x, p1_y,
 							r.get(i - 1).px(), r.get(i - 1).py(),
@@ -298,11 +279,13 @@ public class RouteInfo {
 		return res;
 	}
 
-	public List<ROUTE_POINT> generateRouteWithin(int length,
-			List<ROUTE_POINT> previous, double speed) {
+	public List<RpPoint> generateRouteWithin(int length,
+			List<RpPoint> previous, double speed) {
+		
+		long timeStart = System.nanoTime();
 
-		List<ROUTE_POINT> r = new ArrayList<ROUTE_POINT>();
-		List<ROUTE_POINT> rLargest = new ArrayList<ROUTE_POINT>();
+		List<RpPoint> r = new ArrayList<RpPoint>();
+		List<RpPoint> rLargest = new ArrayList<RpPoint>();
 
 		if (mRoute == null || mRoute.size() < 3) {
 			return r;
@@ -326,7 +309,9 @@ public class RouteInfo {
 				start = previous.size();
 			}
 			
-			for (int i = start;i < length + start;i++) {
+//			int lastStepBack = length + start;
+			
+			for (int pNow = start;pNow < length + start;pNow++) {
 				int attemptInner = 0;
 				boolean ok = false;
 				double px = 0.0;
@@ -337,19 +322,19 @@ public class RouteInfo {
 				double yMin = mYMin;
 				double yMax = mYMax;
 				
-				if (i == 1) {
-					double xLast = r.get(i - 1).px();
-					double yLast = r.get(i - 1).py();
+				if (pNow == 1) {
+					double xLast = r.get(pNow - 1).px();
+					double yLast = r.get(pNow - 1).py();
 					
 					xMax = xLast + maxDist;
 					xMin = xLast - maxDist;
 					yMax = yLast + maxDist;
 					yMin = yLast - maxDist;
-				} else if (i > 1) {
-					double xLast1 = r.get(i - 1).px();
-					double yLast1 = r.get(i - 1).py();
-					double xLast2 = r.get(i - 2).px();
-					double yLast2 = r.get(i - 2).py();
+				} else if (pNow > 1) {					
+					double xLast1 = r.get(pNow - 1).px();
+					double yLast1 = r.get(pNow - 1).py();
+					double xLast2 = r.get(pNow - 2).px();
+					double yLast2 = r.get(pNow - 2).py();
 					
 					double a1 = atan2(yLast1 - yLast2, xLast1 - xLast2);
 					
@@ -360,7 +345,7 @@ public class RouteInfo {
 					double p3x = xLast1 + maxDist * cos(a1 + maxAng);
 					double p3y = yLast1 + maxDist * sin(a1 + maxAng);
 					
-					Point coll = new Point();
+					RpPoint coll = new RpPoint();
 					
 					if (closestLineIntersection(xLast1, yLast1, p1x, p1y, coll)) {
 						p1x = coll.x;
@@ -409,13 +394,13 @@ public class RouteInfo {
 					
 					ok = true;
 
-					if (i == 0) {
+					if (pNow == 0) {
 						if (!isPointWithinRoutePolygon(px, py)) {
 							ok = false;
 						}
 					} else {
-						ROUTE_POINT p1 = r.get(i - 1);
-						ROUTE_POINT p2 = new ROUTE_POINT();
+						RpPoint p1 = r.get(pNow - 1);
+						RpPoint p2 = new RpPoint();
 						p2.px(px);
 						p2.py(py);
 
@@ -427,13 +412,13 @@ public class RouteInfo {
 							ok = false;
 						}
 						
-						if (i > 1) {
-							double px1 = r.get(i - 2).px();
-							double py1 = r.get(i - 2).py();
-							double px2 = r.get(i - 1).px();
-							double py2 = r.get(i - 1).py();
-							double qx1 = r.get(i - 1).px();
-							double qy1 = r.get(i - 1).py();
+						if (pNow > 1) {
+							double px1 = r.get(pNow - 2).px();
+							double py1 = r.get(pNow - 2).py();
+							double px2 = r.get(pNow - 1).px();
+							double py2 = r.get(pNow - 1).py();
+							double qx1 = r.get(pNow - 1).px();
+							double qy1 = r.get(pNow - 1).py();
 							double qx2 = px;
 							double qy2 = py;
 							
@@ -451,9 +436,20 @@ public class RouteInfo {
 
 				if (!ok) {
 					break;
+//					if (pNow >= start && lastStepBack > start) {
+//						do {
+//							pNow--;
+//							r.remove(r.size() - 1);
+//						} while (pNow >= lastStepBack);
+//						lastStepBack = pNow;
+//						pNow--;
+//						continue;
+//					} else {
+//						break;
+//					}
 				}
 
-				ROUTE_POINT p = new ROUTE_POINT();
+				RpPoint p = new RpPoint();
 				p.px(px);
 				p.py(py);
 				p.speed(speed);
@@ -478,16 +474,17 @@ public class RouteInfo {
 		
 		if (mDebugEn) {
 			out.println("Generated points: " + genPoints +
-					", Outer loops: " + attemptOuter);
+					", Outer loops: " + attemptOuter + 
+					", Time: " + (System.nanoTime() - timeStart) / 1000 + " uS");
 		}
 
 		return rLargest;
 	}
 
-	public List<ROUTE_POINT> generateRouteWithin(int length,
-			List<ROUTE_POINT> previous, double speed, int aheadMargin) {
+	public List<RpPoint> generateRouteWithin(int length,
+			List<RpPoint> previous, double speed, int aheadMargin) {
 		
-		List<ROUTE_POINT> res = generateRouteWithin(length + aheadMargin, previous, speed);
+		List<RpPoint> res = generateRouteWithin(length + aheadMargin, previous, speed);
 		
 		int start = 0;
 		if (previous != null) {
@@ -502,17 +499,17 @@ public class RouteInfo {
 		return res.subList(0, end);
 	}
 	
-	boolean isRouteOk(List<ROUTE_POINT> r) {
+	boolean isRouteOk(List<RpPoint> r) {
 		boolean res = true;
 		
 		double maxAng = PI / 6;
-		
+				
 		if (r.size() == 1) {
 			res = isPointWithinRoutePolygon(r.get(0).px(), r.get(0).py());
 		} else if (r.size() > 1) {
 			for (int i = 1;i < r.size();i++) {
-				ROUTE_POINT p1 = r.get(i - 1);
-				ROUTE_POINT p2 = r.get(i);
+				RpPoint p1 = r.get(i - 1);
+				RpPoint p2 = r.get(i);
 
 				if (!isSegmentWithinRoutePolygon(p1, p2)) {
 					res = false;
@@ -533,14 +530,18 @@ public class RouteInfo {
 						res = false;
 					}
 				}
+				
+				if (!res) {
+					break;
+				}
 			}
 		}
-		
+				
 		return res;
 	}
 	
 	public void setRandomSeed(long seed) {
-		mRandom = new Random(seed);
+		mRandom = new SplittableRandom(seed);
 	}
 	
 	public int getLastOuterAttempts() {
@@ -551,16 +552,12 @@ public class RouteInfo {
 		return mLastGeneratedPoints;
 	}
 
-	public static double pointDistance(Point p1, Point p2) {
+	public static double pointDistance(RpPoint p1, RpPoint p2) {
 		return sqrt(pow(p2.x - p1.x, 2) + pow(p2.y - p1.y, 2));
 	}
 	
 	public static double pointDistance(double p1x, double p1y, double p2x, double p2y) {
 		return sqrt(pow(p2x - p1x, 2) + pow(p2y - p1y, 2));
-	}
-	
-	public static double pointDistance(ROUTE_POINT p1, ROUTE_POINT p2) {
-		return sqrt(pow(p2.px() - p1.px(), 2) + pow(p2.py() - p1.py(), 2));
 	}
 	
 	public static double angleBetweenLines(
@@ -612,7 +609,7 @@ public class RouteInfo {
 	}
 
 	private static boolean getLineIntersection(double p0_x, double p0_y, double p1_x, double p1_y, 
-			double p2_x, double p2_y, double p3_x, double p3_y, Point coll)
+			double p2_x, double p2_y, double p3_x, double p3_y, RpPoint coll)
 	{
 		double s1_x, s1_y, s2_x, s2_y;
 		s1_x = p1_x - p0_x;     s1_y = p1_y - p0_y;
@@ -632,13 +629,11 @@ public class RouteInfo {
 		return false; // No collision
 	}
 
-	private static boolean ccw(ROUTE_POINT A, ROUTE_POINT B, ROUTE_POINT C) {
-		return (C.py() - A.py()) * (B.px() - A.px()) > 
-		(B.py() - A.py()) * (C.px() - A.px());
+	private static boolean ccw(RpPoint A, RpPoint B, RpPoint C) {
+		return (C.py() - A.py()) * (B.px() - A.px()) > (B.py() - A.py()) * (C.px() - A.px());
 	}
 
-	private static boolean lineIntersect(ROUTE_POINT A, ROUTE_POINT B,
-			ROUTE_POINT C, ROUTE_POINT D) {
+	private static boolean lineIntersect(RpPoint A, RpPoint B, RpPoint C, RpPoint D) {
 		return ccw(A,C,D) != ccw(B,C,D) && ccw(A,B,C) != ccw(A,B,D);
 	}
 }

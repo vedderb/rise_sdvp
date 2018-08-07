@@ -43,35 +43,11 @@ object TestSettings {
   var maxKmh = 20.0
   var aheadMargin = 20
   var aheadMarginRecovery = 5
+  var recoveryGenAttampts = 500
 }
 
 object TestData {
   val commands = Buffer.empty[CarSpec.Command]
-}
-
-@SerialVersionUID(1L)
-class Rp(p: ROUTE_POINT) extends Serializable {
-  val px = p.px()
-  val py = p.py()
-  val speed = p.speed()
-  val time = p.time()
-  def toRoutePoint(): ROUTE_POINT = {
-    val rp = new ROUTE_POINT()
-    rp.px(px)
-    rp.py(py)
-    rp.speed(speed)
-    rp.time(time)
-    rp
-  }
-}
-
-@SerialVersionUID(1L)
-class RpList(r: List[Rp]) extends Serializable {
-  val route = r
-  def this(r: Buffer[ROUTE_POINT]) { this(r.map(new Rp(_)).toList) }
-  def toRoutePoints(): List[ROUTE_POINT] = route.map(_.toRoutePoint())
-  def size(): Int = route.size
-  def ++(other: RpList): RpList = new RpList(route ++ other.route)
 }
 
 class Car {
@@ -101,7 +77,7 @@ class Car {
     waitPolling(TestSettings.carId, ms)
   }
   
-  def runSegments(route: List[ROUTE_POINT]): Boolean = {
+  def runSegments(route: List[RpPoint]): Boolean = {
     println("[CarCmd] Running generated segments")
     if (recoveryOk) {
       addRoute(TestSettings.carId, route.asJava, false, false, TestSettings.carRoute, 2000)
@@ -122,7 +98,7 @@ class Car {
   def runRecoveryRouteV2(ri: RouteInfo, carRoute: Int): Boolean = {
     println("[CarCmd] Following recovery route (V2)")
     recoveryOk = followRecoveryRouteV2(TestSettings.carId, TestSettings.recoveryRoute, ri,
-        carRoute, TestSettings.aheadMarginRecovery)
+        carRoute, TestSettings.aheadMarginRecovery, TestSettings.recoveryGenAttampts)
     recoveryOk
   }
 
@@ -147,8 +123,8 @@ class Car {
 
 object CarSpec extends Commands2 {
   case class State(
-    route:      RpList,
-    startRoute: RpList,
+    route:      List[RpPoint],
+    startRoute: List[RpPoint],
     routeInfo:  RouteInfo,
     faultNum:   Int)
 
@@ -164,8 +140,8 @@ object CarSpec extends Commands2 {
   def genInitialState: Gen[State] = {
     println("New initial state created")
     val s = State(
-      new RpList(Buffer.empty[ROUTE_POINT]),
-      new RpList(getRoute(0, TestSettings.startRoute, 1000).asScala),
+      List.empty[RpPoint],
+      getRoute(0, TestSettings.startRoute, 1000).asScala.toList,
       new RouteInfo(getRoute(0, TestSettings.outerRoute, 1000)),
       0)
     for (ind <- TestSettings.cutouts) s.routeInfo.addCutout(getRoute(0, ind, 1000))
@@ -207,13 +183,13 @@ object CarSpec extends Commands2 {
     val r = state.routeInfo.generateRouteWithin(
       points,
       (state.route.size match {
-        case 0 => state.startRoute.toRoutePoints()
-        case _ => state.route.toRoutePoints()
+        case 0 => state.startRoute
+        case _ => state.route
       }).asJava, speed.toDouble / 10.0, TestSettings.aheadMargin)
 
     println("Segment size: " + r.size)
 
-    RunSegment(new RpList(r.subList(state.route.size, r.size).asScala))
+    RunSegment(r.subList(state.route.size, r.size).asScala.toList)
   }
   
   def genFaultTest(state: State): Gen[AddFault] = for {
@@ -244,12 +220,12 @@ object CarSpec extends Commands2 {
     duration <- Gen.choose(1, 10)
   } yield AddFault("uwb_yaw", "OFFSET", param, start, duration)
 
-  case class RunSegment(route: RpList) extends Command {
+  case class RunSegment(route: List[RpPoint]) extends Command {
     type Result = Boolean
 
     def run(sut: Sut): Result = {
       TestData.commands += this
-      sut.runSegments(route.toRoutePoints().toList)
+      sut.runSegments(route)
     }
 
     def nextState(state: State): State = {
@@ -364,6 +340,8 @@ object CarTester {
         println("Postcondition failed")
       }
     }
+    
+    CarSpec.destroySut(sut);
 
     if (ok) {
       println("Test sequence successful")
@@ -384,7 +362,7 @@ object CarTester {
 
       rcsc_clearRoute(TestSettings.carId, TestSettings.carRoute, 5000)
       followRecoveryRouteV2(TestSettings.carId, TestSettings.recoveryRoute, r,
-          TestSettings.carRoute, TestSettings.aheadMarginRecovery)
+          TestSettings.carRoute, TestSettings.aheadMarginRecovery, TestSettings.recoveryGenAttampts)
       rcsc_clearRoute(TestSettings.carId, TestSettings.carRoute, 5000)
       rcsc_setAutopilotActive(TestSettings.carId, true, 2000)
 
@@ -410,7 +388,7 @@ object CarTester {
     for (ind <- TestSettings.cutouts) r.addCutout(getRoute(0, ind, 1000))
     rcsc_clearRoute(TestSettings.carId, TestSettings.carRoute, 5000)
     followRecoveryRouteV2(TestSettings.carId, TestSettings.recoveryRoute, r,
-        TestSettings.carRoute, TestSettings.aheadMarginRecovery)
+        TestSettings.carRoute, TestSettings.aheadMarginRecovery, TestSettings.recoveryGenAttampts)
     rcsc_setAutopilotActive(TestSettings.carId, false, 2000)
     rcsc_rcControl(TestSettings.carId, 3, 50.0, 0.0);
     waitPolling(TestSettings.carId, 2000)
@@ -422,7 +400,7 @@ object CarTester {
     for (ind <- TestSettings.cutouts) r.addCutout(getRoute(0, ind, 1000))
     rcsc_clearRoute(TestSettings.carId, TestSettings.carRoute, 5000)
     followRecoveryRouteV2(TestSettings.carId, TestSettings.recoveryRoute, r,
-        TestSettings.carRoute, TestSettings.aheadMarginRecovery, true)
+        TestSettings.carRoute, TestSettings.aheadMarginRecovery, TestSettings.recoveryGenAttampts, true)
   }
 
   def randomGenTest() {
@@ -459,7 +437,7 @@ object CarTester {
         if (subRoute.size() > 0) {
           addRoute(0, subRoute, true, true, TestSettings.carRoute, 2000)
         }
-        Thread.sleep(40)
+        Thread.sleep(5)
         indLast = rGen.size()
       }
     }
@@ -492,7 +470,7 @@ object CarTester {
   }
 
   def createManTest() {
-    val a = List.fill(3)(new ROUTE_POINT)
+    val a = List.fill(3)(new RpPoint)
     a(0).px(5)
     a(0).py(8)
     a(0).speed(3.1)

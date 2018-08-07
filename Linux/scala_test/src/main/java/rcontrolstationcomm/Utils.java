@@ -20,11 +20,97 @@ package rcontrolstationcomm;
 import java.util.ArrayList;
 import java.util.List;
 import org.bridj.Pointer;
+import java.io.Serializable;
+
 import static java.lang.System.out;
 
 public class Utils {
-	public static List<ROUTE_POINT> getRoute(int car, int mapRoute, int timeoutMs) {
-		List<ROUTE_POINT> ret = new ArrayList<ROUTE_POINT>();
+	public static class RpPoint implements Serializable {
+		private static final long serialVersionUID = 1L;
+		public RpPoint() {
+			x = 0.0;
+			y = 0.0;
+			speed = 0.0;
+			time = 0;
+		}
+		
+		public RpPoint(double nX, double nY) {
+			x = nX;
+			y = nY;
+			speed = 0.0;
+			time = 0;
+		}
+		
+		public RpPoint(RpPoint p) {
+			x = p.px();
+			y = p.py();
+			speed = p.speed();
+			time = p.time();
+		}
+		
+		public RpPoint(ROUTE_POINT p) {
+			x = p.px();
+			y = p.py();
+			speed = p.speed();
+			time = p.time();
+		}
+		
+		void setTo(RpPoint other) {
+			x = other.x;
+			y = other.y;
+			speed = other.speed;
+			time = other.time;
+		}
+		
+		double px() {
+			return x;
+		}
+		
+		double py() {
+			return y;
+		}
+		
+		void px(double xNew) {
+			x = xNew;
+		}
+		
+		void py(double yNew) {
+			y = yNew;
+		}
+		
+		double speed() {
+			return speed;
+		}
+		
+		void speed(double newSpeed) {
+			speed = newSpeed;
+		}
+		
+		int time() {
+			return time;
+		}
+		
+		void time(int newTime) {
+			time = newTime;
+		}
+		
+		ROUTE_POINT asRoutePoint() {
+			ROUTE_POINT ret = new ROUTE_POINT();
+			ret.px(x);
+			ret.py(y);
+			ret.speed(speed);
+			ret.time(time);
+			return ret;
+		}
+		
+		public double x;
+		public double y;
+		public double speed;
+		public int time;
+	}
+	
+	public static List<RpPoint> getRoute(int car, int mapRoute, int timeoutMs) {
+		List<RpPoint> ret = new ArrayList<RpPoint>();
 		
 		Pointer<ROUTE_POINT> route = Pointer.allocateArray(ROUTE_POINT.class,  500);
 		Pointer<Integer> len = Pointer.pointerToInts(0);
@@ -35,7 +121,7 @@ public class Utils {
 		for (int i = 0;i < lenRes;i++) {
 			// Creating a new object here is necessary for some reason, otherwise
 			// bridj crashes in some situation where a route is used.
-			ROUTE_POINT a = new ROUTE_POINT();
+			RpPoint a = new RpPoint();
 			a.px(route.get(i).px());
 			a.py(route.get(i).py());
 			a.speed(route.get(i).speed());
@@ -46,12 +132,12 @@ public class Utils {
 		return ret;
 	}
 	
-	public static boolean addRoute(int car, List<ROUTE_POINT> route, boolean replace,
+	public static boolean addRoute(int car, List<RpPoint> route, boolean replace,
 			boolean mapOnly, int mapRoute, int timeoutMs) {
 		Pointer<ROUTE_POINT> routePtr = Pointer.allocateArray(ROUTE_POINT.class, route.size());
 				
 		for (int i = 0;i < route.size();i++) {
-			routePtr.set(i, route.get(i));
+			routePtr.set(i, route.get(i).asRoutePoint());
 		}
 		
 		return RControlStationCommLibrary.rcsc_addRoutePoints(car, routePtr, route.size(), 
@@ -215,9 +301,9 @@ public class Utils {
 		// the edges are defined by a convex polygon, or when there are
 		// cutout areas.
 		
-		List<ROUTE_POINT> rec = getRoute(car, recoveryRoute, 1000);
+		List<RpPoint> rec = getRoute(car, recoveryRoute, 1000);
 		CAR_STATE st = getCarState(car, 1000);
-		ROUTE_POINT first = new ROUTE_POINT();
+		RpPoint first = new RpPoint();
 		first.px(st.px());
 		first.py(st.py());
 		first.speed(rec.get(0).speed());
@@ -232,16 +318,24 @@ public class Utils {
 		RControlStationCommLibrary.rcsc_setAutopilotActive(car, false, 1000);
 	}
 	
-	public static boolean followRecoveryRouteV2(int car, int recoveryRoute, RouteInfo ri, int carRoute, int aheadMargin) {
-		return followRecoveryRouteV2(car, recoveryRoute, ri, carRoute, aheadMargin, false);
+	public static boolean followRecoveryRouteV2(int car, int recoveryRoute, RouteInfo ri,
+			int carRoute, int aheadMargin, int genAttempts) {
+		return followRecoveryRouteV2(car, recoveryRoute, ri, carRoute, aheadMargin, genAttempts, false);
 	}
 	
-	public static boolean followRecoveryRouteV2(int car, int recoveryRoute, RouteInfo ri, int carRoute, int aheadMargin, boolean genOnly) {
+	public static boolean followRecoveryRouteV2(int car, int recoveryRoute, RouteInfo ri,
+			int carRoute, int aheadMargin, int genAttempts, boolean genOnly) {
+		
 		// Attempt to generate valid route that connects with recovery route. May connect anywhere on
 		// the recovery route as long as there are at least 3 points left.
 		
+		// Settings
+		boolean debugPrint = false;
+		int maxParts = 50;
+		int genPoints = 4;
+		
 		boolean res = false;
-		List<ROUTE_POINT> rec = getRoute(car, recoveryRoute, 1000);
+		List<RpPoint> rec = getRoute(car, recoveryRoute, 1000);
 		CAR_STATE st = getCarState(car, 1000);
 		
 		double ang = -st.yaw() * Math.PI / 180.0;
@@ -249,20 +343,20 @@ public class Utils {
 		int validRoutes = 0;
 		int discardedRoutes = 0;
 		
-		ROUTE_POINT r0 = new ROUTE_POINT();
+		RpPoint r0 = new RpPoint();
 		r0.px(st.px());
 		r0.py(st.py());
 		r0.speed(speed);
 		
-		ROUTE_POINT r1 = new ROUTE_POINT();
+		RpPoint r1 = new RpPoint();
 		r1.px(st.px() + 0.01 * Math.cos(ang));
 		r1.py(st.py() + 0.01 * Math.sin(ang));
 		r1.speed(speed);
 		
-		List<ROUTE_POINT> recStart = new ArrayList<ROUTE_POINT>();
-		List<ROUTE_POINT> recStartNow = new ArrayList<ROUTE_POINT>();
-		List<ROUTE_POINT> recStartNew = new ArrayList<ROUTE_POINT>();
-		List<ROUTE_POINT> recStartBest = new ArrayList<ROUTE_POINT>();
+		List<RpPoint> recStart = new ArrayList<RpPoint>();
+		List<RpPoint> recStartNow = new ArrayList<RpPoint>();
+		List<RpPoint> recStartNew = new ArrayList<RpPoint>();
+		List<RpPoint> recStartBest = new ArrayList<RpPoint>();
 		
 		recStart.add(r0);
 		recStart.add(r1);
@@ -270,16 +364,12 @@ public class Utils {
 		RControlStationCommLibrary.rcsc_setAutopilotActive(car, false, 1000);
 		
 		if (ri.isRouteOk(recStart)) {
-			int attempts = 30;
-			int maxParts = 30;
-			int genPoints = 4;
-			
 			int recIndexNow = 0;
 			int recIndexBest = 0;
 			double recLenLeftNow = 0.0;
 			double recLenLeftBest = 0.0;
 			
-			for (int i = 0;i < attempts;i++) {
+			for (int i = 0;i < genAttempts;i++) {
 				recStartNow.clear();
 				recStartNow.addAll(recStart);
 				boolean ok = false;
@@ -288,7 +378,7 @@ public class Utils {
 				for (int j = 0;j < maxParts;j++) {
 					for (int k = 0;k < rec.size() - 3;k++) {
 						for (int add = 0;add < genPoints;add++) {
-							List<ROUTE_POINT> test = new ArrayList<ROUTE_POINT>();
+							List<RpPoint> test = new ArrayList<RpPoint>();
 							test.addAll(recStartNow);
 							
 							for (int rem = 0;rem < (genPoints - add - 1);rem++) {
@@ -300,7 +390,7 @@ public class Utils {
 							test.add(rec.get(k));
 							test.add(rec.get(k + 1));
 
-							if (ri.isRouteOk(test)) {
+							if (ri.isRouteOk(test.subList(test.size() - 4, test.size()))) {
 								recStartNew.clear();
 								recStartNew.addAll(test.subList(0, test.size() - 2));
 								
@@ -352,11 +442,13 @@ public class Utils {
 					}
 				}
 				
-				String okTxt = "" + ok;
-				if (discarded) {
-					okTxt = "discarded";
+				if (debugPrint) {
+					String okTxt = "" + ok;
+					if (discarded) {
+						okTxt = "discarded";
+					}
+					out.println("Attempt " + i + "/" + genAttempts + " OK: " + okTxt);
 				}
-				out.println("Attempt " + i + "/" + attempts + " OK: " + okTxt);
 			}
 			
 			if (!recStartBest.isEmpty()) {
@@ -412,7 +504,7 @@ public class Utils {
 		}
 	}
 	
-	public static double routeLen(List<ROUTE_POINT> r) {
+	public static double routeLen(List<RpPoint> r) {
 		double res = 0.0;
 		
 		for (int i = 1;i < r.size();i++) {
