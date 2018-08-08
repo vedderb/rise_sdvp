@@ -42,7 +42,7 @@ object TestSettings {
   var minKmh = 8.0
   var maxKmh = 20.0
   var aheadMargin = 20
-  var aheadMarginRecovery = 5
+  var aheadMarginRecovery = 15
   var recoveryGenAttampts = 500
 }
 

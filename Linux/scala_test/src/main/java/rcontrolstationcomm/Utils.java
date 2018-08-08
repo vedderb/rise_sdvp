@@ -19,8 +19,11 @@ package rcontrolstationcomm;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+
 import org.bridj.Pointer;
 import java.io.Serializable;
+import java.text.NumberFormat;
 
 import static java.lang.System.out;
 
@@ -329,9 +332,11 @@ public class Utils {
 		// Attempt to generate valid route that connects with recovery route. May connect anywhere on
 		// the recovery route as long as there are at least 3 points left.
 		
+		long timeStart = System.nanoTime();
+		
 		// Settings
 		boolean debugPrint = false;
-		int maxParts = 50;
+		int maxParts = 80;
 		int genPoints = 4;
 		
 		boolean res = false;
@@ -458,6 +463,8 @@ public class Utils {
 				
 				recStartBest.add(rec.get(0));
 				rec.remove(0);
+				shortenRoute(recStartBest, ri);
+				
 				addRoute(car, recStartBest, false, false, carRoute, 1000);
 				
 				res = true;
@@ -469,14 +476,20 @@ public class Utils {
 		}
 
 		if (res) {
-			out.println("Found " + validRoutes + " valid recovery routes (" + discardedRoutes +
-					" discarded). Using the shortest one (" + 
-					(routeLen(recStartBest) + routeLen(rec)) + " m).");
+			NumberFormat nf2 = NumberFormat.getNumberInstance(Locale.UK);
+			nf2.setMaximumFractionDigits(2);
+			nf2.setMinimumFractionDigits(2);
+			nf2.setGroupingUsed(false);
+			out.println("Found " + validRoutes + " valid recovery routes in " +
+					nf2.format((System.nanoTime() - timeStart) / 1.0e6) + " ms (" + discardedRoutes +
+					" discarded, " + (genAttempts - discardedRoutes - validRoutes) + " failed). " +
+					"Using the shortest one (" + nf2.format((routeLen(recStartBest) + routeLen(rec))) + " m).");
+			
 			if (!genOnly) {
 				addRoute(car, rec, false, false, -2, 1000);
 				RControlStationCommLibrary.rcsc_setAutopilotActive(car, true, 2000);
 				waitPolling(car, 500);
-				waitUntilRouteAlmostEnded(car, 3);
+				waitUntilRouteAlmostEnded(car, carRoute);
 				RControlStationCommLibrary.rcsc_setAutopilotActive(car, false, 2000);
 			}
 		}
@@ -516,5 +529,57 @@ public class Utils {
 		}
 		
 		return res;
+	}
+	
+	public static void shortenRoute(List<RpPoint> r, RouteInfo ri) {
+		boolean debug = true;
+		long startTime = System.nanoTime();
+		
+		boolean shorter = true;
+		List<RpPoint> current = new ArrayList<RpPoint>();
+		current.addAll(r);
+		int iterations = 0;
+
+		while (shorter) {
+			shorter = false;
+			
+			for (int start = 2;start < current.size() - 1;start++) {
+				for (int end = current.size() - 2;end > start;end--) {
+					List<RpPoint> tmp = new ArrayList<RpPoint>();
+					tmp.addAll(current.subList(0, start));
+					tmp.addAll(current.subList(end, current.size()));
+					
+					if (ri.isRouteOk(tmp)) {
+						shorter = true;
+						current.clear();
+						current.addAll(tmp);
+						iterations++;
+						break;
+					}
+				}
+				
+				if (shorter) {
+					break;
+				}
+			}
+		}
+		
+		if (debug) {
+			double lenStart = routeLen(r);
+			double lenEnd = routeLen(current);
+			int pointsStart = r.size();
+			int pointsEnd = current.size();
+			
+			NumberFormat nf2 = NumberFormat.getNumberInstance(Locale.UK);
+			nf2.setMaximumFractionDigits(2);
+			nf2.setMinimumFractionDigits(2);
+			nf2.setGroupingUsed(false);
+			System.out.println("Route shortened with " + nf2.format(lenStart - lenEnd) + " m in " +
+					nf2.format((double)(System.nanoTime() - startTime) / 1.0e6) + " ms" + 
+					" (iterations: " + iterations + ", removed: " + (pointsStart - pointsEnd) + ")");
+		}
+		
+		r.clear();
+		r.addAll(current);
 	}
 }
