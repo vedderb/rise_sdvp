@@ -348,18 +348,18 @@ public class RouteInfo {
 					RpPoint coll = new RpPoint();
 					
 					if (closestLineIntersection(xLast1, yLast1, p1x, p1y, coll)) {
-						p1x = coll.x;
-						p1y = coll.y;
+						p1x = coll.px();
+						p1y = coll.py();
 					}
 					
 					if (closestLineIntersection(xLast1, yLast1, p2x, p2y, coll)) {
-						p2x = coll.x;
-						p2y = coll.y;
+						p2x = coll.px();
+						p2y = coll.py();
 					}
 					
 					if (closestLineIntersection(xLast1, yLast1, p3x, p3y, coll)) {
-						p3x = coll.x;
-						p3y = coll.y;
+						p3x = coll.px();
+						p3y = coll.py();
 					}
 					
 					xMax = maxFrom4(xLast1, p1x, p2x, p3x);
@@ -553,7 +553,7 @@ public class RouteInfo {
 	}
 
 	public static double pointDistance(RpPoint p1, RpPoint p2) {
-		return sqrt(pow(p2.x - p1.x, 2) + pow(p2.y - p1.y, 2));
+		return sqrt(pow(p2.px() - p1.px(), 2) + pow(p2.py() - p1.py(), 2));
 	}
 	
 	public static double pointDistance(double p1x, double p1y, double p2x, double p2y) {
@@ -621,8 +621,8 @@ public class RouteInfo {
 
 		if (s >= 0 && s <= 1 && t >= 0 && t <= 1) {
 			// Collision detected
-			coll.x = p0_x + (t * s1_x);
-			coll.y = p0_y + (t * s1_y);
+			coll.px(p0_x + (t * s1_x));
+			coll.py(p0_y + (t * s1_y));
 			return true;
 		}
 

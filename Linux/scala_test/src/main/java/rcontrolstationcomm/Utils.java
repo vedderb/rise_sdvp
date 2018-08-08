@@ -28,7 +28,7 @@ import java.text.NumberFormat;
 import static java.lang.System.out;
 
 public class Utils {
-	public static class RpPoint implements Serializable {
+	public static final class RpPoint implements Serializable {
 		private static final long serialVersionUID = 1L;
 		public RpPoint() {
 			x = 0.0;
@@ -106,10 +106,10 @@ public class Utils {
 			return ret;
 		}
 		
-		public double x;
-		public double y;
-		public double speed;
-		public int time;
+		private double x;
+		private double y;
+		private double speed;
+		private int time;
 	}
 	
 	public static List<RpPoint> getRoute(int car, int mapRoute, int timeoutMs) {
@@ -122,8 +122,6 @@ public class Utils {
 		
 		int lenRes = len.get(0);
 		for (int i = 0;i < lenRes;i++) {
-			// Creating a new object here is necessary for some reason, otherwise
-			// bridj crashes in some situation where a route is used.
 			RpPoint a = new RpPoint();
 			a.px(route.get(i).px());
 			a.py(route.get(i).py());
