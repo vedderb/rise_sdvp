@@ -20,14 +20,18 @@ package rcontrolstationcomm;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-
 import org.bridj.Pointer;
 import java.io.Serializable;
 import java.text.NumberFormat;
-
+import static java.lang.Math.PI;
+import static java.lang.Math.atan2;
+import static java.lang.Math.cos;
+import static java.lang.Math.pow;
+import static java.lang.Math.sin;
+import static java.lang.Math.sqrt;
 import static java.lang.System.out;
 
-public class Utils {
+public final class Utils {
 	public static final class RpPoint implements Serializable {
 		private static final long serialVersionUID = 1L;
 		public RpPoint() {
@@ -44,11 +48,18 @@ public class Utils {
 			time = 0;
 		}
 		
+		public RpPoint(double nX, double nY, double nSpeed, int nTime) {
+			x = nX;
+			y = nY;
+			speed = nSpeed;
+			time = nTime;
+		}
+		
 		public RpPoint(RpPoint p) {
-			x = p.px();
-			y = p.py();
-			speed = p.speed();
-			time = p.time();
+			x = p.x;
+			y = p.y;
+			speed = p.speed;
+			time = p.time;
 		}
 		
 		public RpPoint(ROUTE_POINT p) {
@@ -461,7 +472,7 @@ public class Utils {
 				
 				recStartBest.add(rec.get(0));
 				rec.remove(0);
-				shortenRoute(recStartBest, ri);
+				shortenRouteMore(recStartBest, ri);
 				
 				addRoute(car, recStartBest, false, false, carRoute, 1000);
 				
@@ -530,7 +541,7 @@ public class Utils {
 	}
 	
 	public static void shortenRoute(List<RpPoint> r, RouteInfo ri) {
-		boolean debug = true;
+		boolean debug = false;
 		long startTime = System.nanoTime();
 		
 		boolean shorter = true;
@@ -579,5 +590,154 @@ public class Utils {
 		
 		r.clear();
 		r.addAll(current);
+	}
+	
+	public static void shortenRouteMore(List<RpPoint> r, RouteInfo ri) {
+		boolean debug = true;
+		long startTime = System.nanoTime();
+		int shorteningPasses = 0;
+		int okChecks = 0;
+		int pointsStart = r.size();
+		double lenStart = routeLen(r);
+		
+		shortenRoute(r, ri);
+		
+		double minDist = 0.6;
+		double maxAng = PI / 6.1;
+		double interpol = 2.0;
+		double endDiff = 0.02;
+		
+		interpolateRoute(r, interpol);
+		
+		boolean shorter = true;
+		while (shorter) {
+			shorter = false;
+			
+			for (int i = 1;i < (r.size() - 1);i++) {
+				RpPoint prev = r.get(i - 1);
+				RpPoint now  = r.get(i);
+				
+				List<List<RpPoint>> added = new ArrayList<List<RpPoint>>();
+				List<RpPoint> addedLeft = new ArrayList<RpPoint>();
+				List<RpPoint> addedRight = new ArrayList<RpPoint>();
+				addedLeft.add(prev);
+				addedLeft.add(now);
+				addedRight.addAll(addedLeft);
+				for (int j = 0;j < 6;j++) {
+					RpPoint n = new RpPoint(now);
+					double a1 = atan2(addedLeft.get(j + 1).py() - addedLeft.get(j).py(),
+							addedLeft.get(j + 1).px() - addedLeft.get(j).px());
+					n.px(addedLeft.get(j + 1).px() + minDist * cos(a1 - maxAng));
+					n.py(addedLeft.get(j + 1).py() + minDist * sin(a1 - maxAng));
+					addedLeft.add(n);
+					
+					n = new RpPoint(now);
+					a1 = atan2(addedRight.get(j + 1).py() - addedRight.get(j).py(),
+							addedRight.get(j + 1).px() - addedRight.get(j).px());
+					n.px(addedRight.get(j + 1).px() + minDist * cos(a1 + maxAng));
+					n.py(addedRight.get(j + 1).py() + minDist * sin(a1 + maxAng));
+					addedRight.add(n);
+				}
+				addedLeft.remove(0);
+				addedLeft.remove(0);
+				addedRight.remove(0);
+				addedRight.remove(0);
+				added.add(addedLeft);
+				added.add(addedRight);
+
+				for (List<RpPoint> pList: added) {
+					for (int subList = 1;subList <= pList.size();subList++) {
+						for (int j = r.size() - 2;j > i - 1;j--) {
+							List<RpPoint> tmp = new ArrayList<RpPoint>();
+							tmp.addAll(r.subList(0, i + 1));
+							tmp.addAll(pList.subList(0, subList));
+							tmp.addAll(r.subList(j, r.size()));
+							
+							okChecks++;
+
+							if (ri.isRouteOk(tmp) && (routeLen(tmp) + endDiff) < routeLen(r)) {
+								r.clear();
+								r.addAll(tmp);
+								shortenRoute(r, ri);
+								interpolateRoute(r, 1.0);
+								shorter = true;
+								shorteningPasses++;
+								break;
+							}
+						}
+
+						if (shorter) {
+							break;
+						}
+					}
+					
+					if (shorter) {
+						break;
+					}
+				}
+			}
+		}
+		
+		shortenRoute(r, ri);
+		
+		if (debug) {
+			int pointsEnd = r.size();
+			double lenEnd = routeLen(r);
+			
+			NumberFormat nf2 = NumberFormat.getNumberInstance(Locale.UK);
+			nf2.setMaximumFractionDigits(2);
+			nf2.setMinimumFractionDigits(2);
+			nf2.setGroupingUsed(false);
+			System.out.println("Route shortened with " + nf2.format(lenStart - lenEnd) + " m in " +
+					nf2.format((double)(System.nanoTime() - startTime) / 1.0e6) + " ms" + 
+					" (passes: " + shorteningPasses + ", okChecks: " + okChecks + ", removed: " +
+					(pointsStart - pointsEnd) + ")");
+		}
+	}
+	
+	public static void interpolateRoute(List<RpPoint> r, double maxSegmentLen) {
+		boolean added = true;
+		while (added) {
+			added = false;
+			for (int i = 1;i < r.size();i++) {
+				RpPoint prev = r.get(i - 1);
+				RpPoint now  = r.get(i);
+
+				if (pointDistance(prev, now) > maxSegmentLen) {
+					RpPoint mid = new RpPoint(prev);
+					mid.px((prev.px() + now.px()) / 2.0);
+					mid.py((prev.py() + now.py()) / 2.0);
+					mid.speed((prev.speed() + now.speed()) / 2.0);
+					mid.time((prev.time() + now.time()) / 2);
+					r.add(i, mid);
+					added = true;
+					break;
+				}
+			}
+		}
+	}
+	
+	public static double pointDistance(RpPoint p1, RpPoint p2) {
+		return sqrt(pow(p2.px() - p1.px(), 2) + pow(p2.py() - p1.py(), 2));
+	}
+	
+	public static double pointDistance(double p1x, double p1y, double p2x, double p2y) {
+		return sqrt(pow(p2x - p1x, 2) + pow(p2y - p1y, 2));
+	}
+	
+	public static double angleBetweenLines(
+			double px1, double py1, double px2, double py2,
+			double qx1, double qy1, double qx2, double qy2) {
+		double a1 = atan2(py2 - py1, px2 - px1);
+		double a2 = atan2(qy2 - qy1, qx2 - qx1);
+		double diff = a2 - a1;
+		
+		if (diff > PI) {
+			diff -= 2.0 * PI;
+		} else if (diff < -PI) {
+			diff += 2.0 * PI;
+		}
+		
+		return diff;
 	}
 }

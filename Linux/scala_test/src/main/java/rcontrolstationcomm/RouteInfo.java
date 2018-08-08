@@ -84,7 +84,7 @@ public class RouteInfo {
 		for (int i = 0;i < route.size();i++) {
 			RpPoint p = route.get(i);
 			RpPoint pp = i > 0 ? route.get(i - 1) : p;
-			mLength += pointDistance(p, pp);
+			mLength += Utils.pointDistance(p, pp);
 
 			if (p.px() < mXMin) {
 				mXMin = p.px();
@@ -186,6 +186,10 @@ public class RouteInfo {
 
 		return c;
 	}
+	
+	public boolean isPointWithinRoutePolygon(RpPoint p) {
+		return isPointWithinRoutePolygon(p.px(), p.py());
+	}
 
 	public boolean isSegmentWithinRoutePolygon(RpPoint p1, RpPoint p2) {
 		boolean res = true;
@@ -238,14 +242,14 @@ public class RouteInfo {
 					mRoute.get(i).px(), mRoute.get(i).py(), collLast)) {
 				
 				if (res) {
-					double dist = lastDist = pointDistance(pStart, collLast);
+					double dist = lastDist = Utils.pointDistance(pStart, collLast);
 					if (dist < lastDist) {
 						coll.setTo(collLast);
 						lastDist = dist;
 					}
 				} else {
 					coll.setTo(collLast);
-					lastDist = pointDistance(pStart, collLast);
+					lastDist = Utils.pointDistance(pStart, collLast);
 				}
 				
 				res = true;
@@ -260,14 +264,14 @@ public class RouteInfo {
 							r.get(i).px(), r.get(i).py(), collLast)) {
 
 						if (res) {
-							double dist = lastDist = pointDistance(pStart, collLast);
+							double dist = lastDist = Utils.pointDistance(pStart, collLast);
 							if (dist < lastDist) {
 								coll.setTo(collLast);
 								lastDist = dist;
 							}
 						} else {
 							coll.setTo(collLast);
-							lastDist = pointDistance(pStart, collLast);
+							lastDist = Utils.pointDistance(pStart, collLast);
 						}
 
 						res = true;
@@ -367,7 +371,7 @@ public class RouteInfo {
 					yMax = maxFrom4(yLast1, p1y, p2y, p3y);
 					yMin = minFrom4(yLast1, p1y, p2y, p3y);
 					
-					if (pointDistance(xMax, yMax, xMin, yMin) < minDist) {
+					if (Utils.pointDistance(xMax, yMax, xMin, yMin) < minDist) {
 						break;
 					}
 				}
@@ -408,7 +412,7 @@ public class RouteInfo {
 							ok = false;
 						}
 						
-						if (pointDistance(p1, p2) < minDist) {
+						if (Utils.pointDistance(p1, p2) < minDist) {
 							ok = false;
 						}
 						
@@ -422,7 +426,7 @@ public class RouteInfo {
 							double qx2 = px;
 							double qy2 = py;
 							
-							if (abs(angleBetweenLines(px1, py1, px2, py2,
+							if (abs(Utils.angleBetweenLines(px1, py1, px2, py2,
 									qx1, qy1, qx2, qy2)) > maxAng) {
 								ok = false;
 							}
@@ -525,7 +529,7 @@ public class RouteInfo {
 					double qx2 = p2.px();
 					double qy2 = p2.py();
 
-					if (abs(angleBetweenLines(px1, py1, px2, py2,
+					if (abs(Utils.angleBetweenLines(px1, py1, px2, py2,
 							qx1, qy1, qx2, qy2)) > maxAng) {
 						res = false;
 					}
@@ -550,30 +554,6 @@ public class RouteInfo {
 	
 	public int getLastGeneratedPoints() {
 		return mLastGeneratedPoints;
-	}
-
-	public static double pointDistance(RpPoint p1, RpPoint p2) {
-		return sqrt(pow(p2.px() - p1.px(), 2) + pow(p2.py() - p1.py(), 2));
-	}
-	
-	public static double pointDistance(double p1x, double p1y, double p2x, double p2y) {
-		return sqrt(pow(p2x - p1x, 2) + pow(p2y - p1y, 2));
-	}
-	
-	public static double angleBetweenLines(
-			double px1, double py1, double px2, double py2,
-			double qx1, double qy1, double qx2, double qy2) {
-		double a1 = atan2(py2 - py1, px2 - px1);
-		double a2 = atan2(qy2 - qy1, qx2 - qx1);
-		double diff = a2 - a1;
-		
-		if (diff > PI) {
-			diff -= 2.0 * PI;
-		} else if (diff < -PI) {
-			diff += 2.0 * PI;
-		}
-		
-		return diff;
 	}
 	
 	public double randInRange(double min, double max) {
