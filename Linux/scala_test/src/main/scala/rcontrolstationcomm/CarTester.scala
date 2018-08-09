@@ -398,6 +398,7 @@ object CarTester {
     val edgeRoute = getRoute(0, TestSettings.outerRoute, 5000);
     val r = new RouteInfo(edgeRoute);
     for (ind <- TestSettings.cutouts) r.addCutout(getRoute(0, ind, 1000))
+//    r.setRandomSeed(123) // For repeatedly comparing the algorithm
     rcsc_clearRoute(TestSettings.carId, TestSettings.carRoute, 5000)
     followRecoveryRouteV2(TestSettings.carId, TestSettings.recoveryRoute, r,
         TestSettings.carRoute, TestSettings.aheadMarginRecovery, TestSettings.recoveryGenAttampts, true)

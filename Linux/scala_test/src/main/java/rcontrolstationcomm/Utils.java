@@ -602,9 +602,9 @@ public final class Utils {
 		
 		shortenRoute(r, ri);
 		
-		double minDist = 0.6;
+		double minDist = 0.7;
 		double maxAng = PI / 6.1;
-		double interpol = 2.0;
+		double interpol = 1.5;
 		double endDiff = 0.02;
 		
 		interpolateRoute(r, interpol);
@@ -623,43 +623,47 @@ public final class Utils {
 				addedLeft.add(prev);
 				addedLeft.add(now);
 				addedRight.addAll(addedLeft);
-				for (int j = 0;j < 6;j++) {
+				for (int j = 0;j < 11;j++) {
 					RpPoint n = new RpPoint(now);
-					double a1 = atan2(addedLeft.get(j + 1).py() - addedLeft.get(j).py(),
-							addedLeft.get(j + 1).px() - addedLeft.get(j).px());
-					n.px(addedLeft.get(j + 1).px() + minDist * cos(a1 - maxAng));
-					n.py(addedLeft.get(j + 1).py() + minDist * sin(a1 - maxAng));
-					addedLeft.add(n);
+					int ind1 = addedLeft.size() - 1;
+					double a1 = atan2(addedLeft.get(ind1).py() - addedLeft.get(ind1 - 1).py(),
+							addedLeft.get(ind1).px() - addedLeft.get(ind1 - 1).px());
+					n.px(addedLeft.get(ind1).px() + minDist * cos(a1 - maxAng));
+					n.py(addedLeft.get(ind1).py() + minDist * sin(a1 - maxAng));
+					if (ri.isPointWithinRoutePolygon(n)) {
+						addedLeft.add(n);
+					}
 					
 					n = new RpPoint(now);
-					a1 = atan2(addedRight.get(j + 1).py() - addedRight.get(j).py(),
-							addedRight.get(j + 1).px() - addedRight.get(j).px());
-					n.px(addedRight.get(j + 1).px() + minDist * cos(a1 + maxAng));
-					n.py(addedRight.get(j + 1).py() + minDist * sin(a1 + maxAng));
-					addedRight.add(n);
+					ind1 = addedRight.size() - 1;
+					a1 = atan2(addedRight.get(ind1).py() - addedRight.get(ind1 - 1).py(),
+							addedRight.get(ind1).px() - addedRight.get(ind1 - 1).px());
+					n.px(addedRight.get(ind1).px() + minDist * cos(a1 + maxAng));
+					n.py(addedRight.get(ind1).py() + minDist * sin(a1 + maxAng));
+					if (ri.isPointWithinRoutePolygon(n)) {
+						addedRight.add(n);
+					}
 				}
-				addedLeft.remove(0);
-				addedLeft.remove(0);
-				addedRight.remove(0);
-				addedRight.remove(0);
-				added.add(addedLeft);
-				added.add(addedRight);
-
+				added.add(addedLeft.subList(2, addedLeft.size()));
+				added.add(addedRight.subList(2, addedRight.size()));
+				
 				for (List<RpPoint> pList: added) {
+					double rLenOld = routeLen(r);
 					for (int subList = 1;subList <= pList.size();subList++) {
 						for (int j = r.size() - 2;j > i - 1;j--) {
 							List<RpPoint> tmp = new ArrayList<RpPoint>();
 							tmp.addAll(r.subList(0, i + 1));
+							int ind1 = tmp.size() - 1;
 							tmp.addAll(pList.subList(0, subList));
+							int ind2 = tmp.size() + 2;
 							tmp.addAll(r.subList(j, r.size()));
 							
 							okChecks++;
 
-							if (ri.isRouteOk(tmp) && (routeLen(tmp) + endDiff) < routeLen(r)) {
+							if ((routeLen(tmp) + endDiff) < rLenOld && ri.isRouteOk(tmp.subList(ind1, ind2))) {
 								r.clear();
 								r.addAll(tmp);
-								shortenRoute(r, ri);
-								interpolateRoute(r, 1.0);
+								interpolateRoute(r, interpol);
 								shorter = true;
 								shorteningPasses++;
 								break;
@@ -669,10 +673,6 @@ public final class Utils {
 						if (shorter) {
 							break;
 						}
-					}
-					
-					if (shorter) {
-						break;
 					}
 				}
 			}
