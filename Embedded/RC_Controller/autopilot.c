@@ -486,6 +486,9 @@ static THD_FUNCTION(ap_thread, arg) {
 			ROUTE_POINT *rp_ls1 = &m_route[0]; // First point on goal line segment
 			ROUTE_POINT *rp_ls2 = &m_route[1]; // Second point on goal line segment
 
+			ROUTE_POINT *closest1_speed = &m_route[0];
+			ROUTE_POINT *closest2_speed = &m_route[2];
+
 			for (int i = start;i < end;i++) {
 				int ind = i; // First point index for this iteration
 				int indn = i + 1; // Next point index for this iteration
@@ -530,6 +533,11 @@ static THD_FUNCTION(ap_thread, arg) {
 
 				int res = utils_circle_line_int(car_cx, car_cy, m_rad_now, p1, p2, &int1, &int2);
 
+				if (res) {
+					closest1_speed = p1;
+					closest2_speed = p2;
+				}
+
 				// One intersection. Use it.
 				if (res == 1) {
 					circle_intersections++;
@@ -552,7 +560,7 @@ static THD_FUNCTION(ap_thread, arg) {
 					rp_ls2 = &m_route[indn];
 				}
 
-				// If we aren't repeating routes and there is an intersecion on the last
+				// If we aren't repeating routes and there is an intersection on the last
 				// line segment, go straight to the last point.
 				if (!main_config.ap_repeat_routes) {
 					if (indn == last_point_ind && circle_intersections > 0) {
@@ -620,6 +628,11 @@ static THD_FUNCTION(ap_thread, arg) {
 						}
 					}
 				}
+			}
+
+			if (circle_intersections == 0) {
+				closest1_speed = closest1;
+				closest2_speed = closest2;
 			}
 
 			static int sample = 0;
@@ -730,9 +743,9 @@ static THD_FUNCTION(ap_thread, arg) {
 					}
 				} else {
 					// Calculate the speed based on the average speed between the two closest points
-					const float dist_prev = utils_rp_distance(&rp_now, closest1);
-					const float dist_tot = utils_rp_distance(&rp_now, closest1) + utils_rp_distance(&rp_now, closest2);
-					speed = utils_map(dist_prev, 0.0, dist_tot, closest1->speed, closest2->speed);
+					const float dist_prev = utils_rp_distance(&rp_now, closest1_speed);
+					const float dist_tot = utils_rp_distance(&rp_now, closest1_speed) + utils_rp_distance(&rp_now, closest2_speed);
+					speed = utils_map(dist_prev, 0.0, dist_tot, closest1_speed->speed, closest2_speed->speed);
 				}
 
 				if (m_is_speed_override) {

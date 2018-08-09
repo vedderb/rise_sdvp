@@ -1,115 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <routes>
-    <anchors>
-        <anchor>
-            <x>-36.477</x>
-            <y>-53.315</y>
-            <height>1</height>
-            <id>234</id>
-        </anchor>
-        <anchor>
-            <x>-24.33</x>
-            <y>-64.749</y>
-            <height>1</height>
-            <id>50</id>
-        </anchor>
-        <anchor>
-            <x>-36.477</x>
-            <y>-53.315</y>
-            <height>1</height>
-            <id>234</id>
-        </anchor>
-        <anchor>
-            <x>-24.33</x>
-            <y>-64.749</y>
-            <height>1</height>
-            <id>50</id>
-        </anchor>
-        <anchor>
-            <x>-36.477</x>
-            <y>-53.315</y>
-            <height>1</height>
-            <id>234</id>
-        </anchor>
-        <anchor>
-            <x>-24.33</x>
-            <y>-64.749</y>
-            <height>1</height>
-            <id>50</id>
-        </anchor>
-        <anchor>
-            <x>-36.477</x>
-            <y>-53.315</y>
-            <height>1</height>
-            <id>234</id>
-        </anchor>
-        <anchor>
-            <x>-24.33</x>
-            <y>-64.749</y>
-            <height>1</height>
-            <id>50</id>
-        </anchor>
-        <anchor>
-            <x>-36.477</x>
-            <y>-53.315</y>
-            <height>1</height>
-            <id>234</id>
-        </anchor>
-        <anchor>
-            <x>-24.33</x>
-            <y>-64.749</y>
-            <height>1</height>
-            <id>50</id>
-        </anchor>
-        <anchor>
-            <x>-36.477</x>
-            <y>-53.315</y>
-            <height>1</height>
-            <id>234</id>
-        </anchor>
-        <anchor>
-            <x>-24.33</x>
-            <y>-64.749</y>
-            <height>1</height>
-            <id>50</id>
-        </anchor>
-        <anchor>
-            <x>-36.477</x>
-            <y>-53.315</y>
-            <height>1</height>
-            <id>234</id>
-        </anchor>
-        <anchor>
-            <x>-24.33</x>
-            <y>-64.749</y>
-            <height>1</height>
-            <id>50</id>
-        </anchor>
-        <anchor>
-            <x>-36.477</x>
-            <y>-53.315</y>
-            <height>1</height>
-            <id>234</id>
-        </anchor>
-        <anchor>
-            <x>-24.33</x>
-            <y>-64.749</y>
-            <height>1</height>
-            <id>50</id>
-        </anchor>
-        <anchor>
-            <x>-36.477</x>
-            <y>-53.315</y>
-            <height>1</height>
-            <id>234</id>
-        </anchor>
-        <anchor>
-            <x>-24.33</x>
-            <y>-64.749</y>
-            <height>1</height>
-            <id>50</id>
-        </anchor>
-    </anchors>
     <route>
         <id>0</id>
         <point>
@@ -133,18 +23,6 @@
     </route>
     <route>
         <id>1</id>
-        <point>
-            <x>61.687</x>
-            <y>-905.154</y>
-            <speed>2.77778</speed>
-            <time>42000</time>
-        </point>
-        <point>
-            <x>57.702</x>
-            <y>-904.067</y>
-            <speed>2.77778</speed>
-            <time>44000</time>
-        </point>
         <point>
             <x>53.718</x>
             <y>-902.825</y>
@@ -277,6 +155,12 @@
             <speed>0.833333</speed>
             <time>50000</time>
         </point>
+        <point>
+            <x>55.827</x>
+            <y>-887.013</y>
+            <speed>0.833333</speed>
+            <time>2000</time>
+        </point>
     </route>
     <route>
         <id>5</id>
@@ -303,6 +187,12 @@
             <y>-890.901</y>
             <speed>0.833333</speed>
             <time>58000</time>
+        </point>
+        <point>
+            <x>32.117</x>
+            <y>-881.877</y>
+            <speed>0.833333</speed>
+            <time>0</time>
         </point>
     </route>
     <route>
@@ -331,6 +221,12 @@
             <speed>0.833333</speed>
             <time>66000</time>
         </point>
+        <point>
+            <x>38.029</x>
+            <y>-903.377</y>
+            <speed>0.833333</speed>
+            <time>4000</time>
+        </point>
     </route>
     <route>
         <id>7</id>
@@ -357,6 +253,12 @@
             <y>-919.762</y>
             <speed>0.833333</speed>
             <time>74000</time>
+        </point>
+        <point>
+            <x>46.211</x>
+            <y>-912.574</y>
+            <speed>0.833333</speed>
+            <time>6000</time>
         </point>
     </route>
 </routes>

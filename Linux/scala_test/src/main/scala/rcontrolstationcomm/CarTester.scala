@@ -43,7 +43,7 @@ object TestSettings {
   var maxKmh = 20.0
   var aheadMargin = 20
   var aheadMarginRecovery = 15
-  var recoveryGenAttampts = 500
+  var recoveryGenAttampts = 100
 }
 
 object TestData {
@@ -67,9 +67,8 @@ class Car {
     rcsc_setAutopilotActive(TestSettings.carId, active, 2000)
   }
   
-  def brakeCar(timeMs: Int): Unit = {
-    rcsc_rcControl(TestSettings.carId, 3, 50.0, 0.0);
-    waitPolling(TestSettings.carId, timeMs)
+  def stopCar(): Unit = {
+    brakeAndWaitUntilStoppedPolling(TestSettings.carId, 50.0)
   }
   
   def waitCarPolling(ms: Int): Unit = {
@@ -163,7 +162,7 @@ object CarSpec extends Commands2 {
 
   def destroySut(sut: Sut): Unit = {
     sut.activateAutopilot(false)
-    sut.brakeCar(2000)
+    sut.stopCar()
   }
 
   def genCommand(state: State): Gen[Command] = Gen.frequency(
@@ -279,8 +278,7 @@ object CarTester {
   def connect(host: String, port: Int): Boolean =
     rcsc_connectTcp(pointerToCString(host), port)
 
-  def disconnect(): Unit =
-    rcsc_disconnectTcp()
+  def disconnect(): Unit = rcsc_disconnectTcp()
 
   def testScala(tests: Int) {
     val params = Test.Parameters.default.
@@ -376,9 +374,7 @@ object CarTester {
         waitUntilRouteAlmostEnded(TestSettings.carId, 4)
         indLast = rGen.size()
       }
-      rcsc_setAutopilotActive(TestSettings.carId, false, 2000)
-      rcsc_rcControl(TestSettings.carId, 3, 50.0, 0.0);
-      waitPolling(TestSettings.carId, 2000)
+      brakeAndWaitUntilStoppedPolling(TestSettings.carId, 50.0)
     }
   }
   
@@ -389,9 +385,7 @@ object CarTester {
     rcsc_clearRoute(TestSettings.carId, TestSettings.carRoute, 5000)
     followRecoveryRouteV2(TestSettings.carId, TestSettings.recoveryRoute, r,
         TestSettings.carRoute, TestSettings.aheadMarginRecovery, TestSettings.recoveryGenAttampts)
-    rcsc_setAutopilotActive(TestSettings.carId, false, 2000)
-    rcsc_rcControl(TestSettings.carId, 3, 50.0, 0.0);
-    waitPolling(TestSettings.carId, 2000)
+    brakeAndWaitUntilStoppedPolling(TestSettings.carId, 50.0)
   }
   
   def recoveryTestGenOnly() {
@@ -449,6 +443,18 @@ object CarTester {
     println("Point usage average: " +
       (usedPoints.toDouble / genPoints.toDouble) * 100.0 + " %")
   }
+
+  def driveRoute(route: Int) {
+    val r = getRoute(TestSettings.carId, route, 1000)
+    if (!r.isEmpty()) {
+      addRoute(TestSettings.carId, r, true, false, -2, 5000)
+      rcsc_setAutopilotActive(TestSettings.carId, true, 2000)
+      waitUntilRouteAlmostEnded(TestSettings.carId, 2)
+      brakeAndWaitUntilStoppedPolling(TestSettings.carId, 50.0)
+    }
+  }
+
+  def driveCarRoute(): Unit = driveRoute(TestSettings.carRoute)
 
   def getPrintRouteTest() {
     val edgeRoute = getRoute(0, TestSettings.outerRoute, 5000);
