@@ -70,6 +70,8 @@ public:
     quint8 carId();
     void connectNtrip(QString server, QString stream, QString user = "", QString pass = "", int port = 80);
     void setSendRtcmBasePos(bool send, double lat = 0.0, double lon = 0.0, double height = 0.0);
+    Q_INVOKABLE void rebootSystem(bool powerOff = false);
+    Q_INVOKABLE QVariantList getNetworkAddresses();
 
 signals:
 
@@ -123,7 +125,6 @@ private:
     double mRtcmBaseHeight;
     bool mRtcmSendBase;
 
-    void rebootSystem(bool powerOff = false);
     bool setUnixTime(qint64 t);
     void printTerminal(QString str);
     bool waitProcess(QProcess &process, int timeoutMs = 300000);

@@ -24,6 +24,7 @@
 #include <unistd.h>
 #include <QEventLoop>
 #include <QCoreApplication>
+#include <QNetworkInterface>
 #include "rtcm3_simple.h"
 
 namespace {
@@ -378,6 +379,41 @@ void CarClient::setSendRtcmBasePos(bool send, double lat, double lon, double hei
     mRtcmBaseHeight = height;
 }
 
+void CarClient::rebootSystem(bool powerOff)
+{
+    // https://askubuntu.com/questions/159007/how-do-i-run-specific-sudo-commands-without-a-password
+    QStringList args;
+    QString cmd = "sudo";
+
+    if (powerOff) {
+        args << "shutdown" << "-h" << "now";
+    } else {
+        args << "reboot";
+    }
+
+    QProcess process;
+    process.setEnvironment(QProcess::systemEnvironment());
+    process.start(cmd, args);
+    waitProcess(process);
+
+    qApp->quit();
+}
+
+QVariantList CarClient::getNetworkAddresses()
+{
+    QVariantList res;
+
+    for(QHostAddress a: QNetworkInterface::allAddresses()) {
+        if(!a.isLoopback()) {
+            if (a.protocol() == QAbstractSocket::IPv4Protocol) {
+                res << a.toString();
+            }
+        }
+    }
+
+    return res;
+}
+
 void CarClient::serialDataAvailable()
 {
     while (mSerialPort->bytesAvailable() > 0) {
@@ -638,26 +674,6 @@ void CarClient::logEthernetReceived(quint8 id, QByteArray data)
 {
     (void)id;
     mLogBroadcaster->broadcastData(data);
-}
-
-void CarClient::rebootSystem(bool powerOff)
-{
-    // https://askubuntu.com/questions/159007/how-do-i-run-specific-sudo-commands-without-a-password
-    QStringList args;
-    QString cmd = "sudo";
-
-    if (powerOff) {
-        args << "shutdown" << "-h" << "now";
-    } else {
-        args << "reboot";
-    }
-
-    QProcess process;
-    process.setEnvironment(QProcess::systemEnvironment());
-    process.start(cmd, args);
-    waitProcess(process);
-
-    qApp->quit();
 }
 
 bool CarClient::setUnixTime(qint64 t)
