@@ -39,15 +39,18 @@ object TestSettings {
   var recoveryRoute = 1
   var outerRoute = 2
   var cutouts = List(4, 5, 6, 7)
-  var minKmh = 8.0
-  var maxKmh = 20.0
+  var minKmh = 3.0
+  var maxKmh = 12.0
   var aheadMargin = 20
   var aheadMarginRecovery = 15
   var recoveryGenAttampts = 100
+  var fiActive = true
 }
 
-object TestData {
+object TestResult {
   val commands = Buffer.empty[CarSpec.Command]
+  val uwbDiff = Buffer.empty[Double]
+  val maxSpeed = Buffer.empty[Double]
 }
 
 class Car {
@@ -80,7 +83,11 @@ class Car {
     println("[CarCmd] Running generated segments")
     if (recoveryOk) {
       addRoute(TestSettings.carId, route.asJava, false, false, TestSettings.carRoute, 2000)
-      waitUntilRouteAlmostEnded(TestSettings.carId, 4)
+      val res = new WaitRouteResult
+      waitUntilRouteAlmostEnded(TestSettings.carId, 4, res)
+      TestResult.uwbDiff += res.maxUwbDiff
+      TestResult.maxSpeed += res.maxSpeed
+      res.ok
     } else {
       println("[ERROR] Cannot run segments because following the recovery route failed")
       false
@@ -106,7 +113,11 @@ class Car {
     println("[CarCmd] Adding fault; Probe: " + probe + " Type: " + faultType +
       " Param: " + param + " Start: " + start + " Duration: " + duration)
     fiSetEnabled(TestSettings.carId, true, 1000)
-    fiAddFault(TestSettings.carId, probe, faultType, param, start, duration, 1000)
+    if (TestSettings.fiActive) {
+      fiAddFault(TestSettings.carId, probe, faultType, param, start, duration, 1000)
+    } else {
+      true
+    }
   }
 
   def clearFaults(): Boolean = {
@@ -156,7 +167,9 @@ object CarSpec extends Commands2 {
     sut.clearRoute()
     sut.resetUwbPosNow()
     sut.activateAutopilot(true)
-    TestData.commands.clear()
+    TestResult.commands.clear()
+    TestResult.uwbDiff.clear()
+    TestResult.maxSpeed.clear()
     sut
   }
 
@@ -223,7 +236,7 @@ object CarSpec extends Commands2 {
     type Result = Boolean
 
     def run(sut: Sut): Result = {
-      TestData.commands += this
+      TestResult.commands += this
       sut.runSegments(route)
     }
 
@@ -244,7 +257,7 @@ object CarSpec extends Commands2 {
     type Result = Boolean
 
     def run(sut: Sut): Result = {
-      TestData.commands += this
+      TestResult.commands += this
       sut.addFault(probe, fault, param, start, duration)
     }
 
@@ -301,22 +314,79 @@ object CarTester {
       println("All tests passed")
     } else {
       println("Tests failed. Failing command sequence:")
-      for (cmd <- TestData.commands) println(cmd.toString())
+      for (cmd <- TestResult.commands) println(cmd.toString())
     }
+    
+    println("test_diff = [")
+    for (diff <- TestResult.uwbDiff) println(diff)
+    println("]';")
+    
+    println("test_speed = [")
+    for (speed <- TestResult.maxSpeed) println(speed)
+    println("]';")
 
     // Save last test to disk to make re-running it possible
     val oos = new ObjectOutputStream(new FileOutputStream("last_test.bin"))
-    oos.writeObject(TestData.commands.toList)
+    oos.writeObject(TestResult.commands.toList)
     oos.close
+    
+    val oos2 = new ObjectOutputStream(new FileOutputStream("last_test_uwb_diff.bin"))
+    oos2.writeObject(TestResult.uwbDiff.toList)
+    oos2.close
+    
+    val oos3 = new ObjectOutputStream(new FileOutputStream("last_test_speed.bin"))
+    oos3.writeObject(TestResult.maxSpeed.toList)
+    oos3.close
   }
 
-  def runLastTest() = rerunTest(TestData.commands.clone())
+  def runLastTest() = rerunTest(TestResult.commands.clone())
 
   def runLastTestHdd() {
     val ois = new ObjectInputStream(new FileInputStream("last_test.bin"))
     val cmds = ois.readObject.asInstanceOf[List[CarSpec.Command]].toBuffer
     ois.close
     rerunTest(cmds)
+  }
+  
+  def printLastTest() {
+    for (cmd <- TestResult.commands) println(cmd)
+  }
+  
+  def printLastTestUwbDiff() {
+    println("test_diff = [")
+    for (diff <- TestResult.uwbDiff) println(diff)
+    println("]';")
+  }
+  
+  def printLastTestMaxSpeed() {
+    println("test_speed = [")
+    for (speed <- TestResult.maxSpeed) println(speed * 3.6)
+    println("]';")
+  }
+  
+  def printLastTestHdd() {
+    val ois = new ObjectInputStream(new FileInputStream("last_test.bin"))
+    val cmds = ois.readObject.asInstanceOf[List[CarSpec.Command]].toBuffer
+    ois.close
+    for (cmd <- cmds) println(cmd)
+  }
+  
+  def printLastTestUwbDiffHdd() {
+    val ois = new ObjectInputStream(new FileInputStream("last_test_uwb_diff.bin"))
+    val diffs = ois.readObject.asInstanceOf[List[Double]].toBuffer
+    ois.close
+    println("test_diff = [")
+    for (diff <- diffs) println(diff)
+    println("]';")
+  }
+  
+  def printLastTestMaxSpeedHdd() {
+    val ois = new ObjectInputStream(new FileInputStream("last_test_speed.bin"))
+    val speeds = ois.readObject.asInstanceOf[List[Double]].toBuffer
+    ois.close
+    println("test_speed = [")
+    for (speed <- speeds) println(speed * 3.6)
+    println("]';")
   }
 
   def rerunTest(cmds: Buffer[CarSpec.Command]) {
@@ -392,7 +462,7 @@ object CarTester {
     val edgeRoute = getRoute(0, TestSettings.outerRoute, 5000);
     val r = new RouteInfo(edgeRoute);
     for (ind <- TestSettings.cutouts) r.addCutout(getRoute(0, ind, 1000))
-//    r.setRandomSeed(123) // For repeatedly comparing the algorithm
+    r.setRandomSeed(123) // For repeatedly comparing the algorithm
     rcsc_clearRoute(TestSettings.carId, TestSettings.carRoute, 5000)
     followRecoveryRouteV2(TestSettings.carId, TestSettings.recoveryRoute, r,
         TestSettings.carRoute, TestSettings.aheadMarginRecovery, TestSettings.recoveryGenAttampts, true)

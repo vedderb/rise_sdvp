@@ -532,11 +532,8 @@ public class RouteInfo {
 					if (abs(Utils.angleBetweenLines(px1, py1, px2, py2,
 							qx1, qy1, qx2, qy2)) > maxAng) {
 						res = false;
+						break;
 					}
-				}
-				
-				if (!res) {
-					break;
 				}
 			}
 		}

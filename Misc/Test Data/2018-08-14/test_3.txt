@@ -1,0 +1,47 @@
+Notes
+* Max speed: 10.5 km/h
+
+RunSegment(List(rcontrolstationcomm.Utils$RpPoint@17fbfb02, rcontrolstationcomm.Utils$RpPoint@8f2e3e6, rcontrolstationcomm.Utils$RpPoint@6f315b08, rcontrolstationcomm.Utils$RpPoint@6c8efde4, rcontrolstationcomm.Utils$RpPoint@24e5389c, rcontrolstationcomm.Utils$RpPoint@3b170235, rcontrolstationcomm.Utils$RpPoint@5e9bf744, rcontrolstationcomm.Utils$RpPoint@45e140ae, rcontrolstationcomm.Utils$RpPoint@48cdb156))
+RunSegment(List(rcontrolstationcomm.Utils$RpPoint@4b4814d0, rcontrolstationcomm.Utils$RpPoint@4ae8fb2a, rcontrolstationcomm.Utils$RpPoint@54326e9, rcontrolstationcomm.Utils$RpPoint@20216016, rcontrolstationcomm.Utils$RpPoint@2b441e56))
+AddFault(uwb_travel_dist,AMPLIFICATION,2.5,46,6)
+RunSegment(List(rcontrolstationcomm.Utils$RpPoint@267891bf, rcontrolstationcomm.Utils$RpPoint@3a109ff7, rcontrolstationcomm.Utils$RpPoint@111a7973, rcontrolstationcomm.Utils$RpPoint@1a2773a8, rcontrolstationcomm.Utils$RpPoint@78b0ec3a, rcontrolstationcomm.Utils$RpPoint@46612bfc, rcontrolstationcomm.Utils$RpPoint@4f213a2))
+AddFault(uwb_range_234,AMPLIFICATION,2.0,53,4)
+RunSegment(List(rcontrolstationcomm.Utils$RpPoint@25699aa7, rcontrolstationcomm.Utils$RpPoint@5a47730c, rcontrolstationcomm.Utils$RpPoint@15369d73, rcontrolstationcomm.Utils$RpPoint@1cde374, rcontrolstationcomm.Utils$RpPoint@6818fd48))
+AddFault(uwb_travel_dist,AMPLIFICATION,2.2,44,6)
+AddFault(uwb_yaw,OFFSET,-18.0,0,2)
+AddFault(uwb_range_50,AMPLIFICATION,4.0,14,8)
+AddFault(uwb_range_234,AMPLIFICATION,2.0,21,6)
+RunSegment(List(rcontrolstationcomm.Utils$RpPoint@9263c54, rcontrolstationcomm.Utils$RpPoint@28daf506, rcontrolstationcomm.Utils$RpPoint@4662752a, rcontrolstationcomm.Utils$RpPoint@693f2213, rcontrolstationcomm.Utils$RpPoint@514377fc, rcontrolstationcomm.Utils$RpPoint@2e4eda17, rcontrolstationcomm.Utils$RpPoint@7b5021d1))
+
+
+New initial state created
+New SUT created
+[CarCmd] Clearing faults
+[CarCmd] Clearing route
+[CarCmd] Following recovery route (V2)
+Route shortened with 0.76 m in 3.40 ms (passes: 2, okChecks: 1915, removed: 0)
+Found 100 valid recovery routes in 645.97 ms (0 discarded, 0 failed). Using the shortest one (13.26 m).
+Max UWB diff: 0.5035835680401028 m
+[CarCmd] Clearing route
+[CarCmd] Resetting UWB position
+[CarCmd] Activating autopilot
+[CarCmd] Running generated segments
+Max UWB diff: 0.4701361930334735 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.5049436503214801 m
+[CarCmd] Adding fault; Probe: uwb_travel_dist Type: AMPLIFICATION Param: 2.5 Start: 46 Duration: 6
+[CarCmd] Running generated segments
+Max UWB diff: 0.6916366459348444 m
+[CarCmd] Adding fault; Probe: uwb_range_234 Type: AMPLIFICATION Param: 2.0 Start: 53 Duration: 4
+[CarCmd] Running generated segments
+Max UWB diff: 0.7078021192395552 m
+[CarCmd] Adding fault; Probe: uwb_travel_dist Type: AMPLIFICATION Param: 2.2 Start: 44 Duration: 6
+[CarCmd] Adding fault; Probe: uwb_yaw Type: OFFSET Param: -18.0 Start: 0 Duration: 2
+[CarCmd] Adding fault; Probe: uwb_range_50 Type: AMPLIFICATION Param: 4.0 Start: 14 Duration: 8
+[CarCmd] Adding fault; Probe: uwb_range_234 Type: AMPLIFICATION Param: 2.0 Start: 21 Duration: 6
+[CarCmd] Running generated segments
+Max UWB diff: 1.4645321573799617 m
+[Error] Too large difference between the UWB-based and RTKGNSS-based positions.
+Postcondition failed
+[CarCmd] Deactivating autopilot
+Test sequence failed

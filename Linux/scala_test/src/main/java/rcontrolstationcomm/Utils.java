@@ -270,10 +270,19 @@ public final class Utils {
 		terminalCmd(car, "pos_uwb_reset_pos", timeoutMs);
 		return true;
 	}
+	
+	public static class WaitRouteResult {
+		public double maxUwbDiff;
+		public double time;
+		public double maxSpeed;
+		public boolean ok;
+	}
 
-	public static boolean waitUntilRouteAlmostEnded(int car, int points_left) {
+	public static boolean waitUntilRouteAlmostEnded(int car, int points_left, WaitRouteResult result) {
 		boolean res = true;
 		double maxUwbDiff = 0.0;
+		double maxSpeed = 0.0;
+		long timeStart = System.nanoTime();
 
 		CAR_STATE st = getCarState(car, 1000);
 		double uwbDiff = Math.sqrt(Math.pow((st.px() - st.px_uwb()), 2) +
@@ -291,6 +300,9 @@ public final class Utils {
 				if (uwbDiff > maxUwbDiff) {
 					maxUwbDiff = uwbDiff;
 				}
+				if (st.speed() > maxSpeed) {
+					maxSpeed = st.speed();
+				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 				break;
@@ -304,8 +316,19 @@ public final class Utils {
 			out.println("[Error] Too large difference between the UWB-based"
 					+ " and RTKGNSS-based positions.");
 		}
+		
+		if (result != null) {
+			result.maxUwbDiff = maxUwbDiff;
+			result.maxSpeed = maxSpeed;
+			result.time = (double)(System.nanoTime() - timeStart) * 1.0e-9;
+			result.ok = res;
+		}
 
 		return res;
+	}
+	
+	public static boolean waitUntilRouteAlmostEnded(int car, int points_left) {
+		return waitUntilRouteAlmostEnded(car, points_left, null);
 	}
 
 	public static void waitPolling(int car, int ms) {
