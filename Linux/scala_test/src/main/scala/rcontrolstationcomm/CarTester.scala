@@ -46,6 +46,7 @@ object TestSettings {
   var recoveryGenAttampts = 100
   var fiActive = true
   var uwbMaxDiff = 1.0
+  var shorenRecoveryRoute = true
 }
 
 object TestResult {
@@ -110,7 +111,8 @@ class Car {
   def runRecoveryRouteV2(ri: RouteInfo, carRoute: Int): Boolean = {
     println("[CarCmd] Following recovery route (V2)")
     recoveryOk = followRecoveryRouteV2(TestSettings.carId, TestSettings.recoveryRoute, ri,
-        carRoute, TestSettings.aheadMarginRecovery, TestSettings.recoveryGenAttampts)
+        carRoute, TestSettings.aheadMarginRecovery, TestSettings.recoveryGenAttampts,
+        TestSettings.shorenRecoveryRoute)
     recoveryOk
   }
 
@@ -428,7 +430,8 @@ object CarTester {
 
       rcsc_clearRoute(TestSettings.carId, TestSettings.carRoute, 5000)
       followRecoveryRouteV2(TestSettings.carId, TestSettings.recoveryRoute, r,
-          TestSettings.carRoute, TestSettings.aheadMarginRecovery, TestSettings.recoveryGenAttampts)
+          TestSettings.carRoute, TestSettings.aheadMarginRecovery,
+          TestSettings.recoveryGenAttampts, TestSettings.shorenRecoveryRoute)
       rcsc_clearRoute(TestSettings.carId, TestSettings.carRoute, 5000)
       rcsc_setAutopilotActive(TestSettings.carId, true, 2000)
 
@@ -452,7 +455,8 @@ object CarTester {
     for (ind <- TestSettings.cutouts) r.addCutout(getRoute(0, ind, 1000))
     rcsc_clearRoute(TestSettings.carId, TestSettings.carRoute, 5000)
     followRecoveryRouteV2(TestSettings.carId, TestSettings.recoveryRoute, r,
-        TestSettings.carRoute, TestSettings.aheadMarginRecovery, TestSettings.recoveryGenAttampts)
+        TestSettings.carRoute, TestSettings.aheadMarginRecovery,
+        TestSettings.recoveryGenAttampts, TestSettings.shorenRecoveryRoute)
     brakeAndWaitUntilStoppedPolling(TestSettings.carId, 50.0)
   }
   
@@ -463,7 +467,8 @@ object CarTester {
     r.setRandomSeed(123) // For repeatedly comparing the algorithm
     rcsc_clearRoute(TestSettings.carId, TestSettings.carRoute, 5000)
     followRecoveryRouteV2(TestSettings.carId, TestSettings.recoveryRoute, r,
-        TestSettings.carRoute, TestSettings.aheadMarginRecovery, TestSettings.recoveryGenAttampts, true)
+        TestSettings.carRoute, TestSettings.aheadMarginRecovery, TestSettings.recoveryGenAttampts,
+        TestSettings.shorenRecoveryRoute, true)
   }
 
   def randomGenTest() {

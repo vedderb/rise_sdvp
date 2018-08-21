@@ -389,10 +389,10 @@ public final class Utils {
 
 		RControlStationCommLibrary.rcsc_setAutopilotActive(car, false, 1000);
 	}
-
+	
 	public static boolean followRecoveryRouteV2(int car, int recoveryRoute, RouteInfo ri,
-			int carRoute, int aheadMargin, int genAttempts) {
-		return followRecoveryRouteV2(car, recoveryRoute, ri, carRoute, aheadMargin, genAttempts, false);
+			int carRoute, int aheadMargin, int genAttempts, boolean tryShorten) {
+		return followRecoveryRouteV2(car, recoveryRoute, ri, carRoute, aheadMargin, genAttempts, tryShorten, false);
 	}
 	
 	/**
@@ -419,12 +419,15 @@ public final class Utils {
 	 * @param genOnly
 	 * If set the route is only generated and shown on the map, but the autopilot is not activated.
 	 * 
+	 * @param tryShorten
+	 * Try to shorten the generated recovery route.
+	 * 
 	 * @return
 	 * True for success, false if it was not possible to generate a connecting route or if the car
 	 * was outside the valid area in the RouteInfo.
 	 */
 	public static boolean followRecoveryRouteV2(int car, int recoveryRoute, RouteInfo ri,
-			int carRoute, int aheadMargin, int genAttempts, boolean genOnly) {
+			int carRoute, int aheadMargin, int genAttempts, boolean tryShorten, boolean genOnly) {
 
 		long timeStart = System.nanoTime();
 
@@ -548,7 +551,10 @@ public final class Utils {
 
 				recStartBest.add(rec.get(0));
 				rec.remove(0);
-				shortenRouteMore(recStartBest, ri);
+				
+				if (tryShorten) {
+					shortenRouteMore(recStartBest, ri);
+				}
 
 				addRoute(car, recStartBest, false, false, carRoute, 1000);
 

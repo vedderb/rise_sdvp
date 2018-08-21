@@ -3,20 +3,20 @@
     <route>
         <id>0</id>
         <point>
-            <x>43.404</x>
-            <y>-899.618</y>
+            <x>42.53</x>
+            <y>-899.569</y>
             <speed>0.833333</speed>
             <time>20000</time>
         </point>
         <point>
-            <x>41.393</x>
-            <y>-898.948</y>
+            <x>39.283</x>
+            <y>-898.536</y>
             <speed>0.833333</speed>
             <time>22000</time>
         </point>
         <point>
-            <x>39.413</x>
-            <y>-898.247</y>
+            <x>36.332</x>
+            <y>-897.65</y>
             <speed>0.833333</speed>
             <time>24000</time>
         </point>
@@ -57,26 +57,26 @@
             <time>80000</time>
         </point>
         <point>
-            <x>85.134</x>
-            <y>-956.794</y>
+            <x>85.328</x>
+            <y>-957.124</y>
             <speed>0.833333</speed>
             <time>82000</time>
         </point>
         <point>
-            <x>-18.924</x>
-            <y>-924.06</y>
+            <x>-19.009</x>
+            <y>-925.542</y>
             <speed>0.833333</speed>
             <time>84000</time>
         </point>
         <point>
-            <x>7.822</x>
-            <y>-841.781</y>
+            <x>6.669</x>
+            <y>-841.718</y>
             <speed>0.833333</speed>
             <time>86000</time>
         </point>
         <point>
-            <x>103.22</x>
-            <y>-870.694</y>
+            <x>108.645</x>
+            <y>-872.709</y>
             <speed>0.833333</speed>
             <time>88000</time>
         </point>
@@ -84,32 +84,32 @@
     <route>
         <id>4</id>
         <point>
-            <x>59.108</x>
-            <y>-863.773</y>
+            <x>59.059</x>
+            <y>-864.298</y>
             <speed>0.833333</speed>
             <time>44000</time>
         </point>
         <point>
-            <x>48.813</x>
-            <y>-896.464</y>
+            <x>49.614</x>
+            <y>-894.699</y>
             <speed>0.833333</speed>
             <time>46000</time>
         </point>
         <point>
-            <x>91.481</x>
-            <y>-909.732</y>
+            <x>91.821</x>
+            <y>-907.833</y>
             <speed>0.833333</speed>
             <time>48000</time>
         </point>
         <point>
-            <x>101.458</x>
-            <y>-877.465</y>
+            <x>101.709</x>
+            <y>-877.137</y>
             <speed>0.833333</speed>
             <time>50000</time>
         </point>
         <point>
-            <x>67.706</x>
-            <y>-866.745</y>
+            <x>61.42</x>
+            <y>-864.888</y>
             <speed>0.833333</speed>
             <time>90000</time>
         </point>
@@ -117,8 +117,8 @@
     <route>
         <id>5</id>
         <point>
-            <x>11.983</x>
-            <y>-849.232</y>
+            <x>10.358</x>
+            <y>-848.949</y>
             <speed>0.833333</speed>
             <time>52000</time>
         </point>
@@ -129,20 +129,20 @@
             <time>54000</time>
         </point>
         <point>
-            <x>40.322</x>
-            <y>-892.219</y>
+            <x>41.94</x>
+            <y>-892.485</y>
             <speed>0.833333</speed>
             <time>56000</time>
         </point>
         <point>
-            <x>1.369</x>
-            <y>-879.8</y>
+            <x>1.061</x>
+            <y>-879.793</y>
             <speed>0.833333</speed>
             <time>58000</time>
         </point>
         <point>
-            <x>9.754</x>
-            <y>-852.947</y>
+            <x>9.473</x>
+            <y>-851.901</y>
             <speed>0.833333</speed>
             <time>92000</time>
         </point>
@@ -150,32 +150,32 @@
     <route>
         <id>6</id>
         <point>
-            <x>39.048</x>
-            <y>-904.955</y>
+            <x>39.431</x>
+            <y>-905.619</y>
             <speed>0.833333</speed>
             <time>60000</time>
         </point>
         <point>
-            <x>30.345</x>
-            <y>-933.295</y>
+            <x>31.166</x>
+            <y>-933.216</y>
             <speed>0.833333</speed>
             <time>62000</time>
         </point>
         <point>
-            <x>-10.199</x>
-            <y>-919.815</y>
+            <x>-11.778</x>
+            <y>-920.082</y>
             <speed>0.833333</speed>
             <time>64000</time>
         </point>
         <point>
-            <x>-1.602</x>
-            <y>-892.006</y>
+            <x>-2.923</x>
+            <y>-892.042</y>
             <speed>0.833333</speed>
             <time>66000</time>
         </point>
         <point>
-            <x>35.121</x>
-            <y>-902.62</y>
+            <x>36.922</x>
+            <y>-904.586</y>
             <speed>0.833333</speed>
             <time>94000</time>
         </point>
@@ -183,14 +183,14 @@
     <route>
         <id>7</id>
         <point>
-            <x>47.752</x>
-            <y>-907.184</y>
+            <x>45.629</x>
+            <y>-907.833</y>
             <speed>0.833333</speed>
             <time>68000</time>
         </point>
         <point>
-            <x>90.207</x>
-            <y>-919.39</y>
+            <x>89.312</x>
+            <y>-920.525</y>
             <speed>0.833333</speed>
             <time>70000</time>
         </point>
@@ -201,14 +201,14 @@
             <time>72000</time>
         </point>
         <point>
-            <x>37.881</x>
-            <y>-935.523</y>
+            <x>37.217</x>
+            <y>-935.578</y>
             <speed>0.833333</speed>
             <time>74000</time>
         </point>
         <point>
-            <x>45.204</x>
-            <y>-911.111</y>
+            <x>44.596</x>
+            <y>-910.489</y>
             <speed>0.833333</speed>
             <time>96000</time>
         </point>
