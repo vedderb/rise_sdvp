@@ -140,7 +140,6 @@ class Car {
 object CarSpec extends Commands2 {
   case class State(
     route:      List[RpPoint],
-    startRoute: List[RpPoint],
     routeInfo:  RouteInfo,
     faultNum:   Int)
 
@@ -156,7 +155,6 @@ object CarSpec extends Commands2 {
   def genInitialState: Gen[State] = {
     println("New initial state created")
     val s = State(
-      List.empty[RpPoint],
       getRoute(0, TestSettings.startRoute, 1000).asScala.toList,
       new RouteInfo(getRoute(0, TestSettings.outerRoute, 1000)),
       0)
@@ -173,6 +171,7 @@ object CarSpec extends Commands2 {
     sut.clearRoute()
     sut.resetUwbPosNow()
     sut.activateAutopilot(true)
+    sut.runSegments(state.route)
     TestResult.commands.clear()
     TestResult.uwbDiff.clear()
     TestResult.maxSpeed.clear()
@@ -197,16 +196,9 @@ object CarSpec extends Commands2 {
     speed <- Gen.choose(TestSettings.minKmh / 3.6 * 10.0, TestSettings.maxKmh / 3.6 * 10.0)
   } yield {
     state.routeInfo.setRandomSeed(seed)
-
     val r = state.routeInfo.generateRouteWithin(
-      points,
-      (state.route.size match {
-        case 0 => state.startRoute
-        case _ => state.route
-      }).asJava, speed.toDouble / 10.0, TestSettings.aheadMargin)
-
+      points, state.route.asJava, speed.toDouble / 10.0, TestSettings.aheadMargin)
     println("Segment size: " + r.size)
-
     RunSegment(r.subList(state.route.size, r.size).asScala.toList)
   }
   
