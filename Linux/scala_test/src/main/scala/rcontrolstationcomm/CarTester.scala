@@ -45,6 +45,7 @@ object TestSettings {
   var aheadMarginRecovery = 15
   var recoveryGenAttampts = 100
   var fiActive = true
+  var uwbMaxDiff = 1.0
 }
 
 object TestResult {
@@ -78,7 +79,7 @@ class Car {
     println("[CarCmd] Waiting for " + ms + " ms while polling the car position")
     waitPolling(TestSettings.carId, ms)
   }
-  
+
   def runSegments(route: List[RpPoint]): Boolean = {
     println("[CarCmd] Running generated segments")
     if (recoveryOk) {
@@ -87,7 +88,12 @@ class Car {
       waitUntilRouteAlmostEnded(TestSettings.carId, 4, res)
       TestResult.uwbDiff += res.maxUwbDiff
       TestResult.maxSpeed += res.maxSpeed
-      res.ok
+      if (res.maxUwbDiff > TestSettings.uwbMaxDiff) {
+        println("[Error] Too large difference between the UWB-based and RTKGNSS-based positions.");
+        false
+      } else {
+        true
+      }
     } else {
       println("[ERROR] Cannot run segments because following the recovery route failed")
       false
