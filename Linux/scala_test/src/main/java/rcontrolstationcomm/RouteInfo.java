@@ -113,7 +113,7 @@ public class RouteInfo {
 	}
 
 	public boolean hasRoute() {
-		return mRoute == null;
+		return mRoute != null;
 	}
 
 	public double xMin() {
@@ -334,7 +334,7 @@ public class RouteInfo {
 					xMin = xLast - maxDist;
 					yMax = yLast + maxDist;
 					yMin = yLast - maxDist;
-				} else if (pNow > 1) {					
+				} else if (pNow > 1) {
 					double xLast1 = r.get(pNow - 1).px();
 					double yLast1 = r.get(pNow - 1).py();
 					double xLast2 = r.get(pNow - 2).px();
@@ -401,6 +401,7 @@ public class RouteInfo {
 					if (pNow == 0) {
 						if (!isPointWithinRoutePolygon(px, py)) {
 							ok = false;
+							continue;
 						}
 					} else {
 						RpPoint p1 = r.get(pNow - 1);
@@ -410,10 +411,12 @@ public class RouteInfo {
 
 						if (!isSegmentWithinRoutePolygon(p1, p2)) {
 							ok = false;
+							continue;
 						}
 						
 						if (Utils.pointDistance(p1, p2) < minDist) {
 							ok = false;
+							continue;
 						}
 						
 						if (pNow > 1) {
@@ -429,6 +432,7 @@ public class RouteInfo {
 							if (abs(Utils.angleBetweenLines(px1, py1, px2, py2,
 									qx1, qy1, qx2, qy2)) > maxAng) {
 								ok = false;
+								continue;
 							}
 						}
 					}

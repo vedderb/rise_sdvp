@@ -57,6 +57,8 @@ object TestResult {
 
 class Car {
   var recoveryOk = true
+  var routeInfo = new RouteInfo
+  var lastSegments = List.empty[RpPoint]
   
   def clearRoute(): Boolean = {
     println("[CarCmd] Clearing route")
@@ -73,6 +75,14 @@ class Car {
   }
   
   def stopCar(): Unit = {
+    if (routeInfo.hasRoute() && !lastSegments.isEmpty) {
+      println("[CarCmd] Running slowdown route")
+      val r = routeInfo.generateRouteWithin(5, lastSegments.asJava, 0.8, TestSettings.aheadMargin)
+      addRoute(TestSettings.carId, r.subList(lastSegments.size, r.size), false, false, TestSettings.carRoute, 2000)
+      waitUntilRouteAlmostEnded(TestSettings.carId, 3)
+    }
+    
+    println("[CarCmd] Stopping car")
     brakeAndWaitUntilStoppedPolling(TestSettings.carId, 50.0)
   }
   
@@ -82,8 +92,9 @@ class Car {
   }
 
   def runSegments(route: List[RpPoint]): Boolean = {
-    println("[CarCmd] Running generated segments")
+    println("[CarCmd] Running segments")
     if (recoveryOk) {
+      lastSegments = route
       addRoute(TestSettings.carId, route.asJava, false, false, TestSettings.carRoute, 2000)
       val res = new WaitRouteResult
       waitUntilRouteAlmostEnded(TestSettings.carId, 4, res)
@@ -167,6 +178,7 @@ object CarSpec extends Commands2 {
   def newSut(state: State): Sut = {
     println("New SUT created")
     val sut = new Sut
+    sut.routeInfo = state.routeInfo
     sut.clearFaults()
     sut.clearRoute()
     sut.runRecoveryRouteV2(state.routeInfo, TestSettings.carRoute)
@@ -181,7 +193,6 @@ object CarSpec extends Commands2 {
   }
 
   def destroySut(sut: Sut): Unit = {
-    sut.activateAutopilot(false)
     sut.stopCar()
   }
 
