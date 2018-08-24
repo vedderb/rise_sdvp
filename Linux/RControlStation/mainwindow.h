@@ -32,6 +32,10 @@
 #include "rtcm3_simple.h"
 #include "intersectiontest.h"
 
+#ifdef HAS_LIME_SDR
+#include "gpssim.h"
+#endif
+
 #ifdef HAS_JOYSTICK
 #include "joystick.h"
 #endif
@@ -151,6 +155,7 @@ private slots:
     void on_anchorHeightBox_valueChanged(double arg1);
     void on_removeAnchorsButton_clicked();
     void on_mapDrawRouteTextBox_toggled(bool checked);
+    void on_actionGPSSimulator_triggered();
 
 private:
     Ui::MainWindow *ui;
@@ -179,6 +184,10 @@ private:
 #ifdef HAS_JOYSTICK
     Joystick *mJoystick;
     JS_TYPE mJsType;
+#endif
+
+#ifdef HAS_LIME_SDR
+    GpsSim *mGpsSim;
 #endif
 
     void saveRoutes(bool withId);

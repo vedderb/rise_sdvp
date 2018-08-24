@@ -1,11 +1,5 @@
-#ifndef INTERSECTIONTEST_H
-#define INTERSECTIONTEST_H
-
-#include <QDialog>
-#include "datatypes.h"
-#include "carinterface.h"
 /*
-    Copyright 2017 Benjamin Vedder	benjamin@vedder.se
+    Copyright 2018 Benjamin Vedder	benjamin@vedder.se
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -21,40 +15,42 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef GPSSIM_H
+#define GPSSIM_H
+
+#include <QDialog>
+#include <QTimer>
 #include "mapwidget.h"
-#include "packetinterface.h"
+#include "limesdr.h"
 
 namespace Ui {
-class IntersectionTest;
+class GpsSim;
 }
 
-class IntersectionTest : public QDialog
+class GpsSim : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit IntersectionTest(QWidget *parent = 0);
-    ~IntersectionTest();
-    void setCars(QList<CarInterface*> *cars);
+    explicit GpsSim(QWidget *parent = 0);
+    ~GpsSim();
     void setMap(MapWidget *map);
-    void setPacketInterface(PacketInterface *packet);
-
-public slots:
-    void nComRx(const ncom_data &data);
 
 private slots:
-    void on_runButton_clicked();
+    void timerSlot();
+    void statusUpdate(QString str);
+
+    void on_startButton_clicked();
     void on_stopButton_clicked();
+    void on_setPosButton_clicked();
+    void on_clearButton_clicked();
 
 private:
-    Ui::IntersectionTest *ui;
-    QList<CarInterface*> *mCars;
+    Ui::GpsSim *ui;
     MapWidget *mMap;
-    PacketInterface *mPacketInterface;
-    ncom_data mRtRangeData;
-    int mRtRangeInt;
-    bool mRunning;
+    LimeSDR *mSdr;
+    QTimer *mTimer;
 
 };
 
-#endif // INTERSECTIONTEST_H
+#endif // GPSSIM_H

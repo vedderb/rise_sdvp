@@ -69,4 +69,7 @@
         <file>Icons/size_off.png</file>
         <file>Icons/size_on.png</file>
     </qresource>
+    <qresource prefix="/">
+        <file>res/brdc0990.18n</file>
+    </qresource>
 </RCC>

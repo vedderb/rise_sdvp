@@ -225,6 +225,7 @@ void CarInterface::setStateData(CAR_STATE data)
         LocPoint ap_goal = car->getApGoal();
         loc.setYaw(data.yaw * M_PI / 180.0);
         loc.setXY(data.px, data.py);
+        loc.setSpeed(data.speed);
         loc_gps.setXY(data.px_gps, data.py_gps);
         loc_uwb.setXY(data.px_uwb, data.py_uwb);
         ap_goal.setXY(data.ap_goal_px, data.ap_goal_py);

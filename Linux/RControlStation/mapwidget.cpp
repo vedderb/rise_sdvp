@@ -182,14 +182,14 @@ MapWidget::MapWidget(QWidget *parent) : QWidget(parent)
     mInfoTraces.append(l);
 
     // Set this to the SP base station position for now
-    //    mRefLat = 57.71495867;
-    //    mRefLon = 12.89134921;
-    //    mRefHeight = 219.0;
+    mRefLat = 57.71495867;
+    mRefLon = 12.89134921;
+    mRefHeight = 219.0;
 
     // ASTA
-    mRefLat = 57.78100308;
-    mRefLon = 12.76925422;
-    mRefHeight = 253.76;
+//    mRefLat = 57.78100308;
+//    mRefLon = 12.76925422;
+//    mRefHeight = 253.76;
 
     // Home
     //    mRefLat = 57.57848470;

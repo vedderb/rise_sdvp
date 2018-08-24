@@ -99,6 +99,11 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->nComWidget, SIGNAL(dataRx(ncom_data)),
             mIntersectionTest, SLOT(nComRx(ncom_data)));
 
+#ifdef HAS_LIME_SDR
+    mGpsSim = new GpsSim(this);
+    mGpsSim->setMap(ui->mapWidget);
+#endif
+
     mKeyUp = false;
     mKeyDown = false;
     mKeyLeft = false;
@@ -1984,4 +1989,15 @@ void MainWindow::saveRoutes(bool withId)
 void MainWindow::on_mapDrawRouteTextBox_toggled(bool checked)
 {
     ui->mapWidget->setDrawRouteText(checked);
+}
+
+void MainWindow::on_actionGPSSimulator_triggered()
+{
+#ifdef HAS_LIME_SDR
+    mGpsSim->show();
+#else
+    QMessageBox::warning(this, "GPS Simulator",
+                         "This version of RControlStation is not built with LIME SDR support, which "
+                         "is required for the GPS simulator.");
+#endif
 }
