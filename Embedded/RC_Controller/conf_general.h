@@ -46,11 +46,6 @@
 //#define CAR_TERO // Benjamins tero car
 //#define EBIKE_BENJAMIN // Benjamins ebike
 
-// Defaults for different cars
-#ifdef CAR_TERO
-#define BOARD_YAW_ROT				180.0
-#endif
-
 // Differential steering
 #ifndef HAS_DIFF_STEERING
 #define HAS_DIFF_STEERING			0
