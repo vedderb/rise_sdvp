@@ -54,6 +54,7 @@ void showHelp()
     qDebug() << "--chronos : Run CHRONOS client";
     qDebug() << "--ntrip [server]:[stream]:[user]:[password]:[port] : Connect to ntrip server";
     qDebug() << "--rtcmbasepos [lat]:[lon]:[height] : Inject RTCM base position message";
+    qDebug() << "--batterycells : Number of cells in series, e.g. for the GUI battery indicator";
 #ifdef HAS_GUI
     qDebug() << "--usegui : Use QML GUI";
 #endif
@@ -103,6 +104,7 @@ int main(int argc, char *argv[])
     double rtcmBaseLat = 0.0;
     double rtcmBaseLon = 0.0;
     double rtcmBaseHeight = 0.0;
+    int batteryCells = 10;
 
 #ifdef HAS_GUI
     bool useGui = false;
@@ -304,6 +306,15 @@ int main(int argc, char *argv[])
             }
         }
 
+        if (str == "--batterycells") {
+            if ((i - 1) < args.size()) {
+                i++;
+                bool ok;
+                batteryCells = args.at(i).toInt(&ok);
+                found = ok;
+            }
+        }
+
 #ifdef HAS_GUI
         if (str == "--usegui") {
             useGui = true;
@@ -334,6 +345,7 @@ int main(int argc, char *argv[])
     car.startUbxServer(tcpUbxPort);
     car.startLogServer(tcpLogPort);
     car.restartRtklib();
+    car.setBatteryCells(batteryCells);
 
     if (car.isRtklibRunning()) {
         car.connectNmea(tcpNmeaServer, tcpNmeaPort);

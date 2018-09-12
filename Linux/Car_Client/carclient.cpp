@@ -63,6 +63,7 @@ CarClient::CarClient(QObject *parent) : QObject(parent)
     mLogFlushTimer = new QTimer(this);
     mLogFlushTimer->start(2000);
     mRtklibRunning = false;
+    mBatteryCells = 10;
 
     mHostAddress = QHostAddress("0.0.0.0");
     mUdpPort = 0;
@@ -412,6 +413,16 @@ QVariantList CarClient::getNetworkAddresses()
     }
 
     return res;
+}
+
+int CarClient::getBatteryCells()
+{
+    return mBatteryCells;
+}
+
+void CarClient::setBatteryCells(int cells)
+{
+    mBatteryCells = cells;
 }
 
 void CarClient::serialDataAvailable()

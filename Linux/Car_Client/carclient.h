@@ -72,6 +72,8 @@ public:
     void setSendRtcmBasePos(bool send, double lat = 0.0, double lon = 0.0, double height = 0.0);
     Q_INVOKABLE void rebootSystem(bool powerOff = false);
     Q_INVOKABLE QVariantList getNetworkAddresses();
+    Q_INVOKABLE int getBatteryCells();
+    void setBatteryCells(int cells);
 
 signals:
 
@@ -119,6 +121,7 @@ private:
     QFile mLog;
     Ublox *mUblox;
     bool mRtklibRunning;
+    int mBatteryCells;
 
     double mRtcmBaseLat;
     double mRtcmBaseLon;

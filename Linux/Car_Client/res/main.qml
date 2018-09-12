@@ -47,7 +47,6 @@ ApplicationWindow {
     property double pyLast: 0.0
     property double distanceTravelled: 0.0
     property string solutionName
-    property string batteryColor
     property double yaw: 0.0
     property int seconds: 0
     property int minutes: 0
@@ -241,7 +240,7 @@ ApplicationWindow {
                             opacity: 1
                             border.color: "black"
                             border.width: 2
-                            color: batteryColor
+                            color: "green"
                         }
 
                         Label {
@@ -510,7 +509,8 @@ ApplicationWindow {
                     return;
                 }
 
-                currentBatteryPercentage = ((state.vin - 34.0) / 8.0) * 100.0
+                currentBatteryPercentage = ((state.vin - (3.4 * carClient.getBatteryCells())) /
+                                            (0.8 * carClient.getBatteryCells())) * 100.0
                 currentBatteryVoltage = state.vin
 
                 if (currentBatteryPercentage < 0) {
@@ -519,11 +519,11 @@ ApplicationWindow {
                     currentBatteryPercentage = 100
                 }
                 if (currentBatteryPercentage < 10) {
-                    batteryColor = "red"
+                    batteryRectangle.color = "red"
                 } else if (currentBatteryPercentage < 30) {
-                    batteryColor = "yellow"
+                    batteryRectangle.color = "yellow"
                 } else {
-                    batteryColor = "green"
+                    batteryRectangle.color = "green"
                 }
 
                 var timeDiff = (new Date().getTime() - timeLast)/1000.0
