@@ -1996,3 +1996,8 @@ void MainWindow::on_actionGPSSimulator_triggered()
                          "is required for the GPS simulator.");
 #endif
 }
+
+void MainWindow::on_mapDrawUwbTraceBox_toggled(bool checked)
+{
+    ui->mapWidget->setDrawUwbTrace(checked);
+}

@@ -126,6 +126,9 @@ public:
     bool getDrawRouteText() const;
     void setDrawRouteText(bool drawRouteText);
 
+    bool getDrawUwbTrace() const;
+    void setDrawUwbTrace(bool drawUwbTrace);
+
 signals:
     void scaleChanged(double newScale);
     void offsetChanged(double newXOffset, double newYOffset);
@@ -194,6 +197,7 @@ private:
     QList<QPixmap> mPixmaps;
     bool mAnchorMode;
     bool mDrawRouteText;
+    bool mDrawUwbTrace;
 
     void updateClosestInfoPoint();
     int drawInfoPoints(QPainter &painter, const QList<LocPoint> &pts,

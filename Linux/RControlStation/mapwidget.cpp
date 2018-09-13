@@ -166,6 +166,7 @@ MapWidget::MapWidget(QWidget *parent) : QWidget(parent)
     mInfoTraceNow = 0;
     mAnchorMode = false;
     mDrawRouteText = true;
+    mDrawUwbTrace = false;
 
     mOsm = new OsmClient(this);
     mDrawOpenStreetmap = true;
@@ -789,6 +790,17 @@ bool MapWidget::getDrawRouteText() const
 void MapWidget::setDrawRouteText(bool drawRouteText)
 {
     mDrawRouteText = drawRouteText;
+    update();
+}
+
+bool MapWidget::getDrawUwbTrace() const
+{
+    return mDrawUwbTrace;
+}
+
+void MapWidget::setDrawUwbTrace(bool drawUwbTrace)
+{
+    mDrawUwbTrace = drawUwbTrace;
     update();
 }
 
@@ -1645,13 +1657,15 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
     }
 
     // Draw UWB trace for the selected car
-    pen.setWidthF(2.5 / mScaleFactor);
-    pen.setColor(Qt::green);
-    painter.setPen(pen);
-    painter.setTransform(drawTrans);
-    for (int i = 1;i < mCarTraceUwb.size();i++) {
-        painter.drawLine(mCarTraceUwb[i - 1].getX() * 1000.0, mCarTraceUwb[i - 1].getY() * 1000.0,
-                mCarTraceUwb[i].getX() * 1000.0, mCarTraceUwb[i].getY() * 1000.0);
+    if (mDrawUwbTrace) {
+        pen.setWidthF(2.5 / mScaleFactor);
+        pen.setColor(Qt::green);
+        painter.setPen(pen);
+        painter.setTransform(drawTrans);
+        for (int i = 1;i < mCarTraceUwb.size();i++) {
+            painter.drawLine(mCarTraceUwb[i - 1].getX() * 1000.0, mCarTraceUwb[i - 1].getY() * 1000.0,
+                    mCarTraceUwb[i].getX() * 1000.0, mCarTraceUwb[i].getY() * 1000.0);
+        }
     }
 
     // Draw routes
@@ -1812,9 +1826,11 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
         // Print data
         QTime t = QTime::fromMSecsSinceStartOfDay(carInfo.getTime());
         txt.sprintf("%s\n"
+                    "Sol: %s\n"
                     "(%.3f, %.3f, %.0f)\n"
                     "%02d:%02d:%02d:%03d",
                     carInfo.getName().toLocal8Bit().data(),
+                    carInfo.getLocationGps().getInfo().toLocal8Bit().data(),
                     pos.getX(), pos.getY(), angle,
                     t.hour(), t.minute(), t.second(), t.msec());
         pt_txt.setX(x + 120 + (car_w - 190) * ((cos(pos.getYaw()) + 1) / 2));
@@ -1822,7 +1838,7 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
         painter.setTransform(txtTrans);
         pt_txt = drawTrans.map(pt_txt);
         rect_txt.setCoords(pt_txt.x(), pt_txt.y() - 20,
-                           pt_txt.x() + 300, pt_txt.y() + 25);
+                           pt_txt.x() + 300, pt_txt.y() + 50);
         painter.drawText(rect_txt, txt);
     }
 

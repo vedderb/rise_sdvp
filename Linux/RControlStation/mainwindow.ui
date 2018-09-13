@@ -2117,7 +2117,7 @@
                    <x>0</x>
                    <y>0</y>
                    <width>210</width>
-                   <height>668</height>
+                   <height>693</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_15">
@@ -2187,6 +2187,13 @@
                        </property>
                        <property name="checked">
                         <bool>true</bool>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QCheckBox" name="mapDrawUwbTraceBox">
+                       <property name="text">
+                        <string>Draw UWB Trace</string>
                        </property>
                       </widget>
                      </item>

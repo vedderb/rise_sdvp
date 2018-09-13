@@ -156,6 +156,7 @@ private slots:
     void on_removeAnchorsButton_clicked();
     void on_mapDrawRouteTextBox_toggled(bool checked);
     void on_actionGPSSimulator_triggered();
+    void on_mapDrawUwbTraceBox_toggled(bool checked);
 
 private:
     Ui::MainWindow *ui;

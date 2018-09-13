@@ -504,6 +504,16 @@ void CarInterface::nmeaReceived(quint8 id, QByteArray nmea_msg)
 {
     if (id == mId) {
         ui->nmeaWidget->inputNmea(nmea_msg);
+
+        if (mMap) {
+            CarInfo *car = mMap->getCarInfo(mId);
+
+            if (car) {
+                LocPoint loc_gps = car->getLocationGps();
+                loc_gps.setInfo(ui->nmeaWidget->fixType());
+                car->setLocationGps(loc_gps);
+            }
+        }
     }
 }
 

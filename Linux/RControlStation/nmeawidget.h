@@ -33,6 +33,7 @@ public:
     explicit NmeaWidget(QWidget *parent = 0);
     ~NmeaWidget();
     void inputNmea(QByteArray msg);
+    QString fixType() const;
 
 private slots:
     void on_nmeaLogChooseButton_clicked();
@@ -42,6 +43,7 @@ private slots:
 private:
     Ui::NmeaWidget *ui;
     TcpBroadcast *mNmeaForwardServer;
+    QString mFixType;
 
 };
 
