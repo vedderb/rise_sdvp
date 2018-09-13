@@ -1,5 +1,5 @@
 /*
-    Copyright 2016 Benjamin Vedder	benjamin@vedder.se
+    Copyright 2016 - 2018 Benjamin Vedder	benjamin@vedder.se
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -36,51 +36,30 @@ class BaseStation : public QWidget
 public:
     explicit BaseStation(QWidget *parent = 0);
     ~BaseStation();
-    int getAvgPosLlh(double &lat, double &lon, double &height);
     void setMap(MapWidget *map);
 
 signals:
     void rtcmOut(QByteArray data);
 
 private slots:
-    void tcpInputConnected();
-    void tcpInputDisconnected();
-    void tcpInputDataAvailable();
-    void tcpInputError(QAbstractSocket::SocketError socketError);
     void timerSlot();
-    void rxGga(int fields, NmeaServer::nmea_gga_info_t gga);
     void rxRawx(ubx_rxm_rawx rawx);
+    void rxNavSol(ubx_nav_sol sol);
 
-    void on_nmeaConnectButton_clicked();
-    void on_nmeaSampleClearButton_clicked();
     void on_ubxSerialRefreshButton_clicked();
     void on_ubxSerialDisconnectButton_clicked();
     void on_ubxSerialConnectButton_clicked();
-    void on_refGetButton_clicked();
     void on_tcpServerBox_toggled(bool checked);
 
 private:
     Ui::BaseStation *ui;
-    QTcpSocket *mTcpSocket;
-    bool mTcpConnected;
     QTimer *mTimer;
     Ublox *mUblox;
     TcpBroadcast *mTcpServer;
-    int mBasePosCnt;
     MapWidget *mMap;
+    int mBasePosCnt;
+    bool mBasePosSet;
 
-    double mXNow;
-    double mYNow;
-    double mZNow;
-    double mXAvg;
-    double mYAvg;
-    double mZAvg;
-    double mAvgSamples;
-
-    QString mFixNowStr;
-    QString mSatNowStr;
-
-    void updateNmeaText();
 };
 
 #endif // BASESTATION_H

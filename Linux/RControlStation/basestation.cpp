@@ -1,5 +1,5 @@
 /*
-    Copyright 2016 - 2017 Benjamin Vedder	benjamin@vedder.se
+    Copyright 2016 - 2018 Benjamin Vedder	benjamin@vedder.se
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -32,41 +32,22 @@ BaseStation::BaseStation(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    mTcpSocket = new QTcpSocket(this);
-    mTcpConnected = false;
-    mXNow = 0.0;
-    mYNow = 0.0;
-    mZNow = 0.0;
-    mXAvg = 0.0;
-    mYAvg = 0.0;
-    mZAvg = 0.0;
-    mAvgSamples = 0.0;
-    mBasePosCnt = 0;
     mMap = 0;
-
-    mFixNowStr = "Solution...";
-    mSatNowStr = "Sats...";
-
     mUblox = new Ublox(this);
     mTcpServer = new TcpBroadcast(this);
+    mBasePosCnt = 0;
+    mBasePosSet = false;
 
     mTimer = new QTimer(this);
     mTimer->start(20);
 
-    connect(mTcpSocket, SIGNAL(readyRead()), this, SLOT(tcpInputDataAvailable()));
-    connect(mTcpSocket, SIGNAL(connected()), this, SLOT(tcpInputConnected()));
-    connect(mTcpSocket, SIGNAL(disconnected()),
-            this, SLOT(tcpInputDisconnected()));
-    connect(mTcpSocket, SIGNAL(error(QAbstractSocket::SocketError)),
-            this, SLOT(tcpInputError(QAbstractSocket::SocketError)));
     connect(mTimer, SIGNAL(timeout()),
             this, SLOT(timerSlot()));
-    connect(mUblox, SIGNAL(rxGga(int,NmeaServer::nmea_gga_info_t)),
-            this, SLOT(rxGga(int,NmeaServer::nmea_gga_info_t)));
     connect(mUblox, SIGNAL(rxRawx(ubx_rxm_rawx)),
             this, SLOT(rxRawx(ubx_rxm_rawx)));
+    connect(mUblox, SIGNAL(rxNavSol(ubx_nav_sol)),
+            this, SLOT(rxNavSol(ubx_nav_sol)));
 
-    updateNmeaText();
     on_ubxSerialRefreshButton_clicked();
 }
 
@@ -75,71 +56,9 @@ BaseStation::~BaseStation()
     delete ui;
 }
 
-int BaseStation::getAvgPosLlh(double &lat, double &lon, double &height)
-{
-    double xAvg = mXAvg / mAvgSamples;
-    double yAvg = mYAvg / mAvgSamples;
-    double zAvg = mZAvg / mAvgSamples;
-
-    utility::xyzToLlh(xAvg, yAvg, zAvg, &lat, &lon, &height);
-
-    return (int)mAvgSamples;
-}
-
 void BaseStation::setMap(MapWidget *map)
 {
     mMap = map;
-}
-
-void BaseStation::tcpInputConnected()
-{
-    ui->nmeaConnectButton->setEnabled(true);
-    ui->nmeaConnectButton->setToolTip("Disconnect");
-    ui->nmeaConnectButton->setText("");
-    ui->nmeaConnectButton->setIcon(QIcon(":/models/Icons/Disconnected-96.png"));
-    mTcpConnected = true;
-}
-
-void BaseStation::tcpInputDisconnected()
-{
-    ui->nmeaConnectButton->setEnabled(true);
-    ui->nmeaConnectButton->setToolTip("Connect");
-    ui->nmeaConnectButton->setText("");
-    ui->nmeaConnectButton->setIcon(QIcon(":/models/Icons/Connected-96.png"));
-    mTcpConnected = false;
-}
-
-void BaseStation::tcpInputDataAvailable()
-{
-    QByteArray nmea_msg =  mTcpSocket->readAll();
-
-    NmeaServer::nmea_gga_info_t gga;
-    QTextStream msgs(nmea_msg);
-
-    while(!msgs.atEnd()) {
-        QString str = msgs.readLine();
-        QByteArray data = str.toLocal8Bit();
-
-        int fields = NmeaServer::decodeNmeaGGA(data, gga);
-        rxGga(fields, gga);
-    }
-}
-
-void BaseStation::tcpInputError(QAbstractSocket::SocketError socketError)
-{
-    (void)socketError;
-
-    QString errorStr = mTcpSocket->errorString();
-    qWarning() << "TcpError:" << errorStr;
-    QMessageBox::warning(this, "BaseStation TCP Error", errorStr);
-
-    mTcpSocket->close();
-
-    ui->nmeaConnectButton->setEnabled(true);
-    ui->nmeaConnectButton->setToolTip("Connect");
-    ui->nmeaConnectButton->setText("");
-    ui->nmeaConnectButton->setIcon(QIcon(":/models/Icons/Connected-96.png"));
-    mTcpConnected = false;
 }
 
 void BaseStation::timerSlot()
@@ -155,83 +74,6 @@ void BaseStation::timerSlot()
             ui->ubxSerialConnectedLabel->setText("Not connected");
         }
     }
-}
-
-void BaseStation::rxGga(int fields, NmeaServer::nmea_gga_info_t gga)
-{
-    if (fields >= 2) {
-        mSatNowStr.sprintf("Satellites: %d", gga.n_sat);
-
-        //qDebug() << data;
-        //qDebug() << QString().sprintf("%.9f", gga.lat);
-
-        switch (gga.fix_type) {
-        case 0: mFixNowStr = "Solution: Invalid"; break;
-        case 1: mFixNowStr = "Solution: SPP"; break;
-        case 2: mFixNowStr = "Solution: DGPS"; break;
-        case 3: mFixNowStr = "Solution: PPS"; break;
-        case 4: mFixNowStr = "Solution: RTK Fix"; break;
-        case 5: mFixNowStr = "Solution: RTK Float"; break;
-        default: mFixNowStr = "Solution: Unknown"; break;
-        }
-
-        if (gga.fix_type == 1 || gga.fix_type == 2 || gga.fix_type == 4 || gga.fix_type == 5) {
-            utility::llhToXyz(gga.lat, gga.lon, gga.height, &mXNow, &mYNow, &mZNow);
-            mXAvg += mXNow;
-            mYAvg += mYNow;
-            mZAvg += mZNow;
-            mAvgSamples += 1.0;
-
-            if (mMap && ui->ubxPlotMapBox->isChecked()) {
-                double i_llh[3];
-
-                mMap->getEnuRef(i_llh);
-
-                double llh[3];
-                double xyz[3];
-
-                llh[0] = gga.lat;
-                llh[1] = gga.lon;
-                llh[2] = gga.height;
-                utility::llhToEnu(i_llh, llh, xyz);
-
-                LocPoint p;
-                p.setXY(xyz[0], xyz[1]);
-                QString info;
-
-                QString fix_t = "Unknown";
-                if (gga.fix_type == 4) {
-                    fix_t = "RTK fix";
-                    p.setColor(Qt::green);
-                } else if (gga.fix_type == 5) {
-                    fix_t = "RTK float";
-                    p.setColor(Qt::yellow);
-                } else if (gga.fix_type == 1) {
-                    fix_t = "Single";
-                    p.setColor(Qt::red);
-                }
-
-                info.sprintf("Fix type: %s\n"
-                             "Sats    : %d\n"
-                             "Height  : %.2f",
-                             fix_t.toLocal8Bit().data(),
-                             gga.n_sat,
-                             gga.height);
-
-                p.setInfo(info);
-                mMap->addInfoPoint(p);
-
-                if (ui->ubxFollowMapBox->isChecked()) {
-                    mMap->moveView(p.getX(), p.getY());
-                }
-            }
-        }
-    } else {
-        mFixNowStr = "Solution: Invalid";
-        mSatNowStr = "Satellites: 0";
-    }
-
-    updateNmeaText();
 }
 
 void BaseStation::rxRawx(ubx_rxm_rawx rawx)
@@ -364,60 +206,96 @@ void BaseStation::rxRawx(ubx_rxm_rawx rawx)
     }
 }
 
-void BaseStation::on_nmeaConnectButton_clicked()
+void BaseStation::rxNavSol(ubx_nav_sol sol)
 {
-    if (mTcpConnected) {
-        mTcpSocket->abort();
+    double llh[3];
+    utility::xyzToLlh(sol.ecef_x, sol.ecef_y, sol.ecef_z, &llh[0], &llh[1], &llh[2]);
 
-        ui->nmeaConnectButton->setEnabled(true);
-        ui->nmeaConnectButton->setToolTip("Connect");
-        ui->nmeaConnectButton->setText("");
-        ui->nmeaConnectButton->setIcon(QIcon(":/models/Icons/Connected-96.png"));
-        mTcpConnected = false;
-    } else {
-        mTcpSocket->abort();
-        mTcpSocket->connectToHost(ui->nmeaServerEdit->text(), ui->nmeaPortBox->value());
+    QString txt = QString(
+                "Lat:    %1\n"
+                "Lon:    %2\n"
+                "Height: %3\n"
+                "Sats:   %4\n"
+                "P ACC:  %5 m").
+            arg(llh[0]).
+            arg(llh[1]).
+            arg(llh[2]).
+            arg(sol.num_sv).
+            arg(sol.p_acc);
 
-        ui->nmeaConnectButton->setEnabled(false);
-        ui->nmeaConnectButton->setText("Connecting...");
+    if (mMap && ui->ubxPlotMapBox->isChecked()) {
+        double i_llh[3];
+
+        mMap->getEnuRef(i_llh);
+
+        double xyz[3];
+        utility::llhToEnu(i_llh, llh, xyz);
+
+        LocPoint p;
+        p.setXY(xyz[0], xyz[1]);
+        QString info;
+
+        QString fix_t = "Unknown";
+        if (sol.diffsoln) {
+            fix_t = "RTK";
+            p.setColor(Qt::green);
+        } else {
+            fix_t = "Single";
+            p.setColor(Qt::red);
+        }
+
+        info.sprintf("Fix type: %s\n"
+                     "Sats    : %d\n"
+                     "Height  : %.2f",
+                     fix_t.toLocal8Bit().data(),
+                     sol.num_sv,
+                     llh[2]);
+
+        p.setInfo(info);
+        mMap->addInfoPoint(p);
+
+        if (ui->ubxFollowMapBox->isChecked()) {
+            mMap->moveView(p.getX(), p.getY());
+        }
     }
-}
 
-void BaseStation::on_nmeaSampleClearButton_clicked()
-{
-    mXAvg = 0.0;
-    mYAvg = 0.0;
-    mZAvg = 0.0;
-    mAvgSamples = 0.0;
+    ui->ubxText->clear();
+    ui->ubxText->appendPlainText(txt);
 
-    updateNmeaText();
-}
+    if (sol.p_acc < ui->surveyInMinAccBox->value() && ui->surveyInBox->isChecked()) {
+        ui->sendBaseBox->setChecked(true);
 
-void BaseStation::updateNmeaText()
-{
-    QString sampStr;
-    sampStr.sprintf("Samples %d", (int)mAvgSamples);
-    ui->nmeaSampleLabel->setText(sampStr);
+        if (mBasePosSet) {
+            double xyz[3];
+            utility::llhToXyz(ui->refSendLatBox->value(),
+                              ui->refSendLonBox->value(),
+                              ui->refSendHBox->value(),
+                              &xyz[0], &xyz[1], &xyz[2]);
 
-    double xAvg = mXAvg / mAvgSamples;
-    double yAvg = mYAvg / mAvgSamples;
-    double zAvg = mZAvg / mAvgSamples;
+            double diff = sqrt(pow(sol.ecef_x - xyz[0], 2.0) +
+                    pow(sol.ecef_y - xyz[1], 2.0) +
+                    pow(sol.ecef_z - xyz[2], 2.0));
 
-    double lat_now, lon_now, height_now;
-    double lat_avg, lon_avg, height_avg;
+            ui->ubxText->appendPlainText(QString("Diff:   %1").arg(diff));
 
-    utility::xyzToLlh(mXNow, mYNow, mZNow, &lat_now, &lon_now, &height_now);
-    utility::xyzToLlh(xAvg, yAvg, zAvg, &lat_avg, &lon_avg, &height_avg);
+            if (diff > ui->surveyInMaxDiffBox->value()) {
+                QMessageBox::warning(this, "Base station",
+                                     QString("Base seems to have moved %1 m, "
+                                             "updating base station position.")
+                                     .arg(diff));
 
-    QString statStr;
-    statStr += mFixNowStr + "\n" + mSatNowStr + "\n\n";
-    statStr += QString().sprintf("XYZ Now: %.3f, %.3f, %.3f\n", mXNow, mYNow, mZNow);
-    statStr += QString().sprintf("LLH Now: %.8f, %.8f, %.3f\n\n", lat_now, lon_now, height_now);
 
-    statStr += QString().sprintf("XYZ Avg: %.3f, %.3f, %.3f\n", xAvg, yAvg, zAvg);
-    statStr += QString().sprintf("LLH Avg: %.8f, %.8f, %.3f", lat_avg, lon_avg, height_avg);
-
-    ui->nmeaBrowser->setText(statStr);
+                ui->refSendLatBox->setValue(llh[0]);
+                ui->refSendLonBox->setValue(llh[1]);
+                ui->refSendHBox->setValue(llh[2]);
+            }
+        } else {
+            ui->refSendLatBox->setValue(llh[0]);
+            ui->refSendLonBox->setValue(llh[1]);
+            ui->refSendHBox->setValue(llh[2]);
+            mBasePosSet = true;
+        }
+    }
 }
 
 void BaseStation::on_ubxSerialRefreshButton_clicked()
@@ -426,7 +304,11 @@ void BaseStation::on_ubxSerialRefreshButton_clicked()
 
     QList<QSerialPortInfo> ports = QSerialPortInfo::availablePorts();
     foreach(const QSerialPortInfo &port, ports) {
-        ui->ubxSerialPortBox->addItem(port.portName(), port.systemLocation());
+        if (port.manufacturer().toLower().replace("-", "").contains("ublox")) {
+            ui->ubxSerialPortBox->insertItem(0, "Ublox - " + port.portName(), port.systemLocation());
+        } else {
+            ui->ubxSerialPortBox->addItem(port.portName(), port.systemLocation());
+        }
     }
 
     ui->ubxSerialPortBox->setCurrentIndex(0);
@@ -461,7 +343,7 @@ void BaseStation::on_ubxSerialConnectButton_clicked()
         mUblox->ubxCfgRate(1000, 1, 0);
         mUblox->ubxCfgMsg(UBX_CLASS_RXM, UBX_RXM_RAWX, 1); // Every second
         mUblox->ubxCfgMsg(UBX_CLASS_RXM, UBX_RXM_SFRBX, 1); // Every second
-        mUblox->ubxCfgMsg(UBX_CLASS_NMEA, UBX_NMEA_GGA, 1); // Every second
+        mUblox->ubxCfgMsg(UBX_CLASS_NAV, UBX_NAV_SOL, 1); // Every second
 
         // Stationary dynamic model
         ubx_cfg_nav5 nav5;
@@ -507,19 +389,6 @@ void BaseStation::on_ubxSerialConnectButton_clicked()
         cfg.dev_bbr = true;
         cfg.dev_flash = true;
         mUblox->ubloxCfgCfg(&cfg);
-    }
-}
-
-void BaseStation::on_refGetButton_clicked()
-{
-    double lat, lon, height;
-    if (getAvgPosLlh(lat, lon, height) > 0) {
-        ui->refSendLatBox->setValue(lat);
-        ui->refSendLonBox->setValue(lon);
-        ui->refSendHBox->setValue(height);
-    } else {
-        QMessageBox::warning(this, "Reference Position",
-                             "No samples collected yet.");
     }
 }
 

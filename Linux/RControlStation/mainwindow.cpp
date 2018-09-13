@@ -517,13 +517,8 @@ void MainWindow::rtcmReceived(QByteArray data)
 
 void MainWindow::rtcmRefPosGet()
 {
-    double lat, lon, height;
-    if (ui->baseStationWidget->getAvgPosLlh(lat, lon, height) > 0) {
-        ui->rtcmWidget->setRefPos(lat, lon, height);
-    } else {
-        QMessageBox::warning(this, "Reference Position",
-                             "No samples collected yet.");
-    }
+    QMessageBox::warning(this, "Reference Position",
+                         "Not implemented yet");
 }
 
 void MainWindow::pingRx(int time, QString msg)
