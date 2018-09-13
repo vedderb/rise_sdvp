@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# sudo apt-get install cmake libjpeg8-dev
+# cd
+# git clone https://github.com/jacksonliam/mjpg-streamer
+# cd /home/pi/mjpg-streamer/mjpg-streamer-experimental
+# make
+# sudo make install
+
+cd /home/pi/mjpg-streamer/mjpg-streamer-experimental
+mjpg_streamer -i "./input_uvc.so -fps 15 -r 1280x720" -o "./output_http.so -w ./www"
+

@@ -1,0 +1,5 @@
+#!/bin/bash
+
+#ffmpeg -f v4l2 -framerate 30 -video_size 800x448 -input_format yuyv422 -i /dev/video0 -f alsa -i default:CARD=C920 -vcodec h264_omx -b:v 1000k -c:a libmp3lame -b:a 96k -ar 44100 -f flv rtmp://localhost:8083/myapp/mystream
+
+cvlc -vvv alsa://default:CARD=C920 --sout '#transcode{acodec=mp3,ab=128}:standard{access=http,mux=ts,dst=:8082}'

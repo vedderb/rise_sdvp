@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# sudo apt install screen
+# crontab -e
+# add
+# @reboot /home/pi/start_screen
+
+# CLI
+#screen -d -m -S car bash -c 'cd /home/pi/rise_sdvp/Linux/Car_Client && ./Car_Client -p /dev/car --useudp --logusb --usetcp ; bash'
+
+# GUI
+screen -d -m -S car bash -c 'cd /home/pi/rise_sdvp/Linux/Car_Client && export DISPLAY=:0 && sleep 15 && ./Car_Client -p /dev/car --useudp --logusb --usetcp --usegui --baterrycells 10 ; bash'
+
+# SSH reverse Tunnel
+screen -d -m -S tunnel bash -c 'cd /home/pi && ./tunnel_server ; bash'
+

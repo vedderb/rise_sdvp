@@ -1,0 +1,3 @@
+#!/bin/bash
+cvlc v4l2:///dev/video0:chroma=h264:width=640:height=360:fps=15 --sout '#standard{access=http,mux=ts,dst=localhost:8080,name=stream,mime=video/ts}'
+#cvlc v4l2:///dev/video0:chroma=h264:width=640:height=360:fps=15 --sout '#rtp{sdp=rtsp://:8080/test}'
