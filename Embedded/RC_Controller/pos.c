@@ -928,15 +928,16 @@ static void update_orientation_angles(float *accel, float *gyro, float *mag, flo
 
 	// Correct yaw
 #if MAIN_MODE == MAIN_MODE_CAR
-	if (main_config.car.clamp_imu_yaw_stationary) {
+	{
 		static float yaw_imu_last = 0.0;
 		static bool yaw_imu_last_set = false;
+
 		if (!yaw_imu_last_set) {
 			yaw_imu_last = m_imu_yaw - m_imu_yaw_offset;
 			yaw_imu_last_set = true;
 		}
 
-		if (fabsf(m_pos.speed) < 0.05) {
+		if (main_config.car.clamp_imu_yaw_stationary && fabsf(m_pos.speed) < 0.05) {
 			m_imu_yaw_offset = m_imu_yaw - yaw_imu_last;
 		} else {
 			yaw_imu_last = m_imu_yaw - m_imu_yaw_offset;
