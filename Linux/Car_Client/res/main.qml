@@ -558,10 +558,10 @@ ApplicationWindow {
                 switch(strs[6]) {
                 case "0": solutionName = "Invalid"; break
                 case "1": solutionName = "SPP"; break
-                case "2": solutionName = "DGPS Fix (" + strs[13] + " s)"; break
+                case "2": solutionName = "DGPS Fix\n(" + strs[13] + " s)"; break
                 case "3": solutionName = "PPS Fix"; break
-                case "4": solutionName = "RTK Fix (" + strs[13] + " s)"; break
-                case "5": solutionName = "RTK Float (" + strs[13] + " s)"; break
+                case "4": solutionName = "RTK Fix\n(" + strs[13] + " s)"; break
+                case "5": solutionName = "RTK Float\n(" + strs[13] + " s)"; break
                 case "6": solutionName = "Estimated (dead reckoning)"; break
                 case "7": solutionName = "Manual Input Mode"; break
                 case "8": solutionName = "Simulation Mode"; break
