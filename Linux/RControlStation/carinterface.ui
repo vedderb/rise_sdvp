@@ -593,6 +593,16 @@
               </property>
              </widget>
             </item>
+            <item row="4" column="2">
+             <widget class="QCheckBox" name="confClampImuYawBox">
+              <property name="toolTip">
+               <string>Clamp IMU yaw when car is stationary</string>
+              </property>
+              <property name="text">
+               <string>Clamp IMU yaw stat</string>
+              </property>
+             </widget>
+            </item>
            </layout>
           </widget>
          </item>

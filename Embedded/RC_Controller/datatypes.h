@@ -221,6 +221,7 @@ typedef struct {
 	float yaw_imu_gain; // Gain for yaw angle from IMU (vs odometry)
 	bool disable_motor; // Disable motor drive commands to make sure that the motor does not move.
 	bool simulate_motor; // Simulate motor movement without motor controller feedback
+	bool clamp_imu_yaw_stationary; // Clamp IMU yaw when car is stationary
 
 	float gear_ratio;
 	float wheel_diam;

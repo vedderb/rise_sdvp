@@ -885,6 +885,7 @@ void CarInterface::getConfGui(MAIN_CONFIG &conf)
     conf.car.yaw_imu_gain = ui->confYawImuGainBox->value();
     conf.car.disable_motor = ui->confMiscDisableMotorBox->isChecked();
     conf.car.simulate_motor = ui->confMiscSimulateMotorBox->isChecked();
+    conf.car.clamp_imu_yaw_stationary = ui->confClampImuYawBox->isChecked();
 
     conf.car.gear_ratio = ui->confGearRatioBox->value();
     conf.car.wheel_diam = ui->confWheelDiamBox->value();
@@ -905,6 +906,7 @@ void CarInterface::setConfGui(MAIN_CONFIG &conf)
     ui->confYawImuGainBox->setValue(conf.car.yaw_imu_gain);
     ui->confMiscDisableMotorBox->setChecked(conf.car.disable_motor);
     ui->confMiscSimulateMotorBox->setChecked(conf.car.simulate_motor);
+    ui->confClampImuYawBox->setChecked(conf.car.clamp_imu_yaw_stationary);
 
     ui->confGearRatioBox->setValue(conf.car.gear_ratio);
     ui->confWheelDiamBox->setValue(conf.car.wheel_diam);

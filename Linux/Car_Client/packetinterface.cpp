@@ -443,6 +443,7 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         conf.car.yaw_imu_gain = utility::buffer_get_double32_auto(data, &ind);
         conf.car.disable_motor = data[ind++];
         conf.car.simulate_motor = data[ind++];
+        conf.car.clamp_imu_yaw_stationary = data[ind++];
 
         conf.car.gear_ratio = utility::buffer_get_double32_auto(data, &ind);
         conf.car.wheel_diam = utility::buffer_get_double32_auto(data, &ind);
@@ -897,6 +898,7 @@ bool PacketInterface::setConfiguration(quint8 id, MAIN_CONFIG &conf, int retries
     utility::buffer_append_double32_auto(mSendBuffer, conf.car.yaw_imu_gain, &send_index);
     mSendBuffer[send_index++] = conf.car.disable_motor;
     mSendBuffer[send_index++] = conf.car.simulate_motor;
+    mSendBuffer[send_index++] = conf.car.clamp_imu_yaw_stationary;
 
     utility::buffer_append_double32_auto(mSendBuffer, conf.car.gear_ratio, &send_index);
     utility::buffer_append_double32_auto(mSendBuffer, conf.car.wheel_diam, &send_index);

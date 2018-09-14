@@ -580,6 +580,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			main_config.car.yaw_imu_gain = buffer_get_float32_auto(data, &ind);
 			main_config.car.disable_motor = data[ind++];
 			main_config.car.simulate_motor = data[ind++];
+			main_config.car.clamp_imu_yaw_stationary = data[ind++];
 
 			main_config.car.gear_ratio = buffer_get_float32_auto(data, &ind);
 			main_config.car.wheel_diam = buffer_get_float32_auto(data, &ind);
@@ -726,6 +727,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.car.yaw_imu_gain, &send_index);
 			m_send_buffer[send_index++] = main_cfg_tmp.car.disable_motor;
 			m_send_buffer[send_index++] = main_cfg_tmp.car.simulate_motor;
+			m_send_buffer[send_index++] = main_cfg_tmp.car.clamp_imu_yaw_stationary;
 
 			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.car.gear_ratio, &send_index);
 			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.car.wheel_diam, &send_index);
