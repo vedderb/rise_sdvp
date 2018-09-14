@@ -554,13 +554,14 @@ ApplicationWindow {
             onNmeaRadioReceived: {
                 var nmeaStr = data.toString()
                 solutionName = "Unknown solution"
-                switch(nmeaStr.split(",")[6]) {
+                var strs = nmeaStr.split(",")[6]
+                switch(strs[6]) {
                 case "0": solutionName = "Invalid"; break
                 case "1": solutionName = "SPP"; break
-                case "2": solutionName = "DGPS Fix" ; break
-                case "3": solutionName = "PPS Fix"; break
-                case "4": solutionName = "RTK Fix"; break
-                case "5": solutionName = "RTK Float"; break
+                case "2": solutionName = "DGPS Fix (" + strs[13] + " s)"; break
+                case "3": solutionName = "PPS Fix (" + strs[13] + " s)"; break
+                case "4": solutionName = "RTK Fix (" + strs[13] + " s)"; break
+                case "5": solutionName = "RTK Float (" + strs[13] + " s)"; break
                 case "6": solutionName = "Estimated (dead reckoning)"; break
                 case "7": solutionName = "Manual Input Mode"; break
                 case "8": solutionName = "Simulation Mode"; break

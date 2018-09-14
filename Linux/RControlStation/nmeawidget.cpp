@@ -68,10 +68,10 @@ void NmeaWidget::inputNmea(QByteArray msg)
             switch (gga.fix_type) {
             case 0: mFixType = "Invalid"; break;
             case 1: mFixType = "SPP"; break;
-            case 2: mFixType = "DGPS"; break;
+            case 2: mFixType = "DGPS" + QString(" (%1 s)").arg(gga.diff_age); break;
             case 3: mFixType = "PPS"; break;
-            case 4: mFixType = "RTK Fix"; break;
-            case 5: mFixType = "RTK Float"; break;
+            case 4: mFixType = "RTK Fix" + QString(" (%1 s)").arg(gga.diff_age);; break;
+            case 5: mFixType = "RTK Float" + QString(" (%1 s)").arg(gga.diff_age);; break;
             default: mFixType = "Unknown"; break;
             }
 
