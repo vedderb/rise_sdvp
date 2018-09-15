@@ -70,6 +70,8 @@ static int m_print_sat_prn;
 static bool m_vesc_left_now;
 static mc_values m_mc_val_right;
 #endif
+static float m_yaw_imu_clamp;
+static bool m_yaw_imu_clamp_set;
 
 // Private functions
 static void cmd_terminal_delay_info(int argc, const char **argv);
@@ -120,6 +122,9 @@ void pos_init(void) {
 	m_vesc_left_now = true;
 	memset(&m_mc_val, 0, sizeof(m_mc_val));
 #endif
+
+	m_yaw_imu_clamp = 0.0;
+	m_yaw_imu_clamp_set = false;
 
 	m_ms_today = -1;
 	chMtxObjectInit(&m_mutex_pos);
@@ -292,6 +297,7 @@ void pos_set_xya(float x, float y, float angle) {
 	m_pos.py = y;
 	m_pos.yaw = angle;
 	m_imu_yaw_offset = m_imu_yaw - angle;
+	m_yaw_imu_clamp = angle;
 
 	chMtxUnlock(&m_mutex_gps);
 	chMtxUnlock(&m_mutex_pos);
@@ -304,6 +310,7 @@ void pos_set_yaw_offset(float angle) {
 	utils_norm_angle(&m_imu_yaw_offset);
 	m_pos.yaw = m_imu_yaw - m_imu_yaw_offset;
 	utils_norm_angle(&m_pos.yaw);
+	m_yaw_imu_clamp = m_pos.yaw;
 
 	chMtxUnlock(&m_mutex_pos);
 }
@@ -929,18 +936,15 @@ static void update_orientation_angles(float *accel, float *gyro, float *mag, flo
 	// Correct yaw
 #if MAIN_MODE == MAIN_MODE_CAR
 	{
-		static float yaw_imu_last = 0.0;
-		static bool yaw_imu_last_set = false;
-
-		if (!yaw_imu_last_set) {
-			yaw_imu_last = m_imu_yaw - m_imu_yaw_offset;
-			yaw_imu_last_set = true;
+		if (!m_yaw_imu_clamp_set) {
+			m_yaw_imu_clamp = m_imu_yaw - m_imu_yaw_offset;
+			m_yaw_imu_clamp_set = true;
 		}
 
 		if (main_config.car.clamp_imu_yaw_stationary && fabsf(m_pos.speed) < 0.05) {
-			m_imu_yaw_offset = m_imu_yaw - yaw_imu_last;
+			m_imu_yaw_offset = m_imu_yaw - m_yaw_imu_clamp;
 		} else {
-			yaw_imu_last = m_imu_yaw - m_imu_yaw_offset;
+			m_yaw_imu_clamp = m_imu_yaw - m_imu_yaw_offset;
 		}
 	}
 

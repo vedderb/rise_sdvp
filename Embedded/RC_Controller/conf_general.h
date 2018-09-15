@@ -96,6 +96,12 @@
 #define VESC_ID						ID_ALL // id, or ID_ALL for any VESC (not used in diff steering mode)
 #define ID_MOTE						254 // If the packet is for the mote and not to be forwarded in mote mode
 
+#ifdef CAR_TERO
+#ifndef BOARD_YAW_ROT
+#define BOARD_YAW_ROT				90.0
+#endif
+#endif
+
 // Car parameters
 #ifndef BOARD_YAW_ROT
 #define BOARD_YAW_ROT				-90.0
