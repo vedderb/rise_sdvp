@@ -31,6 +31,7 @@ void rcsc_disconnectTcp(void);
 void rcsc_setDebugLevel(int level);
 bool rcsc_hasError();
 char *rcsc_lastError();
+void rcsc_clearBuffers();
 bool rcsc_getState(int car, CAR_STATE *state, int timeoutMs);
 bool rcsc_getEnuRef(int car, bool fromMap, double *llh, int timeoutMs);
 bool rcsc_setEnuRef(int car, double *llh, int timeoutMs);

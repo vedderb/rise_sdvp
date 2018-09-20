@@ -21,6 +21,7 @@
 #include <cstring>
 #include <QXmlStreamReader>
 #include <QXmlStreamWriter>
+#include <QHostAddress>
 
 RControlStationComm::RControlStationComm()
 {
@@ -97,6 +98,24 @@ char *RControlStationComm::lastError()
     }
 
     return mTextBuffer;
+}
+
+void RControlStationComm::clearBuffers()
+{
+    if (mTcpSocket->state() == QTcpSocket::ConnectedState) {
+        auto adr = mTcpSocket->peerAddress();
+        auto port = mTcpSocket->peerPort();
+
+        mTcpSocket->abort();
+        mTcpSocket->connectToHost(adr, port);
+        mTcpSocket->waitForConnected(1000);
+        mTcpSocket->readAll();
+    }
+
+    mRxBuffer.clear();
+    mXmlBuffer.clear();
+    mErrorMsgs.clear();
+    qDebug() << "libRControlStation: Buffers cleared";
 }
 
 bool RControlStationComm::getState(int car, CAR_STATE *state, int timeoutMs)

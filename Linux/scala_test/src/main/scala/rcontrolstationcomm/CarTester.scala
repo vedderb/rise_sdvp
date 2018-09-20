@@ -33,7 +33,7 @@ import util.{ Try, Success, Failure }
 
 // Var so that they can be changed from the interactive console.
 object TestSettings {
-  var carId = 1
+  var carId = 0
   var carRoute = 3
   var startRoute = 0
   var recoveryRoute = 1
@@ -303,6 +303,8 @@ object CarTester {
     rcsc_connectTcp(pointerToCString(host), port)
 
   def disconnect(): Unit = rcsc_disconnectTcp()
+  
+  def clearBuffers(): Unit = rcsc_clearBuffers()
 
   def testScala(tests: Int) {
     val params = Test.Parameters.default.
@@ -519,6 +521,43 @@ object CarTester {
         Thread.sleep(5)
         indLast = rGen.size()
       }
+    }
+
+    println("Maximum outer loop attempts during this run: " + maxAttempts)
+    println("Total amount of generated points: " + genPoints)
+    println("Used points: " + usedPoints)
+    println("Point usage average: " +
+      (usedPoints.toDouble / genPoints.toDouble) * 100.0 + " %")
+  }
+  
+  def longGenTest(points: Int) {
+    val edgeRoute = getRoute(0, TestSettings.outerRoute, 5000);
+    val startRoute = getRoute(0, TestSettings.startRoute, 5000);
+    var maxAttempts = 0
+    var genPoints = 0
+    var usedPoints = 0
+    val r = new RouteInfo(edgeRoute);
+    for (ind <- TestSettings.cutouts) r.addCutout(getRoute(0, ind, 1000))
+
+    var rGen = startRoute
+    var indLast = 0
+
+    rcsc_clearRoute(-1, 3, 5000)
+
+    for (i <- 0 to (points / 5)) {
+      rGen = r.generateRouteWithin(5, rGen, r.randInRange(1.0, 5.0), TestSettings.aheadMargin)
+
+      if (r.getLastOuterAttempts() > maxAttempts) {
+        maxAttempts = r.getLastOuterAttempts()
+      }
+
+      genPoints += r.getLastGeneratedPoints()
+      usedPoints += 5
+
+      addRoute(0, rGen, true, true, TestSettings.carRoute, 2000)
+      
+      Thread.sleep(5)
+      indLast = rGen.size()
     }
 
     println("Maximum outer loop attempts during this run: " + maxAttempts)

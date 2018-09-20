@@ -34,6 +34,7 @@ public:
     void setDebugLevel(int level);
     bool hasError();
     char *lastError();
+    void clearBuffers();
     bool getState(int car, CAR_STATE *state, int timeoutMs = 1000);
     bool getEnuRef(int car, bool fromMap, double *llh, int timeoutMs = 1000);
     bool setEnuRef(int car, double *llh, int timeoutMs = 1000);

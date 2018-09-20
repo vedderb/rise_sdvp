@@ -90,3 +90,8 @@ bool rcsc_sendTerminalCmd(int car, char *cmd, char *reply, int timeoutMs)
 {
     return rcsc.sendTerminalCmd(car, cmd, reply, timeoutMs);
 }
+
+void rcsc_clearBuffers()
+{
+    rcsc.clearBuffers();
+}

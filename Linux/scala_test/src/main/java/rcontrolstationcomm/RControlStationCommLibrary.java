@@ -91,6 +91,11 @@ public class RControlStationCommLibrary {
 	 */
 	native public static Pointer<Byte > rcsc_lastError();
 	/**
+	 * Original signature : <code>void rcsc_clearBuffers()</code><br>
+	 * <i>native declaration : line 31</i>
+	 */
+	native public static void rcsc_clearBuffers();
+	/**
 	 * Original signature : <code>bool rcsc_getState(int, CAR_STATE*, int)</code><br>
 	 * <i>native declaration : line 31</i>
 	 */
