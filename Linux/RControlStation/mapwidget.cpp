@@ -20,6 +20,7 @@
 #include <qmath.h>
 #include <QPrinter>
 #include <QPrintEngine>
+#include <QTime>
 
 #include "mapwidget.h"
 #include "utility.h"
