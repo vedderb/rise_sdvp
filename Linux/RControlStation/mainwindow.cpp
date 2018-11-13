@@ -1125,7 +1125,7 @@ void MainWindow::on_mapGetRouteButton_clicked()
 {
     if (!mSerialPort->isOpen() && !mPacketInterface->isUdpConnected() && !mTcpSocket->isOpen()) {
         QMessageBox::warning(this, "Get route",
-                             "Serial port not connected.");
+                             "Car not connected.");
         return;
     }
 
@@ -1148,7 +1148,7 @@ void MainWindow::on_mapGetRouteButton_clicked()
 
     if (ok) {
         if (route.size() > 0) {
-            ui->mapWidget->addRoute(route);
+            ui->mapWidget->setRoute(route);
             ui->mapUploadRouteProgressBar->setValue(100);
             showStatusInfo("GetRoute OK", true);
         } else {

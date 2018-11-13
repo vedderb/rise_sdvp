@@ -827,10 +827,11 @@ typedef struct {
     double y;
     double z;
     double heading;
-    double speed;
-    int16_t accel;
-    int16_t curvature;
-    uint8_t mode;
+    double long_speed;
+    double lat_speed;
+    double long_accel;
+    double lat_accel;
+    double curvature;
 } chronos_dopm_pt;
 
 typedef struct {

@@ -76,16 +76,12 @@ void Chronos::startTimerSlot()
 
 void Chronos::tcpRx(QByteArray data)
 {
-
-    qDebug() << "TCP RX";
-
     for (char c: data) {
         switch (mTcpState) {
         case 0: // first byte of sync word
             if (!(c == ISO_PART_SYNC_WORD)) {
-
-                // Error: deal with it
                 qDebug() << "Expected sync word byte 0";
+                mTcpState = 0;
                 break;
             }
             mTcpState++;
@@ -93,6 +89,7 @@ void Chronos::tcpRx(QByteArray data)
         case 1: // second byte of sync word
             if (!(c == ISO_PART_SYNC_WORD)) {
                 qDebug() << "Expected sync word byte 1";
+                mTcpState = 0;
                 break;
             }
             mTcpState++;
@@ -102,19 +99,19 @@ void Chronos::tcpRx(QByteArray data)
             mTcpState++;
             break;
         case 3: // Sequence number
-            // ignore for now. later detect broken sequences
+            // ignore for now
             mTcpState++;
             break;
         case 4: // Protocol Version and ACK requenst
-            // ignore for now. later deal with ack request.
+            // ignore for now
             mTcpState++;
             break;
-        case 5: //Message ID byte 0
+        case 5: // Message ID byte 0
             mTcpType = 0;
             mTcpType = ((quint8)c) << 8;
             mTcpState++;
             break;
-        case 6: //Message ID byte 1
+        case 6: // Message ID byte 1
             mTcpType |= (quint8)c;
             mTcpLen = 0;
             mTcpData.clear();
@@ -142,19 +139,16 @@ void Chronos::tcpRx(QByteArray data)
             break;
 
         case 11:
-            //qDebug() << "decode case";
             mTcpData.append(c);
             if (mTcpData.size() >= (int)mTcpLen) {
                 mTcpState++;
             }
             break;
         case 12: // checksum
-            qDebug() << "checksum byte = " << (quint8)c;
             mTcpChecksum = ((uint8_t)c) << 8;
             mTcpState++;
             break;
         case 13: // checksum
-            qDebug() << "checksum byte = " << (quint8)c;
             mTcpChecksum |= (uint8_t)c;
             mTcpState = 0;
 
@@ -164,14 +158,11 @@ void Chronos::tcpRx(QByteArray data)
 
             break;
 
-
         default:
             break;
         }
     }
-    qDebug() << "TCP RX" << mTcpState;
 }
-
 
 void Chronos::tcpConnectionChanged(bool connected)
 {
@@ -182,24 +173,6 @@ void Chronos::tcpConnectionChanged(bool connected)
         mIsArmed = false;
     }
 }
-
-/*
-void Chronos::readPendingDatagrams()
-{
-    while (mUdpSocket->hasPendingDatagrams()) {
-        QByteArray datagram;
-        datagram.resize(mUdpSocket->pendingDatagramSize());
-
-        mUdpSocket->readDatagram(datagram.data(), datagram.size(),
-                                &mUdpHostAddress, &mUdpPort);
-
-        VByteArray vb(datagram);
-        quint8 type = vb.vbPopFrontUint8();
-        quint16 len = vb.vbPopFrontUint32();
-        decodeMsg(type, len, vb);
-    }
-}
-*/
 
 void Chronos::readPendingDatagrams()
 {
@@ -219,12 +192,6 @@ void Chronos::readPendingDatagrams()
         quint16 message_id  = vb.vbPopFrontUint16();
         quint32 message_len = vb.vbPopFrontUint32();
         // TODO: ACK bit.
-
-        /*
-        qDebug() << "UDP CHRONOS HEADER: " << sync_word
-                 << sender_id << seq_num << prot_ver
-                 << message_id << message_len;
-        */
 
         quint16 checksum = ((quint8)vb.at(vb.size() - 2) << 8) |
                 (quint8)vb.at(vb.size() - 1);
@@ -255,7 +222,7 @@ void Chronos::stateReceived(quint8 id, CAR_STATE state)
     }
 
     // monr has 13 fields now.
-    monr.gps_time = chronosTimeNow(); // Time has to be fixed
+    monr.gps_time = gpsMsOfWeek();
     monr.x = state.px;
     monr.y = state.py;
     monr.z = 0;
@@ -278,9 +245,7 @@ void Chronos::stateReceived(quint8 id, CAR_STATE state)
 
 bool Chronos::decodeMsg(quint16 type, quint32 len, QByteArray payload)
 {
-    //(void)type;
     (void)len;
-    //(void)payload;
 
     quint16 value_id;
     quint16 content_len;
@@ -293,58 +258,69 @@ bool Chronos::decodeMsg(quint16 type, quint32 len, QByteArray payload)
         qDebug() << "decoding DOTM";
         QVector<chronos_dopm_pt> path;
 
+        QVector<int> ids;
+        chronos_dopm_pt pt;
+        memset(&pt, 0, sizeof(pt));
+
         while (vb.size() > 28) { // only footer left (2 bytes)
-            chronos_dopm_pt pt;
+            quint16 id = vb.vbPopFrontUint16();
+            quint16 len = vb.vbPopFrontUint16();
 
-            vb.vbPopFrontUint16(); // pop value_id and throw
-            vb.vbPopFrontUint16(); // pop content length and throw
+            if (ids.indexOf(id) >= 0) {
+                path.append(pt);
+                memset(&pt, 0, sizeof(pt));
+                ids.clear();
+            }
 
-            pt.tRel = vb.vbPopFrontUint32();
+            ids.append(id);
 
-            vb.vbPopFrontUint16(); // pop value_id and throw
-            vb.vbPopFrontUint16(); // pop content length and throw
+            switch (id) {
+            case ISO_VALUE_ID_REL_TIME:
+                pt.tRel = vb.vbPopFrontUint32();
+                break;
 
-            pt.x = vb.vbPopFrontDouble32(1e3);
+            case ISO_VALUE_ID_X_POS:
+                pt.x = vb.vbPopFrontDouble32(1e3);
+                break;
 
-            vb.vbPopFrontUint16(); // pop value_id and throw
-            vb.vbPopFrontUint16(); // pop content length and throw
+            case ISO_VALUE_ID_Y_POS:
+                pt.y = vb.vbPopFrontDouble32(1e3);
+                break;
 
-            pt.y = vb.vbPopFrontDouble32(1e3);
+            case ISO_VALUE_ID_Z_POS:
+                pt.z = vb.vbPopFrontDouble32(1e3);
+                break;
 
-            vb.vbPopFrontUint16(); // pop value_id and throw
-            vb.vbPopFrontUint16(); // pop content length and throw
+            case ISO_VALUE_ID_HEADING:
+                pt.heading = vb.vbPopFrontDouble16(1e1);
+                break;
 
-            pt.z = vb.vbPopFrontDouble32(1e3);
+            case ISO_VALUE_ID_LONG_SPEED:
+                pt.long_speed = vb.vbPopFrontDouble16(1e2);
+                break;
 
-            vb.vbPopFrontUint16(); // pop value_id and throw
-            vb.vbPopFrontUint16(); // pop content length and throw
+            case ISO_VALUE_ID_LAT_SPEED:
+                pt.lat_speed = vb.vbPopFrontDouble16(1e2);
+                break;
 
-            pt.heading = vb.vbPopFrontDouble16(1e1);
+            case ISO_VALUE_ID_LONG_ACC:
+                pt.long_accel = vb.vbPopFrontDouble16(1e3);
+                break;
 
-            vb.vbPopFrontUint16(); // pop value_id and throw
-            vb.vbPopFrontUint16(); // pop content length and throw
+            case ISO_VALUE_ID_LAT_ACC:
+                pt.lat_accel = vb.vbPopFrontDouble16(1e3);
+                break;
 
-            pt.speed = vb.vbPopFrontDouble16(1e2); // LONG SPEED
+            case ISO_VALUE_ID_CURVATURE:
+                pt.curvature = vb.vbPopFrontDouble32(3e4);
+                break;
 
-            vb.vbPopFrontUint16(); // pop value_id and throw
-            vb.vbPopFrontUint16(); // pop content length and throw
-
-            /*Throwing*/ vb.vbPopFrontInt16(); // LAT SPEED
-
-            vb.vbPopFrontUint16(); // pop value_id and throw
-            vb.vbPopFrontUint16(); // pop content length and throw
-
-            pt.accel = vb.vbPopFrontInt16(); // LONG ACC
-
-            vb.vbPopFrontUint16(); // pop value_id and throw
-            vb.vbPopFrontUint16(); // pop content length and throw
-
-            /*Throwing*/ vb.vbPopFrontUint16(); // LAT ACC
-
-            pt.mode = 0;
-            pt.curvature = 0;
-            path.append(pt);
+            default:
+                vb.remove(0, len);
+                break;
+            }
         }
+
         // Subsample points
         QVector<chronos_dopm_pt> path_reduced;
 
@@ -480,7 +456,6 @@ bool Chronos::decodeMsg(quint16 type, quint32 len, QByteArray payload)
 
     default:
         break;
-
     }
 
     return true;
@@ -490,22 +465,14 @@ void Chronos::processDopm(QVector<chronos_dopm_pt> path)
 {
     qDebug() << "DOPM RX";
 
-    if (mIsArmed) {
-        //qDebug() << "Ignored because car is armed";
-        qDebug() << "Car is armed but does NOT ignore the DOPM";
-        //return;
-    }
-
     if (mPacket) {
-//        mPacket->clearRoute(255);
-
         mRouteLast.clear();
         QList<LocPoint> points;
         bool first = true;
         for (chronos_dopm_pt pt: path) {
             LocPoint lpt;
             lpt.setXY(pt.x, pt.y);
-            lpt.setSpeed(pt.speed);
+            lpt.setSpeed(pt.long_speed);
             lpt.setTime(pt.tRel);
 
             points.append(lpt);
@@ -576,30 +543,24 @@ void Chronos::processStrt(chronos_strt strt)
         return;
     }
 
-    quint64 cTime = chronosTimeNow();
+    quint64 cTime = gpsMsOfWeek();
 
     qDebug() << strt.start_time << cTime << ((int)strt.start_time - (int)cTime);
 
-    //mStartTimer->setSingleShot(true);
-    //mStartTimer->start();
-    startTimerSlot();
+//    startTimerSlot();
 
-    qDebug() << "Starting car";
-
-    /*
-    if ((strt.ts <= cTime) || (strt.ts - cTime) < 10) {
+    if ((strt.start_time <= cTime) || (strt.start_time - cTime) < 10) {
         startTimerSlot();
+        qDebug() << "Starting car now";
     } else {
         mStartTimer->setSingleShot(true);
-        mStartTimer->start(strt.ts - chronosTimeNow());
-        qDebug() << "Starting car in" << strt.ts - cTime << "ms";
+        mStartTimer->start(strt.start_time - gpsMsOfWeek());
+        qDebug() << "Starting car in" << strt.start_time - cTime << "ms";
     }
-    */
 }
 
 void Chronos::processHeab(chronos_heab heab)
 {
-    //qDebug() << "HEAB RX";
     (void)heab;
 
     if (mPacket) {
@@ -651,10 +612,10 @@ void Chronos::processMtsp(chronos_mtsp mtsp)
     }
 
     if (mPacket) {
-        mPacket->setSyncPoint(255, closest_sync, mtsp.time_est - chronosTimeNow(),
+        mPacket->setSyncPoint(255, closest_sync, mtsp.time_est - gpsMsOfWeek(),
                               mSypmLast.sync_point - mSypmLast.stop_time);
 
-        qDebug() << closest_sync << mtsp.time_est - chronosTimeNow() <<
+        qDebug() << closest_sync << mtsp.time_est - gpsMsOfWeek() <<
                     mSypmLast.sync_point - mSypmLast.stop_time;
     }
 }
@@ -729,13 +690,14 @@ bool Chronos::sendMonr(chronos_monr monr)
     return true;
 }
 
-quint64 Chronos::chronosTimeNow()
+quint32 Chronos::gpsMsOfWeek()
 {
-    QDateTime date = QDateTime::currentDateTime();
-    return date.currentMSecsSinceEpoch() - 1072915200000 + 5000;
+    // Note 18 leap seconds is hard-coded
+    return (QDateTime::currentMSecsSinceEpoch() - 315964800LL * 1000LL + 18LL * 1000LL) %
+            (24LL * 60LL * 60LL * 7LL * 1000LL);
 }
 
-quint32 Chronos::chronosTimeToUtcToday(quint64 time)
+quint32 Chronos::gpsMsOfWeekToUtcToday(quint64 time)
 {
-    return (time % (24*60*60*1000)) - 5000;
+    return ((time + 315964800LL * 1000LL - 18LL * 1000LL) % (24*60*60*1000));
 }
