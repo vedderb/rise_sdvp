@@ -243,6 +243,8 @@ MapWidget::MapWidget(QWidget *parent) : QWidget(parent)
         delete p;
         mPixmaps.append(pix);
     }
+
+    grabGesture(Qt::PinchGesture);
 }
 
 CarInfo *MapWidget::getCarInfo(int car)
@@ -679,8 +681,14 @@ void MapWidget::mousePressEvent(QMouseEvent *e)
                     mRoutePointSelected = routeInd;
                     mRoutes[mRouteNow][routeInd].setXY(pos.getX(), pos.getY());
                 } else {
-                    mRoutes[mRouteNow].append(pos);
-                    emit routePointAdded(pos);
+                    if (mRoutes[mRouteNow].size() < 2 ||
+                            mRoutes[mRouteNow].last().getDistanceTo(pos) <
+                            mRoutes[mRouteNow].first().getDistanceTo(pos)) {
+                        mRoutes[mRouteNow].append(pos);
+                        emit routePointAdded(pos);
+                    } else {
+                        mRoutes[mRouteNow].prepend(pos);
+                    }
                 }
             } else if (e->buttons() & Qt::RightButton) {
                 if (routeFound) {
@@ -781,6 +789,28 @@ void MapWidget::wheelEvent(QWheelEvent *e)
     }
 
     updateClosestInfoPoint();
+}
+
+bool MapWidget::event(QEvent *event)
+{
+    if (event->type() == QEvent::Gesture) {
+        QGestureEvent *ge = static_cast<QGestureEvent*>(event);
+
+        if (QGesture *pinch = ge->gesture(Qt::PinchGesture)) {
+            QPinchGesture *pg = static_cast<QPinchGesture *>(pinch);
+
+            if (pg->changeFlags() & QPinchGesture::ScaleFactorChanged) {
+                mScaleFactor *= pg->scaleFactor();
+                mXOffset *= pg->scaleFactor();
+                mYOffset *= pg->scaleFactor();
+                update();
+            }
+
+            return true;
+        }
+    }
+
+    return QWidget::event(event);
 }
 
 bool MapWidget::getDrawRouteText() const

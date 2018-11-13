@@ -1191,9 +1191,19 @@ void MainWindow::on_mapOffButton_clicked()
 void MainWindow::on_mapUpdateSpeedButton_clicked()
 {
     QList<LocPoint> route = ui->mapWidget->getRoute();
+    qint32 timeAcc = 0;
 
     for (int i = 0;i < route.size();i++) {
-        route[i].setSpeed(ui->mapRouteSpeedBox->value() / 3.6);
+        double speed = ui->mapRouteSpeedBox->value() / 3.6;
+        route[i].setSpeed(speed);
+
+        if (i == 0) {
+            route[i].setTime(0);
+        } else {
+            double dist = route[i].getDistanceTo(route[i - 1]);
+            timeAcc += (dist / speed) * 1000.0;
+            route[i].setTime(timeAcc);
+        }
     }
 
     ui->mapWidget->setRoute(route);

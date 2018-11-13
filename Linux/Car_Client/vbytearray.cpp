@@ -71,7 +71,7 @@ void VByteArray::vbAppendDouble32(double number, double scale)
 
 void VByteArray::vbAppendDouble16(double number, double scale)
 {
-    vbAppendInt32((qint16)roundDouble(number * scale));
+    vbAppendInt16((qint16)roundDouble(number * scale));
 }
 
 void VByteArray::vbAppendDouble32Auto(double number)
@@ -192,6 +192,12 @@ quint8 VByteArray::vbPopFrontUint8()
     return res;
 }
 
+double VByteArray::vbPopFrontDouble48(double scale)
+{
+    return (double)vbPopFrontInt48() / scale;
+}
+
+
 double VByteArray::vbPopFrontDouble32(double scale)
 {
     return (double)vbPopFrontInt32() / scale;
@@ -249,4 +255,9 @@ quint64 VByteArray::vbPopFrontUint48()
 
     remove(0, 6);
     return res;
+}
+
+qint64 VByteArray::vbPopFrontInt48()
+{
+   return (qint64)vbPopFrontUint48();
 }

@@ -28,6 +28,7 @@
 #include <QList>
 #include <QInputDialog>
 #include <QTimer>
+#include <QPinchGesture>
 
 #include "locpoint.h"
 #include "carinfo.h"
@@ -142,11 +143,12 @@ private slots:
     void errorGetTile(QString reason);
 
 protected:
-    void paintEvent(QPaintEvent *event);
-    void mouseMoveEvent (QMouseEvent * e);
-    void mousePressEvent(QMouseEvent * e);
-    void mouseReleaseEvent(QMouseEvent * e);
-    void wheelEvent(QWheelEvent * e);
+    void paintEvent(QPaintEvent *event) override;
+    void mouseMoveEvent (QMouseEvent *e) override;
+    void mousePressEvent(QMouseEvent *e) override;
+    void mouseReleaseEvent(QMouseEvent *e) override;
+    void wheelEvent(QWheelEvent *e) override;
+    bool event(QEvent *event) override;
 
 private:
     QList<CarInfo> mCarInfo;

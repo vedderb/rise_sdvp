@@ -185,25 +185,44 @@ void autopilot_clear_route(void) {
 	chMtxUnlock(&m_ap_lock);
 }
 
-void autopilot_replace_route(ROUTE_POINT *p) {
+bool autopilot_replace_route(ROUTE_POINT *p) {
+	bool ret = false;
+
 	chMtxLock(&m_ap_lock);
 
 	if (!m_is_active) {
 		clear_route();
 		add_point(p, true);
+		ret = true;
 	} else {
+		bool time_mode = p->time > 0;
+
 		while (m_point_last != m_point_now) {
 			m_point_last--;
 			if (m_point_last < 0) {
 				m_point_last = AP_ROUTE_SIZE - 1;
 			}
+
+			// If we use time stamps (times are > 0), only overwrite the newer
+			// part of the route.
+			if (time_mode && p->time >= m_route[m_point_last].time) {
+				break;
+			}
 		}
 
-		m_has_prev_point = false;
-		add_point(p, true);
+		m_has_prev_point = m_point_last != m_point_now;
+
+		// In time mode, only add the point if its timestamp was ahead of the point
+		// we currently follow.
+		if (!time_mode || m_point_last != m_point_now) {
+			add_point(p, true);
+			ret = true;
+		}
 	}
 
 	chMtxUnlock(&m_ap_lock);
+
+	return ret;
 }
 
 void autopilot_sync_point(int32_t point, int32_t time, int32_t min_time_diff) {

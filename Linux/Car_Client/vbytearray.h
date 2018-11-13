@@ -28,11 +28,13 @@ public:
     quint16 vbPopFrontUint16();
     qint8 vbPopFrontInt8();
     quint8 vbPopFrontUint8();
+    double vbPopFrontDouble48(double scale);
     double vbPopFrontDouble32(double scale);
     double vbPopFrontDouble16(double scale);
     double vbPopFrontDouble32Auto();
     QString vbPopFrontString();
     quint64 vbPopFrontUint48();
+    qint64 vbPopFrontInt48();
 
 };
 

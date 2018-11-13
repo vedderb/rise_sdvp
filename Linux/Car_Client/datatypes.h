@@ -845,23 +845,30 @@ typedef struct {
 } chronos_ostm;
 
 typedef struct {
-    uint8_t type;
-    uint64_t ts;
+    uint32_t start_time; // GPS second of week
+    uint32_t delay_time; // time in ms relative start_time when object should start follow trajectory
 } chronos_strt;
 
 typedef struct {
+    uint32_t gps_time;
     uint8_t status;
 } chronos_heab;
 
 typedef struct {
-    uint64_t ts;
-    double lat;
-    double lon;
-    double alt;
-    double speed;
+    uint32_t gps_time; // GPS Second of week representation
+    double  x;
+    double  y;
+    double  z;
     double heading;
-    uint8_t direction; // 0: FWD 1: REV 2: Unavailable
-    uint8_t status; // 0: Init 1: Armed 2: Running 3: Stopped 4: General error
+    double  lon_speed;
+    double  lat_speed;
+    double  lon_acc;
+    double  lat_acc;
+    uint8_t  direction; // [ 0 : Forward, 1 : Backward, 2 : Unavailable ]
+    uint8_t  status;    // [ 0 : Off, 1 : Init, 2 : Armed, 3 : Disarmed, 4 : Running, 5 : Postrun, 6 : Remote controlled ]
+    uint8_t  rdyToArm;  // [ 0 : Not ready, 1 : Ready, 2 : Unavailable ]
+    uint8_t  error;     // Each bit represents an error status:
+                        // [AbortReq, BrokeGeoFence, PoorPosAccuracy, EngineFault, BatFault, OtherObjError, Vendor, Vendor]
 } chronos_monr;
 
 typedef struct {
