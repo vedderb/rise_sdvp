@@ -439,10 +439,10 @@ bool Chronos::decodeMsg(quint16 type, quint32 len, QByteArray payload)
             content_len = vb.vbPopFrontUint16();
             switch(value_id) {
             case ISO_VALUE_ID_GPS_SEC_OF_WEEK:
-                strt.start_time = vb.vbPopFrontUint32();
+                strt.ms_of_week = vb.vbPopFrontUint32();
                 break;
-            case ISO_VALUE_ID_DELAYED_START:
-                strt.delay_time = vb.vbPopFrontUint32();
+            case ISO_VALUE_ID_GPS_WEEK:
+                strt.week = vb.vbPopFrontUint16();
                 break;
 
             default:
@@ -545,17 +545,15 @@ void Chronos::processStrt(chronos_strt strt)
 
     quint64 cTime = gpsMsOfWeek();
 
-    qDebug() << strt.start_time << cTime << ((int)strt.start_time - (int)cTime);
-
 //    startTimerSlot();
 
-    if ((strt.start_time <= cTime) || (strt.start_time - cTime) < 10) {
+    if ((strt.ms_of_week <= cTime) || (strt.ms_of_week - cTime) < 10) {
         startTimerSlot();
         qDebug() << "Starting car now";
     } else {
         mStartTimer->setSingleShot(true);
-        mStartTimer->start(strt.start_time - gpsMsOfWeek());
-        qDebug() << "Starting car in" << strt.start_time - cTime << "ms";
+        mStartTimer->start(strt.ms_of_week - gpsMsOfWeek());
+        qDebug() << "Starting car in" << strt.ms_of_week - cTime << "ms";
     }
 }
 
@@ -694,6 +692,12 @@ quint32 Chronos::gpsMsOfWeek()
 {
     // Note 18 leap seconds is hard-coded
     return (QDateTime::currentMSecsSinceEpoch() - 315964800LL * 1000LL + 18LL * 1000LL) %
+            (24LL * 60LL * 60LL * 7LL * 1000LL);
+}
+
+quint32 Chronos::gpsWeek()
+{
+    return (QDateTime::currentMSecsSinceEpoch() - 315964800LL * 1000LL + 18LL * 1000LL) /
             (24LL * 60LL * 60LL * 7LL * 1000LL);
 }
 

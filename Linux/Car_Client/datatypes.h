@@ -846,8 +846,8 @@ typedef struct {
 } chronos_ostm;
 
 typedef struct {
-    uint32_t start_time; // GPS second of week
-    uint32_t delay_time; // time in ms relative start_time when object should start follow trajectory
+    uint32_t ms_of_week; // GPS second of week
+    uint16_t week; // GPS week
 } chronos_strt;
 
 typedef struct {

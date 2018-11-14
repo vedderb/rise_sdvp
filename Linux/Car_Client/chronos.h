@@ -98,6 +98,7 @@ private:
 
     bool sendMonr(chronos_monr monr);
     quint32 gpsMsOfWeek();
+    quint32 gpsWeek();
     quint32 gpsMsOfWeekToUtcToday(quint64 time);
 
 };
