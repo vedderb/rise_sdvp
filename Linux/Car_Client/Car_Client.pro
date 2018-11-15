@@ -32,8 +32,9 @@ SOURCES += main.cpp \
     packet.cpp \
     tcpserversimple.cpp \
     chronos.cpp \
-    vbytearray.cpp \
-    rtcmclient.cpp
+    rtcmclient.cpp \
+    chronoscomm.cpp \
+    vbytearrayle.cpp
 
 HEADERS += \
     packetinterface.h \
@@ -49,8 +50,9 @@ HEADERS += \
     packet.h \
     tcpserversimple.h \
     chronos.h \
-    vbytearray.h \
-    rtcmclient.h
+    rtcmclient.h \
+    chronoscomm.h \
+    vbytearrayle.h
 
 RESOURCES += \
     res.qrc

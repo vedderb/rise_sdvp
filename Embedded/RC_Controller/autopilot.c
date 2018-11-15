@@ -672,6 +672,7 @@ static THD_FUNCTION(ap_thread, arg) {
 					commands_plot_set_graph(2);
 					commands_send_plot_points((float)sample, pos_now.yaw * 0.1);
 					commands_plot_set_graph(3);
+					commands_plot_set_graph(3);
 					commands_send_plot_points((float)sample, m_rad_now * 10.0);
 
 					commands_printf("D: %.1f cm, S: %.2f km/h, Yaw: %.1f deg, Rad: %.2f m",
