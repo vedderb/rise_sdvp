@@ -23,6 +23,7 @@ ChronosComm::ChronosComm(QObject *parent) : QObject(parent)
 {
     mTcpServer = new TcpServerSimple(this);
     mUdpSocket = new QUdpSocket(this);
+    mTcpSocket = new QTcpSocket(this);
 
     mUdpHostAddress = QHostAddress("0.0.0.0");
     mUdpPort = 0;
@@ -31,8 +32,8 @@ ChronosComm::ChronosComm(QObject *parent) : QObject(parent)
 
     connect(mTcpServer, SIGNAL(dataRx(QByteArray)),
             this, SLOT(tcpRx(QByteArray)));
-    connect(mTcpServer, SIGNAL(connectionChanged(bool)),
-            this, SLOT(tcpConnectionChanged(bool)));
+    connect(mTcpServer, SIGNAL(connectionChanged(bool,QString)),
+            this, SLOT(tcpConnectionChanged(bool,QString)));
     connect(mUdpSocket, SIGNAL(readyRead()),
             this, SLOT(readPendingDatagrams()));
 }
@@ -377,9 +378,9 @@ void ChronosComm::tcpRx(QByteArray data)
     }
 }
 
-void ChronosComm::tcpConnectionChanged(bool connected)
+void ChronosComm::tcpConnectionChanged(bool connected, QString address)
 {
-    emit connectionChanged(connected);
+    emit connectionChanged(connected, address);
 }
 
 void ChronosComm::readPendingDatagrams()

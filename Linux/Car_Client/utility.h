@@ -49,6 +49,12 @@ void createEnuMatrix(double lat, double lon, double *enuMat);
 void llhToEnu(const double *iLlh, const double *llh, double *xyz);
 void enuToLlh(const double *iLlh, const double *xyz, double *llh);
 double logn(double base, double number);
+unsigned short crc16(const unsigned char *buf, unsigned int len);
+int getTimeUtcToday();
+void stepTowards(double *value, double goal, double step);
+double sign(double x);
+int truncateNumber(double *number, double min, double max);
+void normAngle(double *angle);
 
 }
 

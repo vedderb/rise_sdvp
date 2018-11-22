@@ -17,8 +17,8 @@ Chronos::Chronos(QObject *parent) : QObject(parent)
 
     connect(mStartTimer, SIGNAL(timeout()),
             this, SLOT(startTimerSlot()));
-    connect(mChronos, SIGNAL(connectionChanged(bool)),
-            this, SLOT(connectionChanged(bool)));
+    connect(mChronos, SIGNAL(connectionChanged(bool,QString)),
+            this, SLOT(connectionChanged(bool,QString)));
     connect(mChronos, SIGNAL(dotmRx(QVector<chronos_dotm_pt>)),
             this, SLOT(processDotm(QVector<chronos_dotm_pt>)));
     connect(mChronos, SIGNAL(heabRx(chronos_heab)),
@@ -55,12 +55,12 @@ void Chronos::startTimerSlot()
     }
 }
 
-void Chronos::connectionChanged(bool connected)
+void Chronos::connectionChanged(bool connected, QString address)
 {
     if (connected) {
-        qDebug() << "Chronos TCP connection accepted";
+        qDebug() << "Chronos TCP connection accepted from" << address;
     } else {
-        qDebug() << "Chronos TCP disconnected";
+        qDebug() << "Chronos TCP disconnected from" << address;
         mIsArmed = false;
     }
 }

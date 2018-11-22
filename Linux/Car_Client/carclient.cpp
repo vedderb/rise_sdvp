@@ -113,6 +113,8 @@ CarClient::CarClient(QObject *parent) : QObject(parent)
     connect(mUblox, SIGNAL(rxRawx(ubx_rxm_rawx)), this, SLOT(rxRawx(ubx_rxm_rawx)));
     connect(mTcpServer->packet(), SIGNAL(packetReceived(QByteArray&)),
             this, SLOT(tcpRx(QByteArray&)));
+    connect(mTcpServer, SIGNAL(connectionChanged(bool,QString)),
+            this, SLOT(tcpConnectionChanged(bool,QString)));
     connect(mRtcmClient, SIGNAL(rtcmReceived(QByteArray,int,bool)),
             this, SLOT(rtcmReceived(QByteArray,int,bool)));
     connect(mPacketInterface, SIGNAL(logEthernetReceived(quint8,QByteArray)),
@@ -425,11 +427,18 @@ void CarClient::setBatteryCells(int cells)
     mBatteryCells = cells;
 }
 
+void CarClient::addSimulatedCar(int id)
+{
+    CarSim *car = new CarSim(this);
+    car->setId(id);
+    connect(car, SIGNAL(dataToSend(QByteArray)), this, SLOT(processCarData(QByteArray)));
+    mSimulatedCars.append(car);
+}
+
 void CarClient::serialDataAvailable()
 {
     while (mSerialPort->bytesAvailable() > 0) {
-        QByteArray data = mSerialPort->readAll();
-        mPacketInterface->processData(data);
+        processCarData(mSerialPort->readAll());
     }
 }
 
@@ -494,6 +503,10 @@ void CarClient::packetDataToSend(QByteArray &data)
 {
     if (mSerialPort->isOpen()) {
         mSerialPort->writeData(data);
+    }
+
+    for (CarSim *s: mSimulatedCars) {
+        s->processData(data);
     }
 }
 
@@ -674,6 +687,15 @@ void CarClient::tcpRx(QByteArray &data)
     mPacketInterface->sendPacket(data);
 }
 
+void CarClient::tcpConnectionChanged(bool connected, QString address)
+{
+    if (connected) {
+        qDebug() << "TCP connection from" << address << "accepted";
+    } else {
+        qDebug() << "Disconnected TCP from" << address;
+    }
+}
+
 void CarClient::rtcmReceived(QByteArray data, int type, bool sync)
 {
     (void)type;
@@ -685,6 +707,11 @@ void CarClient::logEthernetReceived(quint8 id, QByteArray data)
 {
     (void)id;
     mLogBroadcaster->broadcastData(data);
+}
+
+void CarClient::processCarData(QByteArray data)
+{
+    mPacketInterface->processData(data);
 }
 
 bool CarClient::setUnixTime(qint64 t)

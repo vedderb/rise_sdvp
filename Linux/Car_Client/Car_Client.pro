@@ -34,7 +34,8 @@ SOURCES += main.cpp \
     chronos.cpp \
     rtcmclient.cpp \
     chronoscomm.cpp \
-    vbytearrayle.cpp
+    vbytearrayle.cpp \
+    vbytearray.cpp
 
 HEADERS += \
     packetinterface.h \
@@ -52,8 +53,10 @@ HEADERS += \
     chronos.h \
     rtcmclient.h \
     chronoscomm.h \
-    vbytearrayle.h
+    vbytearrayle.h \
+    vbytearray.h
 
 RESOURCES += \
     res.qrc
 
+include(carsim/carsim.pri)

@@ -32,6 +32,7 @@ extern "C++" {
 
 // Packet IDs
 #define ID_ALL						255
+#define ID_CAR_CLIENT				254 // Packet for car client only
 #define ID_MOTE						254
 #define ID_RTCM						211 // Same as RTCM3PREAMB
 

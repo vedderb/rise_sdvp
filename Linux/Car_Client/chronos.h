@@ -18,7 +18,7 @@ public:
 
 private slots:
     void startTimerSlot();
-    void connectionChanged(bool connected);
+    void connectionChanged(bool connected, QString address);
     void stateReceived(quint8 id, CAR_STATE state);
 
     void processDotm(QVector<chronos_dotm_pt> path);
