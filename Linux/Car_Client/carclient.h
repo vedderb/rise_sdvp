@@ -76,6 +76,7 @@ public:
     Q_INVOKABLE int getBatteryCells();
     void setBatteryCells(int cells);
     void addSimulatedCar(int id);
+    CarSim *getSimulatedCar(int id);
 
 signals:
 

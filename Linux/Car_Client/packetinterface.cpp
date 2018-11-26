@@ -301,7 +301,10 @@ bool PacketInterface::sendPacketAck(const unsigned char *data, unsigned int len_
         connect(this, SIGNAL(ackReceived(quint8, CMD_PACKET, QString)), &loop, SLOT(quit()));
         connect(&timeoutTimer, SIGNAL(timeout()), &loop, SLOT(quit()));
 
-        sendPacket(buffer, len_packet);
+        QTimer::singleShot(0, [this, buffer, len_packet]() {
+            sendPacket(buffer, len_packet);
+        });
+
         loop.exec();
 
         if (timeoutTimer.isActive()) {
@@ -1050,7 +1053,8 @@ bool PacketInterface::getRoutePart(quint8 id,
     quint8 idRx;
 
     auto conn = connect(this, &PacketInterface::routePartReceived,
-                        [&routeLen, &points, &idRx](quint8 id, int len, const QList<LocPoint> &route){
+                        [&routeLen, &points, &idRx](quint8 id, int len,
+                        const QList<LocPoint> &route){
         idRx = id;
         routeLen = len;
         points.append(route);
@@ -1065,7 +1069,10 @@ bool PacketInterface::getRoutePart(quint8 id,
         utility::buffer_append_int32(mSendBuffer, first, &send_index);
         mSendBuffer[send_index++] = num;
 
-        sendPacket(mSendBuffer, send_index);
+        QTimer::singleShot(0, [this, &send_index]() {
+            sendPacket(mSendBuffer, send_index);
+        });
+
         res = waitSignal(this, SIGNAL(routePartReceived(quint8,int,QList<LocPoint>)), 200);
 
         if (res) {

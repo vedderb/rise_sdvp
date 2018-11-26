@@ -180,7 +180,7 @@ Autopilot::Autopilot(QObject *parent) : QObject(parent)
     mPy = 0.0;
     mSpeed = 0.0;
 
-    mAxisDistance = 1.0;
+    mAxisDistance = 0.475;
     mRepeatRoutes = true;
     mSpeedMax = 100.0;
     mBaseRad = 1.2;
@@ -537,7 +537,7 @@ void Autopilot::timerSlot()
         ROUTE_POINT *rp_ls2 = &m_route[1]; // Second point on goal line segment
 
         ROUTE_POINT *closest1_speed = &m_route[0];
-        ROUTE_POINT *closest2_speed = &m_route[2];
+        ROUTE_POINT *closest2_speed = &m_route[1];
 
         for (int i = start;i < end;i++) {
             int ind = i; // First point index for this iteration

@@ -435,6 +435,20 @@ void CarClient::addSimulatedCar(int id)
     mSimulatedCars.append(car);
 }
 
+CarSim *CarClient::getSimulatedCar(int id)
+{
+    CarSim *sim = 0;
+
+    for (CarSim *s: mSimulatedCars) {
+        if (s->id() == id) {
+            sim = s;
+            break;
+        }
+    }
+
+    return sim;
+}
+
 void CarClient::serialDataAvailable()
 {
     while (mSerialPort->bytesAvailable() > 0) {

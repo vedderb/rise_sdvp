@@ -27,6 +27,7 @@
 #include <QXmlStreamWriter>
 #include <QXmlStreamReader>
 #include <QStringList>
+#include <QElapsedTimer>
 
 #include "utility.h"
 
@@ -91,6 +92,8 @@ MainWindow::MainWindow(QWidget *parent) :
     mNmea = new NmeaServer(this);
     mUdpSocket = new QUdpSocket(this);
     mTcpSocket = new QTcpSocket(this);
+    mTcpSocket->setSocketOption(QAbstractSocket::LowDelayOption, true);
+    mUdpSocket->setSocketOption(QAbstractSocket::LowDelayOption, true);
 
     mIntersectionTest = new IntersectionTest(this);
     mIntersectionTest->setCars(&mCars);
@@ -443,6 +446,11 @@ void MainWindow::timerSlot()
 
 void MainWindow::showStatusInfo(QString info, bool isGood)
 {
+    if (mStatusLabel->text() == info) {
+        mStatusInfoTime = 80;
+        return;
+    }
+
     if (isGood) {
         mStatusLabel->setStyleSheet("QLabel { background-color : lightgreen; color : black; }");
     } else {
@@ -1091,6 +1099,9 @@ void MainWindow::on_mapUploadRouteButton_clicked()
         ok = mPacketInterface->clearRoute(car);
     }
 
+    QElapsedTimer timer;
+    timer.start();
+
     if (ok) {
         int ind = 0;
         for (ind = 0;ind < len;ind += 5) {
@@ -1107,7 +1118,10 @@ void MainWindow::on_mapUploadRouteButton_clicked()
                 break;
             }
 
-            ui->mapUploadRouteProgressBar->setValue((100 * (ind + 5)) / len);
+            if (timer.elapsed() >= 20) {
+                timer.restart();
+                ui->mapUploadRouteProgressBar->setValue((100 * (ind + 5)) / len);
+            }
         }
     }
 
@@ -1135,9 +1149,15 @@ void MainWindow::on_mapGetRouteButton_clicked()
     int routeLen;
     bool ok = mPacketInterface->getRoutePart(ui->mapCarBox->value(), route.size(), 10, route, routeLen);
 
+    QElapsedTimer timer;
+    timer.start();
+
     while (route.size() < routeLen && ok) {
         ok = mPacketInterface->getRoutePart(ui->mapCarBox->value(), route.size(), 10, route, routeLen);
-        ui->mapUploadRouteProgressBar->setValue((100 * route.size()) / routeLen);
+        if (timer.elapsed() >= 20) {
+            timer.restart();
+            ui->mapUploadRouteProgressBar->setValue((100 * route.size()) / routeLen);
+        }
     }
 
     while (route.size() > routeLen) {

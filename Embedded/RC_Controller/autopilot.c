@@ -506,7 +506,7 @@ static THD_FUNCTION(ap_thread, arg) {
 			ROUTE_POINT *rp_ls2 = &m_route[1]; // Second point on goal line segment
 
 			ROUTE_POINT *closest1_speed = &m_route[0];
-			ROUTE_POINT *closest2_speed = &m_route[2];
+			ROUTE_POINT *closest2_speed = &m_route[1];
 
 			for (int i = start;i < end;i++) {
 				int ind = i; // First point index for this iteration

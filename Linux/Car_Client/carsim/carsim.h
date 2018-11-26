@@ -43,6 +43,7 @@ public slots:
     void setMotorCurrentBrake(double current);
     void setSteeringTurnRad(double turnRad);
     void setSteering(double steering);
+    Autopilot *autopilot();
 
 private slots:
     void timerSlot();

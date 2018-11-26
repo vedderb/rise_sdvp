@@ -402,6 +402,13 @@ int main(int argc, char *argv[])
 
     if (useChronos) {
         chronos.startServer(car.packetInterface());
+
+        // In case we simulate, use CHRONOS-compatible settings
+        CarSim *sim = car.getSimulatedCar(simulateCarFirst);
+        if (sim) {
+            sim->autopilot()->setModeTime(2);
+            sim->autopilot()->setRepeatRoutes(false);
+        }
     }
 
     if (useNtrip) {

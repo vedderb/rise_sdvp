@@ -76,6 +76,7 @@ Packet *TcpServerSimple::packet()
 void TcpServerSimple::newTcpConnection()
 {
     QTcpSocket *socket = mTcpServer->nextPendingConnection();
+    socket->setSocketOption(QAbstractSocket::LowDelayOption, true);
 
     if (mTcpSocket) {
         socket->close();

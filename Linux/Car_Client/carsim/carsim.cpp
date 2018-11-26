@@ -166,6 +166,11 @@ void CarSim::setSteering(double steering)
     utility::truncateNumber(&mSimState.steering, -1.0, 1.0);
 }
 
+Autopilot *CarSim::autopilot()
+{
+    return mAutoPilot;
+}
+
 void CarSim::timerSlot()
 {
     if (mRxTimer) {
@@ -238,13 +243,48 @@ void CarSim::processPacket(VByteArray vb)
             }
         } break;
 
+        case CMD_SET_ENU_REF: {
+            double lat, lon, height;
+            lat = vb.vbPopFrontDouble64(1e16);
+            lon = vb.vbPopFrontDouble64(1e16);
+            height = vb.vbPopFrontDouble32(1e3);
+
+            // TODO: Use values
+            (void)lat;
+            (void)lon;
+            (void)height;
+
+            // Send ack
+            VByteArray ack;
+            ack.vbAppendUint8(id_ret);
+            ack.vbAppendUint8(packet_id);
+            sendPacket(ack);
+        } break;
+
+        case CMD_GET_ENU_REF: {
+            double llh[3];
+
+            // TODO: Get values
+            llh[0] = 0.0;
+            llh[1] = 0.0;
+            llh[2] = 0.0;
+
+            VByteArray ret;
+            ret.vbAppendUint8(id_ret);
+            ret.vbAppendUint8(packet_id);
+            ret.vbAppendDouble64(llh[0], 1e16);
+            ret.vbAppendDouble64(llh[1], 1e16);
+            ret.vbAppendDouble32(llh[2], 1e3);
+            sendPacket(ret);
+        } break;
+
         case CMD_GET_STATE: {
             ROUTE_POINT rp_goal;
             mAutoPilot->autopilot_get_goal_now(&rp_goal);
 
             VByteArray ret;
             ret.vbAppendUint8(id_ret);
-            ret.vbAppendUint8(CMD_GET_STATE);
+            ret.vbAppendUint8(packet_id);
             ret.vbAppendUint8(FW_VERSION_MAJOR);
             ret.vbAppendUint8(FW_VERSION_MINOR);
             ret.vbAppendDouble32(mSimState.roll, 1e6);

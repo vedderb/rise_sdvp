@@ -25,6 +25,9 @@ ChronosComm::ChronosComm(QObject *parent) : QObject(parent)
     mUdpSocket = new QUdpSocket(this);
     mTcpSocket = new QTcpSocket(this);
 
+    mTcpSocket->setSocketOption(QAbstractSocket::LowDelayOption, true);
+    mUdpSocket->setSocketOption(QAbstractSocket::LowDelayOption, true);
+
     mUdpHostAddress = QHostAddress("0.0.0.0");
     mUdpPort = 0;
     mTransmitterId = 0;
