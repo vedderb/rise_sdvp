@@ -354,6 +354,10 @@ void ChronosComm::tcpRx(QByteArray data)
         case 10:
             mTcpLen |= ((quint8)c) << 24;
             mTcpState++;
+            if (mTcpLen == 0) {
+                // Go directly to the checksum state
+                mTcpState++;
+            }
             break;
         case 11:
             mTcpData.append(c);
