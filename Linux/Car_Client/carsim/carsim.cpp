@@ -43,6 +43,8 @@ CarSim::CarSim(QObject *parent) : QObject(parent)
     mAutoPilot = new Autopilot(this);
     mTimer = new QTimer(this);
     mTimer->start(10);
+    mUdpSocket = new QUdpSocket(this);
+    mDynoConnected = false;
 
     // Autopilot settings
     // TODO: Set this from a configuration message, or from CLI arguments
@@ -58,6 +60,8 @@ CarSim::CarSim(QObject *parent) : QObject(parent)
             this, SLOT(setMotorCurrentBrake(double)));
     connect(mAutoPilot, SIGNAL(setSteeringTurnRad(double)),
             this, SLOT(setSteeringTurnRad(double)));
+    connect(mUdpSocket, SIGNAL(readyRead()),
+            this, SLOT(readPendingDatagrams()));
 }
 
 void CarSim::processData(QByteArray data)
@@ -179,41 +183,65 @@ void CarSim::timerSlot()
         mRxState = 0;
     }
 
-    // Estimate position from motor RPM and steering angle
-    int tacho = mMotor->tacho();
-    double distance = (tacho - mSimState.motor_tacho) * gearRatio
-            * (2.0 / (double)mMotor->poles()) * (1.0 / 6.0)
-            * wheelDiam * M_PI;
-    mSimState.motor_tacho = tacho;
+    if (!mDynoConnected) {
+        // Estimate position from motor RPM and steering angle
+        int tacho = mMotor->tacho();
+        double distance = (tacho - mSimState.motor_tacho) * gearRatio
+                * (2.0 / (double)mMotor->poles()) * (1.0 / 6.0)
+                * wheelDiam * M_PI;
+        mSimState.motor_tacho = tacho;
 
-    double angle_rad = -mSimState.yaw * M_PI / 180.0;
-
-    if (fabs(mSimState.steering) > 1e-6) {
-        double turn_rad_rear = carTurnRad * -1.0 / mSimState.steering;
-        double turn_rad_front = sqrt(axisDistance * axisDistance + turn_rad_rear * turn_rad_rear);
-
-        if (turn_rad_rear < 0.0) {
-            turn_rad_front = -turn_rad_front;
+        // Initial distance is unknown
+        if (distance > 2.0) {
+            distance = 0;
         }
 
-        double angle_diff = (distance * 2.0) / (turn_rad_rear + turn_rad_front);
-
-        mSimState.px += turn_rad_rear * (sin(angle_rad + angle_diff) - sinf(angle_rad));
-        mSimState.py += turn_rad_rear * (cos(angle_rad - angle_diff) - cosf(angle_rad));
-
-        angle_rad += (distance * 2.0) / (turn_rad_rear + turn_rad_front);
-        mSimState.yaw = -angle_rad * 180.0 / M_PI;
-        utility::normAngle(&mSimState.yaw);
-    } else {
-        mSimState.px += cos(angle_rad) * distance;
-        mSimState.py += sin(angle_rad) * distance;
+        double speed = mMotor->rpm() * gearRatio
+                * (double)(2.0 / mMotor->poles()) * (1.0 / 60.0)
+                * wheelDiam * M_PI;
+        updateState(distance, speed);
     }
+}
 
-    mSimState.speed = mMotor->rpm() * gearRatio
-            * (double)(2.0 / mMotor->poles()) * (1.0 / 60.0)
-            * wheelDiam * M_PI;
+void CarSim::readPendingDatagrams()
+{
+    while (mUdpSocket->hasPendingDatagrams()) {
+        QByteArray datagram;
+        datagram.resize(mUdpSocket->pendingDatagramSize());
 
-    mAutoPilot->updatePositionSpeed(mSimState.px, mSimState.py, mSimState.yaw, mSimState.speed);
+        mUdpSocket->readDatagram(datagram.data(), datagram.size());
+
+        datagram.remove(0, 1);
+        datagram.remove(datagram.size() - 1, 1);
+        QString str(datagram);
+        QStringList elements = str.split(" ");
+
+        while (!elements.isEmpty()) {
+            if (elements.first().toLower() == "avfi") {
+                break;
+            } else {
+                elements.removeFirst();
+            }
+        }
+
+        if (elements.size() >= 11) {
+//            double energy = elements.at(2).toDouble();
+//            double targetForce = elements.at(3).toDouble();
+            double distance = elements.at(8).toDouble() * 1000.0;
+//            double acceleration = elements.at(9).toDouble();
+            double speed = elements.at(10).toDouble() / 3.6;
+
+            double distance_diff = distance - mSimState.motor_tacho;
+            mSimState.motor_tacho = distance;
+
+            // Initial distance is unknown
+            if (distance_diff > 20.0) {
+                distance_diff = 0;
+            }
+
+            updateState(distance_diff, speed);
+        }
+    }
 }
 
 void CarSim::processPacket(VByteArray vb)
@@ -497,6 +525,36 @@ void CarSim::sendPacket(VByteArray data)
     emit dataToSend(vb);
 }
 
+void CarSim::updateState(double distance, double speed)
+{
+    double angle_rad = -mSimState.yaw * M_PI / 180.0;
+
+    if (fabs(mSimState.steering) > 1e-6) {
+        double turn_rad_rear = carTurnRad * -1.0 / mSimState.steering;
+        double turn_rad_front = sqrt(axisDistance * axisDistance + turn_rad_rear * turn_rad_rear);
+
+        if (turn_rad_rear < 0.0) {
+            turn_rad_front = -turn_rad_front;
+        }
+
+        double angle_diff = (distance * 2.0) / (turn_rad_rear + turn_rad_front);
+
+        mSimState.px += turn_rad_rear * (sin(angle_rad + angle_diff) - sinf(angle_rad));
+        mSimState.py += turn_rad_rear * (cos(angle_rad - angle_diff) - cosf(angle_rad));
+
+        angle_rad += (distance * 2.0) / (turn_rad_rear + turn_rad_front);
+        mSimState.yaw = -angle_rad * 180.0 / M_PI;
+        utility::normAngle(&mSimState.yaw);
+    } else {
+        mSimState.px += cos(angle_rad) * distance;
+        mSimState.py += sin(angle_rad) * distance;
+    }
+
+    mSimState.speed = speed;
+
+    mAutoPilot->updatePositionSpeed(mSimState.px, mSimState.py, mSimState.yaw, mSimState.speed);
+}
+
 quint8 CarSim::id() const
 {
     return mId;
@@ -505,5 +563,19 @@ quint8 CarSim::id() const
 void CarSim::setId(const quint8 &id)
 {
     mId = id;
+}
+
+void CarSim::listenDyno()
+{
+    mUdpSocket->close();
+    if (mUdpSocket->bind(QHostAddress::Any, 7000)) {
+        mDynoConnected = true;
+    }
+}
+
+void CarSim::stopListenDyno()
+{
+    mUdpSocket->close();
+    mDynoConnected = false;
 }
 

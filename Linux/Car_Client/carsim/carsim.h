@@ -20,6 +20,7 @@
 
 #include <QObject>
 #include <QTimer>
+#include <QUdpSocket>
 #include "datatypes.h"
 #include "vbytearray.h"
 #include "motorsim.h"
@@ -33,6 +34,8 @@ public:
 
     quint8 id() const;
     void setId(const quint8 &id);
+    void listenDyno();
+    void stopListenDyno();
 
 signals:
     void dataToSend(QByteArray data);
@@ -47,6 +50,7 @@ public slots:
 
 private slots:
     void timerSlot();
+    void readPendingDatagrams();
 
 private:
     static const quint8 FW_VERSION_MAJOR = 10;
@@ -81,8 +85,12 @@ private:
     unsigned char mCrcHigh;
     CAR_SIM_STATE mSimState;
 
+    QUdpSocket *mUdpSocket;
+    bool mDynoConnected;
+
     void processPacket(VByteArray vb);
     void sendPacket(VByteArray data);
+    void updateState(double distance, double speed);
 
 };
 

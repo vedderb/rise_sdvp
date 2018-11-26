@@ -56,6 +56,7 @@ void showHelp()
     qDebug() << "--rtcmbasepos [lat]:[lon]:[height] : Inject RTCM base position message";
     qDebug() << "--batterycells : Number of cells in series, e.g. for the GUI battery indicator";
     qDebug() << "--simulatecars [num]:[firstid] : Simulate num cars where the first car has ID firstid";
+    qDebug() << "--dynosim : Run simulator together with output from AWITAR dyno instead of MotorSim";
 #ifdef HAS_GUI
     qDebug() << "--usegui : Use QML GUI";
 #endif
@@ -108,6 +109,7 @@ int main(int argc, char *argv[])
     int batteryCells = 10;
     int simulateCarNum = 0;
     int simulateCarFirst = 0;
+    bool dynoSim = false;
 
 #ifdef HAS_GUI
     bool useGui = false;
@@ -332,6 +334,11 @@ int main(int argc, char *argv[])
             }
         }
 
+        if (str == "--dynosim") {
+            dynoSim = true;
+            found = true;
+        }
+
 #ifdef HAS_GUI
         if (str == "--usegui") {
             useGui = true;
@@ -417,6 +424,13 @@ int main(int argc, char *argv[])
 
     if (sendRtcmBase) {
         car.setSendRtcmBasePos(true, rtcmBaseLat, rtcmBaseLon, rtcmBaseHeight);
+    }
+
+    if (dynoSim) {
+        CarSim *sim = car.getSimulatedCar(simulateCarFirst);
+        if (sim) {
+            sim->listenDyno();
+        }
     }
 
 #ifdef HAS_GUI
