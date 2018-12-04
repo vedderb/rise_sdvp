@@ -37,6 +37,18 @@ public:
     void listenDyno();
     void stopListenDyno();
 
+    double carTurnRad() const;
+    void setCarTurnRad(double carTurnRad);
+
+    double gearRatio() const;
+    void setGearRatio(double gearRatio);
+
+    double wheelDiam() const;
+    void setWheelDiam(double wheelDiam);
+
+    double axisDistance() const;
+    void setAxisDistance(double axisDistance);
+
 signals:
     void dataToSend(QByteArray data);
 
@@ -56,6 +68,11 @@ private:
     static const quint8 FW_VERSION_MAJOR = 10;
     static const quint8 FW_VERSION_MINOR = 2;
 
+    double mCarTurnRad;
+    double mGearRatio;
+    double mWheelDiam;
+    double mAxisDistance;
+
     typedef struct {
         double px;
         double py;
@@ -70,7 +87,7 @@ private:
         double accel_y;
         double accel_z;
         double steering;
-        int motor_tacho;
+        double motor_tacho;
     } CAR_SIM_STATE;
 
     QTimer *mTimer;

@@ -22,14 +22,6 @@
 #include <cstring>
 #include <QDebug>
 
-namespace
-{
-const double carTurnRad = 1.0;
-const double gearRatio = (1.0 / 3.0) * (21.0 / 37.0);
-const double wheelDiam = 0.11;
-const double axisDistance = 0.475;
-}
-
 CarSim::CarSim(QObject *parent) : QObject(parent)
 {
     mId = 0;
@@ -46,9 +38,15 @@ CarSim::CarSim(QObject *parent) : QObject(parent)
     mUdpSocket = new QUdpSocket(this);
     mDynoConnected = false;
 
+    // Default car parameters
+    mCarTurnRad = 1.0;
+    mGearRatio = (1.0 / 3.0) * (21.0 / 37.0);
+    mWheelDiam = 0.11;
+    mAxisDistance = 0.475;
+
     // Autopilot settings
     // TODO: Set this from a configuration message, or from CLI arguments
-    mAutoPilot->setAxisDistance(axisDistance);
+    mAutoPilot->setAxisDistance(mAxisDistance);
     mAutoPilot->setBaseRad(1.2);
     mAutoPilot->setModeTime(0);
     mAutoPilot->setRepeatRoutes(true);
@@ -145,8 +143,8 @@ void CarSim::processData(QByteArray data)
 void CarSim::setMotorSpeed(double speed)
 {
     double rpm = speed /
-            (gearRatio *  (2.0 / (double)mMotor->poles()) *
-             (1.0 / 60.0) * wheelDiam * M_PI);
+            (mGearRatio *  (2.0 / (double)mMotor->poles()) *
+             (1.0 / 60.0) * mWheelDiam * M_PI);
 
     mMotor->setControl(MotorSim::MOTOR_CONTROL_RPM, rpm);
 }
@@ -158,7 +156,7 @@ void CarSim::setMotorCurrentBrake(double current)
 
 void CarSim::setSteeringTurnRad(double turnRad)
 {
-    mSimState.steering = -carTurnRad / turnRad;
+    mSimState.steering = -mCarTurnRad / turnRad;
     utility::truncateNumber(&mSimState.steering,
                             -mAutoPilot->autopilot_get_steering_scale(),
                             mAutoPilot->autopilot_get_steering_scale());
@@ -186,9 +184,9 @@ void CarSim::timerSlot()
     if (!mDynoConnected) {
         // Estimate position from motor RPM and steering angle
         int tacho = mMotor->tacho();
-        double distance = (tacho - mSimState.motor_tacho) * gearRatio
+        double distance = (tacho - mSimState.motor_tacho) * mGearRatio
                 * (2.0 / (double)mMotor->poles()) * (1.0 / 6.0)
-                * wheelDiam * M_PI;
+                * mWheelDiam * M_PI;
         mSimState.motor_tacho = tacho;
 
         // Initial distance is unknown
@@ -196,9 +194,9 @@ void CarSim::timerSlot()
             distance = 0;
         }
 
-        double speed = mMotor->rpm() * gearRatio
+        double speed = mMotor->rpm() * mGearRatio
                 * (double)(2.0 / mMotor->poles()) * (1.0 / 60.0)
-                * wheelDiam * M_PI;
+                * mWheelDiam * M_PI;
         updateState(distance, speed);
     }
 }
@@ -227,7 +225,7 @@ void CarSim::readPendingDatagrams()
         if (elements.size() >= 11) {
 //            double energy = elements.at(2).toDouble();
 //            double targetForce = elements.at(3).toDouble();
-            double distance = elements.at(8).toDouble() * 1000.0;
+            double distance = elements.at(8).toDouble();
 //            double acceleration = elements.at(9).toDouble();
             double speed = elements.at(10).toDouble() / 3.6;
 
@@ -242,6 +240,47 @@ void CarSim::readPendingDatagrams()
             updateState(distance_diff, speed);
         }
     }
+}
+
+double CarSim::axisDistance() const
+{
+    return mAxisDistance;
+}
+
+void CarSim::setAxisDistance(double axisDistance)
+{
+    mAxisDistance = axisDistance;
+    mAutoPilot->setAxisDistance(mAxisDistance);
+}
+
+double CarSim::wheelDiam() const
+{
+    return mWheelDiam;
+}
+
+void CarSim::setWheelDiam(double wheelDiam)
+{
+    mWheelDiam = wheelDiam;
+}
+
+double CarSim::gearRatio() const
+{
+    return mGearRatio;
+}
+
+void CarSim::setGearRatio(double gearRatio)
+{
+    mGearRatio = gearRatio;
+}
+
+double CarSim::carTurnRad() const
+{
+    return mCarTurnRad;
+}
+
+void CarSim::setCarTurnRad(double carTurnRad)
+{
+    mCarTurnRad = carTurnRad;
 }
 
 void CarSim::processPacket(VByteArray vb)
@@ -530,8 +569,8 @@ void CarSim::updateState(double distance, double speed)
     double angle_rad = -mSimState.yaw * M_PI / 180.0;
 
     if (fabs(mSimState.steering) > 1e-6) {
-        double turn_rad_rear = carTurnRad * -1.0 / mSimState.steering;
-        double turn_rad_front = sqrt(axisDistance * axisDistance + turn_rad_rear * turn_rad_rear);
+        double turn_rad_rear = mCarTurnRad * -1.0 / mSimState.steering;
+        double turn_rad_front = sqrt(mAxisDistance * mAxisDistance + turn_rad_rear * turn_rad_rear);
 
         if (turn_rad_rear < 0.0) {
             turn_rad_front = -turn_rad_front;

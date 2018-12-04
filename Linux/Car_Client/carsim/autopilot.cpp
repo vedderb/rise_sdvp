@@ -183,7 +183,7 @@ Autopilot::Autopilot(QObject *parent) : QObject(parent)
     mAxisDistance = 0.475;
     mRepeatRoutes = true;
     mSpeedMax = 100.0;
-    mBaseRad = 1.2;
+    mBaseRad = 1.8;
     mTimeAddMs = 1000 * 60;
     mModeTime = 0;
 

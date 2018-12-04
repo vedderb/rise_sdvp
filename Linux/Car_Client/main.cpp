@@ -430,6 +430,9 @@ int main(int argc, char *argv[])
         CarSim *sim = car.getSimulatedCar(simulateCarFirst);
         if (sim) {
             sim->listenDyno();
+            sim->autopilot()->setBaseRad(8.0);
+            sim->setAxisDistance(3.0);
+            sim->setCarTurnRad(6.0);
         }
     }
 
