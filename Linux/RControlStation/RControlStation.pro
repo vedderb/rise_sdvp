@@ -28,7 +28,7 @@ unix:!macx {
 DEFINES += HAS_OPENGL
 
 # Lime SDR support
-DEFINES += HAS_LIME_SDR
+#DEFINES += HAS_LIME_SDR
 
 TARGET = RControlStation
 TEMPLATE = app
