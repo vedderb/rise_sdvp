@@ -296,6 +296,16 @@ void CarSim::processPacket(VByteArray vb)
         }
 
         switch (packet_id) {
+        case CMD_TERMINAL_CMD: {
+            // For the scala tests to work
+            QString cmd = vb.vbPopFrontString();
+            if (cmd.startsWith("fi_")) {
+                commPrintf(cmd + " : OK\n");
+            } else if (cmd.startsWith("pos_uwb_reset_pos")) {
+                commPrintf("UWB Pos reset\n");
+            }
+        } break;
+
         case CMD_SET_POS:
         case CMD_SET_POS_ACK: {
             mSimState.px = vb.vbPopFrontDouble32(1e4);
@@ -379,8 +389,8 @@ void CarSim::processPacket(VByteArray vb)
             ret.vbAppendDouble32(mAutoPilot->autopilot_get_rad_now(), 1e6);
             ret.vbAppendInt32(utility::getTimeUtcToday());
             ret.vbAppendInt16(mAutoPilot->autopilot_get_route_left());
-            ret.vbAppendDouble32(0.0, 1e4); // UWB px
-            ret.vbAppendDouble32(0.0, 1e4); // UWB PY
+            ret.vbAppendDouble32(mSimState.px, 1e4); // UWB px
+            ret.vbAppendDouble32(mSimState.py, 1e4); // UWB PY
             sendPacket(ret);
         } break;
 
@@ -410,7 +420,7 @@ void CarSim::processPacket(VByteArray vb)
                 break;
 
             case RC_MODE_CURRENT_BRAKE:
-                mMotor->setControl(MotorSim::MOTOR_CONTROL_CURRENT, throttle);
+                mMotor->setControl(MotorSim::MOTOR_CONTROL_CURRENT_BRAKE, throttle);
                 break;
 
             default:
@@ -592,6 +602,15 @@ void CarSim::updateState(double distance, double speed)
     mSimState.speed = speed;
 
     mAutoPilot->updatePositionSpeed(mSimState.px, mSimState.py, mSimState.yaw, mSimState.speed);
+}
+
+void CarSim::commPrintf(QString str)
+{
+    VByteArray pkt;
+    pkt.vbAppendUint8(mId);
+    pkt.vbAppendUint8(CMD_PRINTF);
+    pkt.append(str.toLocal8Bit().data());
+    sendPacket(pkt);
 }
 
 quint8 CarSim::id() const

@@ -41,7 +41,7 @@ void LimeSDR::run()
     int32_t antenna = LMS_PATH_TX1;
     int32_t channel = 0;
     int32_t index = 0;
-    double sampleRate = 4e6;
+    double sampleRate = 2e6;
     double frequency = 1575.42e6;
     double bandwidth = 2.5e6;
 

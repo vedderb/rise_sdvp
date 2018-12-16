@@ -108,6 +108,7 @@ private:
     void processPacket(VByteArray vb);
     void sendPacket(VByteArray data);
     void updateState(double distance, double speed);
+    void commPrintf(QString str);
 
 };
 
