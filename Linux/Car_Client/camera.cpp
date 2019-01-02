@@ -114,12 +114,12 @@ bool Camera::startCameraStream(int width, int height, int fps)
             vfSet.setResolution(width, height);
         }
 
-        auto a = mCamera->supportedViewfinderPixelFormats();
-        if (a.contains(QVideoFrame::Format_RGB24)) {
-            vfSet.setPixelFormat(QVideoFrame::Format_RGB24);
-        } else if (a.contains(QVideoFrame::Format_RGB32)) {
-            vfSet.setPixelFormat(QVideoFrame::Format_RGB32);
-        }
+//        auto a = mCamera->supportedViewfinderPixelFormats();
+//        if (a.contains(QVideoFrame::Format_RGB24)) {
+//            vfSet.setPixelFormat(QVideoFrame::Format_RGB24);
+//        } else if (a.contains(QVideoFrame::Format_RGB32)) {
+//            vfSet.setPixelFormat(QVideoFrame::Format_RGB32);
+//        }
 
 //        vfSet.setPixelFormat(QVideoFrame::Format_Jpeg);
 //        vfSet.setPixelFormat(QVideoFrame::Format_YUYV);
