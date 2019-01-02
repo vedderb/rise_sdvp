@@ -1,15 +1,22 @@
 # Build GUI
 #DEFINES += HAS_GUI
 
+# Build camera support
+DEFINES += HAS_CAMERA
+
 QT += core
 QT += widgets
 QT += network
 QT += serialport
+QT += gui
 
 contains(DEFINES, HAS_GUI) {
     QT += quick
     QT += quickcontrols2
-    QT += gui
+}
+
+contains(DEFINES, HAS_CAMERA) {
+    QT += multimedia
 }
 
 CONFIG += c++11
@@ -58,5 +65,11 @@ HEADERS += \
 
 RESOURCES += \
     res.qrc
+
+contains(DEFINES, HAS_CAMERA) {
+    QT += multimedia
+    SOURCES += camera.cpp
+    HEADERS += camera.h
+}
 
 include(carsim/carsim.pri)

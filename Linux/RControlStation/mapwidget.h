@@ -1,5 +1,5 @@
 /*
-    Copyright 2012 - 2017 Benjamin Vedder	benjamin@vedder.se
+    Copyright 2012 - 2019 Benjamin Vedder	benjamin@vedder.se
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@
 #include <QInputDialog>
 #include <QTimer>
 #include <QPinchGesture>
+#include <QImage>
 
 #include "locpoint.h"
 #include "carinfo.h"
@@ -130,6 +131,8 @@ public:
     bool getDrawUwbTrace() const;
     void setDrawUwbTrace(bool drawUwbTrace);
 
+    void setLastCameraImage(const QImage &lastCameraImage);
+
 signals:
     void scaleChanged(double newScale);
     void offsetChanged(double newXOffset, double newYOffset);
@@ -200,6 +203,7 @@ private:
     bool mAnchorMode;
     bool mDrawRouteText;
     bool mDrawUwbTrace;
+    QImage mLastCameraImage;
 
     void updateClosestInfoPoint();
     int drawInfoPoints(QPainter &painter, const QList<LocPoint> &pts,

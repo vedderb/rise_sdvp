@@ -1,5 +1,5 @@
 /*
-    Copyright 2016-2017 Benjamin Vedder	benjamin@vedder.se
+    Copyright 2016 - 2019 Benjamin Vedder	benjamin@vedder.se
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -84,6 +84,7 @@ private slots:
     void dwSampleReceived(quint8 id, DW_LOG_INFO dw);
     void updateAnchorsMap();
     void loadMagCal();
+    void cameraImageReceived(quint8 id, QImage image, int bytes);
 
     void on_terminalSendButton_clicked();
     void on_terminalSendVescButton_clicked();
@@ -116,6 +117,9 @@ private slots:
     void on_experimentLoadXmlButton_clicked();
     void on_experimentHZoomButton_toggled(bool checked);
     void on_experimentVZoomButton_toggled(bool checked);
+    void on_camStartButton_clicked();
+    void on_camStopButton_clicked();
+    void on_camShowMapBox_toggled(bool checked);
 
 private:
     typedef struct {
@@ -146,6 +150,7 @@ private:
     bool mExperimentReplot;
     QString mFaultLast;
     bool settingsReadDone;
+    int imageByteCnt;
 
     void getConfGui(MAIN_CONFIG &conf);
     void setConfGui(MAIN_CONFIG &conf);

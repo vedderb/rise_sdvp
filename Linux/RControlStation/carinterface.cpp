@@ -1,5 +1,5 @@
 /*
-    Copyright 2016 - 2017 Benjamin Vedder	benjamin@vedder.se
+    Copyright 2016 - 2019 Benjamin Vedder	benjamin@vedder.se
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -67,6 +67,7 @@ CarInterface::CarInterface(QWidget *parent) :
     mExperimentReplot = false;
     mExperimentPlotNow = 0;
     settingsReadDone = false;
+    imageByteCnt = 0;
 
     mTimer = new QTimer(this);
     mTimer->start(20);
@@ -336,6 +337,8 @@ void CarInterface::setPacketInterface(PacketInterface *packetInterface)
             this, SLOT(radarSamplesReceived(quint8,QVector<QPair<double,double> >)));
     connect(mPacketInterface, SIGNAL(dwSampleReceived(quint8,DW_LOG_INFO)),
             this, SLOT(dwSampleReceived(quint8,DW_LOG_INFO)));
+    connect(mPacketInterface, SIGNAL(cameraImageReceived(quint8,QImage,int)),
+            this, SLOT(cameraImageReceived(quint8,QImage,int)));
 }
 
 void CarInterface::setControlValues(double throttle, double steering, double max, bool currentMode)
@@ -453,7 +456,7 @@ void CarInterface::tcpRx(QByteArray &data)
 
 void CarInterface::terminalPrint(quint8 id, QString str)
 {
-    if (id == mId) {
+    if (id == mId || id == 255) {
         ui->terminalBrowser->append(str);
     }
 }
@@ -729,6 +732,21 @@ void CarInterface::loadMagCal()
 
     ui->confCommonWidget->setMagComp(ui->magCal->getComp());
     ui->confCommonWidget->setMagCompCenter(ui->magCal->getCenter());
+}
+
+void CarInterface::cameraImageReceived(quint8 id, QImage image, int bytes)
+{
+    if (id == mId || id == 255) {
+        imageByteCnt += bytes;
+
+        ui->camInfoLabel->setText(QString("Total: %1 MB  Last: %2 KB").
+                                  arg(imageByteCnt / 1024 / 1024).arg(bytes / 1024));
+        ui->camWidget->setPixmap(QPixmap::fromImage(image));
+
+        if (mMap && ui->camShowMapBox->isChecked()) {
+            mMap->setLastCameraImage(image);
+        }
+    }
 }
 
 void CarInterface::on_terminalSendButton_clicked()
@@ -1281,4 +1299,32 @@ void CarInterface::on_experimentVZoomButton_toggled(bool checked)
 {
     (void)checked;
     updateExperimentZoom();
+}
+
+void CarInterface::on_camStartButton_clicked()
+{
+    if (mPacketInterface) {
+        mPacketInterface->startCameraStream(mId, ui->camCamBox->value(),
+                                            ui->camQualityBox->value(),
+                                            ui->camWidthBox->value(),
+                                            ui->camHeightBox->value(),
+                                            ui->camFpsBox->value(),
+                                            ui->camSkipBox->value());
+    }
+}
+
+void CarInterface::on_camStopButton_clicked()
+{
+    mPacketInterface->startCameraStream(mId, -1, 0, 0, 0, 0, 0);
+
+    if (mMap) {
+        mMap->setLastCameraImage(QImage());
+    }
+}
+
+void CarInterface::on_camShowMapBox_toggled(bool checked)
+{
+    if (mMap && !checked) {
+        mMap->setLastCameraImage(QImage());
+    }
 }

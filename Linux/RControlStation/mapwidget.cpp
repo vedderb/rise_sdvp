@@ -813,6 +813,12 @@ bool MapWidget::event(QEvent *event)
     return QWidget::event(event);
 }
 
+void MapWidget::setLastCameraImage(const QImage &lastCameraImage)
+{
+    mLastCameraImage = lastCameraImage;
+    update();
+}
+
 bool MapWidget::getDrawRouteText() const
 {
     return mDrawRouteText;
@@ -2008,6 +2014,19 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
     painter.setTransform(txtTrans);
     font.setPointSize(10);
     painter.setFont(font);
+
+    if (!mLastCameraImage.isNull()) {
+        double imgWidth = (double)width / 2.5;
+        double imgHeight = (double)mLastCameraImage.height() *
+                (imgWidth / (double)mLastCameraImage.width());
+
+        QRectF target(width - imgWidth, 0.0, imgWidth, imgHeight);
+        QRectF source(0.0, 0.0, mLastCameraImage.width(), mLastCameraImage.height());
+
+        start_txt += imgHeight;
+
+        painter.drawImage(target, mLastCameraImage, source);
+    }
 
     // Draw units (m)
     if (mDrawGrid) {

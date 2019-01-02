@@ -1,5 +1,5 @@
 /*
-    Copyright 2016 Benjamin Vedder	benjamin@vedder.se
+    Copyright 2016 - 2019 Benjamin Vedder	benjamin@vedder.se
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 #define BUFFER_H_
 
 #include <stdint.h>
+#include <QObject>
 
 namespace utility {
 
@@ -55,6 +56,7 @@ void stepTowards(double *value, double goal, double step);
 double sign(double x);
 int truncateNumber(double *number, double min, double max);
 void normAngle(double *angle);
+bool waitSignal(QObject *sender, const char *signal, int timeoutMs);
 
 }
 

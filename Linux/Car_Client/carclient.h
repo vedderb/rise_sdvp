@@ -25,6 +25,7 @@
 #include <QUdpSocket>
 #include <QFile>
 #include <QProcess>
+#include <QImage>
 #include "packetinterface.h"
 #include "tcpbroadcast.h"
 #include "serialport.h"
@@ -32,6 +33,10 @@
 #include "tcpserversimple.h"
 #include "rtcmclient.h"
 #include "carsim/carsim.h"
+
+#if HAS_CAMERA
+#include "camera.h"
+#endif
 
 class CarClient : public QObject
 {
@@ -106,6 +111,7 @@ public slots:
 
 private slots:
     void processCarData(QByteArray data);
+    void cameraImageCaptured(QImage img);
 
 private:
     PacketInterface *mPacketInterface;
@@ -130,6 +136,13 @@ private:
     bool mRtklibRunning;
     int mBatteryCells;
     QList<CarSim*> mSimulatedCars;
+
+#if HAS_CAMERA
+    Camera *mCamera;
+    int mCameraJpgQuality;
+    int mCameraSkipFrames;
+    int mCameraSkipFrameCnt;
+#endif
 
     double mRtcmBaseLat;
     double mRtcmBaseLon;

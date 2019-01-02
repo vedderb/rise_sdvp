@@ -90,7 +90,8 @@ SOURCES += main.cpp\
     intersectiontest.cpp \
     ncom.cpp \
     correctionanalysis.cpp \
-    historylineedit.cpp
+    historylineedit.cpp \
+    imagewidget.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
@@ -126,7 +127,8 @@ HEADERS  += mainwindow.h \
     intersectiontest.h \
     ncom.h \
     correctionanalysis.h \
-    historylineedit.h
+    historylineedit.h \
+    imagewidget.h
 
 FORMS    += mainwindow.ui \
     carinterface.ui \

@@ -18,6 +18,8 @@
 #include "utility.h"
 #include <cmath>
 #include <QDateTime>
+#include <QEventLoop>
+#include <QTimer>
 
 namespace {
 inline double roundDouble(double x) {
@@ -406,6 +408,22 @@ void normAngle(double *angle)
     while (*angle >  180.0) {
         *angle -= 360.0;
     }
+}
+
+bool waitSignal(QObject *sender, const char *signal, int timeoutMs)
+{
+    QEventLoop loop;
+    QTimer timeoutTimer;
+    timeoutTimer.setSingleShot(true);
+    timeoutTimer.start(timeoutMs);
+    auto conn1 = QObject::connect(sender, signal, &loop, SLOT(quit()));
+    auto conn2 = QObject::connect(&timeoutTimer, SIGNAL(timeout()), &loop, SLOT(quit()));
+    loop.exec();
+
+    QObject::disconnect(conn1);
+    QObject::disconnect(conn2);
+
+    return timeoutTimer.isActive();
 }
 
 }
