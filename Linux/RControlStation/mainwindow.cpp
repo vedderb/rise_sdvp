@@ -2047,3 +2047,12 @@ void MainWindow::on_mapDrawUwbTraceBox_toggled(bool checked)
 {
     ui->mapWidget->setDrawUwbTrace(checked);
 }
+
+void MainWindow::on_actionToggleFullscreen_triggered()
+{
+    if (isFullScreen()) {
+        showNormal();
+    } else {
+        showFullScreen();
+    }
+}

@@ -2016,7 +2016,7 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
     painter.setFont(font);
 
     if (!mLastCameraImage.isNull()) {
-        double imgWidth = (double)width / 2.5;
+        double imgWidth = (double)width / 2.1;
         double imgHeight = (double)mLastCameraImage.height() *
                 (imgWidth / (double)mLastCameraImage.width());
 
@@ -2025,7 +2025,9 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
 
         start_txt += imgHeight;
 
+        painter.setOpacity(0.8);
         painter.drawImage(target, mLastCameraImage, source);
+        painter.setOpacity(1.0);
     }
 
     // Draw units (m)

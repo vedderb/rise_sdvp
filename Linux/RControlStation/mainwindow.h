@@ -158,6 +158,8 @@ private slots:
     void on_actionGPSSimulator_triggered();
     void on_mapDrawUwbTraceBox_toggled(bool checked);
 
+    void on_actionToggleFullscreen_triggered();
+
 private:
     Ui::MainWindow *ui;
     QTimer *mTimer;
