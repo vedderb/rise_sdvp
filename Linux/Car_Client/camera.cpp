@@ -32,8 +32,7 @@ MyVideoSurface::MyVideoSurface(QObject *parent) : QAbstractVideoSurface(parent)
 QList<QVideoFrame::PixelFormat> MyVideoSurface::supportedPixelFormats(QAbstractVideoBuffer::HandleType) const
 {
     QList<QVideoFrame::PixelFormat> result;
-    result  << QVideoFrame::Format_RGB32 << QVideoFrame::Format_YUV420P << QVideoFrame::Format_RGB24 <<
-               QVideoFrame::Format_Jpeg;
+    result  << QVideoFrame::Format_RGB32 << QVideoFrame::Format_RGB24;
     return result;
 }
 
@@ -81,7 +80,7 @@ bool Camera::openCamera(int cameraIndex)
         mCamera->setViewfinder(mVid);
         mCamera->setCaptureMode(QCamera::CaptureViewfinder);
         mCamera->load();
-        utility::waitSignal(mCamera, SIGNAL(stateChanged(QCamera::State)), 200);
+        utility::waitSignal(mCamera, SIGNAL(stateChanged(QCamera::State)), 1000);
         res = true;
     } else {
         qWarning() << "Camera not found";
@@ -115,6 +114,13 @@ bool Camera::startCameraStream(int width, int height, int fps)
             vfSet.setResolution(width, height);
         }
 
+        auto a = mCamera->supportedViewfinderPixelFormats();
+        if (a.contains(QVideoFrame::Format_RGB24)) {
+            vfSet.setPixelFormat(QVideoFrame::Format_RGB24);
+        } else if (a.contains(QVideoFrame::Format_RGB32)) {
+            vfSet.setPixelFormat(QVideoFrame::Format_RGB32);
+        }
+
 //        vfSet.setPixelFormat(QVideoFrame::Format_Jpeg);
 //        vfSet.setPixelFormat(QVideoFrame::Format_YUYV);
 
@@ -137,7 +143,7 @@ QString Camera::cameraInfo()
         res += "Locks supported: " + QString::number(mCamera->supportedLocks(), 16) + "\n";
 
         for (auto a: mCamera->supportedViewfinderPixelFormats()) {
-            res += "VF PixelFormat: " + QString::number(a, 16) + "\n";
+            res += "VF PixelFormat: " + QString::number(a) + "\n";
         }
 
         for (auto a: mCamera->supportedViewfinderFrameRateRanges()) {

@@ -553,7 +553,7 @@ void CarClient::packetDataToSend(QByteArray &data)
             mCamera->startCameraStream(width, height, fps);
         }
 
-        packetConsumed = true;
+        packetConsumed = false;
 #endif
     } else if (cmd == CMD_TERMINAL_CMD) {
         QString str(vb);
