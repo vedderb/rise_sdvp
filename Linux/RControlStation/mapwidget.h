@@ -133,6 +133,12 @@ public:
 
     void setLastCameraImage(const QImage &lastCameraImage);
 
+    double getCameraImageWidth() const;
+    void setCameraImageWidth(double cameraImageWidth);
+
+    double getCameraImageOpacity() const;
+    void setCameraImageOpacity(double cameraImageOpacity);
+
 signals:
     void scaleChanged(double newScale);
     void offsetChanged(double newXOffset, double newYOffset);
@@ -204,6 +210,8 @@ private:
     bool mDrawRouteText;
     bool mDrawUwbTrace;
     QImage mLastCameraImage;
+    double mCameraImageWidth;
+    double mCameraImageOpacity;
 
     void updateClosestInfoPoint();
     int drawInfoPoints(QPainter &painter, const QList<LocPoint> &pts,

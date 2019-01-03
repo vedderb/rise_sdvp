@@ -168,6 +168,8 @@ MapWidget::MapWidget(QWidget *parent) : QWidget(parent)
     mAnchorMode = false;
     mDrawRouteText = true;
     mDrawUwbTrace = false;
+    mCameraImageWidth = 0.46;
+    mCameraImageOpacity = 0.8;
 
     mOsm = new OsmClient(this);
     mDrawOpenStreetmap = true;
@@ -813,10 +815,35 @@ bool MapWidget::event(QEvent *event)
     return QWidget::event(event);
 }
 
+double MapWidget::getCameraImageOpacity() const
+{
+    return mCameraImageOpacity;
+}
+
+void MapWidget::setCameraImageOpacity(double cameraImageOpacity)
+{
+    mCameraImageOpacity = cameraImageOpacity;
+    update();
+}
+
+double MapWidget::getCameraImageWidth() const
+{
+    return mCameraImageWidth;
+}
+
+void MapWidget::setCameraImageWidth(double cameraImageWidth)
+{
+    mCameraImageWidth = cameraImageWidth;
+    update();
+}
+
 void MapWidget::setLastCameraImage(const QImage &lastCameraImage)
 {
     mLastCameraImage = lastCameraImage;
-    update();
+
+    if (mCameraImageWidth > 0.0001) {
+        update();
+    }
 }
 
 bool MapWidget::getDrawRouteText() const
@@ -2015,8 +2042,8 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
     font.setPointSize(10);
     painter.setFont(font);
 
-    if (!mLastCameraImage.isNull()) {
-        double imgWidth = (double)width / 2.1;
+    if (!mLastCameraImage.isNull() && mCameraImageWidth > 0.001) {
+        double imgWidth = (double)width * mCameraImageWidth;
         double imgHeight = (double)mLastCameraImage.height() *
                 (imgWidth / (double)mLastCameraImage.width());
 
@@ -2025,7 +2052,7 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
 
         start_txt += imgHeight;
 
-        painter.setOpacity(0.8);
+        painter.setOpacity(mCameraImageOpacity);
         painter.drawImage(target, mLastCameraImage, source);
         painter.setOpacity(1.0);
     }

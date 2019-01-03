@@ -69,6 +69,7 @@ CarInterface::CarInterface(QWidget *parent) :
     mSettingsReadDone = false;
     mImageByteCnt = 0;
     mImageCnt = 0;
+    mImageFpsFilter = 0.0;
 
     mTimer = new QTimer(this);
     mTimer->start(20);
@@ -741,9 +742,13 @@ void CarInterface::cameraImageReceived(quint8 id, QImage image, int bytes)
         mImageByteCnt += bytes;
         mImageCnt++;
 
-        ui->camInfoLabel->setText(QString("Total: %1 MB  Last img: %2 KB Imgs: %3 FPS: %4").
-                                  arg(mImageByteCnt / 1024 / 1024).arg(bytes / 1024).
-                                  arg(mImageCnt).arg(1000 / mImageTimer.restart()));
+        mImageFpsFilter -= 0.1 * (mImageFpsFilter - 1000.0 / (double)mImageTimer.restart());
+
+        ui->camInfoLabel->setText(QString("Total RX: %1 MB | Last RX: %2 KB | "
+                                          "IMG CNT: %3 | FPS: %4").
+                                  arg((double)mImageByteCnt / 1024.0 / 1024.0, 0, 'f', 1).
+                                  arg(bytes / 1024).
+                                  arg(mImageCnt).arg(mImageFpsFilter, 0, 'f', 1));
         ui->camWidget->setPixmap(QPixmap::fromImage(image));
 
         if (mMap && ui->camShowMapBox->isChecked()) {

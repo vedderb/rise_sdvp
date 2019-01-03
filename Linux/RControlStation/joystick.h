@@ -52,7 +52,7 @@ public:
     bool isConnected();
 
 Q_SIGNALS:
-    void buttonPressed(int button);
+    void buttonChanged(int button, bool pressed);
     void joystickError(int error, JoystickErrorType errorType);
 
 public Q_SLOTS:

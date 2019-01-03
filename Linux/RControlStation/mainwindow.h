@@ -75,6 +75,7 @@ private slots:
     void tcpInputDisconnected();
     void tcpInputDataAvailable();
     void tcpInputError(QAbstractSocket::SocketError socketError);
+    void jsButtonChanged(int button, bool pressed);
 
     void on_carAddButton_clicked();
     void on_copterAddButton_clicked();
@@ -157,8 +158,9 @@ private slots:
     void on_mapDrawRouteTextBox_toggled(bool checked);
     void on_actionGPSSimulator_triggered();
     void on_mapDrawUwbTraceBox_toggled(bool checked);
-
     void on_actionToggleFullscreen_triggered();
+    void on_mapCameraWidthBox_valueChanged(double arg1);
+    void on_mapCameraOpacityBox_valueChanged(double arg1);
 
 private:
     Ui::MainWindow *ui;

@@ -154,6 +154,7 @@ private:
     int mImageByteCnt;
     int mImageCnt;
     QElapsedTimer mImageTimer;
+    double mImageFpsFilter;
 
     void getConfGui(MAIN_CONFIG &conf);
     void setConfGui(MAIN_CONFIG &conf);

@@ -100,8 +100,8 @@ void Joystick::stop()
         mConnected = false;
         mAxis_count = 0;
         mButton_count = 0;
-        delete mAxes;
-        delete mButtons;
+        delete[] mAxes;
+        delete[] mButtons;
     }
     mMutex.unlock();
 }
@@ -181,8 +181,8 @@ void Joystick::run()
                 mMutex.lock();
                 mButtons[event.number] = event.value;
                 mMutex.unlock();
-                if (event.value == 0 && !(event.type & JS_EVENT_INIT)) {
-                    Q_EMIT buttonPressed(event.number);
+                if (!(event.type & JS_EVENT_INIT)) {
+                    Q_EMIT buttonChanged(event.number, event.value);
                 }
                 break;
             }

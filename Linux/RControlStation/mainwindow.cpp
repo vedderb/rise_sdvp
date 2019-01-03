@@ -86,6 +86,9 @@ MainWindow::MainWindow(QWidget *parent) :
 #ifdef HAS_JOYSTICK
     mJoystick = new Joystick(this);
     mJsType = JS_TYPE_HK;
+
+    connect(mJoystick, SIGNAL(buttonChanged(int,bool)),
+            this, SLOT(jsButtonChanged(int,bool)));
 #endif
 
     mPing = new Ping(this);
@@ -163,6 +166,26 @@ MainWindow::MainWindow(QWidget *parent) :
             qApp, SLOT(aboutQt()));
 
     on_serialRefreshButton_clicked();
+    on_mapCameraWidthBox_valueChanged(ui->mapCameraWidthBox->value());
+    on_mapCameraOpacityBox_valueChanged(ui->mapCameraOpacityBox->value());
+
+#if HAS_JOYSTICK
+    // Connect micronav joystick by default
+    bool connectJs = false;
+
+    {
+        Joystick js;
+        if (js.init(ui->jsPortEdit->text()) == 0) {
+            if (js.getName().contains("micronav one", Qt::CaseInsensitive)) {
+                connectJs = true;
+            }
+        }
+    }
+
+    if (connectJs) {
+        on_jsConnectButton_clicked();
+    }
+#endif
 
     qApp->installEventFilter(this);
 }
@@ -715,6 +738,17 @@ void MainWindow::tcpInputError(QAbstractSocket::SocketError socketError)
     QMessageBox::warning(this, "TCP Error", errorStr);
 
     mTcpSocket->close();
+}
+
+void MainWindow::jsButtonChanged(int button, bool pressed)
+{
+    qDebug() << "JS BT:" << button << pressed;
+
+#if HAS_JOYSTICK
+    if (mJsType == JS_TYPE_MICRONAV_ONE) {
+        // TODO: Handle buttons
+    }
+#endif
 }
 
 void MainWindow::on_carAddButton_clicked()
@@ -2055,4 +2089,14 @@ void MainWindow::on_actionToggleFullscreen_triggered()
     } else {
         showFullScreen();
     }
+}
+
+void MainWindow::on_mapCameraWidthBox_valueChanged(double arg1)
+{
+    ui->mapWidget->setCameraImageWidth(arg1);
+}
+
+void MainWindow::on_mapCameraOpacityBox_valueChanged(double arg1)
+{
+    ui->mapWidget->setCameraImageOpacity(arg1);
 }

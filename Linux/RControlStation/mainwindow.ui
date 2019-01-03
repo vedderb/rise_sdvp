@@ -2117,7 +2117,7 @@
                    <x>0</x>
                    <y>0</y>
                    <width>210</width>
-                   <height>693</height>
+                   <height>783</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_15">
@@ -2194,6 +2194,62 @@
                       <widget class="QCheckBox" name="mapDrawUwbTraceBox">
                        <property name="text">
                         <string>Draw UWB Trace</string>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QGroupBox" name="groupBox_19">
+                    <property name="title">
+                     <string>Camera Stream</string>
+                    </property>
+                    <layout class="QVBoxLayout" name="verticalLayout_24">
+                     <property name="spacing">
+                      <number>2</number>
+                     </property>
+                     <property name="leftMargin">
+                      <number>4</number>
+                     </property>
+                     <property name="topMargin">
+                      <number>4</number>
+                     </property>
+                     <property name="rightMargin">
+                      <number>4</number>
+                     </property>
+                     <property name="bottomMargin">
+                      <number>4</number>
+                     </property>
+                     <item>
+                      <widget class="QDoubleSpinBox" name="mapCameraWidthBox">
+                       <property name="prefix">
+                        <string>Width: </string>
+                       </property>
+                       <property name="maximum">
+                        <double>1.000000000000000</double>
+                       </property>
+                       <property name="singleStep">
+                        <double>0.020000000000000</double>
+                       </property>
+                       <property name="value">
+                        <double>0.460000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QDoubleSpinBox" name="mapCameraOpacityBox">
+                       <property name="prefix">
+                        <string>Opacity: </string>
+                       </property>
+                       <property name="maximum">
+                        <double>1.000000000000000</double>
+                       </property>
+                       <property name="singleStep">
+                        <double>0.020000000000000</double>
+                       </property>
+                       <property name="value">
+                        <double>0.800000000000000</double>
                        </property>
                       </widget>
                      </item>
