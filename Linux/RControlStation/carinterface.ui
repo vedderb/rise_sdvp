@@ -1821,7 +1821,7 @@
            <item row="0" column="5">
             <widget class="QSpinBox" name="camQualityBox">
              <property name="toolTip">
-              <string>JPG compression quality, rance 0 to 100, -1 for default value</string>
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;JPEG compression quality, range 0 to 100, -1 for default value. Lower values decrease the bandwidth at the expense of image quality.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
              <property name="prefix">
               <string>Quality: </string>

@@ -2941,6 +2941,9 @@
    <property name="text">
     <string>Toggle Fullscreen</string>
    </property>
+   <property name="shortcut">
+    <string>F11</string>
+   </property>
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>

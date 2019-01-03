@@ -22,6 +22,7 @@
 #include <QVector>
 #include <QTimer>
 #include <QUdpSocket>
+#include <QElapsedTimer>
 #include "datatypes.h"
 #include "mapwidget.h"
 #include "packetinterface.h"
@@ -149,8 +150,10 @@ private:
     TcpServerSimple *mTcpServer;
     bool mExperimentReplot;
     QString mFaultLast;
-    bool settingsReadDone;
-    int imageByteCnt;
+    bool mSettingsReadDone;
+    int mImageByteCnt;
+    int mImageCnt;
+    QElapsedTimer mImageTimer;
 
     void getConfGui(MAIN_CONFIG &conf);
     void setConfGui(MAIN_CONFIG &conf);

@@ -66,8 +66,9 @@ CarInterface::CarInterface(QWidget *parent) :
     mId = 0;
     mExperimentReplot = false;
     mExperimentPlotNow = 0;
-    settingsReadDone = false;
-    imageByteCnt = 0;
+    mSettingsReadDone = false;
+    mImageByteCnt = 0;
+    mImageCnt = 0;
 
     mTimer = new QTimer(this);
     mTimer->start(20);
@@ -523,7 +524,7 @@ void CarInterface::nmeaReceived(quint8 id, QByteArray nmea_msg)
 void CarInterface::configurationReceived(quint8 id, MAIN_CONFIG config)
 {
     if (id == mId) {
-        settingsReadDone = true;
+        mSettingsReadDone = true;
         setConfGui(config);
         QString str;
         str.sprintf("Car %d: Configuration Received", id);
@@ -737,10 +738,12 @@ void CarInterface::loadMagCal()
 void CarInterface::cameraImageReceived(quint8 id, QImage image, int bytes)
 {
     if (id == mId || id == 255) {
-        imageByteCnt += bytes;
+        mImageByteCnt += bytes;
+        mImageCnt++;
 
-        ui->camInfoLabel->setText(QString("Total: %1 MB  Last: %2 KB").
-                                  arg(imageByteCnt / 1024 / 1024).arg(bytes / 1024));
+        ui->camInfoLabel->setText(QString("Total: %1 MB  Last img: %2 KB Imgs: %3 FPS: %4").
+                                  arg(mImageByteCnt / 1024 / 1024).arg(bytes / 1024).
+                                  arg(mImageCnt).arg(1000 / mImageTimer.restart()));
         ui->camWidget->setPixmap(QPixmap::fromImage(image));
 
         if (mMap && ui->camShowMapBox->isChecked()) {
@@ -876,7 +879,7 @@ void CarInterface::on_confReadDefaultButton_clicked()
 
 void CarInterface::on_confWriteButton_clicked()
 {
-    if (!settingsReadDone) {
+    if (!mSettingsReadDone) {
         QMessageBox::warning(this, "Configuration",
                              "You must read the configuration at least once before writing it. "
                              "Otherwise everything would be set to 0.");
@@ -1303,6 +1306,10 @@ void CarInterface::on_experimentVZoomButton_toggled(bool checked)
 
 void CarInterface::on_camStartButton_clicked()
 {
+    mImageByteCnt = 0;
+    mImageCnt = 0;
+    mImageTimer.restart();
+
     if (mPacketInterface) {
         mPacketInterface->startCameraStream(mId, ui->camCamBox->value(),
                                             ui->camQualityBox->value(),
@@ -1316,6 +1323,7 @@ void CarInterface::on_camStartButton_clicked()
 void CarInterface::on_camStopButton_clicked()
 {
     mPacketInterface->startCameraStream(mId, -1, 0, 0, 0, 0, 0);
+    ui->camWidget->setPixmap(QPixmap());
 
     if (mMap) {
         mMap->setLastCameraImage(QImage());
