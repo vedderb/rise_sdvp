@@ -70,6 +70,7 @@ CarInterface::CarInterface(QWidget *parent) :
     mImageByteCnt = 0;
     mImageCnt = 0;
     mImageFpsFilter = 0.0;
+    mFullscreenImage = 0;
 
     mTimer = new QTimer(this);
     mTimer->start(20);
@@ -125,6 +126,10 @@ CarInterface::~CarInterface()
 {
     if (mMap) {
         mMap->removeCar(mId);
+    }
+
+    if (mFullscreenImage) {
+        delete mFullscreenImage;
     }
 
     delete ui;
@@ -401,6 +406,22 @@ bool CarInterface::setAp(bool on)
 void CarInterface::disableKbBox()
 {
     ui->keyboardControlBox->setChecked(false);
+}
+
+void CarInterface::toggleCameraFullscreen()
+{
+    if (mFullscreenImage) {
+        delete mFullscreenImage;
+    } else {
+        mFullscreenImage = new ImageWidget();
+        mFullscreenImage->setWindowFlags(mFullscreenImage->windowFlags() |
+                                         Qt::WindowStaysOnTopHint);
+        mFullscreenImage->showFullScreen();
+
+        connect(mFullscreenImage, &ImageWidget::destroyed, [=]() {
+            mFullscreenImage = 0;
+        });
+    }
 }
 
 void CarInterface::timerSlot()
@@ -749,10 +770,15 @@ void CarInterface::cameraImageReceived(quint8 id, QImage image, int bytes)
                                   arg((double)mImageByteCnt / 1024.0 / 1024.0, 0, 'f', 1).
                                   arg(bytes / 1024).
                                   arg(mImageCnt).arg(mImageFpsFilter, 0, 'f', 1));
-        ui->camWidget->setPixmap(QPixmap::fromImage(image));
 
-        if (mMap && ui->camShowMapBox->isChecked()) {
-            mMap->setLastCameraImage(image);
+        if (mFullscreenImage) {
+            mFullscreenImage->setPixmap(QPixmap::fromImage(image));
+        } else {
+            ui->camWidget->setPixmap(QPixmap::fromImage(image));
+
+            if (mMap && ui->camShowMapBox->isChecked()) {
+                mMap->setLastCameraImage(image);
+            }
         }
     }
 }

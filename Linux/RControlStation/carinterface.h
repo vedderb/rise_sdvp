@@ -27,6 +27,7 @@
 #include "mapwidget.h"
 #include "packetinterface.h"
 #include "tcpserversimple.h"
+#include "imagewidget.h"
 
 #ifdef HAS_OPENGL
 #include "orientationwidget.h"
@@ -57,6 +58,7 @@ public:
     void setCtrlKb();
     bool setAp(bool on);
     void disableKbBox();
+    void toggleCameraFullscreen();
 
 signals:
     void terminalCmd(quint8 id, QString cmd);
@@ -155,6 +157,7 @@ private:
     int mImageCnt;
     QElapsedTimer mImageTimer;
     double mImageFpsFilter;
+    ImageWidget *mFullscreenImage;
 
     void getConfGui(MAIN_CONFIG &conf);
     void setConfGui(MAIN_CONFIG &conf);

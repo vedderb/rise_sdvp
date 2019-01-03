@@ -32,7 +32,7 @@ void ImageWidget::paintEvent(QPaintEvent *event)
     if (!mPixmap.isNull()) {
         QPainter painter(this);
         painter.setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
-        painter.fillRect(rect(), Qt::transparent);
+        painter.fillRect(rect(), Qt::black);
 
         int pw = mPixmap.width();
         int ph = mPixmap.height();
@@ -40,9 +40,9 @@ void ImageWidget::paintEvent(QPaintEvent *event)
         int h = height();
 
         if (((double)pw / (double)ph) > ((double)w / (double)h)) {
-            painter.drawPixmap(0, 0, w, (ph * w) / pw, mPixmap);
+            painter.drawPixmap(0, (h - (ph * w) / pw) / 2, w, (ph * w) / pw, mPixmap);
         } else {
-            painter.drawPixmap(0, 0, (pw * h) / ph, h, mPixmap);
+            painter.drawPixmap((w - (pw * h) / ph) / 2, 0, (pw * h) / ph, h, mPixmap);
         }
     }
 }

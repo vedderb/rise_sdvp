@@ -228,6 +228,15 @@ bool MainWindow::eventFilter(QObject *object, QEvent *e)
         }
     }
 
+    // Handle F10 here as it won't be detected from the camera window otherwise.
+    if (e->type() == QEvent::KeyPress) {
+        QKeyEvent *keyEvent = static_cast<QKeyEvent *>(e);
+        if (keyEvent->key() == Qt::Key_F10) {
+            on_actionToggleCameraFullscreen_triggered();
+            return true;
+        }
+    }
+
 #ifdef HAS_JOYSTICK
     if (mJoystick->isConnected()) {
         return false;
@@ -742,11 +751,15 @@ void MainWindow::tcpInputError(QAbstractSocket::SocketError socketError)
 
 void MainWindow::jsButtonChanged(int button, bool pressed)
 {
-    qDebug() << "JS BT:" << button << pressed;
+    //qDebug() << "JS BT:" << button << pressed;
 
 #if HAS_JOYSTICK
     if (mJsType == JS_TYPE_MICRONAV_ONE) {
-        // TODO: Handle buttons
+        if (button == 1 && pressed) {
+            on_actionToggleFullscreen_triggered();
+        } else if (button == 3 && pressed) {
+            on_actionToggleCameraFullscreen_triggered();
+        }
     }
 #endif
 }
@@ -2099,4 +2112,17 @@ void MainWindow::on_mapCameraWidthBox_valueChanged(double arg1)
 void MainWindow::on_mapCameraOpacityBox_valueChanged(double arg1)
 {
     ui->mapWidget->setCameraImageOpacity(arg1);
+}
+
+void MainWindow::on_actionToggleCameraFullscreen_triggered()
+{
+    if (mCars.size() == 1) {
+        mCars[0]->toggleCameraFullscreen();
+    } else {
+        for (int i = 0;i < mCars.size();i++) {
+            if (mCars[i]->getId() == ui->mapCarBox->value()) {
+                mCars[i]->toggleCameraFullscreen();
+            }
+        }
+    }
 }
