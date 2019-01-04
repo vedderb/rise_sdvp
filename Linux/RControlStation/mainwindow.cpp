@@ -751,14 +751,28 @@ void MainWindow::tcpInputError(QAbstractSocket::SocketError socketError)
 
 void MainWindow::jsButtonChanged(int button, bool pressed)
 {
-    //qDebug() << "JS BT:" << button << pressed;
+//    qDebug() << "JS BT:" << button << pressed;
 
 #if HAS_JOYSTICK
     if (mJsType == JS_TYPE_MICRONAV_ONE) {
+        QWidget *fw = QApplication::focusWidget();
+
         if (button == 1 && pressed) {
             on_actionToggleFullscreen_triggered();
         } else if (button == 3 && pressed) {
             on_actionToggleCameraFullscreen_triggered();
+        } else if (button == 14 && pressed) {
+            if (fw) {
+                QKeyEvent *event = new QKeyEvent(
+                            QEvent::KeyPress, Qt::Key_Up, Qt::NoModifier);
+                QCoreApplication::postEvent(fw, event);
+            }
+        } else if (button == 10 && pressed) {
+            if (fw) {
+                QKeyEvent *event = new QKeyEvent(
+                            QEvent::KeyPress, Qt::Key_Down, Qt::NoModifier);
+                QCoreApplication::postEvent(fw, event);
+            }
         }
     }
 #endif
@@ -946,6 +960,8 @@ void MainWindow::on_jsConnectButton_clicked()
             mJsType = JS_TYPE_MICRONAV_ONE;
             qDebug() << "Treating joystick as Micronav One.";
             showStatusInfo("Micronav One joystick connected!", true);
+            mJoystick->setRepeats(10, true);
+            mJoystick->setRepeats(14, true);
         } else {
             mJsType = JS_TYPE_HK;
             qDebug() << "Treating joystick as hobbyking simulator.";
