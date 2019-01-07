@@ -882,6 +882,7 @@ MapWidget::InteractionMode MapWidget::getInteractionMode() const
 void MapWidget::setInteractionMode(const MapWidget::InteractionMode &controlMode)
 {
     mInteractionMode = controlMode;
+    update();
 }
 
 double MapWidget::getCameraImageOpacity() const
@@ -1282,6 +1283,7 @@ void MapWidget::removeLastRoutePoint()
         mRoutes[mRouteNow].removeLast();
     }
     emit lastRoutePointRemoved(pos);
+    update();
 }
 
 double MapWidget::getOsmRes() const

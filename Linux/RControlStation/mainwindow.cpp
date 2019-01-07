@@ -773,6 +773,18 @@ void MainWindow::jsButtonChanged(int button, bool pressed)
                             QEvent::KeyPress, Qt::Key_Down, Qt::NoModifier);
                 QCoreApplication::postEvent(fw, event);
             }
+        } else  if (button == 13 && pressed) {
+            ui->mapWidget->removeLastRoutePoint();
+        }
+
+        if (mJoystick->getButton(12)) {
+            ui->mapWidget->setInteractionMode(MapWidget::InteractionModeShiftDown);
+        } else if (mJoystick->getButton(5)) {
+            ui->mapWidget->setInteractionMode(MapWidget::InteractionModeCtrlDown);
+        } else if (mJoystick->getButton(6)) {
+            ui->mapWidget->setInteractionMode(MapWidget::InteractionModeCtrlShiftDown);
+        } else {
+            ui->mapWidget->setInteractionMode(MapWidget::InteractionModeDefault);
         }
     }
 #endif
