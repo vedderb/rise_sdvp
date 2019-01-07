@@ -74,6 +74,7 @@ public:
     Q_INVOKABLE PacketInterface* packetInterface();
     bool isRtklibRunning();
     quint8 carId();
+    void setCarId(quint8 id);
     void connectNtrip(QString server, QString stream, QString user = "", QString pass = "", int port = 80);
     void setSendRtcmBasePos(bool send, double lat = 0.0, double lon = 0.0, double height = 0.0);
     Q_INVOKABLE void rebootSystem(bool powerOff = false);
@@ -142,6 +143,7 @@ private:
     int mCameraJpgQuality;
     int mCameraSkipFrames;
     int mCameraSkipFrameCnt;
+    int mCameraNoAckCnt;
 #endif
 
     double mRtcmBaseLat;

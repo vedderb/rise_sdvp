@@ -2142,3 +2142,11 @@ void MainWindow::on_actionToggleCameraFullscreen_triggered()
         }
     }
 }
+
+void MainWindow::on_tabWidget_currentChanged(int index)
+{
+    // Focus on map widget when changing tab to it
+    if (index == 1) {
+        ui->mapWidget->setFocus();
+    }
+}

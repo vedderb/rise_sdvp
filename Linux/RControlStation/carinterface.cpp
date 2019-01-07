@@ -763,6 +763,8 @@ void CarInterface::cameraImageReceived(quint8 id, QImage image, int bytes)
         mImageByteCnt += bytes;
         mImageCnt++;
 
+        mPacketInterface->sendCameraFrameAck(mId);
+
         mImageFpsFilter -= 0.1 * (mImageFpsFilter - 1000.0 / (double)mImageTimer.restart());
 
         ui->camInfoLabel->setText(QString("Total RX: %1 MB | Last RX: %2 KB | "

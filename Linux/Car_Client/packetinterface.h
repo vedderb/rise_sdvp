@@ -129,6 +129,7 @@ public slots:
     void mrOverridePower(quint8 id, double fl_f, double bl_l, double fr_r, double br_b);
     void startCameraStream(quint8 id, int camera, int quality,
                            int width, int height, int fps, int skip);
+    void sendCameraFrameAck(quint8 id);
 
 private:
     unsigned short crc16(const unsigned char *buf, unsigned int len);

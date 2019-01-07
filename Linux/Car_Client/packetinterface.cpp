@@ -1401,3 +1401,12 @@ void PacketInterface::startCameraStream(quint8 id, int camera, int quality,
     utility::buffer_append_int16(mSendBuffer, skip, &send_index);
     sendPacket(mSendBuffer, send_index);
 }
+
+void PacketInterface::sendCameraFrameAck(quint8 id)
+{
+    QByteArray packet;
+    packet.clear();
+    packet.append(id);
+    packet.append((char)CMD_CAMERA_FRAME_ACK);
+    sendPacket(packet);
+}

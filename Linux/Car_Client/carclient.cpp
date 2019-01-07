@@ -125,6 +125,7 @@ CarClient::CarClient(QObject *parent) : QObject(parent)
     mCameraJpgQuality = -1;
     mCameraSkipFrames = 0;
     mCameraSkipFrameCnt = 0;
+    mCameraNoAckCnt = 0;
     mCamera = new Camera(this);
     connect(mCamera->video(), SIGNAL(imageCaptured(QImage)),
             this, SLOT(cameraImageCaptured(QImage)));
@@ -155,6 +156,7 @@ void CarClient::connectSerial(QString port, int baudrate)
     qDebug() << "Serial port connected";
 
     mPacketInterface->stopUdpConnection();
+    mPacketInterface->getState(255); // To get car ID
 }
 
 void CarClient::connectSerialRtcm(QString port, int baudrate)
@@ -379,6 +381,11 @@ quint8 CarClient::carId()
     return mCarId;
 }
 
+void CarClient::setCarId(quint8 id)
+{
+    mCarId = id;
+}
+
 void CarClient::connectNtrip(QString server, QString stream, QString user, QString pass, int port)
 {
     mRtcmClient->connectNtrip(server, stream, user, pass, port);
@@ -525,7 +532,9 @@ void CarClient::serialRtcmPortError(QSerialPort::SerialPortError error)
 
 void CarClient::packetDataToSend(QByteArray &data)
 {
-    // Inspect data going to the car and possibly process it here
+    // This is a packet from RControlStation going to the car.
+    // Inspect data and possibly process it here.
+
     bool packetConsumed = false;
 
     VByteArray vb(data);
@@ -537,47 +546,51 @@ void CarClient::packetDataToSend(QByteArray &data)
 
     (void)id;
 
-    if (cmd == CMD_CAMERA_STREAM_START) {
+    if (id == mCarId || id == 255) {
+        if (cmd == CMD_CAMERA_STREAM_START) {
 #if HAS_CAMERA
-        int camera = vb.vbPopFrontInt16();
-        mCameraJpgQuality = vb.vbPopFrontInt16();
-        int width = vb.vbPopFrontInt16();
-        int height = vb.vbPopFrontInt16();
-        int fps = vb.vbPopFrontInt16();
-        mCameraSkipFrames = vb.vbPopFrontInt16();
+            int camera = vb.vbPopFrontInt16();
+            mCameraJpgQuality = vb.vbPopFrontInt16();
+            int width = vb.vbPopFrontInt16();
+            int height = vb.vbPopFrontInt16();
+            int fps = vb.vbPopFrontInt16();
+            mCameraSkipFrames = vb.vbPopFrontInt16();
+            mCameraNoAckCnt = 0;
 
-        mCamera->closeCamera();
+            mCamera->closeCamera();
 
-        if (camera >= 0) {
-            mCamera->openCamera(camera);
-            mCamera->startCameraStream(width, height, fps);
-        }
-
-        packetConsumed = false;
-#endif
-    } else if (cmd == CMD_TERMINAL_CMD) {
-        QString str(vb);
-
-        if (str == "help") {
-#if HAS_CAMERA
-            printTerminal("camera_info\n"
-                          "  Print information about the available camera.");
-#endif
-        } else if (str == "camera_info") {
-#if HAS_CAMERA
-            bool res = true;
-            if (!mCamera->isLoaded()) {
-                res = mCamera->openCamera();
+            if (camera >= 0) {
+                mCamera->openCamera(camera);
+                mCamera->startCameraStream(width, height, fps);
             }
 
-            if (res) {
-                printTerminal(mCamera->cameraInfo());
-            } else {
-                printTerminal("No camera available.");
-            }
-
-            packetConsumed = true;
+        } else if (cmd == CMD_CAMERA_FRAME_ACK) {
+            mCameraNoAckCnt--;
 #endif
+        } else if (cmd == CMD_TERMINAL_CMD) {
+            QString str(vb);
+
+            if (str == "help") {
+#if HAS_CAMERA
+                printTerminal("camera_info\n"
+                              "  Print information about the available camera.");
+#endif
+            } else if (str == "camera_info") {
+#if HAS_CAMERA
+                bool res = true;
+                if (!mCamera->isLoaded()) {
+                    res = mCamera->openCamera();
+                }
+
+                if (res) {
+                    printTerminal(mCamera->cameraInfo());
+                } else {
+                    printTerminal("No camera available.");
+                }
+
+                packetConsumed = true;
+#endif
+            }
         }
     }
 
@@ -807,6 +820,12 @@ void CarClient::cameraImageCaptured(QImage img)
         }
     }
 
+    // No ack has been received for a couple of frames, meaning that
+    // the connection probably is bad. Drop frame.
+    if (mCameraNoAckCnt >= 3) {
+        return;
+    }
+
     mCameraSkipFrameCnt = 0;
 
     QByteArray data;
@@ -820,6 +839,7 @@ void CarClient::cameraImageCaptured(QImage img)
 
     if (data.size() > 100) {
         carPacketRx(mCarId, CMD_CAMERA_IMAGE, data);
+        mCameraNoAckCnt++;
     }
 #else
     (void)img;

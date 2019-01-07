@@ -377,6 +377,13 @@ int main(int argc, char *argv[])
 
     if (!ttyPort.isEmpty()) {
         car.connectSerial(ttyPort, baudrate);
+    } else {
+        // Not connected to any car, set default ID
+        if (simulateCarNum > 0) {
+            car.setCarId(simulateCarFirst);
+        } else {
+            car.setCarId(0);
+        }
     }
 
     for (int i = 0;i < simulateCarNum;i++) {
