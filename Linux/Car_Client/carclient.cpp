@@ -65,6 +65,9 @@ CarClient::CarClient(QObject *parent) : QObject(parent)
     mLogFlushTimer->start(2000);
     mRtklibRunning = false;
     mBatteryCells = 10;
+    mOverrideUwbPos = false;
+    mOverrideUwbX = 0.0;
+    mOverrideUwbY = 0.0;
 
     mHostAddress = QHostAddress("0.0.0.0");
     mUdpPort = 0;
@@ -120,6 +123,8 @@ CarClient::CarClient(QObject *parent) : QObject(parent)
             this, SLOT(rtcmReceived(QByteArray,int,bool)));
     connect(mPacketInterface, SIGNAL(logEthernetReceived(quint8,QByteArray)),
             this, SLOT(logEthernetReceived(quint8,QByteArray)));
+    connect(mLogBroadcaster, SIGNAL(dataReceived(QByteArray&)),
+            this, SLOT(logBroadcasterDataReceived(QByteArray&)));
 
 #if HAS_CAMERA
     mCameraJpgQuality = -1;
@@ -681,16 +686,24 @@ void CarClient::readPendingDatagrams()
 
 void CarClient::carPacketRx(quint8 id, CMD_PACKET cmd, const QByteArray &data)
 {
-    (void)cmd;
+    QByteArray toSend = data;
+
+    if (cmd == CMD_GET_STATE && mOverrideUwbPos) {
+        VByteArray vb;
+        vb.append(data.mid(0, 99));
+        vb.vbAppendDouble32(mOverrideUwbX, 1e4);
+        vb.vbAppendDouble32(mOverrideUwbY, 1e4);
+        toSend = vb;
+    }
 
     if (id != 254) {
         mCarId = id;
 
         if (QString::compare(mHostAddress.toString(), "0.0.0.0") != 0) {
-            mUdpSocket->writeDatagram(data, mHostAddress, mUdpPort);
+            mUdpSocket->writeDatagram(toSend, mHostAddress, mUdpPort);
         }
 
-        mTcpServer->packet()->sendPacket(data);
+        mTcpServer->packet()->sendPacket(toSend);
     }
 }
 
@@ -844,6 +857,69 @@ void CarClient::cameraImageCaptured(QImage img)
 #else
     (void)img;
 #endif
+}
+
+void CarClient::logBroadcasterDataReceived(QByteArray &data)
+{
+    mLogBroadcasterDataBuffer.append(data);
+
+    int newLineIndex = mLogBroadcasterDataBuffer.indexOf("\n");
+    if (newLineIndex >= 0) {
+        QString line = mLogBroadcasterDataBuffer.left(newLineIndex);
+        mLogBroadcasterDataBuffer.remove(0, newLineIndex + 1);
+
+        QStringList tokens = line.split(" ");
+
+        if (tokens.at(0) == "plot_init") {
+            if (tokens.size() == 3) {
+                QByteArray data;
+                data.append((quint8)mCarId);
+                data.append((char)CMD_PLOT_INIT);
+                data.append(tokens.at(1).toLocal8Bit());
+                data.append('\0');
+                data.append(tokens.at(2).toLocal8Bit());
+                data.append('\0');
+                carPacketRx(mCarId, CMD_PLOT_INIT, data);
+            }
+        } else if (tokens.at(0) == "plot_add_graph") {
+            if (tokens.size() == 2) {
+                QByteArray data;
+                data.append((quint8)mCarId);
+                data.append((char)CMD_PLOT_ADD_GRAPH);
+                data.append(tokens.at(1).toLocal8Bit());
+                data.append('\0');
+                carPacketRx(mCarId, CMD_PLOT_ADD_GRAPH, data);
+            }
+        } else if (tokens.at(0) == "plot_set_graph") {
+            if (tokens.size() == 2) {
+                QByteArray data;
+                data.append((quint8)mCarId);
+                data.append((char)CMD_PLOT_SET_GRAPH);
+                data.append(tokens.at(1).toInt());
+                data.append('\0');
+                carPacketRx(mCarId, CMD_PLOT_SET_GRAPH, data);
+            }
+        } else if (tokens.at(0) == "plot_add_sample") {
+            if (tokens.size() == 3) {
+                VByteArray data;
+                data.append((quint8)mCarId);
+                data.append((char)CMD_PLOT_DATA);
+                data.vbAppendDouble32Auto(tokens.at(1).toDouble());
+                data.vbAppendDouble32Auto(tokens.at(2).toDouble());
+                carPacketRx(mCarId, CMD_PLOT_DATA, data);
+            }
+        } else if (tokens.at(0) == "uwb_pos_override") {
+            if (tokens.size() == 3) {
+                mOverrideUwbPos = true;
+                mOverrideUwbX = tokens.at(1).toDouble();
+                mOverrideUwbY = tokens.at(2).toDouble();
+            }
+        } else if (tokens.at(0) == "uwb_pos_override_stop") {
+            if (tokens.size() == 1) {
+                mOverrideUwbPos = false;
+            }
+        }
+    }
 }
 
 bool CarClient::setUnixTime(qint64 t)

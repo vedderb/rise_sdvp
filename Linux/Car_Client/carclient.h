@@ -113,6 +113,7 @@ public slots:
 private slots:
     void processCarData(QByteArray data);
     void cameraImageCaptured(QImage img);
+    void logBroadcasterDataReceived(QByteArray &data);
 
 private:
     PacketInterface *mPacketInterface;
@@ -150,6 +151,10 @@ private:
     double mRtcmBaseLon;
     double mRtcmBaseHeight;
     bool mRtcmSendBase;
+    QString mLogBroadcasterDataBuffer;
+    bool mOverrideUwbPos;
+    double mOverrideUwbX;
+    double mOverrideUwbY;
 
     bool setUnixTime(qint64 t);
     void printTerminal(QString str);
