@@ -30,6 +30,9 @@ DEFINES += HAS_OPENGL
 # Lime SDR support
 #DEFINES += HAS_LIME_SDR
 
+# Simulation Scennarios
+#DEFINES += HAS_SIM_SCEN
+
 TARGET = RControlStation
 TEMPLATE = app
 
@@ -161,6 +164,10 @@ contains(DEFINES, HAS_LIME_SDR) {
     HEADERS += gpssim.h gpsgen.h limesdr.h
     FORMS += gpssim.ui
     LIBS += -lLimeSuite
+}
+
+contains(DEFINES, HAS_SIM_SCEN) {
+    include(env_sim/EnvironmentSimulator.pri)
 }
 
 RESOURCES += \
