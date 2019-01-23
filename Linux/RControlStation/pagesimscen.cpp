@@ -206,6 +206,8 @@ void PageSimScen::on_restartButton_clicked()
         return;
     }
 
+    ui->map->clearCars();
+
     try {
         if (mScenarioEngine) {
             delete mScenarioEngine;
@@ -217,7 +219,6 @@ void PageSimScen::on_restartButton_clicked()
         mScenarioGateway = mScenarioEngine->getScenarioGateway();
         mOdrManager = mScenarioEngine->getRoadManager();
     } catch (const std::exception& e) {
-        delete mScenarioEngine;
         mScenarioEngine = 0;
         mOdrManager = 0;
         mScenarioGateway = 0;
@@ -226,6 +227,7 @@ void PageSimScen::on_restartButton_clicked()
 
     if (mScenarioEngine) {
         mScenarioEngine->step(0.0, true);
-        ui->map->clearCars();
     }
+
+    ui->map->update();
 }
