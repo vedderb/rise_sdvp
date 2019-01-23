@@ -717,7 +717,7 @@
      </layout>
     </item>
     <item>
-     <widget class="QTabWidget" name="tabWidget">
+     <widget class="QTabWidget" name="mainTabWidget">
       <property name="toolTip">
        <string/>
       </property>

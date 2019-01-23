@@ -169,7 +169,7 @@ MainWindow::MainWindow(QWidget *parent) :
     on_mapCameraWidthBox_valueChanged(ui->mapCameraWidthBox->value());
     on_mapCameraOpacityBox_valueChanged(ui->mapCameraOpacityBox->value());
 
-#if HAS_JOYSTICK
+#ifdef HAS_JOYSTICK
     // Connect micronav joystick by default
     bool connectJs = false;
 
@@ -185,6 +185,14 @@ MainWindow::MainWindow(QWidget *parent) :
     if (connectJs) {
         on_jsConnectButton_clicked();
     }
+#endif
+
+
+#ifdef HAS_SIM_SCEN
+    mSimScen = new PageSimScen;
+    ui->mainTabWidget->addTab(mSimScen, QIcon(":/models/Icons/Sedan-96.png"), "");
+    ui->mainTabWidget->setTabToolTip(ui->mainTabWidget->count() - 1,
+                                     "Simulation Scenarios");
 #endif
 
     qApp->installEventFilter(this);
@@ -753,7 +761,7 @@ void MainWindow::jsButtonChanged(int button, bool pressed)
 {
 //    qDebug() << "JS BT:" << button << pressed;
 
-#if HAS_JOYSTICK
+#ifdef HAS_JOYSTICK
     if (mJsType == JS_TYPE_MICRONAV_ONE) {
         QWidget *fw = QApplication::focusWidget();
 

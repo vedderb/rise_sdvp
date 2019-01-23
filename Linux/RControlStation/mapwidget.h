@@ -30,12 +30,24 @@
 #include <QTimer>
 #include <QPinchGesture>
 #include <QImage>
+#include <QTransform>
 
 #include "locpoint.h"
 #include "carinfo.h"
 #include "copterinfo.h"
 #include "perspectivepixmap.h"
 #include "osmclient.h"
+
+class MapModule
+{
+public:
+    virtual void processPaint(QPainter &painter, int width, int height, bool highQuality,
+                              QTransform drawTrans, QTransform txtTrans, double scale) = 0;
+    virtual bool processMouse(bool isPress, bool isRelease, bool isMove, bool isWheel,
+                              QPoint widgetPos, LocPoint mapPos, double wheelAngleDelta,
+                              bool ctrl, bool shift, bool ctrlShift,
+                              bool leftButton, bool rightButton) = 0;
+};
 
 class MapWidget : public QWidget
 {
@@ -59,6 +71,8 @@ public:
     void addCopter(const CopterInfo &copter);
     bool removeCar(int carId);
     bool removeCopter(int copterId);
+    void clearCars();
+    void clearCopters();
     LocPoint* getAnchor(int id);
     void addAnchor(const LocPoint &anchor);
     bool removeAnchor(int id);
@@ -150,6 +164,11 @@ public:
     MapWidget::InteractionMode getInteractionMode() const;
     void setInteractionMode(const MapWidget::InteractionMode &controlMode);
 
+    void addMapModule(MapModule *m);
+    void removeMapModule(MapModule *m);
+    void removeMapModuleLast();
+
+
 signals:
     void scaleChanged(double newScale);
     void offsetChanged(double newXOffset, double newYOffset);
@@ -226,6 +245,7 @@ private:
     double mCameraImageOpacity;
     InteractionMode mInteractionMode;
     QTimer *mTimer;
+    QVector<MapModule*> mMapModules;
 
     void updateClosestInfoPoint();
     int drawInfoPoints(QPainter &painter, const QList<LocPoint> &pts,

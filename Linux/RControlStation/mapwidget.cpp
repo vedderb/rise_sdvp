@@ -145,12 +145,6 @@ MapWidget::MapWidget(QWidget *parent) : QWidget(parent)
     mSelectedCar = -1;
     xRealPos = 0;
     yRealPos = 0;
-    mCarInfo.clear();
-    mCopterInfo.clear();
-    mCarTrace.clear();
-    mCarTraceGps.clear();
-    mCarTraceUwb.clear();
-    mAnchors.clear();
     mRoutePointSpeed = 1.0;
     mRoutePointTime = 0.0;
     mAnchorId = 0;
@@ -310,6 +304,16 @@ bool MapWidget::removeCopter(int copterId)
     }
 
     return false;
+}
+
+void MapWidget::clearCars()
+{
+    mCarInfo.clear();
+}
+
+void MapWidget::clearCopters()
+{
+    mCopterInfo.clear();
 }
 
 LocPoint *MapWidget::getAnchor(int id)
@@ -588,6 +592,21 @@ void MapWidget::mouseMoveEvent(QMouseEvent *e)
         ctrl_shift = true;
     }
 
+    QPoint mousePosWidget = this->mapFromGlobal(QCursor::pos());
+    LocPoint mousePosMap;
+    QPoint p = getMousePosRelative();
+    mousePosMap.setXY(p.x() / 1000.0, p.y() / 1000.0);
+
+    for (MapModule *m: mMapModules) {
+        if (m->processMouse(false, false, true, false,
+                            mousePosWidget, mousePosMap, 0.0,
+                            ctrl, shift, ctrl_shift,
+                            e->buttons() & Qt::LeftButton,
+                            e->buttons() & Qt::RightButton)) {
+            return;
+        }
+    }
+
     if (e->buttons() & Qt::LeftButton && !ctrl && !shift && !ctrl_shift) {
         int x = e->pos().x();
         int y = e->pos().y();
@@ -612,17 +631,13 @@ void MapWidget::mouseMoveEvent(QMouseEvent *e)
         mMouseLastY = y;
     }
 
-    LocPoint pos;
-    QPoint p = getMousePosRelative();
-    pos.setXY(p.x() / 1000.0, p.y() / 1000.0);
-
     if (mRoutePointSelected >= 0) {
-        mRoutes[mRouteNow][mRoutePointSelected].setXY(pos.getX(), pos.getY());
+        mRoutes[mRouteNow][mRoutePointSelected].setXY(mousePosMap.getX(), mousePosMap.getY());
         update();
     }
 
     if (mAnchorSelected >= 0) {
-        mAnchors[mAnchorSelected].setXY(pos.getX(), pos.getY());
+        mAnchors[mAnchorSelected].setXY(mousePosMap.getX(), mousePosMap.getY());
         update();
     }
 
@@ -651,17 +666,30 @@ void MapWidget::mousePressEvent(QMouseEvent *e)
         ctrl_shift = true;
     }
 
-    LocPoint pos;
+    QPoint mousePosWidget = this->mapFromGlobal(QCursor::pos());
+    LocPoint mousePosMap;
     QPoint p = getMousePosRelative();
-    pos.setXY(p.x() / 1000.0, p.y() / 1000.0);
-    pos.setSpeed(mRoutePointSpeed);
-    pos.setTime(mRoutePointTime);
-    pos.setId(mAnchorId);
-    pos.setHeight(mAnchorHeight);
+    mousePosMap.setXY(p.x() / 1000.0, p.y() / 1000.0);
+
+    for (MapModule *m: mMapModules) {
+        if (m->processMouse(true, false, false, false,
+                            mousePosWidget, mousePosMap, 0.0,
+                            ctrl, shift, ctrl_shift,
+                            e->buttons() & Qt::LeftButton,
+                            e->buttons() & Qt::RightButton)) {
+            return;
+        }
+    }
+
+    mousePosMap.setSpeed(mRoutePointSpeed);
+    mousePosMap.setTime(mRoutePointTime);
+    mousePosMap.setId(mAnchorId);
+    mousePosMap.setHeight(mAnchorHeight);
+
     double routeDist = 0.0;
     double anchorDist = 0.0;
-    int routeInd = getClosestPoint(pos, mRoutes[mRouteNow], routeDist);
-    int anchorInd = getClosestPoint(pos, mAnchors, anchorDist);
+    int routeInd = getClosestPoint(mousePosMap, mRoutes[mRouteNow], routeDist);
+    int anchorInd = getClosestPoint(mousePosMap, mAnchors, anchorDist);
     bool routeFound = (routeDist * mScaleFactor * 1000.0) < 20 && routeDist >= 0.0;
     bool anchorFound = (anchorDist * mScaleFactor * 1000.0) < 20 && anchorDist >= 0.0;
 
@@ -709,9 +737,9 @@ void MapWidget::mousePressEvent(QMouseEvent *e)
             if (e->buttons() & Qt::LeftButton) {
                 if (anchorFound) {
                     mAnchorSelected = anchorInd;
-                    mAnchors[anchorInd].setXY(pos.getX(), pos.getY());
+                    mAnchors[anchorInd].setXY(mousePosMap.getX(), mousePosMap.getY());
                 } else {
-                    mAnchors.append(pos);
+                    mAnchors.append(mousePosMap);
                 }
             } else if (e->buttons() & Qt::RightButton) {
                 if (anchorFound) {
@@ -722,15 +750,15 @@ void MapWidget::mousePressEvent(QMouseEvent *e)
             if (e->buttons() & Qt::LeftButton) {
                 if (routeFound) {
                     mRoutePointSelected = routeInd;
-                    mRoutes[mRouteNow][routeInd].setXY(pos.getX(), pos.getY());
+                    mRoutes[mRouteNow][routeInd].setXY(mousePosMap.getX(), mousePosMap.getY());
                 } else {
                     if (mRoutes[mRouteNow].size() < 2 ||
-                            mRoutes[mRouteNow].last().getDistanceTo(pos) <
-                            mRoutes[mRouteNow].first().getDistanceTo(pos)) {
-                        mRoutes[mRouteNow].append(pos);
-                        emit routePointAdded(pos);
+                            mRoutes[mRouteNow].last().getDistanceTo(mousePosMap) <
+                            mRoutes[mRouteNow].first().getDistanceTo(mousePosMap)) {
+                        mRoutes[mRouteNow].append(mousePosMap);
+                        emit routePointAdded(mousePosMap);
                     } else {
-                        mRoutes[mRouteNow].prepend(pos);
+                        mRoutes[mRouteNow].prepend(mousePosMap);
                     }
                 }
             } else if (e->buttons() & Qt::RightButton) {
@@ -764,6 +792,39 @@ void MapWidget::mousePressEvent(QMouseEvent *e)
 
 void MapWidget::mouseReleaseEvent(QMouseEvent *e)
 {
+    bool ctrl = e->modifiers() == Qt::ControlModifier;
+    bool shift = e->modifiers() == Qt::ShiftModifier;
+    bool ctrl_shift = e->modifiers() == (Qt::ControlModifier | Qt::ShiftModifier);
+
+    if (mInteractionMode == InteractionModeCtrlDown) {
+        ctrl = true;
+        shift = false;
+        ctrl_shift = false;
+    } else if (mInteractionMode == InteractionModeShiftDown) {
+        ctrl = false;
+        shift = true;
+        ctrl_shift = false;
+    } else if (mInteractionMode == InteractionModeCtrlShiftDown) {
+        ctrl = false;
+        shift = false;
+        ctrl_shift = true;
+    }
+
+    QPoint mousePosWidget = this->mapFromGlobal(QCursor::pos());
+    LocPoint mousePosMap;
+    QPoint p = getMousePosRelative();
+    mousePosMap.setXY(p.x() / 1000.0, p.y() / 1000.0);
+
+    for (MapModule *m: mMapModules) {
+        if (m->processMouse(false, true, false, false,
+                            mousePosWidget, mousePosMap, 0.0,
+                            ctrl, shift, ctrl_shift,
+                            e->buttons() & Qt::LeftButton,
+                            e->buttons() & Qt::RightButton)) {
+            return;
+        }
+    }
+
     if (!(e->buttons() & Qt::LeftButton)) {
         mMouseLastX = 1000000;
         mMouseLastY = 1000000;
@@ -775,6 +836,37 @@ void MapWidget::mouseReleaseEvent(QMouseEvent *e)
 void MapWidget::wheelEvent(QWheelEvent *e)
 {
     bool ctrl = e->modifiers() == Qt::ControlModifier;
+    bool shift = e->modifiers() == Qt::ShiftModifier;
+    bool ctrl_shift = e->modifiers() == (Qt::ControlModifier | Qt::ShiftModifier);
+
+    if (mInteractionMode == InteractionModeCtrlDown) {
+        ctrl = true;
+        shift = false;
+        ctrl_shift = false;
+    } else if (mInteractionMode == InteractionModeShiftDown) {
+        ctrl = false;
+        shift = true;
+        ctrl_shift = false;
+    } else if (mInteractionMode == InteractionModeCtrlShiftDown) {
+        ctrl = false;
+        shift = false;
+        ctrl_shift = true;
+    }
+
+    QPoint mousePosWidget = this->mapFromGlobal(QCursor::pos());
+    LocPoint mousePosMap;
+    QPoint p = getMousePosRelative();
+    mousePosMap.setXY(p.x() / 1000.0, p.y() / 1000.0);
+
+    for (MapModule *m: mMapModules) {
+        if (m->processMouse(false, false, false, true,
+                            mousePosWidget, mousePosMap, e->angleDelta().y(),
+                            ctrl, shift, ctrl_shift,
+                            e->buttons() & Qt::LeftButton,
+                            e->buttons() & Qt::RightButton)) {
+            return;
+        }
+    }
 
     if (mInteractionMode == InteractionModeCtrlDown) {
         ctrl = true;
@@ -883,6 +975,28 @@ void MapWidget::setInteractionMode(const MapWidget::InteractionMode &controlMode
 {
     mInteractionMode = controlMode;
     update();
+}
+
+void MapWidget::addMapModule(MapModule *m)
+{
+    mMapModules.append(m);
+}
+
+void MapWidget::removeMapModule(MapModule *m)
+{
+    for (int i = 0;i < mMapModules.size();i++) {
+        if (mMapModules.at(i) == m) {
+            mMapModules.remove(i);
+            break;
+        }
+    }
+}
+
+void MapWidget::removeMapModuleLast()
+{
+    if (!mMapModules.isEmpty()) {
+        mMapModules.removeLast();
+    }
 }
 
 double MapWidget::getCameraImageOpacity() const
@@ -1079,8 +1193,12 @@ bool MapWidget::getDrawGrid() const
 
 void MapWidget::setDrawGrid(bool drawGrid)
 {
+    bool drawGridOld = mDrawGrid;
     mDrawGrid = drawGrid;
-    update();
+
+    if (drawGridOld != mDrawGrid) {
+        update();
+    }
 }
 
 void MapWidget::updateClosestInfoPoint()
@@ -2075,6 +2193,12 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
         painter.setOpacity(mCameraImageOpacity);
         painter.drawImage(target, mLastCameraImage, source);
         painter.setOpacity(1.0);
+    }
+
+    // Map module painting
+    for (MapModule *m: mMapModules) {
+        m->processPaint(painter, width, height, highQuality,
+                        drawTrans, txtTrans, mScaleFactor);
     }
 
     // Draw units (m)

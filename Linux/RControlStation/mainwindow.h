@@ -36,6 +36,10 @@
 #include "gpssim.h"
 #endif
 
+#ifdef HAS_SIM_SCEN
+#include "pagesimscen.h"
+#endif
+
 #ifdef HAS_JOYSTICK
 #include "joystick.h"
 #endif
@@ -195,6 +199,10 @@ private:
 
 #ifdef HAS_LIME_SDR
     GpsSim *mGpsSim;
+#endif
+
+#ifdef HAS_SIM_SCEN
+    PageSimScen *mSimScen;
 #endif
 
     void saveRoutes(bool withId);
