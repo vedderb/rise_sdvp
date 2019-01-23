@@ -31,7 +31,7 @@ DEFINES += HAS_OPENGL
 #DEFINES += HAS_LIME_SDR
 
 # Simulation Scennarios
-#DEFINES += HAS_SIM_SCEN
+DEFINES += HAS_SIM_SCEN
 
 TARGET = RControlStation
 TEMPLATE = app

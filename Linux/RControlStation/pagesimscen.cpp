@@ -23,8 +23,6 @@
 #include <cmath>
 #include <clocale>
 
-#define MIN(x, y) ((x)<(y)?(x):(y))
-
 void log_callback(const char *str)
 {
     qDebug() << str;
@@ -74,19 +72,13 @@ void PageSimScen::processPaint(QPainter &painter, int width, int height, bool hi
     if (mOdrManager) {
         double step_length_target = 1.0;
         roadmanager::Position pos, pos_prev;
-
         QPen pen;
 
         for (int r = 0;r < mOdrManager->GetNumOfRoads();r++) {
             roadmanager::Road *road = mOdrManager->GetRoadByIdx(r);
 
-            // Road Center
-            pen.setWidthF(3.5 / scale);
-            pen.setColor(Qt::magenta);
-            painter.setPen(pen);
-            painter.setTransform(drawTrans);
-
-            roadmanager::Geometry *geom;
+            // Road Points?
+            roadmanager::Geometry *geom = 0;
             for (int i = 0; i <= road->GetNumberOfGeometries(); i++) {
                 if (i < road->GetNumberOfGeometries()) {
                     geom = road->GetGeometry(i);
@@ -95,20 +87,14 @@ void PageSimScen::processPaint(QPainter &painter, int width, int height, bool hi
                     pos.SetTrackPos(road->GetId(), geom->GetS() + geom->GetLength(), 0);
                 }
 
-                if (i > 0) {
-                    painter.drawLine(pos_prev.GetX() * 1000.0, pos_prev.GetY() * 1000.0,
-                                     pos.GetX() * 1000.0, pos.GetY() * 1000.0);
-                }
-
-                pos_prev = pos;
+                painter.setTransform(drawTrans);
+                painter.setBrush(Qt::red);
+                pen.setWidth(0);
+                painter.setPen(pen);
+                painter.drawEllipse(QPointF(pos.GetX() * 1000.0, pos.GetY() * 1000.0), 6.0 / scale, 6.0 / scale);
             }
 
             // Lanes
-            pen.setWidthF(2.5 / scale);
-            pen.setColor(Qt::green);
-            painter.setPen(pen);
-            painter.setTransform(drawTrans);
-
             for (int i = 0; i < road->GetNumberOfLaneSections(); i++) {
                 roadmanager::LaneSection *lane_section = road->GetLaneSectionByIdx(i);
                 double s_start = lane_section->GetS();
@@ -123,8 +109,22 @@ void PageSimScen::processPaint(QPainter &painter, int width, int height, bool hi
                         continue;
                     }
 
+                    painter.setTransform(drawTrans);
+
+                    if (lane->GetId() == 0) {
+                        // Center Lane
+                        pen.setWidthF(3.5 / scale);
+                        pen.setColor(Qt::magenta);
+                        painter.setPen(pen);
+                    } else {
+                        pen.setWidthF(2.5 / scale);
+                        pen.setColor(Qt::green);
+                        painter.setPen(pen);
+                    }
+    
                     for (int k = 0;k < steps + 1;k++) {
-                        pos.SetLanePos(road->GetId(), lane->GetId(), MIN(s_end, s_start + k * step_length), 0, i);
+                        pos.SetLanePos(road->GetId(), lane->GetId(),
+                                       fmin(s_end, s_start + (double)k * step_length), 0, i);
 
                         if (k > 0) {
                             painter.drawLine(pos_prev.GetX() * 1000.0, pos_prev.GetY() * 1000.0,
