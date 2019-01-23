@@ -2179,8 +2179,6 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
     const double txtOffset = 145.0;
 
     painter.setTransform(txtTrans);
-    font.setPointSize(10);
-    painter.setFont(font);
 
     if (!mLastCameraImage.isNull() && mCameraImageWidth > 0.001) {
         double imgWidth = (double)width * mCameraImageWidth;
@@ -2202,6 +2200,11 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
         m->processPaint(painter, width, height, highQuality,
                         drawTrans, txtTrans, mScaleFactor);
     }
+
+    painter.setTransform(txtTrans);
+    font.setPointSize(10);
+    painter.setFont(font);
+    painter.setPen(QPen(textColor));
 
     // Draw units (m)
     if (mDrawGrid) {
