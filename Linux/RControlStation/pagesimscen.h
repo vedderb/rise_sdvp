@@ -50,6 +50,7 @@ private slots:
     void timerSlot();
 
     void on_openScenarioButton_clicked();
+    void on_restartButton_clicked();
 
 private:
     Ui::PageSimScen *ui;
@@ -58,6 +59,7 @@ private:
     scenarioengine::ScenarioGateway *mScenarioGateway;
     double mSimTime;
     QTimer *mTimer;
+    QString mOscFileName;
 
 };
 

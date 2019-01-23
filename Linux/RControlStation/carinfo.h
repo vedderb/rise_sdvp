@@ -42,6 +42,12 @@ public:
     void setApGoal(const LocPoint &apGoal);
     qint32 getTime() const;
     void setTime(const qint32 &time);
+    double getLength() const;
+    void setLength(double length);
+    double getWidth() const;
+    void setWidth(double width);
+    double getCornerRadius() const;
+    void setCornerRadius(double cornerRadius);
 
 private:
     int mId;
@@ -52,6 +58,9 @@ private:
     LocPoint mApGoal;
     Qt::GlobalColor mColor;
     qint32 mTime;
+    double mLength;
+    double mWidth;
+    double mCornerRadius;
 
 };
 

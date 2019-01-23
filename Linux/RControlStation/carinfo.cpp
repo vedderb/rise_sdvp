@@ -24,6 +24,9 @@ CarInfo::CarInfo(int id, Qt::GlobalColor color)
     mName = "";
     mName.sprintf("Car %d", mId);
     mTime = 0;
+    mLength = 0.8;
+    mWidth = 0.335;
+    mCornerRadius = 0.02;
 }
 
 int CarInfo::getId()
@@ -94,6 +97,36 @@ qint32 CarInfo::getTime() const
 void CarInfo::setTime(const qint32 &time)
 {
     mTime = time;
+}
+
+double CarInfo::getLength() const
+{
+    return mLength;
+}
+
+void CarInfo::setLength(double length)
+{
+    mLength = length;
+}
+
+double CarInfo::getWidth() const
+{
+    return mWidth;
+}
+
+void CarInfo::setWidth(double width)
+{
+    mWidth = width;
+}
+
+double CarInfo::getCornerRadius() const
+{
+    return mCornerRadius;
+}
+
+void CarInfo::setCornerRadius(double cornerRadius)
+{
+    mCornerRadius = cornerRadius;
 }
 
 LocPoint CarInfo::getLocationUwb() const

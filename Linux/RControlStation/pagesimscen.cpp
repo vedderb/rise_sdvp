@@ -81,7 +81,7 @@ void PageSimScen::processPaint(QPainter &painter, int width, int height, bool hi
             roadmanager::Road *road = mOdrManager->GetRoadByIdx(r);
 
             // Road Center
-            pen.setWidthF(2.5 / scale);
+            pen.setWidthF(3.5 / scale);
             pen.setColor(Qt::magenta);
             painter.setPen(pen);
             painter.setTransform(drawTrans);
@@ -104,7 +104,7 @@ void PageSimScen::processPaint(QPainter &painter, int width, int height, bool hi
             }
 
             // Lanes
-            pen.setWidthF(1.5 / scale);
+            pen.setWidthF(2.5 / scale);
             pen.setColor(Qt::green);
             painter.setPen(pen);
             painter.setTransform(drawTrans);
@@ -162,7 +162,7 @@ void PageSimScen::timerSlot()
     ui->map->setFollowCar(ui->followBox->isChecked() ? ui->carBox->value() : -1);
     ui->map->setDrawGrid(ui->drawGridBox->isChecked());
 
-    if (mScenarioEngine && !ui->pauseBox->isChecked()) {
+    if (mScenarioEngine && !ui->pauseButton->isChecked()) {
         mScenarioEngine->step(dt);
 
         for (int i = 0;i < mScenarioGateway->getNumberOfObjects();i++) {
@@ -170,7 +170,11 @@ void PageSimScen::timerSlot()
 
             CarInfo *car = ui->map->getCarInfo(i);
             if (!car) {
-                ui->map->addCar(CarInfo(i));
+                CarInfo c(i);
+                c.setLength(4.5);
+                c.setWidth(2.0);
+                c.setCornerRadius(0.1);
+                ui->map->addCar(c);
                 car = ui->map->getCarInfo(i);
             }
 
@@ -191,27 +195,37 @@ void PageSimScen::on_openScenarioButton_clicked()
                                                     tr("OpenScenario files (*.xosc)"));
 
     if (!filename.isEmpty()) {
-        try {
-            if (mScenarioEngine) {
-                delete mScenarioEngine;
-            }
+        mOscFileName = filename;
+        on_restartButton_clicked();
+    }
+}
 
-            mSimTime = 0.0;
-            mScenarioEngine = new scenarioengine::ScenarioEngine(filename.toStdString(), mSimTime,
-                                                                 scenarioengine::ExternalControlMode::EXT_CONTROL_BY_OSC);
-            mScenarioGateway = mScenarioEngine->getScenarioGateway();
-            mOdrManager = mScenarioEngine->getRoadManager();
-        } catch (const std::exception& e) {
-            delete mScenarioEngine;
-            mScenarioEngine = 0;
-            mOdrManager = 0;
-            mScenarioGateway = 0;
-            qDebug() << "Could not open OSC file" << e.what();
-        }
+void PageSimScen::on_restartButton_clicked()
+{
+    if (mOscFileName.isEmpty()) {
+        return;
+    }
 
+    try {
         if (mScenarioEngine) {
-            mScenarioEngine->step(0.0, true);
-            ui->map->clearCars();
+            delete mScenarioEngine;
         }
+
+        mSimTime = 0.0;
+        mScenarioEngine = new scenarioengine::ScenarioEngine(mOscFileName.toStdString(), mSimTime,
+                                                             scenarioengine::ExternalControlMode::EXT_CONTROL_BY_OSC);
+        mScenarioGateway = mScenarioEngine->getScenarioGateway();
+        mOdrManager = mScenarioEngine->getRoadManager();
+    } catch (const std::exception& e) {
+        delete mScenarioEngine;
+        mScenarioEngine = 0;
+        mOdrManager = 0;
+        mScenarioGateway = 0;
+        qDebug() << "Could not open OSC file:" << e.what();
+    }
+
+    if (mScenarioEngine) {
+        mScenarioEngine->step(0.0, true);
+        ui->map->clearCars();
     }
 }

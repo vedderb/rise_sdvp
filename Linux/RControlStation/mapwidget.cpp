@@ -1507,9 +1507,6 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
     // Paint begins here
     painter.fillRect(0, 0, width, height, QBrush(Qt::transparent));
 
-    const double car_w = 800;
-    const double car_h = 335;
-    const double car_corner = 20;
     double angle, x, y;
     QString txt;
     QPointF pt_txt;
@@ -1956,6 +1953,11 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
         CarInfo &carInfo = mCarInfo[i];
         LocPoint pos = carInfo.getLocation();
         LocPoint pos_gps = carInfo.getLocationGps();
+
+        const double car_len = carInfo.getLength() * 1000.0;
+        const double car_w = carInfo.getWidth() * 1000.0;
+        const double car_corner = carInfo.getCornerRadius() * 1000.0;
+
         x = pos.getX() * 1000.0;
         y = pos.getY() * 1000.0;
         double x_gps = pos_gps.getX() * 1000.0;
@@ -1991,23 +1993,23 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
         painter.translate(x, y);
         painter.rotate(-angle);
         // Wheels
-        painter.drawRoundedRect(-car_w / 12.0,-(car_h / 2), car_w / 6.0, car_h, car_corner / 3, car_corner / 3);
-        painter.drawRoundedRect(car_w - car_w / 2.5,-(car_h / 2), car_w / 6.0, car_h, car_corner / 3, car_corner / 3);
+        painter.drawRoundedRect(-car_len / 12.0,-(car_w / 2), car_len / 6.0, car_w, car_corner / 3, car_corner / 3);
+        painter.drawRoundedRect(car_len - car_len / 2.5,-(car_w / 2), car_len / 6.0, car_w, car_corner / 3, car_corner / 3);
         // Front bumper
         painter.setBrush(col_bumper);
-        painter.drawRoundedRect(-car_w / 6.0, -((car_h - car_w / 20.0) / 2.0), car_w, car_h - car_w / 20.0, car_corner, car_corner);
+        painter.drawRoundedRect(-car_len / 6.0, -((car_w - car_len / 20.0) / 2.0), car_len, car_w - car_len / 20.0, car_corner, car_corner);
         // Hull
         painter.setBrush(col_hull);
-        painter.drawRoundedRect(-car_w / 6.0, -((car_h - car_w / 20.0) / 2.0), car_w - (car_w / 20.0), car_h - car_w / 20.0, car_corner, car_corner);
+        painter.drawRoundedRect(-car_len / 6.0, -((car_w - car_len / 20.0) / 2.0), car_len - (car_len / 20.0), car_w - car_len / 20.0, car_corner, car_corner);
         painter.restore();
 
         // Center
         painter.setBrush(col_center);
-        painter.drawEllipse(QPointF(x, y), car_h / 15.0, car_h / 15.0);
+        painter.drawEllipse(QPointF(x, y), car_w / 15.0, car_w / 15.0);
 
         // GPS Location
         painter.setBrush(col_gps);
-        painter.drawEllipse(QPointF(x_gps, y_gps), car_h / 15.0, car_h / 15.0);
+        painter.drawEllipse(QPointF(x_gps, y_gps), car_w / 15.0, car_w / 15.0);
 
         // Autopilot state
         LocPoint ap_goal = carInfo.getApGoal();
@@ -2035,7 +2037,7 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
                     carInfo.getLocationGps().getInfo().toLocal8Bit().data(),
                     pos.getX(), pos.getY(), angle,
                     t.hour(), t.minute(), t.second(), t.msec());
-        pt_txt.setX(x + 120 + (car_w - 190) * ((cos(pos.getYaw()) + 1) / 2));
+        pt_txt.setX(x + 120 + (car_len - 190) * ((cos(pos.getYaw()) + 1) / 2));
         pt_txt.setY(y);
         painter.setTransform(txtTrans);
         pt_txt = drawTrans.map(pt_txt);
@@ -2131,7 +2133,7 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
 
         // GPS Location
         painter.setBrush(col_gps);
-        painter.drawEllipse(QPointF(x_gps, y_gps), car_h / 15.0, car_h / 15.0);
+        painter.drawEllipse(QPointF(x_gps, y_gps), 335.0 / 15.0, 335.0 / 15.0);
     }
 
     painter.setPen(QPen(textColor));
