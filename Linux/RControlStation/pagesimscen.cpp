@@ -36,7 +36,7 @@ PageSimScen::PageSimScen(QWidget *parent) :
 
     setlocale(LC_NUMERIC, "C");
 
-    Logger::Inst().SetCallback(log_callback);
+//    Logger::Inst().SetCallback(log_callback);
 
     mScenarioEngine = 0;
     mOdrManager = 0;
@@ -196,6 +196,33 @@ void PageSimScen::on_openScenarioButton_clicked()
 
     if (!filename.isEmpty()) {
         mOscFileName = filename;
+        mScenarioDoc.load_file(mOscFileName.toLocal8Bit().data());
+        mStory.clear();
+        mStory.load(mScenarioDoc.child("OpenSCENARIO").child("Storyboard").child("Story"));
+
+        for (OscAct &a: mStory.acts) {
+            qDebug() << a.name;
+            for (OscSequence &s: a.sequences) {
+                qDebug() << "  " + s.name;
+                for (OscManeuver &m: s.maneuvers) {
+                    qDebug() << "    " + m.name;
+                    for (OscEvent &e: m.events) {
+                        qDebug() << "      " + e.name;
+                        qDebug() << "        " + e.action.name;
+                        for (OscCondition c: e.conditions) {
+                            qDebug() << "        " + c.name;
+                        }
+                    }
+                }
+            }
+
+//            a.addSequence("Test123123");
+//            a.sequences.last().addManeuver("asqweqwe");
+        }
+
+        mStory.save();
+//        mScenarioDoc.save_file("/home/benjamin/Skrivbord/test222.xosc");
+
         on_restartButton_clicked();
     }
 }
@@ -214,7 +241,7 @@ void PageSimScen::on_restartButton_clicked()
         }
 
         mSimTime = 0.0;
-        mScenarioEngine = new scenarioengine::ScenarioEngine(mOscFileName.toStdString(), mSimTime,
+        mScenarioEngine = new scenarioengine::ScenarioEngine(mScenarioDoc, mOscFileName.toStdString(), mSimTime,
                                                              scenarioengine::ExternalControlMode::EXT_CONTROL_BY_OSC);
         mScenarioGateway = mScenarioEngine->getScenarioGateway();
         mOdrManager = mScenarioEngine->getRoadManager();

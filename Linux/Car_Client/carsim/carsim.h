@@ -25,6 +25,7 @@
 #include "vbytearray.h"
 #include "motorsim.h"
 #include "autopilot.h"
+#include "tcpbroadcast.h"
 
 class CarSim : public QObject
 {
@@ -49,6 +50,9 @@ public:
     double axisDistance() const;
     void setAxisDistance(double axisDistance);
 
+    bool startUwbBroadcast(int port, int rateHz);
+    bool startLogBroadcast(int port, int rateHz);
+
 signals:
     void dataToSend(QByteArray data);
 
@@ -62,6 +66,8 @@ public slots:
 
 private slots:
     void timerSlot();
+    void uwbBroadcastTimerSlot();
+    void logBroadcastTimerSlot();
     void readPendingDatagrams();
 
 private:
@@ -101,6 +107,12 @@ private:
     unsigned char mCrcLow;
     unsigned char mCrcHigh;
     CAR_SIM_STATE mSimState;
+    TcpBroadcast *mUwbBroadcast;
+    QTimer *mUwbBroadcastTimer;
+    QVector<UWB_ANCHOR> mUwbAnchors;
+    int mUwbBroadcastAnchorNow;
+    TcpBroadcast *mLogBroadcast;
+    QTimer *mLogBroadcastTimer;
 
     QUdpSocket *mUdpSocket;
     bool mDynoConnected;

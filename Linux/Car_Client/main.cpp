@@ -58,6 +58,8 @@ void showHelp()
     qDebug() << "--simulatecars [num]:[firstid] : Simulate num cars where the first car has ID firstid";
     qDebug() << "--dynosim : Run simulator together with output from AWITAR dyno instead of MotorSim";
     qDebug() << "--simaprepeatroutes [1 or 0] : Repeat routes setting for the simulation (default: 1)";
+    qDebug() << "--simlogen [port]:[rateHz] : Enable simulator logging output on TCP port port at rateHz Hz";
+    qDebug() << "--simuwben [port]:[rateHz] : Enable simulator UWB emulation output on TCP port port at rateHz Hz";
 #ifdef HAS_GUI
     qDebug() << "--usegui : Use QML GUI";
 #endif
@@ -112,6 +114,10 @@ int main(int argc, char *argv[])
     int simulateCarFirst = 0;
     bool dynoSim = false;
     bool simApRepeatRoutes = true;
+    int simLogHz = -1;
+    int simLogTcpPort = -1;
+    int simUwbHz = -1;
+    int simUwbTcpPort = -1;
 
 #ifdef HAS_GUI
     bool useGui = false;
@@ -350,6 +356,30 @@ int main(int argc, char *argv[])
             }
         }
 
+        if (str == "--simlogen") {
+            if ((i - 1) < args.size()) {
+                i++;
+                QStringList param = args.at(i).split(":");
+                if (param.size() == 2) {
+                    found = true;
+                    simLogTcpPort = param.at(0).toInt();
+                    simLogHz = param.at(1).toInt();
+                }
+            }
+        }
+
+        if (str == "--simuwben") {
+            if ((i - 1) < args.size()) {
+                i++;
+                QStringList param = args.at(i).split(":");
+                if (param.size() == 2) {
+                    found = true;
+                    simUwbTcpPort = param.at(0).toInt();
+                    simUwbHz = param.at(1).toInt();
+                }
+            }
+        }
+
 #ifdef HAS_GUI
         if (str == "--usegui") {
             useGui = true;
@@ -389,6 +419,12 @@ int main(int argc, char *argv[])
     for (int i = 0;i < simulateCarNum;i++) {
         car.addSimulatedCar(i + simulateCarFirst);
         car.getSimulatedCar(i + simulateCarFirst)->autopilot()->setRepeatRoutes(simApRepeatRoutes);
+        if (simLogHz > 0) {
+            car.getSimulatedCar(i + simulateCarFirst)->startLogBroadcast(simLogTcpPort, simLogHz);
+        }
+        if (simUwbHz > 0) {
+            car.getSimulatedCar(i + simulateCarFirst)->startUwbBroadcast(simUwbTcpPort, simUwbHz);
+        }
     }
 
     if (tcpRtcmPort >= 0) {
