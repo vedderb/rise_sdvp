@@ -94,6 +94,9 @@ private:
         double accel_z;
         double steering;
         double motor_tacho;
+        double enu_lat;
+        double enu_lon;
+        double enu_height;
     } CAR_SIM_STATE;
 
     QTimer *mTimer;

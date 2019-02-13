@@ -427,10 +427,9 @@ void CarSim::processPacket(VByteArray vb)
             lon = vb.vbPopFrontDouble64(1e16);
             height = vb.vbPopFrontDouble32(1e3);
 
-            // TODO: Use values
-            (void)lat;
-            (void)lon;
-            (void)height;
+            mSimState.enu_lat = lat;
+            mSimState.enu_lon = lon;
+            mSimState.enu_height = height;
 
             // Send ack
             VByteArray ack;
@@ -442,10 +441,9 @@ void CarSim::processPacket(VByteArray vb)
         case CMD_GET_ENU_REF: {
             double llh[3];
 
-            // TODO: Get values
-            llh[0] = 0.0;
-            llh[1] = 0.0;
-            llh[2] = 0.0;
+            llh[0] = mSimState.enu_lat;
+            llh[1] = mSimState.enu_lon;
+            llh[2] = mSimState.enu_height;
 
             VByteArray ret;
             ret.vbAppendUint8(id_ret);

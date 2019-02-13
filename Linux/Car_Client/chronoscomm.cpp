@@ -559,10 +559,10 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload)
             quint16 value_len = vb.vbPopFrontUint16();
             switch (value_id) {
             case ISO_VALUE_ID_LAT:
-                osem.lat = vb.vbPopFrontDouble48(1e7);
+                osem.lat = vb.vbPopFrontDouble48(1e10);
                 break;
             case ISO_VALUE_ID_LON:
-                osem.lon = vb.vbPopFrontDouble48(1e7);
+                osem.lon = vb.vbPopFrontDouble48(1e10);
                 break;
             case ISO_VALUE_ID_ALT:
                 osem.alt = vb.vbPopFrontDouble32(1e2);
@@ -577,7 +577,7 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload)
                 osem.gps_ms_of_week = vb.vbPopFrontUint32() / 4;
                 break;
             default:
-                qDebug() << "OSEM: Unknown value id";
+                qDebug() << "OSEM: Unknown value id:" << value_id;
                 vb.remove(0, value_len);
                 break;
             }
@@ -609,9 +609,11 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload)
 
     case ISO_MSG_STRT: {
         chronos_strt strt;
+        strt.gps_ms_of_week = gpsMsOfWeek();
+        strt.gps_week = gpsWeek();
 
         while (!vb.isEmpty()) {
-            quint16 value_id    = vb.vbPopFrontUint16();
+            quint16 value_id = vb.vbPopFrontUint16();
             quint16 value_len = vb.vbPopFrontUint16();
             switch(value_id) {
             case ISO_VALUE_ID_GPS_SEC_OF_WEEK:
@@ -620,14 +622,14 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload)
             case ISO_VALUE_ID_GPS_WEEK:
                 strt.gps_week = vb.vbPopFrontUint16();
                 break;
-
             default:
-                qDebug() << "STRT: Unknown value id";
+                qDebug() << "STRT: Unknown value id" << value_id;
                 vb.remove(0, value_len);
                 break;
             }
         }
 
+        qDebug() << "STRT: " << strt.gps_week << strt.gps_ms_of_week;
         emit strtRx(strt);
     } break;
 

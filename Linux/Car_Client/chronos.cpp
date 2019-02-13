@@ -202,14 +202,14 @@ void Chronos::processOstm(chronos_ostm ostm)
 
 void Chronos::processStrt(chronos_strt strt)
 {
-    qDebug() << "STRT RX";
+    quint64 cTime = ChronosComm::gpsMsOfWeek();
+
+    qDebug() << "STRT RX" << cTime << strt.gps_ms_of_week;
 
     if (!mIsArmed) {
         qDebug() << "Ignored because car is not armed";
         return;
     }
-
-    quint64 cTime = ChronosComm::gpsMsOfWeek();
 
     if ((strt.gps_ms_of_week <= cTime) || (strt.gps_ms_of_week - cTime) < 10) {
         startTimerSlot();
