@@ -17,6 +17,7 @@
 
 #include "pagesimscen.h"
 #include "ui_pagesimscen.h"
+#include "simscentree.h"
 
 #include <QFileDialog>
 #include <QDebug>
@@ -42,6 +43,7 @@ PageSimScen::PageSimScen(QWidget *parent) :
     mOdrManager = 0;
     mScenarioGateway = 0;
     mSimTime = 0.0;
+    mStory = new OscStory();
 
     mTimer = new QTimer(this);
     mTimer->start(20);
@@ -49,16 +51,76 @@ PageSimScen::PageSimScen(QWidget *parent) :
     ui->map->addMapModule(this);
 
     connect(mTimer, SIGNAL(timeout()), this, SLOT(timerSlot()));
+
+    ui->mainSplitter->setStretchFactor(0, 1);
+    ui->mainSplitter->setStretchFactor(1, 0);
+
+    ui->scenTree->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    ui->scenTree->header()->setStretchLastSection(false);
 }
 
 PageSimScen::~PageSimScen()
 {
     delete mScenarioEngine;
+    delete mStory;
 
     mScenarioEngine = 0;
     mOdrManager = 0;
 
     delete ui;
+}
+
+void PageSimScen::updateScenTree()
+{
+    QList<QTreeWidgetItem*> items;
+
+    for (OscAct &a: mStory->acts) {
+        QTreeWidgetItem *it_a = new QTreeWidgetItem();
+        it_a->setText(0, a.name);
+        it_a->setData(0, Qt::UserRole, QVariant::fromValue(&a));
+        items.append(it_a);
+
+        for (OscSequence &s: a.sequences) {
+            QTreeWidgetItem *it_s = new QTreeWidgetItem(it_a);
+            it_s->setText(0, s.name);
+            it_s->setData(0, Qt::UserRole, QVariant::fromValue(&s));
+
+            for (OscManeuver &m: s.maneuvers) {
+                QTreeWidgetItem *it_m = new QTreeWidgetItem(it_s);
+                it_m->setText(0, m.name);
+                it_m->setData(0, Qt::UserRole, QVariant::fromValue(&m));
+
+                for (OscEvent &e: m.events) {
+                    QTreeWidgetItem *it_e = new QTreeWidgetItem(it_m);
+                    it_e->setText(0, e.name);
+                    it_e->setData(0, Qt::UserRole, QVariant::fromValue(&e));
+
+                    for (OscCondition &c: e.conditions) {
+                        QTreeWidgetItem *it_c = new QTreeWidgetItem(it_e);
+                        it_c->setText(0, c.name);
+                        it_c->setData(0, Qt::UserRole, QVariant::fromValue(&c));
+                    }
+                }
+            }
+        }
+    }
+
+    ui->scenTree->clear();
+    ui->scenTree->insertTopLevelItems(0, items);
+    ui->scenTree->expandAll();
+}
+
+void PageSimScen::selectNodeWithData(QVariant d)
+{
+    QTreeWidgetItemIterator it(ui->scenTree);
+    while (*it) {
+        // TODO: Can the pointer be extracted without all these tries?
+        if ((*it)->data(0, Qt::UserRole) == d) {
+            ui->scenTree->setCurrentItem(*it);
+            break;
+        }
+        ++it;
+    }
 }
 
 void PageSimScen::processPaint(QPainter &painter, int width, int height, bool highQuality,
@@ -197,32 +259,9 @@ void PageSimScen::on_openScenarioButton_clicked()
     if (!filename.isEmpty()) {
         mOscFileName = filename;
         mScenarioDoc.load_file(mOscFileName.toLocal8Bit().data());
-        mStory.clear();
-        mStory.load(mScenarioDoc.child("OpenSCENARIO").child("Storyboard").child("Story"));
-
-        for (OscAct &a: mStory.acts) {
-            qDebug() << a.name;
-            for (OscSequence &s: a.sequences) {
-                qDebug() << "  " + s.name;
-                for (OscManeuver &m: s.maneuvers) {
-                    qDebug() << "    " + m.name;
-                    for (OscEvent &e: m.events) {
-                        qDebug() << "      " + e.name;
-                        qDebug() << "        " + e.action.name;
-                        for (OscCondition c: e.conditions) {
-                            qDebug() << "        " + c.name;
-                        }
-                    }
-                }
-            }
-
-//            a.addSequence("Test123123");
-//            a.sequences.last().addManeuver("asqweqwe");
-        }
-
-        mStory.save();
-//        mScenarioDoc.save_file("/home/benjamin/Skrivbord/test222.xosc");
-
+        mStory->clear();
+        mStory->load(mScenarioDoc.child("OpenSCENARIO").child("Storyboard").child("Story"));
+        updateScenTree();
         on_restartButton_clicked();
     }
 }
@@ -232,6 +271,9 @@ void PageSimScen::on_restartButton_clicked()
     if (mOscFileName.isEmpty()) {
         return;
     }
+
+    mStory->save();
+//        mScenarioDoc.save_file("/home/benjamin/Skrivbord/test222.xosc");
 
     ui->map->clearCars();
 
@@ -257,4 +299,115 @@ void PageSimScen::on_restartButton_clicked()
     }
 
     ui->map->update();
+}
+
+void PageSimScen::on_scenTree_currentItemChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous)
+{
+    (void)previous;
+
+    QWidget *w = ui->propArea->widget();
+    if (w) {
+        w->deleteLater();
+    }
+
+    if (!current) {
+        return;
+    }
+
+    QVariant data = current->data(0, Qt::UserRole);
+
+    auto reload = [data,this]() {
+        // For some reason it crashes when not using a qtimer and reloading in
+        // the next event loop iteration. TODO: Figure out why
+        QTimer::singleShot(0, [data,this]() {
+            updateScenTree();
+            selectNodeWithData(data);
+        });
+    };
+
+    if (data.canConvert<OscAct*>()) {
+        OscAct* a = data.value<OscAct*>();
+        QLineEdit *e = new QLineEdit();
+        e->setText(a->name);
+        ui->propArea->setWidget(e);
+
+        connect(e, &QLineEdit::editingFinished, [this,a,e,reload]() {
+            a->name = e->text();
+            a->save();
+            reload();
+        });
+    } else if (data.canConvert<OscSequence*>()) {
+        OscSequence* s = data.value<OscSequence*>();
+        QLineEdit *e = new QLineEdit();
+        e->setText(s->name);
+        ui->propArea->setWidget(e);
+
+        connect(e, &QLineEdit::editingFinished, [this,s,e,reload]() {
+            s->name = e->text();
+            s->save();
+            reload();
+        });
+    } else if (data.canConvert<OscEvent*>()) {
+        OscEvent* e = data.value<OscEvent*>();
+        (void)e;
+    } else if (data.canConvert<OscCondition*>()) {
+        OscCondition* c = data.value<OscCondition*>();
+        if (c->type == OscCondByEntityReachPosLane) {
+            QVBoxLayout *l = new QVBoxLayout;
+            l->setSpacing(1);
+
+            QLineEdit *nameEdit = new QLineEdit();
+            nameEdit->setText(c->name);
+            l->addWidget(nameEdit);
+
+            QDoubleSpinBox *toleranceEdit = new QDoubleSpinBox;
+            toleranceEdit->setPrefix("Tolerance: ");
+            toleranceEdit->setDecimals(2);
+            toleranceEdit->setMaximum(999);
+            toleranceEdit->setValue(c->reachPosTolerance);
+            l->addWidget(toleranceEdit);
+
+            QDoubleSpinBox *posEdit = new QDoubleSpinBox;
+            posEdit->setPrefix("Pos: ");
+            posEdit->setDecimals(1);
+            posEdit->setMaximum(9999);
+            posEdit->setValue(c->reachPosS);
+            l->addWidget(posEdit);
+
+            QSpinBox *roadEdit = new QSpinBox;
+            roadEdit->setPrefix("Road: ");
+            roadEdit->setMinimum(-999);
+            roadEdit->setMaximum(999);
+            roadEdit->setValue(c->reachPosRoad);
+            l->addWidget(roadEdit);
+
+            QSpinBox *laneEdit = new QSpinBox;
+            laneEdit->setPrefix("Lane: ");
+            laneEdit->setMinimum(-999);
+            laneEdit->setMaximum(999);
+            laneEdit->setValue(c->reachPosLane);
+            l->addWidget(laneEdit);
+
+            auto updateFunc = [this,c,nameEdit,toleranceEdit,posEdit,roadEdit,laneEdit,reload]() {
+                c->name = nameEdit->text();
+                c->reachPosTolerance = toleranceEdit->value();
+                c->reachPosS = posEdit->value();
+                c->reachPosRoad = roadEdit->value();
+                c->reachPosLane = laneEdit->value();
+                c->save();
+                reload();
+            };
+
+            connect(nameEdit, &QLineEdit::editingFinished, updateFunc);
+            connect(toleranceEdit, &QAbstractSpinBox::editingFinished, updateFunc);
+            connect(posEdit, &QAbstractSpinBox::editingFinished, updateFunc);
+            connect(roadEdit, &QAbstractSpinBox::editingFinished, updateFunc);
+            connect(laneEdit, &QAbstractSpinBox::editingFinished, updateFunc);
+
+            l->addStretch();
+            QWidget *w = new QWidget;
+            w->setLayout(l);
+            ui->propArea->setWidget(w);
+        }
+    }
 }

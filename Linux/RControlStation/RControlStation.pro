@@ -169,7 +169,8 @@ contains(DEFINES, HAS_LIME_SDR) {
 contains(DEFINES, HAS_SIM_SCEN) {
     include(env_sim/EnvironmentSimulator.pri)
     SOURCES += pagesimscen.cpp
-    HEADERS += pagesimscen.h
+    HEADERS += pagesimscen.h \
+            simscentree.h
     FORMS += pagesimscen.ui
 }
 
