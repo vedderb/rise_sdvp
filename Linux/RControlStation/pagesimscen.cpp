@@ -126,10 +126,8 @@ void PageSimScen::selectNodeWithData(QVariant d)
 void PageSimScen::processPaint(QPainter &painter, int width, int height, bool highQuality,
                                QTransform drawTrans, QTransform txtTrans, double scale)
 {
-    (void)painter;
     (void)width; (void)height;
     (void)highQuality;
-    (void)drawTrans; (void)txtTrans;
 
     if (mOdrManager) {
         double step_length_target = 1.0;
@@ -195,6 +193,31 @@ void PageSimScen::processPaint(QPainter &painter, int width, int height, bool hi
 
                         pos_prev = pos;
                     }
+                }
+            }
+        }
+
+        // Plot selected scenario properties
+        auto treeItem = ui->scenTree->currentItem();
+        if (treeItem) {
+            auto data = treeItem->data(0, Qt::UserRole);
+
+            if (data.canConvert<OscCondition*>()) {
+                auto c = data.value<OscCondition*>();
+                if (c->type == OscCondByEntityReachPosLane) {
+                    pos.SetLanePos(c->reachPosRoad, c->reachPosLane, c->reachPosS, 0);
+                    painter.setTransform(drawTrans);
+                    painter.setPen(Qt::NoPen);
+                    painter.setBrush(Qt::blue);
+                    painter.setOpacity(0.5);
+                    QPointF center(pos.GetX() * 1000.0, pos.GetY() * 1000.0);
+                    double rad = c->reachPosTolerance * 1000.0;
+                    painter.drawEllipse(center, rad, rad);
+                    painter.setOpacity(1.0);
+                    auto ptTxt = drawTrans.map(center);
+                    painter.setTransform(txtTrans);
+                    painter.setBrush(Qt::red);
+                    painter.drawEllipse(ptTxt, 5, 5);
                 }
             }
         }
@@ -305,6 +328,8 @@ void PageSimScen::on_scenTree_currentItemChanged(QTreeWidgetItem *current, QTree
 {
     (void)previous;
 
+    ui->map->update();
+
     QWidget *w = ui->propArea->widget();
     if (w) {
         w->deleteLater();
@@ -389,20 +414,24 @@ void PageSimScen::on_scenTree_currentItemChanged(QTreeWidgetItem *current, QTree
             l->addWidget(laneEdit);
 
             auto updateFunc = [this,c,nameEdit,toleranceEdit,posEdit,roadEdit,laneEdit,reload]() {
+                bool nameChanged = c->name != nameEdit->text();
                 c->name = nameEdit->text();
                 c->reachPosTolerance = toleranceEdit->value();
                 c->reachPosS = posEdit->value();
                 c->reachPosRoad = roadEdit->value();
                 c->reachPosLane = laneEdit->value();
                 c->save();
-                reload();
+                ui->map->update();
+                if (nameChanged) {
+                    reload();
+                }
             };
 
             connect(nameEdit, &QLineEdit::editingFinished, updateFunc);
-            connect(toleranceEdit, &QAbstractSpinBox::editingFinished, updateFunc);
-            connect(posEdit, &QAbstractSpinBox::editingFinished, updateFunc);
-            connect(roadEdit, &QAbstractSpinBox::editingFinished, updateFunc);
-            connect(laneEdit, &QAbstractSpinBox::editingFinished, updateFunc);
+            connect(toleranceEdit, QOverload<double>::of(&QDoubleSpinBox::valueChanged), updateFunc);
+            connect(posEdit, QOverload<double>::of(&QDoubleSpinBox::valueChanged), updateFunc);
+            connect(roadEdit, QOverload<int>::of(&QSpinBox::valueChanged), updateFunc);
+            connect(laneEdit, QOverload<int>::of(&QSpinBox::valueChanged), updateFunc);
 
             l->addStretch();
             QWidget *w = new QWidget;
