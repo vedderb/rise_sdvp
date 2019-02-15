@@ -55,6 +55,14 @@ release_lin {
     UI_DIR = build/lin/obj
 }
 
+release_android {
+    DESTDIR = build/android
+    OBJECTS_DIR = build/android/obj
+    MOC_DIR = build/android/obj
+    RCC_DIR = build/android/obj
+    UI_DIR = build/android/obj
+}
+
 contains(DEFINES, HAS_ASSIMP) {
     LIBS += -lassimp
 }
