@@ -37,7 +37,7 @@
 Ping::Ping(QObject *parent) : QThread(parent)
 {
     mSocket = -1;
-#ifdef Q_OS_UNIX
+#if defined(Q_OS_UNIX) && !defined(Q_OS_ANDROID)
     mPacket = new unsigned char[120000];
     mOutpack = new unsigned char[120000];
 #endif
@@ -47,7 +47,7 @@ Ping::~Ping()
 {
     this->wait();
 
-#ifdef Q_OS_UNIX
+#if defined(Q_OS_UNIX) && !defined(Q_OS_ANDROID)
     if (mSocket >= 0) {
         close(mSocket);
     }
@@ -59,7 +59,7 @@ Ping::~Ping()
 
 bool Ping::pingHost(QString host, int len, QString msg)
 {
-#ifdef Q_OS_UNIX
+#if defined(Q_OS_UNIX) && !defined(Q_OS_ANDROID)
     if (this->isRunning()) {
         //emit pingError(msg, "Ping already in progress");
         return false;
@@ -91,7 +91,7 @@ bool Ping::pingHost(QString host, int len, QString msg)
 
 void Ping::run()
 {
-#ifdef Q_OS_UNIX
+#if defined(Q_OS_UNIX) && !defined(Q_OS_ANDROID)
     int i, cc, packlen;
     int datalen = mLen - ICMP_MINLEN;
     struct hostent *hp;

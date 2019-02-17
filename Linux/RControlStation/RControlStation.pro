@@ -25,7 +25,7 @@ unix:!macx {
 }
 
 # OpenGL support
-DEFINES += HAS_OPENGL
+!android: DEFINES += HAS_OPENGL
 
 # Lime SDR support
 #DEFINES += HAS_LIME_SDR
@@ -184,3 +184,17 @@ contains(DEFINES, HAS_SIM_SCEN) {
 
 RESOURCES += \
     resources.qrc
+
+DISTFILES += \
+    android/AndroidManifest.xml \
+    android/gradle/wrapper/gradle-wrapper.jar \
+    android/gradlew \
+    android/res/values/libs.xml \
+    android/build.gradle \
+    android/gradle/wrapper/gradle-wrapper.properties \
+    android/gradlew.bat
+
+contains(ANDROID_TARGET_ARCH,armeabi-v7a) {
+    ANDROID_PACKAGE_SOURCE_DIR = \
+        $$PWD/android
+}

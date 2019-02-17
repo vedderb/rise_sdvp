@@ -1578,8 +1578,8 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
         i_llh[1] = mRefLon;
         i_llh[2] = mRefHeight;
 
-        mOsmZoomLevel = (int)round(log2(mScaleFactor * mOsmRes * 100000000.0 *
-                                        cos(i_llh[0] * M_PI / 180.0)));
+        mOsmZoomLevel = (int)round(log(mScaleFactor * mOsmRes * 100000000.0 *
+                                        cos(i_llh[0] * M_PI / 180.0)) / log(2.0));
         if (mOsmZoomLevel > mOsmMaxZoomLevel) {
             mOsmZoomLevel = mOsmMaxZoomLevel;
         } else if (mOsmZoomLevel < 0) {
