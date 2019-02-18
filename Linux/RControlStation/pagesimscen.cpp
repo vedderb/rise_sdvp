@@ -267,6 +267,9 @@ void PageSimScen::timerSlot()
             carPos.setXY(pos.GetX(), pos.GetY());
             carPos.setYaw(-pos.GetH());
             car->setLocation(carPos);
+            LocPoint carAp = car->getApGoal();
+            carAp.setRadius(0.0);
+            car->setApGoal(carAp);
         }
 
         ui->map->update();
