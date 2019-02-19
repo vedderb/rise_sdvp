@@ -6,7 +6,8 @@
 #include "pugixml.hpp"
 
 typedef enum {
-    OscActionLateralLaneChange = 0
+    OscActionUnknown = 0,
+    OscActionLatLaneChAbs
 } OscActionType;
 
 class OscAction {
@@ -15,13 +16,68 @@ public:
     OscActionType type;
     pugi::xml_node node;
 
+    QString latLaneChAbs_obj;
+    bool latLaneChAbs_freespace;
+    double latLaneChAbs_timegap;
+    double latLaneChAbs_time;
+    QString latLaneChAbs_shape;
+    int latLaneChAbs_value;
+
     void load(const pugi::xml_node xml_node) {
         node = xml_node;
         name = node.attribute("name").as_string();
+        type = OscActionUnknown;
+
+        for (auto child = node.first_child(); child; child = child.next_sibling()) {
+            if (QString(child.name()) == "Private") {
+                for (auto child2 = child.first_child(); child2; child2 = child2.next_sibling()) {
+                    if (QString(child2.name()) == "Lateral") {
+                        for (auto child3 = child2.first_child(); child3; child3 = child3.next_sibling()) {
+                            if (QString(child3.name()) == "LaneChange") {
+                                latLaneChAbs_obj = child3.attribute("object").as_string();
+                                latLaneChAbs_freespace = QString(child3.attribute("freespace").as_string()).toLower() == true;
+                                latLaneChAbs_timegap = child3.attribute("timeGap").as_double();
+                            }
+                            for (auto child4 = child3.first_child(); child4; child4 = child4.next_sibling()) {
+                                if (QString(child4.name()) == "Dynamics") {
+                                    latLaneChAbs_time = child4.attribute("time").as_double();
+                                    latLaneChAbs_shape = child4.attribute("shape").as_string("sinusoidal");
+                                } else if (QString(child4.name()) == "Target") {
+                                    for (auto child5 = child4.first_child(); child5; child5 = child5.next_sibling()) {
+                                        if (QString(child5.name()) == "Absolute") {
+                                            type = OscActionLatLaneChAbs;
+                                            latLaneChAbs_value = child5.attribute("value").as_int();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     void save() {
         node.attribute("name").set_value(name.toLocal8Bit().data());
+
+        switch (type) {
+        case OscActionLatLaneChAbs: {
+            pugi::xml_node laneChange = node.child("Private").child("Lateral").child("LaneChange");
+            laneChange.attribute("object").set_value(latLaneChAbs_obj.toLocal8Bit().data());
+            laneChange.attribute("freespace").set_value(latLaneChAbs_freespace ? "true" : "false");
+            laneChange.attribute("timeGap").set_value(latLaneChAbs_timegap);
+
+            pugi::xml_node dynamics = laneChange.child("Dynamics");
+            dynamics.attribute("time").set_value(latLaneChAbs_time);
+            dynamics.attribute("shape").set_value(latLaneChAbs_shape.toLocal8Bit().data());
+
+            laneChange.child("Target").child("Absolute").attribute("value").set_value(latLaneChAbs_value);
+        } break;
+
+        default:
+            break;
+        }
     }
 };
 

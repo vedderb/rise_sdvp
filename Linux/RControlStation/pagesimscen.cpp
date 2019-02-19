@@ -21,6 +21,8 @@
 
 #include <QFileDialog>
 #include <QDebug>
+#include <QMenu>
+#include <QAction>
 #include <cmath>
 #include <clocale>
 
@@ -57,6 +59,10 @@ PageSimScen::PageSimScen(QWidget *parent) :
 
     ui->scenTree->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
     ui->scenTree->header()->setStretchLastSection(false);
+    ui->scenTree->setContextMenuPolicy(Qt::CustomContextMenu);
+
+    connect(ui->scenTree, SIGNAL(customContextMenuRequested(QPoint)),
+            this, SLOT(showScenTreeContextMenu(QPoint)));
 }
 
 PageSimScen::~PageSimScen()
@@ -94,6 +100,10 @@ void PageSimScen::updateScenTree()
                     QTreeWidgetItem *it_e = new QTreeWidgetItem(it_m);
                     it_e->setText(0, e.name);
                     it_e->setData(0, Qt::UserRole, QVariant::fromValue(&e));
+
+                    QTreeWidgetItem *it_ac = new QTreeWidgetItem(it_e);
+                    it_ac->setText(0, e.action.name);
+                    it_ac->setData(0, Qt::UserRole, QVariant::fromValue(&e.action));
 
                     for (OscCondition &c: e.conditions) {
                         QTreeWidgetItem *it_c = new QTreeWidgetItem(it_e);
@@ -251,7 +261,8 @@ void PageSimScen::timerSlot()
         mScenarioEngine->step(dt);
 
         for (int i = 0;i < mScenarioGateway->getNumberOfObjects();i++) {
-            roadmanager::Position pos = mScenarioGateway->getObjectStatePtrByIdx(i)->state_.pos;
+            auto objState = mScenarioGateway->getObjectStatePtrByIdx(i)->state_;
+            auto pos = objState.pos;
 
             CarInfo *car = ui->map->getCarInfo(i);
             if (!car) {
@@ -270,9 +281,27 @@ void PageSimScen::timerSlot()
             LocPoint carAp = car->getApGoal();
             carAp.setRadius(0.0);
             car->setApGoal(carAp);
+            car->setName(objState.name);
+            car->setColor(QString(objState.name).toLower() == "ego" ? Qt::blue : Qt::red);
         }
 
         ui->map->update();
+    }
+}
+
+void PageSimScen::showScenTreeContextMenu(const QPoint &pos)
+{
+    auto treeItem = ui->scenTree->itemAt(pos);
+    if (treeItem) {
+        QMenu contextMenu(ui->scenTree);
+        QAction action1(treeItem->text(0), ui->scenTree);
+
+        connect(&action1, &QAction::triggered, []() {
+
+        });
+
+        contextMenu.addAction(&action1);
+        contextMenu.exec(ui->scenTree->mapToGlobal(pos));
     }
 }
 
@@ -391,6 +420,7 @@ void PageSimScen::on_scenTree_currentItemChanged(QTreeWidgetItem *current, QTree
             QDoubleSpinBox *toleranceEdit = new QDoubleSpinBox;
             toleranceEdit->setPrefix("Tolerance: ");
             toleranceEdit->setDecimals(2);
+            toleranceEdit->setSingleStep(0.2);
             toleranceEdit->setMaximum(999);
             toleranceEdit->setValue(c->reachPosTolerance);
             l->addWidget(toleranceEdit);
@@ -435,6 +465,59 @@ void PageSimScen::on_scenTree_currentItemChanged(QTreeWidgetItem *current, QTree
             connect(posEdit, QOverload<double>::of(&QDoubleSpinBox::valueChanged), updateFunc);
             connect(roadEdit, QOverload<int>::of(&QSpinBox::valueChanged), updateFunc);
             connect(laneEdit, QOverload<int>::of(&QSpinBox::valueChanged), updateFunc);
+
+            l->addStretch();
+            QWidget *w = new QWidget;
+            w->setLayout(l);
+            ui->propArea->setWidget(w);
+        }
+    } else if (data.canConvert<OscAction*>()) {
+        OscAction* a = data.value<OscAction*>();
+        if (a->type == OscActionLatLaneChAbs) {
+            QVBoxLayout *l = new QVBoxLayout;
+            l->setSpacing(1);
+
+            QLineEdit *nameEdit = new QLineEdit();
+            nameEdit->setText(a->name);
+            l->addWidget(nameEdit);
+
+            QLineEdit *objectEdit = new QLineEdit();
+            objectEdit->setText(a->latLaneChAbs_obj);
+            l->addWidget(objectEdit);
+
+            QSpinBox *valueEdit = new QSpinBox;
+            valueEdit->setPrefix("Value: ");
+            valueEdit->setMinimum(-999);
+            valueEdit->setMaximum(999);
+            valueEdit->setValue(a->latLaneChAbs_value);
+            l->addWidget(valueEdit);
+
+            QDoubleSpinBox *timeEdit = new QDoubleSpinBox;
+            timeEdit->setPrefix("Time: ");
+            timeEdit->setSuffix(" s");
+            timeEdit->setDecimals(2);
+            timeEdit->setMaximum(9999);
+            timeEdit->setSingleStep(0.1);
+            timeEdit->setValue(a->latLaneChAbs_time);
+            l->addWidget(timeEdit);
+
+            auto updateFunc = [this,a,nameEdit,objectEdit,valueEdit,timeEdit,reload]() {
+                bool nameChanged = a->name != nameEdit->text();
+                a->name = nameEdit->text();
+                a->latLaneChAbs_obj = objectEdit->text();
+                a->latLaneChAbs_value = valueEdit->value();
+                a->latLaneChAbs_time = timeEdit->value();
+                a->save();
+                ui->map->update();
+                if (nameChanged) {
+                    reload();
+                }
+            };
+
+            connect(nameEdit, &QLineEdit::editingFinished, updateFunc);
+            connect(objectEdit, &QLineEdit::editingFinished, updateFunc);
+            connect(valueEdit, QOverload<int>::of(&QSpinBox::valueChanged), updateFunc);
+            connect(timeEdit, QOverload<double>::of(&QDoubleSpinBox::valueChanged), updateFunc);
 
             l->addStretch();
             QWidget *w = new QWidget;

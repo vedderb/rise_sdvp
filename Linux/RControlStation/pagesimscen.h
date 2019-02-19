@@ -23,6 +23,7 @@
 #include <QDebug>
 #include <QVector>
 #include <QTreeWidgetItem>
+#include <QPoint>
 
 #include "mapwidget.h"
 
@@ -54,6 +55,7 @@ public:
 
 private slots:
     void timerSlot();
+    void showScenTreeContextMenu(const QPoint &pos);
 
     void on_openScenarioButton_clicked();
     void on_restartButton_clicked();
