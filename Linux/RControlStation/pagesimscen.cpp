@@ -184,8 +184,6 @@ void PageSimScen::processPaint(QPainter &painter, int width, int height, bool hi
                         continue;
                     }
 
-                    painter.setTransform(drawTrans);
-
                     if (lane->GetId() == 0) {
                         // Center Lane
                         pen.setWidthF(3.5 / scale);
@@ -196,7 +194,9 @@ void PageSimScen::processPaint(QPainter &painter, int width, int height, bool hi
                         pen.setColor(Qt::green);
                         painter.setPen(pen);
                     }
-    
+
+                    painter.setTransform(drawTrans);
+
                     for (int k = 0;k < steps + 1;k++) {
                         pos.SetLanePos(road->GetId(), lane->GetId(),
                                        fmin(s_end, s_start + (double)k * step_length), 0, i);
@@ -208,6 +208,33 @@ void PageSimScen::processPaint(QPainter &painter, int width, int height, bool hi
 
                         pos_prev = pos;
                     }
+                }
+            }
+        }
+
+        // Draw text on top of lines (which is why we have to loop through everything again)
+        for (int r = 0;r < mOdrManager->GetNumOfRoads();r++) {
+            roadmanager::Road *road = mOdrManager->GetRoadByIdx(r);
+            for (int i = 0; i < road->GetNumberOfLaneSections();i++) {
+                roadmanager::LaneSection *lane_section = road->GetLaneSectionByIdx(i);
+                double s_start = lane_section->GetS();
+                for (int j = 0;j < lane_section->GetNumberOfLanes();j++) {
+                    roadmanager::Lane *lane = lane_section->GetLaneByIdx(j);
+
+                    if (!lane->IsDriving() && lane->GetId() != 0) {
+                        continue;
+                    }
+
+                    pos.SetLanePos(road->GetId(), lane->GetId(), s_start, 0, i);
+                    QPointF center(pos.GetX() * 1000.0, pos.GetY() * 1000.0);
+                    QPointF ptTxt = drawTrans.map(center);
+                    ptTxt.setX(ptTxt.x() + 5);
+                    ptTxt.setY(ptTxt.y() - 5);
+                    painter.save();
+                    painter.setTransform(txtTrans);
+                    painter.setPen(Qt::black);
+                    painter.drawText(ptTxt, QString("R%1:L%2").arg(road->GetId()).arg(lane->GetId()));
+                    painter.restore();
                 }
             }
         }
