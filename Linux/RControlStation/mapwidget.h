@@ -46,7 +46,7 @@ public:
     virtual bool processMouse(bool isPress, bool isRelease, bool isMove, bool isWheel,
                               QPoint widgetPos, LocPoint mapPos, double wheelAngleDelta,
                               bool ctrl, bool shift, bool ctrlShift,
-                              bool leftButton, bool rightButton) = 0;
+                              bool leftButton, bool rightButton, double scale) = 0;
 };
 
 class MapWidget : public QWidget
@@ -79,6 +79,7 @@ public:
     void clearAnchors();
     QList<LocPoint> getAnchors();
     void setScaleFactor(double scale);
+    double getScaleFactor();
     void setRotation(double rotation);
     void setXOffset(double offset);
     void setYOffset(double offset);

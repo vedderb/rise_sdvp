@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QString>
+#include <QVector>
 #include "pugixml.hpp"
 
 typedef enum {
@@ -35,7 +36,7 @@ public:
                         for (auto child3 = child2.first_child(); child3; child3 = child3.next_sibling()) {
                             if (QString(child3.name()) == "LaneChange") {
                                 latLaneChAbs_obj = child3.attribute("object").as_string();
-                                latLaneChAbs_freespace = QString(child3.attribute("freespace").as_string()).toLower() == true;
+                                latLaneChAbs_freespace = QString(child3.attribute("freespace").as_string()).toLower() == "true";
                                 latLaneChAbs_timegap = child3.attribute("timeGap").as_double();
                             }
                             for (auto child4 = child3.first_child(); child4; child4 = child4.next_sibling()) {
@@ -211,7 +212,7 @@ public:
     }
 
     void save() {
-        name = node.attribute("name").as_string();
+        node.attribute("name").set_value(name.toLocal8Bit().data());
         action.save();
         for (auto cond: conditions) {
             cond.save();
@@ -242,16 +243,53 @@ public:
         return false;
     }
 
-    void addEvent(QString name) {
+    void addEvent(QString name, QString priority = "overwrite") {
         pugi::xml_node newNode;
         if (events.empty()) {
-            newNode = node.append_child("Maneuver");
+            newNode = node.append_child("Event");
         } else {
-            newNode = node.insert_child_after("Maneuver", events.last().node);
+            newNode = node.insert_child_after("Event", events.last().node);
         }
 
         newNode.append_attribute("name").set_value(name.toLocal8Bit().data());
+        newNode.append_attribute("priority").set_value(priority.toLocal8Bit().data());
         events.append(OscEvent(newNode));
+    }
+
+    void addEventLaneChangePos(QString name) {
+        addEvent(name);
+        pugi::xml_node eventNode = events.last().node;
+
+        pugi::xml_node actionNode = eventNode.append_child("Action");
+        actionNode.append_attribute("name").set_value(QString(name + "Action").toLocal8Bit().data());
+        pugi::xml_node laneChangeNode = actionNode.append_child("Private").
+                append_child("Lateral").append_child("LaneChange");
+        laneChangeNode.append_attribute("object").set_value("Ego");
+        laneChangeNode.append_attribute("freespace").set_value("true");
+        laneChangeNode.append_attribute("timeGap").set_value(1.0);
+        pugi::xml_node dynamicsNode = laneChangeNode.append_child("Dynamics");
+        dynamicsNode.append_attribute("time").set_value(2.0);
+        dynamicsNode.append_attribute("shape").set_value("sinusoidal");
+        laneChangeNode.append_child("Target").append_child("Absolute").append_attribute("value").set_value(0);
+
+        pugi::xml_node conditionNode = eventNode.append_child("StartConditions").
+                append_child("ConditionGroup").append_child("Condition");
+        conditionNode.append_attribute("name").set_value(QString(name + "Condition").toLocal8Bit().data());
+        conditionNode.append_attribute("delay").set_value(0.0);
+        conditionNode.append_attribute("edge").set_value("rising");
+        pugi::xml_node byEntNode = conditionNode.append_child("ByEntity");
+        pugi::xml_node triggerEntNode = byEntNode.append_child("TriggeringEntities");
+        triggerEntNode.append_attribute("rule").set_value("any");
+        triggerEntNode.append_child("Entity").append_attribute("name").set_value("Ego");
+        pugi::xml_node reachPosNode = byEntNode.append_child("EntityCondition").append_child("ReachPosition");
+        reachPosNode.append_attribute("tolerance").set_value(1.0);
+        pugi::xml_node laneNode = reachPosNode.append_child("Position").append_child("Lane");
+        laneNode.append_attribute("roadId").set_value(0);
+        laneNode.append_attribute("laneId").set_value(0);
+        laneNode.append_attribute("s").set_value(0.0);
+
+        events.removeLast();
+        events.append(OscEvent(eventNode));
     }
 
     void load(const pugi::xml_node xml_node) {

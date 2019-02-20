@@ -33,6 +33,7 @@
 #include "pugixml.hpp"
 
 class OscStory;
+class OscCondition;
 
 namespace Ui {
 class PageSimScen;
@@ -51,15 +52,17 @@ public:
     bool processMouse(bool isPress, bool isRelease, bool isMove, bool isWheel,
                       QPoint widgetPos, LocPoint mapPos, double wheelAngleDelta,
                       bool ctrl, bool shift, bool ctrlShift,
-                      bool leftButton, bool rightButton);
+                      bool leftButton, bool rightButton, double scale);
 
 private slots:
     void timerSlot();
     void showScenTreeContextMenu(const QPoint &pos);
 
     void on_openScenarioButton_clicked();
+    void on_saveScenarioButton_clicked();
     void on_restartButton_clicked();
     void on_scenTree_currentItemChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);
+    void on_drawOsmBox_toggled(bool checked);
 
 private:
     Ui::PageSimScen *ui;
@@ -71,6 +74,7 @@ private:
     QString mOscFileName;
     pugi::xml_document mScenarioDoc;
     OscStory *mStory;
+    QVector<OscCondition*> mConditions;
 
     void updateScenTree();
     void selectNodeWithData(QVariant d);

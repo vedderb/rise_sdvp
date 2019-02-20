@@ -368,6 +368,11 @@ void MapWidget::setScaleFactor(double scale)
     update();
 }
 
+double MapWidget::getScaleFactor()
+{
+    return mScaleFactor;
+}
+
 void MapWidget::setRotation(double rotation)
 {
     mRotation = rotation;
@@ -602,7 +607,8 @@ void MapWidget::mouseMoveEvent(QMouseEvent *e)
                             mousePosWidget, mousePosMap, 0.0,
                             ctrl, shift, ctrl_shift,
                             e->buttons() & Qt::LeftButton,
-                            e->buttons() & Qt::RightButton)) {
+                            e->buttons() & Qt::RightButton,
+                            mScaleFactor)) {
             return;
         }
     }
@@ -676,7 +682,8 @@ void MapWidget::mousePressEvent(QMouseEvent *e)
                             mousePosWidget, mousePosMap, 0.0,
                             ctrl, shift, ctrl_shift,
                             e->buttons() & Qt::LeftButton,
-                            e->buttons() & Qt::RightButton)) {
+                            e->buttons() & Qt::RightButton,
+                            mScaleFactor)) {
             return;
         }
     }
@@ -820,7 +827,8 @@ void MapWidget::mouseReleaseEvent(QMouseEvent *e)
                             mousePosWidget, mousePosMap, 0.0,
                             ctrl, shift, ctrl_shift,
                             e->buttons() & Qt::LeftButton,
-                            e->buttons() & Qt::RightButton)) {
+                            e->buttons() & Qt::RightButton,
+                            mScaleFactor)) {
             return;
         }
     }
@@ -863,7 +871,8 @@ void MapWidget::wheelEvent(QWheelEvent *e)
                             mousePosWidget, mousePosMap, e->angleDelta().y(),
                             ctrl, shift, ctrl_shift,
                             e->buttons() & Qt::LeftButton,
-                            e->buttons() & Qt::RightButton)) {
+                            e->buttons() & Qt::RightButton,
+                            mScaleFactor)) {
             return;
         }
     }

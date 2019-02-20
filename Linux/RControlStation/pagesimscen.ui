@@ -28,7 +28,7 @@
       </property>
      </widget>
      <widget class="QWidget" name="widget" native="true">
-      <layout class="QVBoxLayout" name="verticalLayout">
+      <layout class="QVBoxLayout" name="verticalLayout_3">
        <item>
         <widget class="QSplitter" name="splitter">
          <property name="orientation">
@@ -50,46 +50,78 @@
            </property>
           </column>
          </widget>
-         <widget class="QScrollArea" name="propArea">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="widgetResizable">
-           <bool>true</bool>
-          </property>
-          <widget class="QWidget" name="scrollAreaWidgetContents">
-           <property name="geometry">
-            <rect>
-             <x>0</x>
-             <y>0</y>
-             <width>277</width>
-             <height>68</height>
-            </rect>
+         <widget class="QWidget" name="widget_2" native="true">
+          <layout class="QVBoxLayout" name="verticalLayout">
+           <property name="spacing">
+            <number>0</number>
            </property>
-          </widget>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QScrollArea" name="propArea">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="widgetResizable">
+              <bool>true</bool>
+             </property>
+             <widget class="QWidget" name="scrollAreaWidgetContents">
+              <property name="geometry">
+               <rect>
+                <x>0</x>
+                <y>0</y>
+                <width>596</width>
+                <height>94</height>
+               </rect>
+              </property>
+             </widget>
+            </widget>
+           </item>
+          </layout>
          </widget>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="openScenarioButton">
-         <property name="text">
-          <string>Open...</string>
-         </property>
-         <property name="icon">
-          <iconset resource="resources.qrc">
-           <normaloff>:/models/Icons/Open Folder-96.png</normaloff>:/models/Icons/Open Folder-96.png</iconset>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout">
+        <layout class="QGridLayout" name="gridLayout">
          <property name="spacing">
-          <number>2</number>
+          <number>3</number>
          </property>
-         <item>
+         <item row="0" column="0">
+          <widget class="QPushButton" name="openScenarioButton">
+           <property name="text">
+            <string>Open...</string>
+           </property>
+           <property name="icon">
+            <iconset resource="resources.qrc">
+             <normaloff>:/models/Icons/Open Folder-96.png</normaloff>:/models/Icons/Open Folder-96.png</iconset>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QPushButton" name="saveScenarioButton">
+           <property name="text">
+            <string>Save...</string>
+           </property>
+           <property name="icon">
+            <iconset resource="resources.qrc">
+             <normaloff>:/models/Icons/Save as-96.png</normaloff>:/models/Icons/Save as-96.png</iconset>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
           <widget class="QPushButton" name="pauseButton">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -112,7 +144,7 @@
            </property>
           </widget>
          </item>
-         <item>
+         <item row="1" column="1">
           <widget class="QPushButton" name="restartButton">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -149,10 +181,23 @@
         </widget>
        </item>
        <item>
-        <widget class="QCheckBox" name="drawGridBox">
-         <property name="text">
-          <string>Draw Grid</string>
+        <widget class="QSplitter" name="splitter_2">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
          </property>
+         <widget class="QCheckBox" name="drawGridBox">
+          <property name="text">
+           <string>Draw Grid</string>
+          </property>
+         </widget>
+         <widget class="QCheckBox" name="drawOsmBox">
+          <property name="text">
+           <string>Draw OpenStreetMap</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
         </widget>
        </item>
       </layout>

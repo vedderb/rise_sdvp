@@ -20,9 +20,12 @@
 #include "simscentree.h"
 
 #include <QFileDialog>
+#include <QInputDialog>
 #include <QDebug>
 #include <QMenu>
 #include <QAction>
+#include <QLabel>
+#include <QSpacerItem>
 #include <cmath>
 #include <clocale>
 
@@ -79,6 +82,7 @@ PageSimScen::~PageSimScen()
 void PageSimScen::updateScenTree()
 {
     QList<QTreeWidgetItem*> items;
+    mConditions.clear();
 
     for (OscAct &a: mStory->acts) {
         QTreeWidgetItem *it_a = new QTreeWidgetItem();
@@ -109,6 +113,7 @@ void PageSimScen::updateScenTree()
                         QTreeWidgetItem *it_c = new QTreeWidgetItem(it_e);
                         it_c->setText(0, c.name);
                         it_c->setData(0, Qt::UserRole, QVariant::fromValue(&c));
+                        mConditions.append(&c);
                     }
                 }
             }
@@ -118,13 +123,13 @@ void PageSimScen::updateScenTree()
     ui->scenTree->clear();
     ui->scenTree->insertTopLevelItems(0, items);
     ui->scenTree->expandAll();
+    ui->map->update();
 }
 
 void PageSimScen::selectNodeWithData(QVariant d)
 {
     QTreeWidgetItemIterator it(ui->scenTree);
     while (*it) {
-        // TODO: Can the pointer be extracted without all these tries?
         if ((*it)->data(0, Qt::UserRole) == d) {
             ui->scenTree->setCurrentItem(*it);
             break;
@@ -207,28 +212,34 @@ void PageSimScen::processPaint(QPainter &painter, int width, int height, bool hi
             }
         }
 
-        // Plot selected scenario properties
+        OscCondition *condSel = 0;
         auto treeItem = ui->scenTree->currentItem();
         if (treeItem) {
             auto data = treeItem->data(0, Qt::UserRole);
-
             if (data.canConvert<OscCondition*>()) {
-                auto c = data.value<OscCondition*>();
-                if (c->type == OscCondByEntityReachPosLane) {
-                    pos.SetLanePos(c->reachPosRoad, c->reachPosLane, c->reachPosS, 0);
-                    painter.setTransform(drawTrans);
-                    painter.setPen(Qt::NoPen);
-                    painter.setBrush(Qt::blue);
-                    painter.setOpacity(0.5);
-                    QPointF center(pos.GetX() * 1000.0, pos.GetY() * 1000.0);
-                    double rad = c->reachPosTolerance * 1000.0;
-                    painter.drawEllipse(center, rad, rad);
-                    painter.setOpacity(1.0);
-                    auto ptTxt = drawTrans.map(center);
-                    painter.setTransform(txtTrans);
+                condSel = data.value<OscCondition*>();
+            }
+        }
+
+        for (auto c: mConditions) {
+            if (c->type == OscCondByEntityReachPosLane) {
+                pos.SetLanePos(c->reachPosRoad, c->reachPosLane, c->reachPosS, 0);
+                painter.setTransform(drawTrans);
+                painter.setBrush(Qt::blue);
+                painter.setPen(Qt::NoPen);
+                painter.setOpacity(0.5);
+                QPointF center(pos.GetX() * 1000.0, pos.GetY() * 1000.0);
+                double rad = c->reachPosTolerance * 1000.0;
+                painter.drawEllipse(center, rad, rad);
+                painter.setOpacity(1.0);
+                auto ptTxt = drawTrans.map(center);
+                painter.setTransform(txtTrans);
+                if (c == condSel) {
                     painter.setBrush(Qt::red);
-                    painter.drawEllipse(ptTxt, 5, 5);
+                } else {
+                    painter.setBrush(Qt::gray);
                 }
+                painter.drawEllipse(ptTxt, 5, 5);
             }
         }
     }
@@ -237,13 +248,27 @@ void PageSimScen::processPaint(QPainter &painter, int width, int height, bool hi
 bool PageSimScen::processMouse(bool isPress, bool isRelease, bool isMove, bool isWheel,
                                QPoint widgetPos, LocPoint mapPos, double wheelAngleDelta,
                                bool ctrl, bool shift, bool ctrlShift,
-                               bool leftButton, bool rightButton)
+                               bool leftButton, bool rightButton, double scale)
 {
     (void)isPress; (void)isRelease; (void)isMove; (void)isWheel;
-    (void)widgetPos; (void)mapPos;
+    (void)widgetPos;
     (void)wheelAngleDelta;
     (void)ctrl; (void)shift; (void)ctrlShift;
     (void)leftButton; (void)rightButton;
+
+    if (isPress) {
+        roadmanager::Position pos;
+        for (auto c: mConditions) {
+            if (c->type == OscCondByEntityReachPosLane) {
+                pos.SetLanePos(c->reachPosRoad, c->reachPosLane, c->reachPosS, 0);
+                LocPoint posOnMap(pos.GetX(), pos.GetY());
+                if (mapPos.getDistanceTo(posOnMap) < (1.0 / (scale * 100.0))) {
+                    selectNodeWithData(QVariant::fromValue(c));
+                    return true;
+                }
+            }
+        }
+    }
 
     return false;
 }
@@ -289,15 +314,45 @@ void PageSimScen::showScenTreeContextMenu(const QPoint &pos)
 {
     auto treeItem = ui->scenTree->itemAt(pos);
     if (treeItem) {
-        QMenu contextMenu(ui->scenTree);
-        QAction action1(treeItem->text(0), ui->scenTree);
+        auto data = treeItem->data(0, Qt::UserRole);
 
-        connect(&action1, &QAction::triggered, []() {
+        if (data.canConvert<OscManeuver*>()) {
+            auto m = data.value<OscManeuver*>();
+            QMenu contextMenu(ui->scenTree);
+            QAction actionAdd("Add Lane-Change Event", ui->scenTree);
+            connect(&actionAdd, &QAction::triggered, [this,m,data]() {
+                QString text = QInputDialog::getText(this, "Add lane-change event",
+                                                     tr("Event name:"));
+                if (!text.isEmpty()) {
+                    m->addEventLaneChangePos(text);
+                    updateScenTree();
+                    selectNodeWithData(data);
+                }
+            });
 
-        });
+            contextMenu.addAction(&actionAdd);
+            contextMenu.exec(ui->scenTree->mapToGlobal(pos));
+        } else if (data.canConvert<OscEvent*>()) {
+            auto e = data.value<OscEvent*>();
 
-        contextMenu.addAction(&action1);
-        contextMenu.exec(ui->scenTree->mapToGlobal(pos));
+            QMenu contextMenu(ui->scenTree);
+            QAction actionDelete("Delete Event", ui->scenTree);
+            connect(&actionDelete, &QAction::triggered, [this,e,data,treeItem]() {
+                auto parentItem = treeItem->parent();
+                if (parentItem) {
+                    auto parantData = parentItem->data(0, Qt::UserRole);
+                    if (parantData.canConvert<OscManeuver*>()) {
+                        auto m = parantData.value<OscManeuver*>();
+                        m->removeEvent(e->name);
+                        updateScenTree();
+                        selectNodeWithData(data);
+                    }
+                }
+            });
+
+            contextMenu.addAction(&actionDelete);
+            contextMenu.exec(ui->scenTree->mapToGlobal(pos));
+        }
     }
 }
 
@@ -314,6 +369,21 @@ void PageSimScen::on_openScenarioButton_clicked()
         mStory->load(mScenarioDoc.child("OpenSCENARIO").child("Storyboard").child("Story"));
         updateScenTree();
         on_restartButton_clicked();
+    }
+}
+
+void PageSimScen::on_saveScenarioButton_clicked()
+{
+    QString filename = QFileDialog::getSaveFileName(this,
+                                                    tr("Save OpenScenario File"), "",
+                                                    tr("OpenScenario files (*.xosc)"));
+
+    if (!filename.isEmpty()) {
+        if (!filename.toLower().endsWith(".xosc")) {
+            filename.append(".xosc");
+        }
+
+        mScenarioDoc.save_file(filename.toLocal8Bit().data());
     }
 }
 
@@ -380,38 +450,121 @@ void PageSimScen::on_scenTree_currentItemChanged(QTreeWidgetItem *current, QTree
 
     if (data.canConvert<OscAct*>()) {
         OscAct* a = data.value<OscAct*>();
+
+        QGridLayout *l = new QGridLayout;
+        l->setVerticalSpacing(1);
+        l->setHorizontalSpacing(4);
+        l->setMargin(4);
+
         QLineEdit *e = new QLineEdit();
         e->setText(a->name);
-        ui->propArea->setWidget(e);
+        l->addWidget(new QLabel("Name"), 0, 0);
+        l->addWidget(e, 0, 1);
 
         connect(e, &QLineEdit::editingFinished, [this,a,e,reload]() {
             a->name = e->text();
             a->save();
             reload();
         });
+
+        l->addItem(new QSpacerItem(0, 0,
+                                   QSizePolicy::MinimumExpanding,
+                                   QSizePolicy::MinimumExpanding), 1, 1);
+        QWidget *w = new QWidget;
+        w->setLayout(l);
+        ui->propArea->setWidget(w);
     } else if (data.canConvert<OscSequence*>()) {
         OscSequence* s = data.value<OscSequence*>();
+
+        QGridLayout *l = new QGridLayout;
+        l->setVerticalSpacing(1);
+        l->setHorizontalSpacing(4);
+        l->setMargin(4);
+
         QLineEdit *e = new QLineEdit();
         e->setText(s->name);
-        ui->propArea->setWidget(e);
+        l->addWidget(new QLabel("Name"), 0, 0);
+        l->addWidget(e, 0, 1);
 
         connect(e, &QLineEdit::editingFinished, [this,s,e,reload]() {
             s->name = e->text();
             s->save();
             reload();
         });
+
+        l->addItem(new QSpacerItem(0, 0,
+                                   QSizePolicy::MinimumExpanding,
+                                   QSizePolicy::MinimumExpanding), 1, 1);
+        QWidget *w = new QWidget;
+        w->setLayout(l);
+        ui->propArea->setWidget(w);
+    } else if (data.canConvert<OscManeuver*>()) {
+        OscManeuver* m = data.value<OscManeuver*>();
+
+        QGridLayout *l = new QGridLayout;
+        l->setVerticalSpacing(1);
+        l->setHorizontalSpacing(4);
+        l->setMargin(4);
+
+        QLineEdit *e = new QLineEdit();
+        e->setText(m->name);
+        l->addWidget(new QLabel("Name"), 0, 0);
+        l->addWidget(e, 0, 1);
+
+        connect(e, &QLineEdit::editingFinished, [this,m,e,reload]() {
+            m->name = e->text();
+            m->save();
+            reload();
+        });
+
+        l->addItem(new QSpacerItem(0, 0,
+                                   QSizePolicy::MinimumExpanding,
+                                   QSizePolicy::MinimumExpanding), 1, 1);
+        QWidget *w = new QWidget;
+        w->setLayout(l);
+        ui->propArea->setWidget(w);
     } else if (data.canConvert<OscEvent*>()) {
-        OscEvent* e = data.value<OscEvent*>();
-        (void)e;
+        OscEvent* ev = data.value<OscEvent*>();
+
+        QGridLayout *l = new QGridLayout;
+        l->setVerticalSpacing(1);
+        l->setHorizontalSpacing(4);
+        l->setMargin(4);
+
+        QLineEdit *e = new QLineEdit();
+        e->setText(ev->name);
+        l->addWidget(new QLabel("Name"), 0, 0);
+        l->addWidget(e, 0, 1);
+
+        connect(e, &QLineEdit::editingFinished, [this,ev,e,reload]() {
+            ev->name = e->text();
+            ev->save();
+            reload();
+        });
+
+        l->addItem(new QSpacerItem(0, 0,
+                                   QSizePolicy::MinimumExpanding,
+                                   QSizePolicy::MinimumExpanding), 1, 1);
+        QWidget *w = new QWidget;
+        w->setLayout(l);
+        ui->propArea->setWidget(w);
     } else if (data.canConvert<OscCondition*>()) {
         OscCondition* c = data.value<OscCondition*>();
         if (c->type == OscCondByEntityReachPosLane) {
-            QVBoxLayout *l = new QVBoxLayout;
-            l->setSpacing(1);
+            QGridLayout *l = new QGridLayout;
+            l->setVerticalSpacing(1);
+            l->setHorizontalSpacing(4);
+            l->setMargin(4);
 
             QLineEdit *nameEdit = new QLineEdit();
             nameEdit->setText(c->name);
-            l->addWidget(nameEdit);
+            l->addWidget(new QLabel("Name"), 0, 0);
+            l->addWidget(nameEdit, 0, 1);
+
+            QLineEdit *entityNameEdit = new QLineEdit();
+            entityNameEdit->setText(c->entityName);
+            l->addWidget(new QLabel("Entity"), 1, 0);
+            l->addWidget(entityNameEdit, 1, 1);
 
             QDoubleSpinBox *toleranceEdit = new QDoubleSpinBox;
             toleranceEdit->setPrefix("Tolerance: ");
@@ -419,32 +572,34 @@ void PageSimScen::on_scenTree_currentItemChanged(QTreeWidgetItem *current, QTree
             toleranceEdit->setSingleStep(0.2);
             toleranceEdit->setMaximum(999);
             toleranceEdit->setValue(c->reachPosTolerance);
-            l->addWidget(toleranceEdit);
+            l->addWidget(toleranceEdit, 2, 0, 1, 2);
 
             QDoubleSpinBox *posEdit = new QDoubleSpinBox;
             posEdit->setPrefix("Pos: ");
             posEdit->setDecimals(1);
             posEdit->setMaximum(9999);
             posEdit->setValue(c->reachPosS);
-            l->addWidget(posEdit);
+            l->addWidget(posEdit, 3, 0, 1, 2);
 
             QSpinBox *roadEdit = new QSpinBox;
             roadEdit->setPrefix("Road: ");
             roadEdit->setMinimum(-999);
             roadEdit->setMaximum(999);
             roadEdit->setValue(c->reachPosRoad);
-            l->addWidget(roadEdit);
+            l->addWidget(roadEdit, 4, 0, 1, 2);
 
             QSpinBox *laneEdit = new QSpinBox;
             laneEdit->setPrefix("Lane: ");
             laneEdit->setMinimum(-999);
             laneEdit->setMaximum(999);
             laneEdit->setValue(c->reachPosLane);
-            l->addWidget(laneEdit);
+            l->addWidget(laneEdit, 5, 0, 1, 2);
 
-            auto updateFunc = [this,c,nameEdit,toleranceEdit,posEdit,roadEdit,laneEdit,reload]() {
+            auto updateFunc = [this,c,nameEdit,entityNameEdit,
+                    toleranceEdit,posEdit,roadEdit,laneEdit,reload]() {
                 bool nameChanged = c->name != nameEdit->text();
                 c->name = nameEdit->text();
+                c->entityName = entityNameEdit->text();
                 c->reachPosTolerance = toleranceEdit->value();
                 c->reachPosS = posEdit->value();
                 c->reachPosRoad = roadEdit->value();
@@ -456,13 +611,16 @@ void PageSimScen::on_scenTree_currentItemChanged(QTreeWidgetItem *current, QTree
                 }
             };
 
+            connect(entityNameEdit, &QLineEdit::editingFinished, updateFunc);
             connect(nameEdit, &QLineEdit::editingFinished, updateFunc);
             connect(toleranceEdit, QOverload<double>::of(&QDoubleSpinBox::valueChanged), updateFunc);
             connect(posEdit, QOverload<double>::of(&QDoubleSpinBox::valueChanged), updateFunc);
             connect(roadEdit, QOverload<int>::of(&QSpinBox::valueChanged), updateFunc);
             connect(laneEdit, QOverload<int>::of(&QSpinBox::valueChanged), updateFunc);
 
-            l->addStretch();
+            l->addItem(new QSpacerItem(0, 0,
+                                       QSizePolicy::Minimum,
+                                       QSizePolicy::MinimumExpanding), 6, 0);
             QWidget *w = new QWidget;
             w->setLayout(l);
             ui->propArea->setWidget(w);
@@ -470,23 +628,27 @@ void PageSimScen::on_scenTree_currentItemChanged(QTreeWidgetItem *current, QTree
     } else if (data.canConvert<OscAction*>()) {
         OscAction* a = data.value<OscAction*>();
         if (a->type == OscActionLatLaneChAbs) {
-            QVBoxLayout *l = new QVBoxLayout;
-            l->setSpacing(1);
+            QGridLayout *l = new QGridLayout;
+            l->setVerticalSpacing(1);
+            l->setHorizontalSpacing(4);
+            l->setMargin(4);
 
             QLineEdit *nameEdit = new QLineEdit();
             nameEdit->setText(a->name);
-            l->addWidget(nameEdit);
+            l->addWidget(new QLabel("Name"), 0, 0);
+            l->addWidget(nameEdit, 0, 1);
 
             QLineEdit *objectEdit = new QLineEdit();
             objectEdit->setText(a->latLaneChAbs_obj);
-            l->addWidget(objectEdit);
+            l->addWidget(new QLabel("Object"), 1, 0);
+            l->addWidget(objectEdit, 1, 1);
 
             QSpinBox *valueEdit = new QSpinBox;
             valueEdit->setPrefix("Value: ");
             valueEdit->setMinimum(-999);
             valueEdit->setMaximum(999);
             valueEdit->setValue(a->latLaneChAbs_value);
-            l->addWidget(valueEdit);
+            l->addWidget(valueEdit, 2, 0, 1, 2);
 
             QDoubleSpinBox *timeEdit = new QDoubleSpinBox;
             timeEdit->setPrefix("Time: ");
@@ -495,7 +657,7 @@ void PageSimScen::on_scenTree_currentItemChanged(QTreeWidgetItem *current, QTree
             timeEdit->setMaximum(9999);
             timeEdit->setSingleStep(0.1);
             timeEdit->setValue(a->latLaneChAbs_time);
-            l->addWidget(timeEdit);
+            l->addWidget(timeEdit, 3, 0, 1, 2);
 
             auto updateFunc = [this,a,nameEdit,objectEdit,valueEdit,timeEdit,reload]() {
                 bool nameChanged = a->name != nameEdit->text();
@@ -515,10 +677,17 @@ void PageSimScen::on_scenTree_currentItemChanged(QTreeWidgetItem *current, QTree
             connect(valueEdit, QOverload<int>::of(&QSpinBox::valueChanged), updateFunc);
             connect(timeEdit, QOverload<double>::of(&QDoubleSpinBox::valueChanged), updateFunc);
 
-            l->addStretch();
+            l->addItem(new QSpacerItem(0, 0,
+                                       QSizePolicy::Minimum,
+                                       QSizePolicy::MinimumExpanding), 4, 0);
             QWidget *w = new QWidget;
             w->setLayout(l);
             ui->propArea->setWidget(w);
         }
     }
+}
+
+void PageSimScen::on_drawOsmBox_toggled(bool checked)
+{
+    ui->map->setDrawOpenStreetmap(checked);
 }
