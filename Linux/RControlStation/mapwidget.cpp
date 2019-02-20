@@ -1947,6 +1947,14 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
         }
     }
 
+    // Map module painting
+    painter.save();
+    for (MapModule *m: mMapModules) {
+        m->processPaint(painter, width, height, highQuality,
+                        drawTrans, txtTrans, mScaleFactor);
+    }
+    painter.restore();
+
     // Draw cars
     painter.setPen(QPen(textColor));
     for(int i = 0;i < mCarInfo.size();i++) {
@@ -2029,12 +2037,16 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
 
         // Print data
         QTime t = QTime::fromMSecsSinceStartOfDay(carInfo.getTime());
+        QString solStr;
+        if (!carInfo.getLocationGps().getInfo().isEmpty()) {
+            solStr = QString("Sol: %1\n").arg(carInfo.getLocationGps().getInfo());
+        }
         txt.sprintf("%s\n"
-                    "Sol: %s\n"
+                    "%s"
                     "(%.3f, %.3f, %.0f)\n"
                     "%02d:%02d:%02d:%03d",
                     carInfo.getName().toLocal8Bit().data(),
-                    carInfo.getLocationGps().getInfo().toLocal8Bit().data(),
+                    solStr.toLocal8Bit().data(),
                     pos.getX(), pos.getY(), angle,
                     t.hour(), t.minute(), t.second(), t.msec());
         pt_txt.setX(x + 120 + (car_len - 190) * ((cos(pos.getYaw()) + 1) / 2));
@@ -2193,12 +2205,6 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
         painter.setOpacity(mCameraImageOpacity);
         painter.drawImage(target, mLastCameraImage, source);
         painter.setOpacity(1.0);
-    }
-
-    // Map module painting
-    for (MapModule *m: mMapModules) {
-        m->processPaint(painter, width, height, highQuality,
-                        drawTrans, txtTrans, mScaleFactor);
     }
 
     painter.setTransform(txtTrans);

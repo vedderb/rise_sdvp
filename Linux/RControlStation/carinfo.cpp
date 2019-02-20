@@ -59,7 +59,7 @@ void CarInfo::setLocation(LocPoint &point)
     mLocation = point;
 }
 
-LocPoint CarInfo::getLocationGps() const
+LocPoint &CarInfo::getLocationGps()
 {
     return mLocationGps;
 }
@@ -79,7 +79,7 @@ void CarInfo::setColor(Qt::GlobalColor color)
     mColor = color;
 }
 
-LocPoint CarInfo::getApGoal() const
+LocPoint &CarInfo::getApGoal()
 {
     return mApGoal;
 }
@@ -129,7 +129,7 @@ void CarInfo::setCornerRadius(double cornerRadius)
     mCornerRadius = cornerRadius;
 }
 
-LocPoint CarInfo::getLocationUwb() const
+LocPoint &CarInfo::getLocationUwb()
 {
     return mLocationUwb;
 }
@@ -139,7 +139,7 @@ void CarInfo::setLocationUwb(const LocPoint &locationUwb)
     mLocationUwb = locationUwb;
 }
 
-LocPoint CarInfo::getLocation() const
+LocPoint &CarInfo::getLocation()
 {
     return mLocation;
 }

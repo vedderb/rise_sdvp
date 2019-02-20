@@ -274,13 +274,9 @@ void PageSimScen::timerSlot()
                 car = ui->map->getCarInfo(i);
             }
 
-            LocPoint carPos = car->getLocation();
-            carPos.setXY(pos.GetX(), pos.GetY());
-            carPos.setYaw(-pos.GetH());
-            car->setLocation(carPos);
-            LocPoint carAp = car->getApGoal();
-            carAp.setRadius(0.0);
-            car->setApGoal(carAp);
+            car->getLocation().setXY(pos.GetX(), pos.GetY());
+            car->getLocation().setYaw(-pos.GetH());
+            car->getApGoal().setRadius(0.0);
             car->setName(objState.name);
             car->setColor(QString(objState.name).toLower() == "ego" ? Qt::blue : Qt::red);
         }
