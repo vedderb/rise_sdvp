@@ -140,20 +140,20 @@ void FI::processCmd(QString cmd)
 {
     QStringList args = cmd.split(" ");
     const char *argv[args.size()];
-    for (int i = 1;i < args.size();i++) {
-        argv[i - 1] = args.at(i).toLocal8Bit().constData();
+    for (int i = 0;i < args.size();i++) {
+        argv[i] = args.at(i).toLocal8Bit().constData();
     }
 
     if (args.at(0) == "fi_set_enabled") {
-        cmd_terminal_set_enabled(args.size() - 1, argv);
+        cmd_terminal_set_enabled(args.size(), argv);
     } else if (args.at(0) == "fi_add_fault") {
-        cmd_terminal_add_fault(args.size() - 1, argv);
+        cmd_terminal_add_fault(args.size(), argv);
     } else if (args.at(0) == "fi_clear_faults") {
-        cmd_terminal_clear_faults(args.size() - 1, argv);
+        cmd_terminal_clear_faults(args.size(), argv);
     } else if (args.at(0) == "fi_print_faults") {
-        cmd_terminal_print_faults(args.size() - 1, argv);
+        cmd_terminal_print_faults(args.size(), argv);
     } else if (args.at(0) == "fi_reset_cnt") {
-        cmd_terminal_reset_cnt(args.size() - 1, argv);
+        cmd_terminal_reset_cnt(args.size(), argv);
     }
 }
 
