@@ -864,7 +864,7 @@ void CarClient::logBroadcasterDataReceived(QByteArray &data)
     mLogBroadcasterDataBuffer.append(data);
 
     int newLineIndex = mLogBroadcasterDataBuffer.indexOf("\n");
-    if (newLineIndex >= 0) {
+    while (newLineIndex >= 0) {
         QString line = mLogBroadcasterDataBuffer.left(newLineIndex);
         mLogBroadcasterDataBuffer.remove(0, newLineIndex + 1);
 
@@ -919,6 +919,8 @@ void CarClient::logBroadcasterDataReceived(QByteArray &data)
                 mOverrideUwbPos = false;
             }
         }
+
+        newLineIndex = mLogBroadcasterDataBuffer.indexOf("\n");
     }
 }
 
