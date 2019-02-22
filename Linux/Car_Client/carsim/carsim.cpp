@@ -43,6 +43,7 @@ CarSim::CarSim(QObject *parent) : QObject(parent)
     mUwbBroadcastAnchorNow = 0;
     mLogBroadcast = new TcpBroadcast(this);
     mLogBroadcastTimer = new QTimer(this);
+    mFi = new FI(this);
 
     // Default car parameters
     mCarTurnRad = 1.0;
@@ -70,6 +71,9 @@ CarSim::CarSim(QObject *parent) : QObject(parent)
             this, SLOT(uwbBroadcastTimerSlot()));
     connect(mLogBroadcastTimer, SIGNAL(timeout()),
             this, SLOT(logBroadcastTimerSlot()));
+    connect(mFi, &FI::sendPrint, [this](QString s) {
+        commPrintf(s);
+    });
 }
 
 void CarSim::processData(QByteArray data)
@@ -221,13 +225,25 @@ void CarSim::uwbBroadcastTimerSlot()
         UWB_ANCHOR &a = mUwbAnchors[mUwbBroadcastAnchorNow++];
         const double dx = a.px - mSimState.px;
         const double dy = a.py - mSimState.py;
-        double d = sqrt(dx * dx + dy * dy);
-        mUwbBroadcast->broadcastData(QString("UWB_RANGE %1 %2\r\n").arg(a.id).arg(d).toLocal8Bit());
+        float d = sqrt(dx * dx + dy * dy);
+
+        mFi->fi_inject_fault_float(QString("uwb_range_%1").arg(a.id).toLocal8Bit().data(), &d);
+
+        mUwbBroadcast->broadcastData(QString("UWB_RANGE %1 %2 %3 %4\r\n").
+                                     arg(a.id).arg(a.px).arg(a.py).arg(d).toLocal8Bit());
     }
 }
 
 void CarSim::logBroadcastTimerSlot()
 {
+    float travel_dist = (double)mMotor->tacho() * mGearRatio
+            * (2.0 / (double)mMotor->poles()) * (1.0 / 6.0)
+            * mWheelDiam * M_PI;
+    float yaw = mSimState.yaw;
+
+    mFi->fi_inject_fault_float("uwb_travel_dist", &travel_dist);
+    mFi->fi_inject_fault_float("uwb_yaw", &yaw);
+
     QString msg = QString::asprintf(
                 "%u,"     // timestamp (ms)
                 "%u,"     // timestamp pos today (ms)
@@ -250,14 +266,15 @@ void CarSim::logBroadcastTimerSlot()
                 "%u,"     // timestamp gps sample today (ms)
                 "%.7f,"   // lat
                 "%.7f,"   // lon
-                "%.3f\r\n",  // height
+                "%.3f,"  // height
+                "%.3f\r\n",  // Travel distance
                 0,
                 QTime::currentTime().msecsSinceStartOfDay(),
                 mSimState.px,
                 mSimState.py,
                 mSimState.roll,
                 mSimState.pitch,
-                mSimState.yaw,
+                yaw,
                 mSimState.roll_rate,
                 mSimState.pitch_rate,
                 mSimState.yaw_rate,
@@ -272,7 +289,8 @@ void CarSim::logBroadcastTimerSlot()
                 0,
                 0.0,
                 0.0,
-                0.0);
+                0.0,
+                travel_dist);
     mLogBroadcast->broadcastData(msg.toLocal8Bit());
 }
 
@@ -401,7 +419,7 @@ void CarSim::processPacket(VByteArray vb)
             // For the scala tests to work
             QString cmd = vb.vbPopFrontString();
             if (cmd.startsWith("fi_")) {
-                commPrintf(cmd + " : OK\n");
+                mFi->processCmd(cmd);
             } else if (cmd.startsWith("pos_uwb_reset_pos")) {
                 commPrintf("UWB Pos reset\n");
             }

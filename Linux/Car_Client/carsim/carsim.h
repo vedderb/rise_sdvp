@@ -26,6 +26,7 @@
 #include "motorsim.h"
 #include "autopilot.h"
 #include "tcpbroadcast.h"
+#include "fi.h"
 
 class CarSim : public QObject
 {
@@ -116,6 +117,7 @@ private:
     int mUwbBroadcastAnchorNow;
     TcpBroadcast *mLogBroadcast;
     QTimer *mLogBroadcastTimer;
+    FI *mFi;
 
     QUdpSocket *mUdpSocket;
     bool mDynoConnected;
