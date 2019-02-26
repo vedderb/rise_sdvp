@@ -19,8 +19,8 @@ Chronos::Chronos(QObject *parent) : QObject(parent)
             this, SLOT(startTimerSlot()));
     connect(mChronos, SIGNAL(connectionChanged(bool,QString)),
             this, SLOT(connectionChanged(bool,QString)));
-    connect(mChronos, SIGNAL(dotmRx(QVector<chronos_dotm_pt>)),
-            this, SLOT(processDotm(QVector<chronos_dotm_pt>)));
+    connect(mChronos, SIGNAL(trajRx(chronos_traj)),
+            this, SLOT(processTraj(chronos_traj)));
     connect(mChronos, SIGNAL(heabRx(chronos_heab)),
             this, SLOT(processHeab(chronos_heab)));
     connect(mChronos, SIGNAL(osemRx(chronos_osem)),
@@ -102,17 +102,17 @@ void Chronos::stateReceived(quint8 id, CAR_STATE state)
     mChronos->sendMonr(monr);
 }
 
-void Chronos::processDotm(QVector<chronos_dotm_pt> path)
+void Chronos::processTraj(chronos_traj traj)
 {
-    qDebug() << "DOTM RX";
+    qDebug() << "TRAJ RX";
 
     // Subsample points
-    QVector<chronos_dotm_pt> path_reduced;
+    QVector<chronos_traj_pt> path_reduced;
 
-    if (path.size() > 0) {
-        path_reduced.append(path.first());
-        for (chronos_dotm_pt pt: path) {
-            chronos_dotm_pt pt_last = path_reduced.last();
+    if (traj.traj_pts.size() > 0) {
+        path_reduced.append(traj.traj_pts.first());
+        for (chronos_traj_pt pt: traj.traj_pts) {
+            chronos_traj_pt pt_last = path_reduced.last();
 
             if (sqrt((pt.x - pt_last.x) * (pt.x - pt_last.x) +
                      (pt.y - pt_last.y) * (pt.y - pt_last.y) +
@@ -122,8 +122,8 @@ void Chronos::processDotm(QVector<chronos_dotm_pt> path)
         }
 
         // Add end point
-        chronos_dotm_pt pt = path.last();
-        chronos_dotm_pt pt_last = path_reduced.last();
+        chronos_traj_pt pt = traj.traj_pts.last();
+        chronos_traj_pt pt_last = path_reduced.last();
         if (sqrt((pt.x - pt_last.x) * (pt.x - pt_last.x) +
                  (pt.y - pt_last.y) * (pt.y - pt_last.y) +
                  (pt.z - pt_last.z) * (pt.z - pt_last.z)) > 0.01) {
@@ -135,7 +135,7 @@ void Chronos::processDotm(QVector<chronos_dotm_pt> path)
         mRouteLast.clear();
         QList<LocPoint> points;
         bool first = true;
-        for (chronos_dotm_pt pt: path_reduced) {
+        for (chronos_traj_pt pt: path_reduced) {
             LocPoint lpt;
             lpt.setXY(pt.x, pt.y);
             lpt.setSpeed(pt.long_speed);

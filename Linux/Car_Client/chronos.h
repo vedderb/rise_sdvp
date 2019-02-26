@@ -21,7 +21,7 @@ private slots:
     void connectionChanged(bool connected, QString address);
     void stateReceived(quint8 id, CAR_STATE state);
 
-    void processDotm(QVector<chronos_dotm_pt> path);
+    void processTraj(chronos_traj traj);
     void processOsem(chronos_osem osem);
     void processOstm(chronos_ostm ostm);
     void processStrt(chronos_strt strt);

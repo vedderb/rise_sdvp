@@ -35,7 +35,15 @@ typedef struct {
     double long_accel;
     double lat_accel;
     double curvature;
-} chronos_dotm_pt;
+} chronos_traj_pt;
+
+typedef struct {
+    uint16_t traj_id;
+    QString traj_name;
+    uint16_t traj_ver;
+    QVector<chronos_traj_pt> traj_pts;
+    uint32_t object_id;
+} chronos_traj;
 
 typedef struct {
     double lat;
@@ -86,6 +94,10 @@ typedef struct {
     uint64_t time_est;
 } chronos_mtsp;
 
+typedef struct {
+    uint8_t status;
+} chronos_init_sup;
+
 #define PROTOCOL_VERSION 0
 
 // Chronos messaging
@@ -95,12 +107,14 @@ typedef struct {
 #define ISO_PART_SYNC_WORD              0x7E
 
 // ISO Message Types
-#define ISO_MSG_DOTM                    0x0001
+#define ISO_MSG_TRAJ                    0x0001
 #define ISO_MSG_OSEM                    0x0002
 #define ISO_MSG_OSTM                    0x0003
 #define ISO_MSG_STRT                    0x0004
 #define ISO_MSG_HEAB                    0x0005
 #define ISO_MSG_MONR                    0x0006
+
+#define ISO_MSG_INIT_SUP                0xA102
 
 // ISO Value Types
 #define ISO_VALUE_ID_LAT                0x0020
@@ -125,21 +139,30 @@ typedef struct {
 #define ISO_VALUE_ID_LAT_ACC            0x0051
 #define ISO_VALUE_ID_CURVATURE          0x0052
 
+#define ISO_VALUE_ID_TRAJECTORY_ID      0x0101
+#define ISO_VALUE_ID_TRAJECTORY_NAME    0x0102
+#define ISO_VALUE_ID_TRAJECTORY_VERSION 0x0103
+
+#define ISO_VALUE_ID_INIT_SUP_STATUS    0x0200
+#define AUX_VALUE_ID_OBJECT_ID          0xA000
+
 class ChronosComm : public QObject
 {
     Q_OBJECT
 public:
     explicit ChronosComm(QObject *parent = nullptr);
     bool startObject();
+    bool startSupervisor();
     bool connectAsServer(QString address);
     void closeConnection();
 
-    void sendDotm(QVector<chronos_dotm_pt> dotm);
+    void sendTraj(chronos_traj traj);
     void sendHeab(chronos_heab heab);
     void sendOsem(chronos_osem osem);
     void sendOstm(chronos_ostm ostm);
     void sendStrt(chronos_strt strt);
     void sendMonr(chronos_monr monr);
+    void sendInitSup(chronos_init_sup init_sup);
 
     quint8 transmitterId() const;
     void setTransmitterId(const quint8 &transmitterId);
@@ -150,12 +173,13 @@ public:
 
 signals:
     void connectionChanged(bool connected, QString address);
-    void dotmRx(QVector<chronos_dotm_pt> dotm);
+    void trajRx(chronos_traj traj);
     void heabRx(chronos_heab heab);
     void osemRx(chronos_osem osem);
     void ostmRx(chronos_ostm ostm);
     void strtRx(chronos_strt strt);
     void monrRx(chronos_monr monr);
+    void insupRx(chronos_init_sup init_sup);
 
 public slots:
 
@@ -192,6 +216,7 @@ private:
                          quint16 message_id);
     void appendChronosChecksum(VByteArrayLe &vb);
     bool decodeMsg(quint16 type, quint32 len, QByteArray payload);
+    void sendData(QByteArray data, bool isUdp);
 
 };
 
