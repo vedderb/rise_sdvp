@@ -39,6 +39,12 @@ ChronosComm::ChronosComm(QObject *parent) : QObject(parent)
             this, SLOT(tcpConnectionChanged(bool,QString)));
     connect(mUdpSocket, SIGNAL(readyRead()),
             this, SLOT(readPendingDatagrams()));
+
+    connect(mTcpSocket, SIGNAL(readyRead()), this, SLOT(tcpInputDataAvailable()));
+    connect(mTcpSocket, SIGNAL(disconnected()),
+            this, SLOT(tcpInputDisconnected()));
+    connect(mTcpSocket, SIGNAL(error(QAbstractSocket::SocketError)),
+            this, SLOT(tcpInputError(QAbstractSocket::SocketError)));
 }
 
 bool ChronosComm::startObject()
@@ -219,10 +225,10 @@ void ChronosComm::sendOsem(chronos_osem osem)
 
     vb.vbAppendUint16(ISO_VALUE_ID_LAT);
     vb.vbAppendUint16(6);
-    vb.vbAppendUint48((quint64)(osem.lat * 1e7));
+    vb.vbAppendUint48((quint64)(osem.lat * 1e10));
     vb.vbAppendUint16(ISO_VALUE_ID_LON);
     vb.vbAppendUint16(6);
-    vb.vbAppendUint48((quint64)(osem.lon * 1e7));
+    vb.vbAppendUint48((quint64)(osem.lon * 1e10));
     vb.vbAppendUint16(ISO_VALUE_ID_ALT);
     vb.vbAppendUint16(4);
     vb.vbAppendUint32((quint32)(osem.alt * 1e2));
@@ -331,7 +337,7 @@ void ChronosComm::sendInitSup(chronos_init_sup init_sup)
 
     appendChronosChecksum(vb);
 
-    sendData(vb, true);
+    sendData(vb, false);
 }
 
 quint8 ChronosComm::transmitterId() const
@@ -778,8 +784,8 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload)
 
 void ChronosComm::sendData(QByteArray data, bool isUdp)
 {
-    if (isUdp && mUdpSocket->isOpen()) {
-        mUdpSocket->writeDatagram(data, mUdpHostAddress, 53240);
+    if (isUdp) {
+        mUdpSocket->writeDatagram(data, mUdpHostAddress, mUdpPort ? mUdpPort : 53240);
     } else {
         if (mTcpSocket->state() == QTcpSocket::ConnectedState) {
             mTcpSocket->write(data);
