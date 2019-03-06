@@ -24,6 +24,13 @@
 #include <vbytearrayle.h>
 #include <tcpserversimple.h>
 
+typedef enum {
+    COMM_MODE_UNDEFINED = 0,
+    COMM_MODE_OBJECT,
+    COMM_MODE_SUPERVISOR,
+    COMM_MODE_SERVER
+} COMM_MODE;
+
 typedef struct {
     uint32_t tRel;
     double x;
@@ -155,6 +162,7 @@ public:
     bool startSupervisor();
     bool connectAsServer(QString address);
     void closeConnection();
+    COMM_MODE getCommMode();
 
     void sendTraj(chronos_traj traj);
     void sendHeab(chronos_heab heab);
@@ -201,6 +209,7 @@ private:
     quint16 mUdpPort;
     quint8 mTransmitterId;
     quint8 mChronosSeqNum;
+    COMM_MODE mCommMode;
 
     int mTcpState;
     quint16 mTcpType;

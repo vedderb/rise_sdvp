@@ -32,6 +32,7 @@ ChronosComm::ChronosComm(QObject *parent) : QObject(parent)
     mUdpPort = 0;
     mTransmitterId = 0;
     mChronosSeqNum = 0;
+    mCommMode = COMM_MODE_UNDEFINED;
 
     connect(mTcpServer, SIGNAL(dataRx(QByteArray)),
             this, SLOT(tcpRx(QByteArray)));
@@ -71,6 +72,10 @@ bool ChronosComm::startObject()
         qWarning() << "Unable to start chronos object";
     }
 
+    if (res) {
+        mCommMode = COMM_MODE_OBJECT;
+    }
+
     return res;
 }
 
@@ -84,6 +89,10 @@ bool ChronosComm::startSupervisor()
         qDebug() << "Started CHRONOS supervisor";
     } else {
         qWarning() << "Unable to start chronos supervisor";
+    }
+
+    if (res) {
+        mCommMode = COMM_MODE_SUPERVISOR;
     }
 
     return res;
@@ -109,6 +118,10 @@ bool ChronosComm::connectAsServer(QString address)
         qWarning() << "Starting UDP server failed:" << mUdpSocket->errorString();
     }
 
+    if (res) {
+        mCommMode = COMM_MODE_SERVER;
+    }
+
     return res;
 }
 
@@ -118,6 +131,12 @@ void ChronosComm::closeConnection()
     mTcpSocket->close();
     mUdpSocket->close();
     mTcpState = 0;
+    mCommMode = COMM_MODE_UNDEFINED;
+}
+
+COMM_MODE ChronosComm::getCommMode()
+{
+    return mCommMode;
 }
 
 void ChronosComm::sendTraj(chronos_traj traj)
@@ -784,7 +803,7 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload)
 
 void ChronosComm::sendData(QByteArray data, bool isUdp)
 {
-    if (isUdp) {
+    if (isUdp && mCommMode != COMM_MODE_SUPERVISOR) {
         mUdpSocket->writeDatagram(data, mUdpHostAddress, mUdpPort ? mUdpPort : 53240);
     } else {
         if (mTcpSocket->state() == QTcpSocket::ConnectedState) {
