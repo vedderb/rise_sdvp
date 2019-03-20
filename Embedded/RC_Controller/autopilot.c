@@ -1,5 +1,5 @@
 /*
-	Copyright 2016 - 2018 Benjamin Vedder	benjamin@vedder.se
+	Copyright 2016 - 2019 Benjamin Vedder	benjamin@vedder.se
 
 	This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -214,7 +214,7 @@ bool autopilot_replace_route(ROUTE_POINT *p) {
 
 		// In time mode, only add the point if its timestamp was ahead of the point
 		// we currently follow.
-		if (!time_mode || m_point_last != m_point_now) {
+		if (!time_mode || m_point_last != m_point_now || p->time >= m_route[m_point_last].time) {
 			add_point(p, true);
 			ret = true;
 		}
