@@ -160,6 +160,22 @@ X A_GND 8 600 150 300 L 50 50 1 1 I
 ENDDRAW
 ENDDEF
 #
+# Mounting_Hole-Mechanical
+#
+DEF Mounting_Hole-Mechanical MK 0 40 Y Y 1 F N
+F0 "MK" 0 200 50 H V C CNN
+F1 "Mounting_Hole-Mechanical" 0 125 50 H V C CNN
+F2 "" 0 0 50 H I C CNN
+F3 "" 0 0 50 H I C CNN
+$FPLIST
+ Mounting?Hole*
+ Hole*
+$ENDFPLIST
+DRAW
+C 0 0 50 0 1 50 N
+ENDDRAW
+ENDDEF
+#
 # R-RESCUE-RCCAR_IF_Board_GPS-RCCAR_IF_Board_GPS-rescue
 #
 DEF R-RESCUE-RCCAR_IF_Board_GPS-RCCAR_IF_Board_GPS-rescue R 0 0 N Y 1 F N
