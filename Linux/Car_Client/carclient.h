@@ -138,6 +138,7 @@ private:
     bool mRtklibRunning;
     int mBatteryCells;
     QList<CarSim*> mSimulatedCars;
+    QVector<UWB_ANCHOR> mUwbAnchorsNow;
 
 #if HAS_CAMERA
     Camera *mCamera;

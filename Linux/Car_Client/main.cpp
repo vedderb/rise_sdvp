@@ -58,7 +58,7 @@ void showHelp()
     qDebug() << "--simulatecars [num]:[firstid] : Simulate num cars where the first car has ID firstid";
     qDebug() << "--dynosim : Run simulator together with output from AWITAR dyno instead of MotorSim";
     qDebug() << "--simaprepeatroutes [1 or 0] : Repeat routes setting for the simulation (default: 1)";
-    qDebug() << "--simlogen [port]:[rateHz] : Enable simulator logging output on TCP port port at rateHz Hz";
+    qDebug() << "--simlogen [rateHz] : Enable simulator logging output at rateHz Hz";
     qDebug() << "--simuwben [port]:[rateHz] : Enable simulator UWB emulation output on TCP port port at rateHz Hz";
 #ifdef HAS_GUI
     qDebug() << "--usegui : Use QML GUI";
@@ -115,7 +115,6 @@ int main(int argc, char *argv[])
     bool dynoSim = false;
     bool simApRepeatRoutes = true;
     int simLogHz = -1;
-    int simLogTcpPort = -1;
     int simUwbHz = -1;
     int simUwbTcpPort = -1;
 
@@ -359,12 +358,9 @@ int main(int argc, char *argv[])
         if (str == "--simlogen") {
             if ((i - 1) < args.size()) {
                 i++;
-                QStringList param = args.at(i).split(":");
-                if (param.size() == 2) {
-                    found = true;
-                    simLogTcpPort = param.at(0).toInt();
-                    simLogHz = param.at(1).toInt();
-                }
+                bool ok;
+                simLogHz = args.at(i).toInt(&ok);
+                found = ok;
             }
         }
 
@@ -420,7 +416,7 @@ int main(int argc, char *argv[])
         car.addSimulatedCar(i + simulateCarFirst);
         car.getSimulatedCar(i + simulateCarFirst)->autopilot()->setRepeatRoutes(simApRepeatRoutes);
         if (simLogHz > 0) {
-            car.getSimulatedCar(i + simulateCarFirst)->startLogBroadcast(simLogTcpPort, simLogHz);
+            car.getSimulatedCar(i + simulateCarFirst)->startLogBroadcast(simLogHz);
         }
         if (simUwbHz > 0) {
             car.getSimulatedCar(i + simulateCarFirst)->startUwbBroadcast(simUwbTcpPort, simUwbHz);

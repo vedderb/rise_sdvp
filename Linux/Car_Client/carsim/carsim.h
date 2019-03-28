@@ -52,7 +52,7 @@ public:
     void setAxisDistance(double axisDistance);
 
     bool startUwbBroadcast(int port, int rateHz);
-    bool startLogBroadcast(int port, int rateHz);
+    void startLogBroadcast(int rateHz);
 
 signals:
     void dataToSend(QByteArray data);
@@ -115,7 +115,6 @@ private:
     QTimer *mUwbBroadcastTimer;
     QVector<UWB_ANCHOR> mUwbAnchors;
     int mUwbBroadcastAnchorNow;
-    TcpBroadcast *mLogBroadcast;
     QTimer *mLogBroadcastTimer;
     FI *mFi;
 

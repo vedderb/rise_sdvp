@@ -596,6 +596,15 @@ void CarClient::packetDataToSend(QByteArray &data)
                 packetConsumed = true;
 #endif
             }
+        } else if (cmd == CMD_CLEAR_UWB_ANCHORS) {
+            mUwbAnchorsNow.clear();
+        } else if (cmd == CMD_ADD_UWB_ANCHOR) {
+            UWB_ANCHOR a;
+            a.id = vb.vbPopFrontInt16();
+            a.px = vb.vbPopFrontDouble32Auto();
+            a.py = vb.vbPopFrontDouble32Auto();
+            a.height = vb.vbPopFrontDouble32Auto();
+            mUwbAnchorsNow.append(a);
         }
     }
 
@@ -918,6 +927,19 @@ void CarClient::logBroadcasterDataReceived(QByteArray &data)
             if (tokens.size() == 1) {
                 mOverrideUwbPos = false;
             }
+        } else if (tokens.at(0) == "get_uwb_anchor_list") {
+            QString reply;
+            reply.append("anchors");
+            for (UWB_ANCHOR a: mUwbAnchorsNow) {
+                reply.append(QString(" %1 %2 %3 %4").
+                             arg(a.id).
+                             arg(a.px, 0, 'f', 3).
+                             arg(a.py, 0, 'f', 3).
+                             arg(a.height, 0, 'f', 3));
+            }
+            reply.append("\r\n");
+
+            mLogBroadcaster->broadcastData(reply.toLocal8Bit());
         }
 
         newLineIndex = mLogBroadcasterDataBuffer.indexOf("\n");

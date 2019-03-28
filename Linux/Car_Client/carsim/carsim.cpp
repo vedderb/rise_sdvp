@@ -41,7 +41,6 @@ CarSim::CarSim(QObject *parent) : QObject(parent)
     mUwbBroadcast = new TcpBroadcast(this);
     mUwbBroadcastTimer = new QTimer(this);
     mUwbBroadcastAnchorNow = 0;
-    mLogBroadcast = new TcpBroadcast(this);
     mLogBroadcastTimer = new QTimer(this);
     mFi = new FI(this);
 
@@ -291,7 +290,12 @@ void CarSim::logBroadcastTimerSlot()
                 0.0,
                 0.0,
                 travel_dist);
-    mLogBroadcast->broadcastData(msg.toLocal8Bit());
+
+    VByteArray pkt;
+    pkt.vbAppendUint8(mId);
+    pkt.vbAppendUint8(CMD_LOG_ETHERNET);
+    pkt.append(msg.toLocal8Bit());
+    sendPacket(pkt);
 }
 
 void CarSim::readPendingDatagrams()
@@ -359,17 +363,13 @@ bool CarSim::startUwbBroadcast(int port, int rateHz)
     return res;
 }
 
-bool CarSim::startLogBroadcast(int port, int rateHz)
+void CarSim::startLogBroadcast(int rateHz)
 {
-    bool res = mLogBroadcast->startTcpServer(port);
-
-    if (res) {
+    if (rateHz >= 1) {
         mLogBroadcastTimer->start(1000 / rateHz);
     } else {
         mLogBroadcastTimer->stop();
     }
-
-    return res;
 }
 
 double CarSim::wheelDiam() const
