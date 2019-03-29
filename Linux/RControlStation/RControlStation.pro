@@ -25,10 +25,13 @@ unix:!macx {
 }
 
 # OpenGL support
-DEFINES += HAS_OPENGL
+!android: DEFINES += HAS_OPENGL
 
 # Lime SDR support
 #DEFINES += HAS_LIME_SDR
+
+# Simulation Scennarios
+#DEFINES += HAS_SIM_SCEN
 
 TARGET = RControlStation
 TEMPLATE = app
@@ -50,6 +53,14 @@ release_lin {
     MOC_DIR = build/lin/obj
     RCC_DIR = build/lin/obj
     UI_DIR = build/lin/obj
+}
+
+release_android {
+    DESTDIR = build/android
+    OBJECTS_DIR = build/android/obj
+    MOC_DIR = build/android/obj
+    RCC_DIR = build/android/obj
+    UI_DIR = build/android/obj
 }
 
 contains(DEFINES, HAS_ASSIMP) {
@@ -90,7 +101,8 @@ SOURCES += main.cpp\
     intersectiontest.cpp \
     ncom.cpp \
     correctionanalysis.cpp \
-    historylineedit.cpp
+    historylineedit.cpp \
+    imagewidget.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
@@ -126,7 +138,8 @@ HEADERS  += mainwindow.h \
     intersectiontest.h \
     ncom.h \
     correctionanalysis.h \
-    historylineedit.h
+    historylineedit.h \
+    imagewidget.h
 
 FORMS    += mainwindow.ui \
     carinterface.ui \
@@ -161,5 +174,27 @@ contains(DEFINES, HAS_LIME_SDR) {
     LIBS += -lLimeSuite
 }
 
+contains(DEFINES, HAS_SIM_SCEN) {
+    include(env_sim/EnvironmentSimulator.pri)
+    SOURCES += pagesimscen.cpp
+    HEADERS += pagesimscen.h \
+            simscentree.h
+    FORMS += pagesimscen.ui
+}
+
 RESOURCES += \
     resources.qrc
+
+DISTFILES += \
+    android/AndroidManifest.xml \
+    android/gradle/wrapper/gradle-wrapper.jar \
+    android/gradlew \
+    android/res/values/libs.xml \
+    android/build.gradle \
+    android/gradle/wrapper/gradle-wrapper.properties \
+    android/gradlew.bat
+
+contains(ANDROID_TARGET_ARCH,armeabi-v7a) {
+    ANDROID_PACKAGE_SOURCE_DIR = \
+        $$PWD/android
+}

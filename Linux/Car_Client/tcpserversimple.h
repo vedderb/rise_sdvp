@@ -38,7 +38,7 @@ public:
 
 signals:
     void dataRx(const QByteArray &data);
-    void connectionChanged(bool connected);
+    void connectionChanged(bool connected, QString address);
 
 public slots:
     void newTcpConnection();

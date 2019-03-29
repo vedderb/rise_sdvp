@@ -1,5 +1,5 @@
 /*   Copyright (C) 2009  Nathaniel <linux.robotdude@gmail.com>
- *                 2012  Benjamin Vedder <benjamin@vedder.se>
+ *                 2012 - 2019  Benjamin Vedder <benjamin@vedder.se>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -23,6 +23,8 @@
 #include <QThread>
 #include <QWaitCondition>
 #include <QtDebug>
+#include <QTimer>
+#include <QVector>
 
 #ifdef UNIX
 #include <linux/joystick.h>
@@ -50,13 +52,15 @@ public:
     int numAxes();
     int numButtons();
     bool isConnected();
+    void setRepeats(int button, bool repeats);
 
 Q_SIGNALS:
-    void buttonPressed(int button);
+    void buttonChanged(int button, bool pressed);
     void joystickError(int error, JoystickErrorType errorType);
 
-public Q_SLOTS:
+private Q_SLOTS:
     void errorSlot(int error, JoystickErrorType errorType);
+    void timerSlot();
 
 protected:
     void run();
@@ -69,9 +73,13 @@ protected:
     int mAxis_count;
     int mButton_count;
     char mName[80];
-    int *mAxes;
-    char *mButtons;
+    QVector<int> mAxes;
+    QVector<int> mButtons;
+    QVector<int> mButtonTime;
+    QVector<bool> mButtonRepeats;
     bool mConnected;
+    QTimer *mTimer;
+
 };
 
 #endif

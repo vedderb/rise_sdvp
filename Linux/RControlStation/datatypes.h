@@ -32,6 +32,7 @@ extern "C++" {
 
 // Packet IDs
 #define ID_ALL						255
+#define ID_CAR_CLIENT				254 // Packet for car client only
 #define ID_MOTE						254
 #define ID_RTCM						211 // Same as RTCM3PREAMB
 
@@ -353,6 +354,9 @@ typedef enum {
     CMD_ADD_UWB_ANCHOR,
     CMD_CLEAR_UWB_ANCHORS,
     CMD_LOG_ETHERNET,
+    CMD_CAMERA_IMAGE,
+    CMD_CAMERA_STREAM_START,
+    CMD_CAMERA_FRAME_ACK,
 
     // Car commands
     CMD_GET_STATE = 120,
@@ -411,7 +415,8 @@ typedef struct {
 typedef enum {
     JS_TYPE_HK = 0,
     JS_TYPE_PS4,
-    JS_TYPE_PS3
+    JS_TYPE_PS3,
+    JS_TYPE_MICRONAV_ONE
 } JS_TYPE;
 
 // ============== RTCM Datatypes ================== //
@@ -807,71 +812,6 @@ typedef struct {
      */
     uint8_t syncMode;
 } ubx_cfg_tp5;
-
-// Chronos messages
-
-typedef enum {
-    CHRONOS_MSG_DOPM = 1,
-    CHRONOS_MSG_OSEM,
-    CHRONOS_MSG_OSTM,
-    CHRONOS_MSG_STRT,
-    CHRONOS_MSG_HEAB,
-    CHRONOS_MSG_MONR,
-    CHRONOS_MSG_SYPM = 9,
-    CHRONOS_MSG_MTSP
-} CHRONOS_MSG;
-
-typedef struct {
-    uint32_t tRel;
-    double x;
-    double y;
-    double z;
-    double heading;
-    double speed;
-    int16_t accel;
-    int16_t curvature;
-    uint8_t mode;
-} chronos_dopm_pt;
-
-typedef struct {
-    double lat;
-    double lon;
-    double alt;
-    double heading;
-} chronos_osem;
-
-typedef struct {
-    int armed;
-} chronos_ostm;
-
-typedef struct {
-    uint8_t type;
-    uint64_t ts;
-} chronos_strt;
-
-typedef struct {
-    uint8_t status;
-} chronos_heab;
-
-typedef struct {
-    uint64_t ts;
-    double lat;
-    double lon;
-    double alt;
-    double speed;
-    double heading;
-    uint8_t direction; // 0: FWD 1: REV 2: Unavailable
-    uint8_t status; // 0: Init 1: Armed 2: Running 3: Stopped 4: General error
-} chronos_monr;
-
-typedef struct {
-    uint32_t sync_point;
-    uint32_t stop_time;
-} chronos_sypm;
-
-typedef struct {
-    uint64_t time_est;
-} chronos_mtsp;
 
 // RtRange
 

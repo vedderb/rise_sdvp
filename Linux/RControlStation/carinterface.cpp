@@ -1,5 +1,5 @@
 /*
-    Copyright 2016 - 2017 Benjamin Vedder	benjamin@vedder.se
+    Copyright 2016 - 2019 Benjamin Vedder	benjamin@vedder.se
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -66,7 +66,11 @@ CarInterface::CarInterface(QWidget *parent) :
     mId = 0;
     mExperimentReplot = false;
     mExperimentPlotNow = 0;
-    settingsReadDone = false;
+    mSettingsReadDone = false;
+    mImageByteCnt = 0;
+    mImageCnt = 0;
+    mImageFpsFilter = 0.0;
+    mFullscreenImage = 0;
 
     mTimer = new QTimer(this);
     mTimer->start(20);
@@ -122,6 +126,10 @@ CarInterface::~CarInterface()
 {
     if (mMap) {
         mMap->removeCar(mId);
+    }
+
+    if (mFullscreenImage) {
+        delete mFullscreenImage;
     }
 
     delete ui;
@@ -336,6 +344,8 @@ void CarInterface::setPacketInterface(PacketInterface *packetInterface)
             this, SLOT(radarSamplesReceived(quint8,QVector<QPair<double,double> >)));
     connect(mPacketInterface, SIGNAL(dwSampleReceived(quint8,DW_LOG_INFO)),
             this, SLOT(dwSampleReceived(quint8,DW_LOG_INFO)));
+    connect(mPacketInterface, SIGNAL(cameraImageReceived(quint8,QImage,int)),
+            this, SLOT(cameraImageReceived(quint8,QImage,int)));
 }
 
 void CarInterface::setControlValues(double throttle, double steering, double max, bool currentMode)
@@ -398,6 +408,22 @@ void CarInterface::disableKbBox()
     ui->keyboardControlBox->setChecked(false);
 }
 
+void CarInterface::toggleCameraFullscreen()
+{
+    if (mFullscreenImage) {
+        delete mFullscreenImage;
+    } else {
+        mFullscreenImage = new ImageWidget();
+        mFullscreenImage->setWindowFlags(mFullscreenImage->windowFlags() |
+                                         Qt::WindowStaysOnTopHint);
+        mFullscreenImage->showFullScreen();
+
+        connect(mFullscreenImage, &ImageWidget::destroyed, [=]() {
+            mFullscreenImage = 0;
+        });
+    }
+}
+
 void CarInterface::timerSlot()
 {   
     if (mExperimentReplot) {
@@ -453,7 +479,7 @@ void CarInterface::tcpRx(QByteArray &data)
 
 void CarInterface::terminalPrint(quint8 id, QString str)
 {
-    if (id == mId) {
+    if (id == mId || id == 255) {
         ui->terminalBrowser->append(str);
     }
 }
@@ -520,7 +546,7 @@ void CarInterface::nmeaReceived(quint8 id, QByteArray nmea_msg)
 void CarInterface::configurationReceived(quint8 id, MAIN_CONFIG config)
 {
     if (id == mId) {
-        settingsReadDone = true;
+        mSettingsReadDone = true;
         setConfGui(config);
         QString str;
         str.sprintf("Car %d: Configuration Received", id);
@@ -731,6 +757,34 @@ void CarInterface::loadMagCal()
     ui->confCommonWidget->setMagCompCenter(ui->magCal->getCenter());
 }
 
+void CarInterface::cameraImageReceived(quint8 id, QImage image, int bytes)
+{
+    if (id == mId || id == 255) {
+        mImageByteCnt += bytes;
+        mImageCnt++;
+
+        mPacketInterface->sendCameraFrameAck(mId);
+
+        mImageFpsFilter -= 0.1 * (mImageFpsFilter - 1000.0 / (double)mImageTimer.restart());
+
+        ui->camInfoLabel->setText(QString("Total RX: %1 MB | Last RX: %2 KB | "
+                                          "IMG CNT: %3 | FPS: %4").
+                                  arg((double)mImageByteCnt / 1024.0 / 1024.0, 0, 'f', 1).
+                                  arg(bytes / 1024).
+                                  arg(mImageCnt).arg(mImageFpsFilter, 0, 'f', 1));
+
+        if (mFullscreenImage) {
+            mFullscreenImage->setPixmap(QPixmap::fromImage(image));
+        } else {
+            ui->camWidget->setPixmap(QPixmap::fromImage(image));
+
+            if (mMap && ui->camShowMapBox->isChecked()) {
+                mMap->setLastCameraImage(image);
+            }
+        }
+    }
+}
+
 void CarInterface::on_terminalSendButton_clicked()
 {
     emit terminalCmd(mId, ui->terminalEdit->text());
@@ -858,7 +912,7 @@ void CarInterface::on_confReadDefaultButton_clicked()
 
 void CarInterface::on_confWriteButton_clicked()
 {
-    if (!settingsReadDone) {
+    if (!mSettingsReadDone) {
         QMessageBox::warning(this, "Configuration",
                              "You must read the configuration at least once before writing it. "
                              "Otherwise everything would be set to 0.");
@@ -1281,4 +1335,37 @@ void CarInterface::on_experimentVZoomButton_toggled(bool checked)
 {
     (void)checked;
     updateExperimentZoom();
+}
+
+void CarInterface::on_camStartButton_clicked()
+{
+    mImageByteCnt = 0;
+    mImageCnt = 0;
+    mImageTimer.restart();
+
+    if (mPacketInterface) {
+        mPacketInterface->startCameraStream(mId, ui->camCamBox->value(),
+                                            ui->camQualityBox->value(),
+                                            ui->camWidthBox->value(),
+                                            ui->camHeightBox->value(),
+                                            ui->camFpsBox->value(),
+                                            ui->camSkipBox->value());
+    }
+}
+
+void CarInterface::on_camStopButton_clicked()
+{
+    mPacketInterface->startCameraStream(mId, -1, 0, 0, 0, 0, 0);
+    ui->camWidget->setPixmap(QPixmap());
+
+    if (mMap) {
+        mMap->setLastCameraImage(QImage());
+    }
+}
+
+void CarInterface::on_camShowMapBox_toggled(bool checked)
+{
+    if (mMap && !checked) {
+        mMap->setLastCameraImage(QImage());
+    }
 }

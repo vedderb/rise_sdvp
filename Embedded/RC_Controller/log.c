@@ -27,6 +27,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <math.h>
 
 // Settings
 #define UART_DEV					UARTD1
@@ -395,7 +396,8 @@ static void print_log_ext(void) {
 			"%u,"     // timestamp gps sample today (ms)
 			"%.7f,"   // lat
 			"%.7f,"   // lon
-			"%.3f\r\n",  // height
+			"%.3f,"  // height
+			"%.3f\r\n",  // Travel distance
 
 			time,
 			ms_today,
@@ -418,7 +420,10 @@ static void print_log_ext(void) {
 			gps.ms,
 			gps.lat,
 			gps.lon,
-			gps.height);
+			gps.height,
+			(double)(val.tachometer * main_config.car.gear_ratio
+			* (2.0 / main_config.car.motor_poles) * (1.0 / 6.0)
+			* main_config.car.wheel_diam * M_PI));
 }
 
 #ifdef LOG_EN_DW

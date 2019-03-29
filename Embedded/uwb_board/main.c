@@ -85,7 +85,7 @@ int main(void) {
         	chThdSleepMilliseconds(1000);
         }
     } else {
-    	comm_usb_printf("Deca init OK\r\n");
+//    	comm_usb_printf("Deca init OK\r\n");
     }
 	deca_port_set_spi_fast();
 
@@ -106,9 +106,9 @@ int main(void) {
 	mpu9150_set_read_callback(mpu_read);
 
 	for(;;) {
-		if (main_id == 38) {
+		if (main_id == 35) {
 			led_toggle(LED_RED);
-			deca_range_measure(131, 6);
+			deca_range_measure(234, 6);
 			chThdSleepMilliseconds(100);
 		} else {
 			uint8_t buffer[5];

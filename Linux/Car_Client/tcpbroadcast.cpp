@@ -95,6 +95,21 @@ void TcpBroadcast::logStop()
 void TcpBroadcast::newTcpConnection()
 {
     mSockets.append(mTcpServer->nextPendingConnection());
+    connect(mSockets.last(), SIGNAL(readyRead()),
+            this, SLOT(readyRead()));
     qDebug() << "TCP connection accepted:" << mSockets[mSockets.size() - 1]->peerAddress();
+}
+
+void TcpBroadcast::readyRead()
+{
+    QMutableListIterator<QTcpSocket*> itr(mSockets);
+
+    while(itr.hasNext()) {
+        QTcpSocket *socket = itr.next();
+        QByteArray data = socket->readAll();
+        if (!data.isEmpty()) {
+            emit dataReceived(data);
+        }
+    }
 }
 
