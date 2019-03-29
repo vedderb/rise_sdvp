@@ -1,5 +1,5 @@
 /*
-    Copyright 2016 - 2017 Benjamin Vedder	benjamin@vedder.se
+    Copyright 2016 - 2019 Benjamin Vedder	benjamin@vedder.se
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@
 #include <QTimer>
 #include <QVector>
 #include <QUdpSocket>
+#include <QImage>
 #include "datatypes.h"
 #include "locpoint.h"
 
@@ -101,6 +102,7 @@ signals:
     void dwSampleReceived(quint8 id, DW_LOG_INFO dw);
     void routePartReceived(quint8 id, int len, const QList<LocPoint> &route);
     void logEthernetReceived(quint8 id, QByteArray data);
+    void cameraImageReceived(quint8 id, QImage image, int rxBytes);
     
 public slots:
     void timerSlot();
@@ -125,6 +127,9 @@ public slots:
     void radarSetupGet(quint8 id);
     void mrRcControl(quint8 id, double throttle, double roll, double pitch, double yaw);
     void mrOverridePower(quint8 id, double fl_f, double bl_l, double fr_r, double br_b);
+    void startCameraStream(quint8 id, int camera, int quality,
+                           int width, int height, int fps, int skip);
+    void sendCameraFrameAck(quint8 id);
 
 private:
     unsigned short crc16(const unsigned char *buf, unsigned int len);
@@ -141,12 +146,12 @@ private:
     bool mWaitingAck;
 
     // Packet state machine variables
-    static const unsigned int mMaxBufferLen = 4096;
+    static const unsigned int mMaxBufferLen = 2000000;
     int mRxTimer;
     int mRxState;
     unsigned int mPayloadLength;
-    unsigned char mRxBuffer[mMaxBufferLen];
-    unsigned char mSendBufferAck[mMaxBufferLen];
+    unsigned char *mRxBuffer;
+    unsigned char *mSendBufferAck;
     unsigned int mRxDataPtr;
     unsigned char mCrcLow;
     unsigned char mCrcHigh;

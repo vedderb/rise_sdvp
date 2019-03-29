@@ -1,15 +1,22 @@
 # Build GUI
 #DEFINES += HAS_GUI
 
+# Build camera support
+DEFINES += HAS_CAMERA
+
 QT += core
 QT += widgets
 QT += network
 QT += serialport
+QT += gui
 
 contains(DEFINES, HAS_GUI) {
     QT += quick
     QT += quickcontrols2
-    QT += gui
+}
+
+contains(DEFINES, HAS_CAMERA) {
+    QT += multimedia
 }
 
 CONFIG += c++11
@@ -32,8 +39,10 @@ SOURCES += main.cpp \
     packet.cpp \
     tcpserversimple.cpp \
     chronos.cpp \
-    vbytearray.cpp \
-    rtcmclient.cpp
+    rtcmclient.cpp \
+    chronoscomm.cpp \
+    vbytearrayle.cpp \
+    vbytearray.cpp
 
 HEADERS += \
     packetinterface.h \
@@ -49,9 +58,18 @@ HEADERS += \
     packet.h \
     tcpserversimple.h \
     chronos.h \
-    vbytearray.h \
-    rtcmclient.h
+    rtcmclient.h \
+    chronoscomm.h \
+    vbytearrayle.h \
+    vbytearray.h
 
 RESOURCES += \
     res.qrc
 
+contains(DEFINES, HAS_CAMERA) {
+    QT += multimedia
+    SOURCES += camera.cpp
+    HEADERS += camera.h
+}
+
+include(carsim/carsim.pri)

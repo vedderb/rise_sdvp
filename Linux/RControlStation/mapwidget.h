@@ -1,5 +1,5 @@
 /*
-    Copyright 2012 - 2017 Benjamin Vedder	benjamin@vedder.se
+    Copyright 2012 - 2019 Benjamin Vedder	benjamin@vedder.se
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -28,6 +28,9 @@
 #include <QList>
 #include <QInputDialog>
 #include <QTimer>
+#include <QPinchGesture>
+#include <QImage>
+#include <QTransform>
 
 #include "locpoint.h"
 #include "carinfo.h"
@@ -35,11 +38,29 @@
 #include "perspectivepixmap.h"
 #include "osmclient.h"
 
+class MapModule
+{
+public:
+    virtual void processPaint(QPainter &painter, int width, int height, bool highQuality,
+                              QTransform drawTrans, QTransform txtTrans, double scale) = 0;
+    virtual bool processMouse(bool isPress, bool isRelease, bool isMove, bool isWheel,
+                              QPoint widgetPos, LocPoint mapPos, double wheelAngleDelta,
+                              bool ctrl, bool shift, bool ctrlShift,
+                              bool leftButton, bool rightButton, double scale) = 0;
+};
+
 class MapWidget : public QWidget
 {
     Q_OBJECT
 
 public:
+    typedef enum {
+        InteractionModeDefault,
+        InteractionModeCtrlDown,
+        InteractionModeShiftDown,
+        InteractionModeCtrlShiftDown
+    } InteractionMode;
+
     explicit MapWidget(QWidget *parent = 0);
     CarInfo* getCarInfo(int car);
     CopterInfo* getCopterInfo(int copter);
@@ -50,12 +71,15 @@ public:
     void addCopter(const CopterInfo &copter);
     bool removeCar(int carId);
     bool removeCopter(int copterId);
+    void clearCars();
+    void clearCopters();
     LocPoint* getAnchor(int id);
     void addAnchor(const LocPoint &anchor);
     bool removeAnchor(int id);
     void clearAnchors();
     QList<LocPoint> getAnchors();
     void setScaleFactor(double scale);
+    double getScaleFactor();
     void setRotation(double rotation);
     void setXOffset(double offset);
     void setYOffset(double offset);
@@ -93,6 +117,7 @@ public:
     bool getAnchorMode();
     void setAnchorId(int id);
     void setAnchorHeight(double height);
+    void removeLastRoutePoint();
 
     int getOsmMaxZoomLevel() const;
     void setOsmMaxZoomLevel(int osmMaxZoomLevel);
@@ -129,6 +154,22 @@ public:
     bool getDrawUwbTrace() const;
     void setDrawUwbTrace(bool drawUwbTrace);
 
+    void setLastCameraImage(const QImage &lastCameraImage);
+
+    double getCameraImageWidth() const;
+    void setCameraImageWidth(double cameraImageWidth);
+
+    double getCameraImageOpacity() const;
+    void setCameraImageOpacity(double cameraImageOpacity);
+
+    MapWidget::InteractionMode getInteractionMode() const;
+    void setInteractionMode(const MapWidget::InteractionMode &controlMode);
+
+    void addMapModule(MapModule *m);
+    void removeMapModule(MapModule *m);
+    void removeMapModuleLast();
+
+
 signals:
     void scaleChanged(double newScale);
     void offsetChanged(double newXOffset, double newYOffset);
@@ -140,13 +181,15 @@ signals:
 private slots:
     void tileReady(OsmTile tile);
     void errorGetTile(QString reason);
+    void timerSlot();
 
 protected:
-    void paintEvent(QPaintEvent *event);
-    void mouseMoveEvent (QMouseEvent * e);
-    void mousePressEvent(QMouseEvent * e);
-    void mouseReleaseEvent(QMouseEvent * e);
-    void wheelEvent(QWheelEvent * e);
+    void paintEvent(QPaintEvent *event) override;
+    void mouseMoveEvent (QMouseEvent *e) override;
+    void mousePressEvent(QMouseEvent *e) override;
+    void mouseReleaseEvent(QMouseEvent *e) override;
+    void wheelEvent(QWheelEvent *e) override;
+    bool event(QEvent *event) override;
 
 private:
     QList<CarInfo> mCarInfo;
@@ -198,6 +241,12 @@ private:
     bool mAnchorMode;
     bool mDrawRouteText;
     bool mDrawUwbTrace;
+    QImage mLastCameraImage;
+    double mCameraImageWidth;
+    double mCameraImageOpacity;
+    InteractionMode mInteractionMode;
+    QTimer *mTimer;
+    QVector<MapModule*> mMapModules;
 
     void updateClosestInfoPoint();
     int drawInfoPoints(QPainter &painter, const QList<LocPoint> &pts,
@@ -208,6 +257,7 @@ private:
     void drawCircleFast(QPainter &painter, QPointF center, double radius, int type = 0);
 
     void paint(QPainter &painter, int width, int height, bool highQuality = false);
+    void updateTraces();
 };
 
 #endif // MAPWIDGET_H

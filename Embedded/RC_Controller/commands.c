@@ -325,12 +325,10 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 				p.time = buffer_get_int32(data, &ind);
 
 				if (first) {
-					autopilot_replace_route(&p);
+					first = !autopilot_replace_route(&p);
 				} else {
 					autopilot_add_point(&p, false);
 				}
-
-				first = false;
 			}
 
 			// Send ack

@@ -44,10 +44,10 @@ void TcpServerSimple::stopServer()
     mTcpServer->close();
 
     if (mTcpSocket) {
+        emit connectionChanged(false, mTcpSocket->peerAddress().toString());
         mTcpSocket->close();
         delete mTcpSocket;
         mTcpSocket = 0;
-        emit connectionChanged(false);
     }
 }
 
@@ -76,6 +76,7 @@ Packet *TcpServerSimple::packet()
 void TcpServerSimple::newTcpConnection()
 {
     QTcpSocket *socket = mTcpServer->nextPendingConnection();
+    socket->setSocketOption(QAbstractSocket::LowDelayOption, true);
 
     if (mTcpSocket) {
         socket->close();
@@ -89,16 +90,16 @@ void TcpServerSimple::newTcpConnection()
                     this, SLOT(tcpInputDisconnected()));
             connect(mTcpSocket, SIGNAL(error(QAbstractSocket::SocketError)),
                     this, SLOT(tcpInputError(QAbstractSocket::SocketError)));
-            emit connectionChanged(true);
+            emit connectionChanged(true, mTcpSocket->peerAddress().toString());
         }
     }
 }
 
 void TcpServerSimple::tcpInputDisconnected()
 {
+    emit connectionChanged(false, mTcpSocket->peerAddress().toString());
     mTcpSocket->deleteLater();
     mTcpSocket = 0;
-    emit connectionChanged(false);
 }
 
 void TcpServerSimple::tcpInputDataAvailable()
@@ -114,10 +115,8 @@ void TcpServerSimple::tcpInputDataAvailable()
 void TcpServerSimple::tcpInputError(QAbstractSocket::SocketError socketError)
 {
     (void)socketError;
-    mTcpSocket->close();
-    delete mTcpSocket;
-    mTcpSocket = 0;
-    emit connectionChanged(false);
+    mTcpSocket->abort();
+//    qDebug() << socketError;
 }
 
 void TcpServerSimple::dataToSend(QByteArray &data)

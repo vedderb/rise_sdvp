@@ -1,5 +1,5 @@
 /*
-	Copyright 2016 - 2018 Benjamin Vedder	benjamin@vedder.se
+	Copyright 2016 - 2019 Benjamin Vedder	benjamin@vedder.se
 
 	This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -185,25 +185,44 @@ void autopilot_clear_route(void) {
 	chMtxUnlock(&m_ap_lock);
 }
 
-void autopilot_replace_route(ROUTE_POINT *p) {
+bool autopilot_replace_route(ROUTE_POINT *p) {
+	bool ret = false;
+
 	chMtxLock(&m_ap_lock);
 
 	if (!m_is_active) {
 		clear_route();
 		add_point(p, true);
+		ret = true;
 	} else {
+		bool time_mode = p->time > 0;
+
 		while (m_point_last != m_point_now) {
 			m_point_last--;
 			if (m_point_last < 0) {
 				m_point_last = AP_ROUTE_SIZE - 1;
 			}
+
+			// If we use time stamps (times are > 0), only overwrite the newer
+			// part of the route.
+			if (time_mode && p->time >= m_route[m_point_last].time) {
+				break;
+			}
 		}
 
-		m_has_prev_point = false;
-		add_point(p, true);
+		m_has_prev_point = m_point_last != m_point_now;
+
+		// In time mode, only add the point if its timestamp was ahead of the point
+		// we currently follow.
+		if (!time_mode || m_point_last != m_point_now || p->time >= m_route[m_point_last].time) {
+			add_point(p, true);
+			ret = true;
+		}
 	}
 
 	chMtxUnlock(&m_ap_lock);
+
+	return ret;
 }
 
 void autopilot_sync_point(int32_t point, int32_t time, int32_t min_time_diff) {
@@ -487,7 +506,7 @@ static THD_FUNCTION(ap_thread, arg) {
 			ROUTE_POINT *rp_ls2 = &m_route[1]; // Second point on goal line segment
 
 			ROUTE_POINT *closest1_speed = &m_route[0];
-			ROUTE_POINT *closest2_speed = &m_route[2];
+			ROUTE_POINT *closest2_speed = &m_route[1];
 
 			for (int i = start;i < end;i++) {
 				int ind = i; // First point index for this iteration
@@ -652,6 +671,7 @@ static THD_FUNCTION(ap_thread, arg) {
 					commands_send_plot_points((float)sample, speed);
 					commands_plot_set_graph(2);
 					commands_send_plot_points((float)sample, pos_now.yaw * 0.1);
+					commands_plot_set_graph(3);
 					commands_plot_set_graph(3);
 					commands_send_plot_points((float)sample, m_rad_now * 10.0);
 

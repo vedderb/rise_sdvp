@@ -38,12 +38,12 @@ void LimeSDR::run()
     mStop = false;
 
     double gain = 1.0;
-    int32_t antenna = 1;
+    int32_t antenna = LMS_PATH_TX1;
     int32_t channel = 0;
     int32_t index = 0;
     double sampleRate = 2e6;
     double frequency = 1575.42e6;
-    double bandwidth = 10e6;
+    double bandwidth = 2.5e6;
 
     mGps.allocateBuffers(sampleRate);
     mGps.resetState();
@@ -60,47 +60,50 @@ void LimeSDR::run()
         return;
     }
 
-    lms_info_str_t *device_list = (lms_info_str_t*)malloc(sizeof(lms_info_str_t) * device_count);
+    lms_info_str_t *device_list = new lms_info_str_t[device_count];
     device_count = LMS_GetDeviceList(device_list);
 
     for (int i = 0;i < device_count;i++) {
-        myPrint("device[%d/%d]=%s" "\n", i + 1, device_count, device_list[i]);
+        myPrint("device[%d/%d]=%s\n", i + 1, device_count, device_list[i]);
     }
 
     lms_device_t *device = NULL;
 
     if (LMS_Open(&device, device_list[index], NULL)) {
         myPrint("Could not open device.\n");
+        delete[] device_list;
         return;
     }
 
+    delete[] device_list;
+
     int lmsReset = LMS_Reset(device);
     if (lmsReset) {
-        myPrint("lmsReset %d(%s)\n", lmsReset, LMS_GetLastErrorMessage());
+        myPrint("ERROR lmsReset %d(%s)\n", lmsReset, LMS_GetLastErrorMessage());
     }
 
     int lmsInit = LMS_Init(device);
     if (lmsInit){
-        myPrint("lmsInit %d(%s)" "\n", lmsInit, LMS_GetLastErrorMessage());
+        myPrint("ERROR lmsInit %d(%s)\n", lmsInit, LMS_GetLastErrorMessage());
     }
 
     int channel_count = LMS_GetNumChannels(device, LMS_CH_TX);
 
-    myPrint("Tx channel count %d" "\n", channel_count);
+    myPrint("Tx channel count %d\n", channel_count);
 
-    if (channel < 0){
+    if (channel < 0) {
         channel = 0;
     }
 
-    if (channel >= channel_count){
+    if (channel >= channel_count) {
         channel = 0;
     }
 
-    myPrint("Using channel %d" "\n", channel);
+    myPrint("Using channel %d\n", channel);
 
     int antenna_count = LMS_GetAntennaList(device, LMS_CH_TX, channel, NULL);
 
-    myPrint("TX%d Channel has %d antenna(ae)" "\n", channel, antenna_count);
+    myPrint("TX%d Channel has %d antenna(ae)\n", channel, antenna_count);
 
     lms_name_t antenna_name[antenna_count];
     if (antenna_count > 0){
@@ -109,23 +112,37 @@ void LimeSDR::run()
         LMS_GetAntennaList(device, LMS_CH_TX, channel, antenna_name);
         for (i = 0 ; i < antenna_count ; i++){
             LMS_GetAntennaBW(device, LMS_CH_TX, channel, i, antenna_bw + i);
-            myPrint("Channel %d, antenna [%s] has BW [%lf .. %lf] (step %lf)" "\n",
+            myPrint("Channel %d, antenna [%s] has BW [%lf .. %lf] (step %lf)\n",
                     channel, antenna_name[i], antenna_bw[i].min, antenna_bw[i].max, antenna_bw[i].step);
         }
     }
 
-    LMS_SetNormalizedGain(device, LMS_CH_TX, channel, gain);
-
-    // Disable all other channels
-    LMS_EnableChannel(device, LMS_CH_TX, 1 - channel, false);
-    LMS_EnableChannel(device, LMS_CH_RX, 0, false);
-    LMS_EnableChannel(device, LMS_CH_RX, 1, false);
     // Enable our Tx channel
-    LMS_EnableChannel(device, LMS_CH_TX, channel, true);
+    int enableChannel = LMS_EnableChannel(device, LMS_CH_TX, channel, true);
+    if (enableChannel){
+        myPrint("ERROR enableChannel(%lf)=%d(%s)\n",
+                channel, enableChannel, LMS_GetLastErrorMessage());
+    }
+
+    lms_range_t sampleRateRange;
+    int getSampleRateRange = LMS_GetSampleRateRange(device, LMS_CH_TX, &sampleRateRange);
+    if (getSampleRateRange){
+        myPrint("ERROR getSampleRateRange=%d(%s)\n", getSampleRateRange, LMS_GetLastErrorMessage());
+    } else{
+        myPrint("sampleRateRange [%lf MHz.. %lf MHz] (step=%lf Hz)\n",
+                sampleRateRange.min / 1e6, sampleRateRange.max / 1e6, sampleRateRange.step);
+    }
+
+    myPrint("Set sample rate to %lf ...\n", sampleRate);
+
+    int setSampleRate = LMS_SetSampleRate(device, sampleRate, 0);
+    if (setSampleRate){
+        myPrint("ERROR setSampleRate=%d(%s)\n", setSampleRate, LMS_GetLastErrorMessage());
+    }
 
     int setLOFrequency = LMS_SetLOFrequency(device, LMS_CH_TX, channel, frequency);
     if (setLOFrequency){
-        myPrint("setLOFrequency(%lf)=%d(%s)\n",
+        myPrint("ERROR setLOFrequency(%lf)=%d(%s)\n",
                 frequency, setLOFrequency, LMS_GetLastErrorMessage());
     }
 
@@ -137,22 +154,16 @@ void LimeSDR::run()
         antenna = 0;
     }
 
-    LMS_SetAntenna(device, LMS_CH_TX, channel, antenna);
-
-    lms_range_t sampleRateRange;
-    int getSampleRateRange = LMS_GetSampleRateRange(device, LMS_CH_TX, &sampleRateRange);
-    if (getSampleRateRange){
-        myPrint("getSampleRateRange=%d(%s)" "\n", getSampleRateRange, LMS_GetLastErrorMessage());
-    } else{
-        myPrint("sampleRateRange [%lf MHz.. %lf MHz] (step=%lf Hz)" "\n",
-                sampleRateRange.min / 1e6, sampleRateRange.max / 1e6, sampleRateRange.step);
+    int setAntenna = LMS_SetAntenna(device, LMS_CH_TX, channel, antenna);
+    if (setAntenna){
+        myPrint("ERROR setAntenna(%lf)=%d(%s)\n",
+                antenna, setLOFrequency, LMS_GetLastErrorMessage());
     }
 
-    myPrint("Set sample rate to %lf ..." "\n", sampleRate);
-    int setSampleRate = LMS_SetSampleRate(device, sampleRate, 0);
-
-    if (setSampleRate){
-        myPrint("setSampleRate=%d(%s)" "\n", setSampleRate, LMS_GetLastErrorMessage());
+    int setNormalizedGain = LMS_SetNormalizedGain(device, LMS_CH_TX, channel, gain);
+    if (setNormalizedGain){
+        myPrint("ERROR setNormalizedGain(%lf)=%d(%s)\n",
+                gain, setNormalizedGain, LMS_GetLastErrorMessage());
     }
 
     double actualHostSampleRate = 0.0;
@@ -160,20 +171,19 @@ void LimeSDR::run()
     int getSampleRate = LMS_GetSampleRate(device, LMS_CH_TX, channel, &actualHostSampleRate, &actualRFSampleRate);
 
     if (getSampleRate){
-        myPrint("getSampleRate=%d(%s)" "\n", getSampleRate, LMS_GetLastErrorMessage());
+        myPrint("ERROR getSampleRate=%d(%s)\n", getSampleRate, LMS_GetLastErrorMessage());
     } else{
-        myPrint("actualRate %lf (Host) / %lf (RF)" "\n", actualHostSampleRate, actualRFSampleRate);
+        myPrint("actualRate %lf (Host) / %lf (RF)\n", actualHostSampleRate, actualRFSampleRate);
     }
 
     myPrint("Calibrating ..." "\n");
 
     int calibrate = LMS_Calibrate(device, LMS_CH_TX, channel, bandwidth, 0);
-
     if(calibrate){
-        myPrint("calibrate=%d(%s)" "\n", calibrate, LMS_GetLastErrorMessage());
+        myPrint("ERROR calibrate=%d(%s)\n", calibrate, LMS_GetLastErrorMessage());
     }
 
-    myPrint("Setup TX stream ..." "\n");
+    myPrint("Setup TX stream ...\n");
 
     lms_stream_t tx_stream;
     memset(&tx_stream, 0, sizeof(lms_stream_t));
@@ -186,7 +196,7 @@ void LimeSDR::run()
 
     int setupStream = LMS_SetupStream(device, &tx_stream);
     if(setupStream){
-        myPrint("setupStream=%d(%s)" "\n", setupStream, LMS_GetLastErrorMessage());
+        myPrint("ERROR setupStream=%d(%s)\n", setupStream, LMS_GetLastErrorMessage());
     }
 
     int nSamples = (int)sampleRate / 10;
@@ -220,7 +230,7 @@ void LimeSDR::run()
         int sendStream = LMS_SendStream(&tx_stream, genSamples, nSamples, &tx_metadata, 1000);
 
         if(sendStream < 0){
-            myPrint("sendStream %d(%s)" "\n", sendStream, LMS_GetLastErrorMessage());
+            myPrint("ERROR sendStream %d(%s)" "\n", sendStream, LMS_GetLastErrorMessage());
         }
     }
 

@@ -30,18 +30,24 @@ public:
     void setId(int id, bool changeName = false);
     QString getName() const;
     void setName(QString name);
-    LocPoint getLocation() const;
+    LocPoint &getLocation();
     void setLocation(LocPoint &point);
-    LocPoint getLocationGps() const;
+    LocPoint &getLocationGps();
     void setLocationGps(LocPoint &point);
-    LocPoint getLocationUwb() const;
+    LocPoint &getLocationUwb();
     void setLocationUwb(const LocPoint &locationUwb);
     Qt::GlobalColor getColor() const;
     void setColor(Qt::GlobalColor color);
-    LocPoint getApGoal() const;
+    LocPoint &getApGoal();
     void setApGoal(const LocPoint &apGoal);
     qint32 getTime() const;
     void setTime(const qint32 &time);
+    double getLength() const;
+    void setLength(double length);
+    double getWidth() const;
+    void setWidth(double width);
+    double getCornerRadius() const;
+    void setCornerRadius(double cornerRadius);
 
 private:
     int mId;
@@ -52,6 +58,9 @@ private:
     LocPoint mApGoal;
     Qt::GlobalColor mColor;
     qint32 mTime;
+    double mLength;
+    double mWidth;
+    double mCornerRadius;
 
 };
 

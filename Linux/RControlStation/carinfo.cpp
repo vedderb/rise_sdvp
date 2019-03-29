@@ -24,6 +24,9 @@ CarInfo::CarInfo(int id, Qt::GlobalColor color)
     mName = "";
     mName.sprintf("Car %d", mId);
     mTime = 0;
+    mLength = 0.8;
+    mWidth = 0.335;
+    mCornerRadius = 0.02;
 }
 
 int CarInfo::getId()
@@ -56,7 +59,7 @@ void CarInfo::setLocation(LocPoint &point)
     mLocation = point;
 }
 
-LocPoint CarInfo::getLocationGps() const
+LocPoint &CarInfo::getLocationGps()
 {
     return mLocationGps;
 }
@@ -76,7 +79,7 @@ void CarInfo::setColor(Qt::GlobalColor color)
     mColor = color;
 }
 
-LocPoint CarInfo::getApGoal() const
+LocPoint &CarInfo::getApGoal()
 {
     return mApGoal;
 }
@@ -96,7 +99,37 @@ void CarInfo::setTime(const qint32 &time)
     mTime = time;
 }
 
-LocPoint CarInfo::getLocationUwb() const
+double CarInfo::getLength() const
+{
+    return mLength;
+}
+
+void CarInfo::setLength(double length)
+{
+    mLength = length;
+}
+
+double CarInfo::getWidth() const
+{
+    return mWidth;
+}
+
+void CarInfo::setWidth(double width)
+{
+    mWidth = width;
+}
+
+double CarInfo::getCornerRadius() const
+{
+    return mCornerRadius;
+}
+
+void CarInfo::setCornerRadius(double cornerRadius)
+{
+    mCornerRadius = cornerRadius;
+}
+
+LocPoint &CarInfo::getLocationUwb()
 {
     return mLocationUwb;
 }
@@ -106,7 +139,7 @@ void CarInfo::setLocationUwb(const LocPoint &locationUwb)
     mLocationUwb = locationUwb;
 }
 
-LocPoint CarInfo::getLocation() const
+LocPoint &CarInfo::getLocation()
 {
     return mLocation;
 }

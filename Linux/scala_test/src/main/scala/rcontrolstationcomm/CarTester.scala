@@ -509,7 +509,7 @@ object CarTester {
         genPoints += r.getLastGeneratedPoints()
         usedPoints += 5
 
-        var start = indLast - 20
+        var start = indLast - 40
         if (start < 0) {
           start = 0
         }
@@ -518,7 +518,7 @@ object CarTester {
         if (subRoute.size() > 0) {
           addRoute(0, subRoute, true, true, TestSettings.carRoute, 2000)
         }
-        Thread.sleep(5)
+//        Thread.sleep(5)
         indLast = rGen.size()
       }
     }

@@ -39,12 +39,13 @@ public:
     void logStop();
 
 signals:
+    void dataReceived(QByteArray &data);
 
 public slots:
 
-
 private slots:
     void newTcpConnection();
+    void readyRead();
 
 private:
     QTcpServer *mTcpServer;
