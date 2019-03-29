@@ -717,7 +717,7 @@
      </layout>
     </item>
     <item>
-     <widget class="QTabWidget" name="tabWidget">
+     <widget class="QTabWidget" name="mainTabWidget">
       <property name="toolTip">
        <string/>
       </property>
@@ -2117,7 +2117,7 @@
                    <x>0</x>
                    <y>0</y>
                    <width>210</width>
-                   <height>693</height>
+                   <height>783</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_15">
@@ -2194,6 +2194,62 @@
                       <widget class="QCheckBox" name="mapDrawUwbTraceBox">
                        <property name="text">
                         <string>Draw UWB Trace</string>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QGroupBox" name="groupBox_19">
+                    <property name="title">
+                     <string>Camera Stream</string>
+                    </property>
+                    <layout class="QVBoxLayout" name="verticalLayout_24">
+                     <property name="spacing">
+                      <number>2</number>
+                     </property>
+                     <property name="leftMargin">
+                      <number>4</number>
+                     </property>
+                     <property name="topMargin">
+                      <number>4</number>
+                     </property>
+                     <property name="rightMargin">
+                      <number>4</number>
+                     </property>
+                     <property name="bottomMargin">
+                      <number>4</number>
+                     </property>
+                     <item>
+                      <widget class="QDoubleSpinBox" name="mapCameraWidthBox">
+                       <property name="prefix">
+                        <string>Width: </string>
+                       </property>
+                       <property name="maximum">
+                        <double>1.000000000000000</double>
+                       </property>
+                       <property name="singleStep">
+                        <double>0.020000000000000</double>
+                       </property>
+                       <property name="value">
+                        <double>0.460000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QDoubleSpinBox" name="mapCameraOpacityBox">
+                       <property name="prefix">
+                        <string>Opacity: </string>
+                       </property>
+                       <property name="maximum">
+                        <double>1.000000000000000</double>
+                       </property>
+                       <property name="singleStep">
+                        <double>0.020000000000000</double>
+                       </property>
+                       <property name="value">
+                        <double>0.800000000000000</double>
                        </property>
                       </widget>
                      </item>
@@ -2798,11 +2854,15 @@
    </widget>
    <widget class="QMenu" name="menuFile">
     <property name="title">
-     <string>File</string>
+     <string>Fi&amp;le</string>
     </property>
     <addaction name="actionSaveRoutes"/>
     <addaction name="actionSaveRouteswithIDs"/>
     <addaction name="actionLoadRoutes"/>
+    <addaction name="separator"/>
+    <addaction name="actionToggleFullscreen"/>
+    <addaction name="actionToggleCameraFullscreen"/>
+    <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menuTests">
@@ -2814,7 +2874,7 @@
    </widget>
    <widget class="QMenu" name="menuChronos">
     <property name="title">
-     <string>Chronos</string>
+     <string>&amp;Chronos</string>
     </property>
     <addaction name="actionSaveSelectedRouteAsDriveFile"/>
     <addaction name="actionLoadDriveFile"/>
@@ -2831,7 +2891,7 @@
      <normaloff>:/models/Icons/About-96.png</normaloff>:/models/Icons/About-96.png</iconset>
    </property>
    <property name="text">
-    <string>About</string>
+    <string>&amp;About</string>
    </property>
   </action>
   <action name="actionAboutLibrariesUsed">
@@ -2840,7 +2900,7 @@
      <normaloff>:/models/Icons/About-96.png</normaloff>:/models/Icons/About-96.png</iconset>
    </property>
    <property name="text">
-    <string>About Libraries Used</string>
+    <string>About &amp;Libraries Used</string>
    </property>
   </action>
   <action name="actionAboutQt">
@@ -2849,7 +2909,7 @@
      <normaloff>:/models/Icons/About-96.png</normaloff>:/models/Icons/About-96.png</iconset>
    </property>
    <property name="text">
-    <string>About Qt</string>
+    <string>About &amp;Qt</string>
    </property>
   </action>
   <action name="actionExit">
@@ -2858,7 +2918,7 @@
      <normaloff>:/models/Icons/Shutdown-96.png</normaloff>:/models/Icons/Shutdown-96.png</iconset>
    </property>
    <property name="text">
-    <string>Exit</string>
+    <string>&amp;Exit</string>
    </property>
   </action>
   <action name="actionSaveRoutes">
@@ -2867,7 +2927,7 @@
      <normaloff>:/models/Icons/Save as-96.png</normaloff>:/models/Icons/Save as-96.png</iconset>
    </property>
    <property name="text">
-    <string>Save Routes...</string>
+    <string>&amp;Save Routes...</string>
    </property>
   </action>
   <action name="actionLoadRoutes">
@@ -2876,7 +2936,7 @@
      <normaloff>:/models/Icons/Open Folder-96.png</normaloff>:/models/Icons/Open Folder-96.png</iconset>
    </property>
    <property name="text">
-    <string>Load Routes...</string>
+    <string>&amp;Load Routes...</string>
    </property>
   </action>
   <action name="actionTestIntersection">
@@ -2885,7 +2945,7 @@
      <normaloff>:/models/Icons/Streets-100.png</normaloff>:/models/Icons/Streets-100.png</iconset>
    </property>
    <property name="text">
-    <string>Intersection</string>
+    <string>&amp;Intersection</string>
    </property>
    <property name="toolTip">
     <string>Intersection Test</string>
@@ -2897,7 +2957,7 @@
      <normaloff>:/models/Icons/Save as-96.png</normaloff>:/models/Icons/Save as-96.png</iconset>
    </property>
    <property name="text">
-    <string>Save selected route as drive file...</string>
+    <string>&amp;Save selected route as drive file...</string>
    </property>
    <property name="toolTip">
     <string>Save selected route as drive file</string>
@@ -2909,7 +2969,7 @@
      <normaloff>:/models/Icons/Open Folder-96.png</normaloff>:/models/Icons/Open Folder-96.png</iconset>
    </property>
    <property name="text">
-    <string>Load drive file...</string>
+    <string>&amp;Load drive file...</string>
    </property>
   </action>
   <action name="actionSaveRouteswithIDs">
@@ -2918,7 +2978,7 @@
      <normaloff>:/models/Icons/Save as-96.png</normaloff>:/models/Icons/Save as-96.png</iconset>
    </property>
    <property name="text">
-    <string>Save Routes with IDs...</string>
+    <string>Save &amp;Routes with IDs...</string>
    </property>
   </action>
   <action name="actionGPSSimulator">
@@ -2927,7 +2987,31 @@
      <normaloff>:/models/Icons/Satellite-96.png</normaloff>:/models/Icons/Satellite-96.png</iconset>
    </property>
    <property name="text">
-    <string>GPS Simulator</string>
+    <string>&amp;GPS Simulator</string>
+   </property>
+  </action>
+  <action name="actionToggleFullscreen">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/models/Icons/VPN-96.png</normaloff>:/models/Icons/VPN-96.png</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Toggle Fullscreen</string>
+   </property>
+   <property name="shortcut">
+    <string>F11</string>
+   </property>
+  </action>
+  <action name="actionToggleCameraFullscreen">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/models/Icons/Google Images-96.png</normaloff>:/models/Icons/Google Images-96.png</iconset>
+   </property>
+   <property name="text">
+    <string>Toggle Camera Fullscreen</string>
+   </property>
+   <property name="shortcut">
+    <string>F10</string>
    </property>
   </action>
  </widget>

@@ -145,12 +145,6 @@ MapWidget::MapWidget(QWidget *parent) : QWidget(parent)
     mSelectedCar = -1;
     xRealPos = 0;
     yRealPos = 0;
-    mCarInfo.clear();
-    mCopterInfo.clear();
-    mCarTrace.clear();
-    mCarTraceGps.clear();
-    mCarTraceUwb.clear();
-    mAnchors.clear();
     mRoutePointSpeed = 1.0;
     mRoutePointTime = 0.0;
     mAnchorId = 0;
@@ -168,6 +162,9 @@ MapWidget::MapWidget(QWidget *parent) : QWidget(parent)
     mAnchorMode = false;
     mDrawRouteText = true;
     mDrawUwbTrace = false;
+    mCameraImageWidth = 0.46;
+    mCameraImageOpacity = 0.8;
+    mInteractionMode = InteractionModeDefault;
 
     mOsm = new OsmClient(this);
     mDrawOpenStreetmap = true;
@@ -183,15 +180,18 @@ MapWidget::MapWidget(QWidget *parent) : QWidget(parent)
     mInfoTraces.clear();
     mInfoTraces.append(l);
 
+    mTimer = new QTimer(this);
+    mTimer->start(20);
+
     // Set this to the SP base station position for now
-    mRefLat = 57.71495867;
-    mRefLon = 12.89134921;
-    mRefHeight = 219.0;
+//    mRefLat = 57.71495867;
+//    mRefLon = 12.89134921;
+//    mRefHeight = 219.0;
 
     // ASTA
-//    mRefLat = 57.78100308;
-//    mRefLon = 12.76925422;
-//    mRefHeight = 253.76;
+    mRefLat = 57.78100308;
+    mRefLon = 12.76925422;
+    mRefHeight = 253.76;
 
     // Home
     //    mRefLat = 57.57848470;
@@ -205,10 +205,9 @@ MapWidget::MapWidget(QWidget *parent) : QWidget(parent)
     //    mOsm->setTileServerUrl("http://tiles.vedder.se/osm_tiles");
     //mOsm->setTileServerUrl("http://tiles.vedder.se/osm_tiles_hd");
 
-    connect(mOsm, SIGNAL(tileReady(OsmTile)),
-            this, SLOT(tileReady(OsmTile)));
-    connect(mOsm, SIGNAL(errorGetTile(QString)),
-            this, SLOT(errorGetTile(QString)));
+    connect(mOsm, SIGNAL(tileReady(OsmTile)), this, SLOT(tileReady(OsmTile)));
+    connect(mOsm, SIGNAL(errorGetTile(QString)), this, SLOT(errorGetTile(QString)));
+    connect(mTimer, SIGNAL(timeout()), this, SLOT(timerSlot()));
 
     setMouseTracking(true);
 
@@ -243,6 +242,8 @@ MapWidget::MapWidget(QWidget *parent) : QWidget(parent)
         delete p;
         mPixmaps.append(pix);
     }
+
+    grabGesture(Qt::PinchGesture);
 }
 
 CarInfo *MapWidget::getCarInfo(int car)
@@ -305,6 +306,16 @@ bool MapWidget::removeCopter(int copterId)
     return false;
 }
 
+void MapWidget::clearCars()
+{
+    mCarInfo.clear();
+}
+
+void MapWidget::clearCopters()
+{
+    mCopterInfo.clear();
+}
+
 LocPoint *MapWidget::getAnchor(int id)
 {
     for (int i = 0;i < mAnchors.size();i++) {
@@ -355,6 +366,11 @@ void MapWidget::setScaleFactor(double scale)
     mXOffset *= scaleDiff;
     mYOffset *= scaleDiff;
     update();
+}
+
+double MapWidget::getScaleFactor()
+{
+    return mScaleFactor;
 }
 
 void MapWidget::setRotation(double rotation)
@@ -525,6 +541,11 @@ void MapWidget::errorGetTile(QString reason)
     qWarning() << "OSM tile error:" << reason;
 }
 
+void MapWidget::timerSlot()
+{
+    updateTraces();
+}
+
 void MapWidget::setFollowCar(int car)
 {
     int oldCar = mFollowCar;
@@ -558,8 +579,41 @@ void MapWidget::paintEvent(QPaintEvent *event)
 
 void MapWidget::mouseMoveEvent(QMouseEvent *e)
 {
-    if (e->buttons() & Qt::LeftButton && !(e->modifiers() & (Qt::ControlModifier | Qt::ShiftModifier)))
-    {
+    bool ctrl = e->modifiers() == Qt::ControlModifier;
+    bool shift = e->modifiers() == Qt::ShiftModifier;
+    bool ctrl_shift = e->modifiers() == (Qt::ControlModifier | Qt::ShiftModifier);
+
+    if (mInteractionMode == InteractionModeCtrlDown) {
+        ctrl = true;
+        shift = false;
+        ctrl_shift = false;
+    } else if (mInteractionMode == InteractionModeShiftDown) {
+        ctrl = false;
+        shift = true;
+        ctrl_shift = false;
+    } else if (mInteractionMode == InteractionModeCtrlShiftDown) {
+        ctrl = false;
+        shift = false;
+        ctrl_shift = true;
+    }
+
+    QPoint mousePosWidget = this->mapFromGlobal(QCursor::pos());
+    LocPoint mousePosMap;
+    QPoint p = getMousePosRelative();
+    mousePosMap.setXY(p.x() / 1000.0, p.y() / 1000.0);
+
+    for (MapModule *m: mMapModules) {
+        if (m->processMouse(false, false, true, false,
+                            mousePosWidget, mousePosMap, 0.0,
+                            ctrl, shift, ctrl_shift,
+                            e->buttons() & Qt::LeftButton,
+                            e->buttons() & Qt::RightButton,
+                            mScaleFactor)) {
+            return;
+        }
+    }
+
+    if (e->buttons() & Qt::LeftButton && !ctrl && !shift && !ctrl_shift) {
         int x = e->pos().x();
         int y = e->pos().y();
 
@@ -583,17 +637,13 @@ void MapWidget::mouseMoveEvent(QMouseEvent *e)
         mMouseLastY = y;
     }
 
-    LocPoint pos;
-    QPoint p = getMousePosRelative();
-    pos.setXY(p.x() / 1000.0, p.y() / 1000.0);
-
     if (mRoutePointSelected >= 0) {
-        mRoutes[mRouteNow][mRoutePointSelected].setXY(pos.getX(), pos.getY());
+        mRoutes[mRouteNow][mRoutePointSelected].setXY(mousePosMap.getX(), mousePosMap.getY());
         update();
     }
 
     if (mAnchorSelected >= 0) {
-        mAnchors[mAnchorSelected].setXY(pos.getX(), pos.getY());
+        mAnchors[mAnchorSelected].setXY(mousePosMap.getX(), mousePosMap.getY());
         update();
     }
 
@@ -602,27 +652,57 @@ void MapWidget::mouseMoveEvent(QMouseEvent *e)
 
 void MapWidget::mousePressEvent(QMouseEvent *e)
 {
+    setFocus();
+
     bool ctrl = e->modifiers() == Qt::ControlModifier;
     bool shift = e->modifiers() == Qt::ShiftModifier;
     bool ctrl_shift = e->modifiers() == (Qt::ControlModifier | Qt::ShiftModifier);
 
-    LocPoint pos;
+    if (mInteractionMode == InteractionModeCtrlDown) {
+        ctrl = true;
+        shift = false;
+        ctrl_shift = false;
+    } else if (mInteractionMode == InteractionModeShiftDown) {
+        ctrl = false;
+        shift = true;
+        ctrl_shift = false;
+    } else if (mInteractionMode == InteractionModeCtrlShiftDown) {
+        ctrl = false;
+        shift = false;
+        ctrl_shift = true;
+    }
+
+    QPoint mousePosWidget = this->mapFromGlobal(QCursor::pos());
+    LocPoint mousePosMap;
     QPoint p = getMousePosRelative();
-    pos.setXY(p.x() / 1000.0, p.y() / 1000.0);
-    pos.setSpeed(mRoutePointSpeed);
-    pos.setTime(mRoutePointTime);
-    pos.setId(mAnchorId);
-    pos.setHeight(mAnchorHeight);
+    mousePosMap.setXY(p.x() / 1000.0, p.y() / 1000.0);
+
+    for (MapModule *m: mMapModules) {
+        if (m->processMouse(true, false, false, false,
+                            mousePosWidget, mousePosMap, 0.0,
+                            ctrl, shift, ctrl_shift,
+                            e->buttons() & Qt::LeftButton,
+                            e->buttons() & Qt::RightButton,
+                            mScaleFactor)) {
+            return;
+        }
+    }
+
+    mousePosMap.setSpeed(mRoutePointSpeed);
+    mousePosMap.setTime(mRoutePointTime);
+    mousePosMap.setId(mAnchorId);
+    mousePosMap.setHeight(mAnchorHeight);
+
     double routeDist = 0.0;
     double anchorDist = 0.0;
-    int routeInd = getClosestPoint(pos, mRoutes[mRouteNow], routeDist);
-    int anchorInd = getClosestPoint(pos, mAnchors, anchorDist);
+    int routeInd = getClosestPoint(mousePosMap, mRoutes[mRouteNow], routeDist);
+    int anchorInd = getClosestPoint(mousePosMap, mAnchors, anchorDist);
     bool routeFound = (routeDist * mScaleFactor * 1000.0) < 20 && routeDist >= 0.0;
     bool anchorFound = (anchorDist * mScaleFactor * 1000.0) < 20 && anchorDist >= 0.0;
 
     if (ctrl) {
         if (e->buttons() & Qt::LeftButton) {
-            if (mSelectedCar >= 0 && (e->buttons() & Qt::LeftButton)) {
+            if (mSelectedCar >= 0) {
                 for (int i = 0;i < mCarInfo.size();i++) {
                     CarInfo &carInfo = mCarInfo[i];
                     if (carInfo.getId() == mSelectedCar) {
@@ -664,9 +744,9 @@ void MapWidget::mousePressEvent(QMouseEvent *e)
             if (e->buttons() & Qt::LeftButton) {
                 if (anchorFound) {
                     mAnchorSelected = anchorInd;
-                    mAnchors[anchorInd].setXY(pos.getX(), pos.getY());
+                    mAnchors[anchorInd].setXY(mousePosMap.getX(), mousePosMap.getY());
                 } else {
-                    mAnchors.append(pos);
+                    mAnchors.append(mousePosMap);
                 }
             } else if (e->buttons() & Qt::RightButton) {
                 if (anchorFound) {
@@ -677,21 +757,22 @@ void MapWidget::mousePressEvent(QMouseEvent *e)
             if (e->buttons() & Qt::LeftButton) {
                 if (routeFound) {
                     mRoutePointSelected = routeInd;
-                    mRoutes[mRouteNow][routeInd].setXY(pos.getX(), pos.getY());
+                    mRoutes[mRouteNow][routeInd].setXY(mousePosMap.getX(), mousePosMap.getY());
                 } else {
-                    mRoutes[mRouteNow].append(pos);
-                    emit routePointAdded(pos);
+                    if (mRoutes[mRouteNow].size() < 2 ||
+                            mRoutes[mRouteNow].last().getDistanceTo(mousePosMap) <
+                            mRoutes[mRouteNow].first().getDistanceTo(mousePosMap)) {
+                        mRoutes[mRouteNow].append(mousePosMap);
+                        emit routePointAdded(mousePosMap);
+                    } else {
+                        mRoutes[mRouteNow].prepend(mousePosMap);
+                    }
                 }
             } else if (e->buttons() & Qt::RightButton) {
                 if (routeFound) {
                     mRoutes[mRouteNow].removeAt(routeInd);
                 } else {
-                    LocPoint pos;
-                    if (mRoutes[mRouteNow].size() > 0) {
-                        pos = mRoutes[mRouteNow].last();
-                        mRoutes[mRouteNow].removeLast();
-                    }
-                    emit lastRoutePointRemoved(pos);
+                    removeLastRoutePoint();
                 }
             }
         }
@@ -718,6 +799,40 @@ void MapWidget::mousePressEvent(QMouseEvent *e)
 
 void MapWidget::mouseReleaseEvent(QMouseEvent *e)
 {
+    bool ctrl = e->modifiers() == Qt::ControlModifier;
+    bool shift = e->modifiers() == Qt::ShiftModifier;
+    bool ctrl_shift = e->modifiers() == (Qt::ControlModifier | Qt::ShiftModifier);
+
+    if (mInteractionMode == InteractionModeCtrlDown) {
+        ctrl = true;
+        shift = false;
+        ctrl_shift = false;
+    } else if (mInteractionMode == InteractionModeShiftDown) {
+        ctrl = false;
+        shift = true;
+        ctrl_shift = false;
+    } else if (mInteractionMode == InteractionModeCtrlShiftDown) {
+        ctrl = false;
+        shift = false;
+        ctrl_shift = true;
+    }
+
+    QPoint mousePosWidget = this->mapFromGlobal(QCursor::pos());
+    LocPoint mousePosMap;
+    QPoint p = getMousePosRelative();
+    mousePosMap.setXY(p.x() / 1000.0, p.y() / 1000.0);
+
+    for (MapModule *m: mMapModules) {
+        if (m->processMouse(false, true, false, false,
+                            mousePosWidget, mousePosMap, 0.0,
+                            ctrl, shift, ctrl_shift,
+                            e->buttons() & Qt::LeftButton,
+                            e->buttons() & Qt::RightButton,
+                            mScaleFactor)) {
+            return;
+        }
+    }
+
     if (!(e->buttons() & Qt::LeftButton)) {
         mMouseLastX = 1000000;
         mMouseLastY = 1000000;
@@ -728,12 +843,50 @@ void MapWidget::mouseReleaseEvent(QMouseEvent *e)
 
 void MapWidget::wheelEvent(QWheelEvent *e)
 {
-    if (e->modifiers() & Qt::ControlModifier && mSelectedCar >= 0) {
+    bool ctrl = e->modifiers() == Qt::ControlModifier;
+    bool shift = e->modifiers() == Qt::ShiftModifier;
+    bool ctrl_shift = e->modifiers() == (Qt::ControlModifier | Qt::ShiftModifier);
+
+    if (mInteractionMode == InteractionModeCtrlDown) {
+        ctrl = true;
+        shift = false;
+        ctrl_shift = false;
+    } else if (mInteractionMode == InteractionModeShiftDown) {
+        ctrl = false;
+        shift = true;
+        ctrl_shift = false;
+    } else if (mInteractionMode == InteractionModeCtrlShiftDown) {
+        ctrl = false;
+        shift = false;
+        ctrl_shift = true;
+    }
+
+    QPoint mousePosWidget = this->mapFromGlobal(QCursor::pos());
+    LocPoint mousePosMap;
+    QPoint p = getMousePosRelative();
+    mousePosMap.setXY(p.x() / 1000.0, p.y() / 1000.0);
+
+    for (MapModule *m: mMapModules) {
+        if (m->processMouse(false, false, false, true,
+                            mousePosWidget, mousePosMap, e->angleDelta().y(),
+                            ctrl, shift, ctrl_shift,
+                            e->buttons() & Qt::LeftButton,
+                            e->buttons() & Qt::RightButton,
+                            mScaleFactor)) {
+            return;
+        }
+    }
+
+    if (mInteractionMode == InteractionModeCtrlDown) {
+        ctrl = true;
+    }
+
+    if (ctrl && mSelectedCar >= 0) {
         for (int i = 0;i < mCarInfo.size();i++) {
             CarInfo &carInfo = mCarInfo[i];
             if (carInfo.getId() == mSelectedCar) {
                 LocPoint pos = carInfo.getLocation();
-                double angle = pos.getYaw() + (double)e->delta() * 0.0005;
+                double angle = pos.getYaw() + (double)e->angleDelta().y() * 0.0005;
                 normalizeAngleRad(angle);
                 pos.setYaw(angle);
                 carInfo.setLocation(pos);
@@ -746,7 +899,7 @@ void MapWidget::wheelEvent(QWheelEvent *e)
             CopterInfo &copterInfo = mCopterInfo[i];
             if (copterInfo.getId() == mSelectedCar) {
                 LocPoint pos = copterInfo.getLocation();
-                double angle = pos.getYaw() + (double)e->delta() * 0.0005;
+                double angle = pos.getYaw() + (double)e->angleDelta().y() * 0.0005;
                 normalizeAngleRad(angle);
                 pos.setYaw(angle);
                 copterInfo.setLocation(pos);
@@ -755,9 +908,7 @@ void MapWidget::wheelEvent(QWheelEvent *e)
             }
         }
     } else {
-        int x = e->pos().x();
-        int y = e->pos().y();
-        double scaleDiff = ((double)e->delta() / 600.0);
+        double scaleDiff = ((double)e->angleDelta().y() / 600.0);
         if (scaleDiff > 0.8)
         {
             scaleDiff = 0.8;
@@ -767,9 +918,6 @@ void MapWidget::wheelEvent(QWheelEvent *e)
         {
             scaleDiff = -0.8;
         }
-
-        x -= width() / 2;
-        y -= height() / 2;
 
         mScaleFactor += mScaleFactor * scaleDiff;
         mXOffset += mXOffset * scaleDiff;
@@ -781,6 +929,114 @@ void MapWidget::wheelEvent(QWheelEvent *e)
     }
 
     updateClosestInfoPoint();
+}
+
+bool MapWidget::event(QEvent *event)
+{
+    if (event->type() == QEvent::Gesture) {
+        QGestureEvent *ge = static_cast<QGestureEvent*>(event);
+
+        if (QGesture *pinch = ge->gesture(Qt::PinchGesture)) {
+            QPinchGesture *pg = static_cast<QPinchGesture *>(pinch);
+
+            if (pg->changeFlags() & QPinchGesture::ScaleFactorChanged) {
+                mScaleFactor *= pg->scaleFactor();
+                mXOffset *= pg->scaleFactor();
+                mYOffset *= pg->scaleFactor();
+                update();
+            }
+
+            return true;
+        }
+    } else if (event->type() == QEvent::KeyPress) {
+        // Generate scroll events from up and down arrow keys
+        QKeyEvent *ke = static_cast<QKeyEvent*>(event);
+        if (ke->key() == Qt::Key_Up) {
+            QWheelEvent we(QPointF(0, 0),
+                           QPointF(0, 0),
+                           QPoint(0, 0),
+                           QPoint(0, 120),
+                           0, Qt::Vertical, 0,
+                           ke->modifiers());
+            wheelEvent(&we);
+            return true;
+        } else if (ke->key() == Qt::Key_Down) {
+            QWheelEvent we(QPointF(0, 0),
+                           QPointF(0, 0),
+                           QPoint(0, 0),
+                           QPoint(0, -120),
+                           0, Qt::Vertical, 0,
+                           ke->modifiers());
+            wheelEvent(&we);
+            return true;
+        }
+    }
+
+    return QWidget::event(event);
+}
+
+MapWidget::InteractionMode MapWidget::getInteractionMode() const
+{
+    return mInteractionMode;
+}
+
+void MapWidget::setInteractionMode(const MapWidget::InteractionMode &controlMode)
+{
+    mInteractionMode = controlMode;
+    update();
+}
+
+void MapWidget::addMapModule(MapModule *m)
+{
+    mMapModules.append(m);
+}
+
+void MapWidget::removeMapModule(MapModule *m)
+{
+    for (int i = 0;i < mMapModules.size();i++) {
+        if (mMapModules.at(i) == m) {
+            mMapModules.remove(i);
+            break;
+        }
+    }
+}
+
+void MapWidget::removeMapModuleLast()
+{
+    if (!mMapModules.isEmpty()) {
+        mMapModules.removeLast();
+    }
+}
+
+double MapWidget::getCameraImageOpacity() const
+{
+    return mCameraImageOpacity;
+}
+
+void MapWidget::setCameraImageOpacity(double cameraImageOpacity)
+{
+    mCameraImageOpacity = cameraImageOpacity;
+    update();
+}
+
+double MapWidget::getCameraImageWidth() const
+{
+    return mCameraImageWidth;
+}
+
+void MapWidget::setCameraImageWidth(double cameraImageWidth)
+{
+    mCameraImageWidth = cameraImageWidth;
+    update();
+}
+
+void MapWidget::setLastCameraImage(const QImage &lastCameraImage)
+{
+    mLastCameraImage = lastCameraImage;
+
+    if (mCameraImageWidth > 0.0001) {
+        update();
+    }
 }
 
 bool MapWidget::getDrawRouteText() const
@@ -946,8 +1202,12 @@ bool MapWidget::getDrawGrid() const
 
 void MapWidget::setDrawGrid(bool drawGrid)
 {
+    bool drawGridOld = mDrawGrid;
     mDrawGrid = drawGrid;
-    update();
+
+    if (drawGridOld != mDrawGrid) {
+        update();
+    }
 }
 
 void MapWidget::updateClosestInfoPoint()
@@ -1142,6 +1402,17 @@ void MapWidget::setAnchorHeight(double height)
     mAnchorHeight = height;
 }
 
+void MapWidget::removeLastRoutePoint()
+{
+    LocPoint pos;
+    if (mRoutes[mRouteNow].size() > 0) {
+        pos = mRoutes[mRouteNow].last();
+        mRoutes[mRouteNow].removeLast();
+    }
+    emit lastRoutePointRemoved(pos);
+    update();
+}
+
 double MapWidget::getOsmRes() const
 {
     return mOsmRes;
@@ -1245,9 +1516,6 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
     // Paint begins here
     painter.fillRect(0, 0, width, height, QBrush(Qt::transparent));
 
-    const double car_w = 800;
-    const double car_h = 335;
-    const double car_corner = 20;
     double angle, x, y;
     QString txt;
     QPointF pt_txt;
@@ -1319,8 +1587,8 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
         i_llh[1] = mRefLon;
         i_llh[2] = mRefHeight;
 
-        mOsmZoomLevel = (int)round(log2(mScaleFactor * mOsmRes * 100000000.0 *
-                                        cos(i_llh[0] * M_PI / 180.0)));
+        mOsmZoomLevel = (int)round(log(mScaleFactor * mOsmRes * 100000000.0 *
+                                        cos(i_llh[0] * M_PI / 180.0)) / log(2.0));
         if (mOsmZoomLevel > mOsmMaxZoomLevel) {
             mOsmZoomLevel = mOsmMaxZoomLevel;
         } else if (mOsmZoomLevel < 0) {
@@ -1472,67 +1740,6 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
             pt_end = drawTrans.map(pt_end);
             painter.drawLine(pt_start, pt_end);
         }
-    }
-
-    // Store trace for the selected car or copter
-    if (mTraceCar >= 0) {
-        for (int i = 0;i < mCarInfo.size();i++) {
-            CarInfo &carInfo = mCarInfo[i];
-            if (carInfo.getId() == mTraceCar) {
-                if (mCarTrace.isEmpty()) {
-                    mCarTrace.append(carInfo.getLocation());
-                }
-                if (mCarTrace.last().getDistanceTo(carInfo.getLocation()) > mTraceMinSpaceCar) {
-                    mCarTrace.append(carInfo.getLocation());
-                }
-                // GPS trace
-                if (mCarTraceGps.isEmpty()) {
-                    mCarTraceGps.append(carInfo.getLocationGps());
-                }
-                if (mCarTraceGps.last().getDistanceTo(carInfo.getLocationGps()) > mTraceMinSpaceGps) {
-                    mCarTraceGps.append(carInfo.getLocationGps());
-                }
-                // UWB trace
-                if (mCarTraceUwb.isEmpty()) {
-                    mCarTraceUwb.append(carInfo.getLocationUwb());
-                }
-                if (mCarTraceUwb.last().getDistanceTo(carInfo.getLocationUwb()) > mTraceMinSpaceCar) {
-                    mCarTraceUwb.append(carInfo.getLocationUwb());
-                }
-            }
-        }
-
-        for (int i = 0;i < mCopterInfo.size();i++) {
-            CopterInfo &copterInfo = mCopterInfo[i];
-            if (copterInfo.getId() == mTraceCar) {
-                if (mCarTrace.isEmpty()) {
-                    mCarTrace.append(copterInfo.getLocation());
-                }
-                if (mCarTrace.last().getDistanceTo(copterInfo.getLocation()) > mTraceMinSpaceCar) {
-                    mCarTrace.append(copterInfo.getLocation());
-                }
-                // GPS trace
-                if (mCarTraceGps.isEmpty()) {
-                    mCarTraceGps.append(copterInfo.getLocationGps());
-                }
-                if (mCarTraceGps.last().getDistanceTo(copterInfo.getLocationGps()) > mTraceMinSpaceGps) {
-                    mCarTraceGps.append(copterInfo.getLocationGps());
-                }
-            }
-        }
-    }
-
-    // Truncate traces
-    while (mCarTrace.size() > 5000) {
-        mCarTrace.removeFirst();
-    }
-
-    while (mCarTraceGps.size() > 1800) {
-        mCarTraceGps.removeFirst();
-    }
-
-    while (mCarTraceUwb.size() > 5000) {
-        mCarTraceUwb.removeFirst();
     }
 
     // Draw info trace
@@ -1749,12 +1956,25 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
         }
     }
 
+    // Map module painting
+    painter.save();
+    for (MapModule *m: mMapModules) {
+        m->processPaint(painter, width, height, highQuality,
+                        drawTrans, txtTrans, mScaleFactor);
+    }
+    painter.restore();
+
     // Draw cars
     painter.setPen(QPen(textColor));
     for(int i = 0;i < mCarInfo.size();i++) {
         CarInfo &carInfo = mCarInfo[i];
         LocPoint pos = carInfo.getLocation();
         LocPoint pos_gps = carInfo.getLocationGps();
+
+        const double car_len = carInfo.getLength() * 1000.0;
+        const double car_w = carInfo.getWidth() * 1000.0;
+        const double car_corner = carInfo.getCornerRadius() * 1000.0;
+
         x = pos.getX() * 1000.0;
         y = pos.getY() * 1000.0;
         double x_gps = pos_gps.getX() * 1000.0;
@@ -1790,23 +2010,23 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
         painter.translate(x, y);
         painter.rotate(-angle);
         // Wheels
-        painter.drawRoundedRect(-car_w / 12.0,-(car_h / 2), car_w / 6.0, car_h, car_corner / 3, car_corner / 3);
-        painter.drawRoundedRect(car_w - car_w / 2.5,-(car_h / 2), car_w / 6.0, car_h, car_corner / 3, car_corner / 3);
+        painter.drawRoundedRect(-car_len / 12.0,-(car_w / 2), car_len / 6.0, car_w, car_corner / 3, car_corner / 3);
+        painter.drawRoundedRect(car_len - car_len / 2.5,-(car_w / 2), car_len / 6.0, car_w, car_corner / 3, car_corner / 3);
         // Front bumper
         painter.setBrush(col_bumper);
-        painter.drawRoundedRect(-car_w / 6.0, -((car_h - car_w / 20.0) / 2.0), car_w, car_h - car_w / 20.0, car_corner, car_corner);
+        painter.drawRoundedRect(-car_len / 6.0, -((car_w - car_len / 20.0) / 2.0), car_len, car_w - car_len / 20.0, car_corner, car_corner);
         // Hull
         painter.setBrush(col_hull);
-        painter.drawRoundedRect(-car_w / 6.0, -((car_h - car_w / 20.0) / 2.0), car_w - (car_w / 20.0), car_h - car_w / 20.0, car_corner, car_corner);
+        painter.drawRoundedRect(-car_len / 6.0, -((car_w - car_len / 20.0) / 2.0), car_len - (car_len / 20.0), car_w - car_len / 20.0, car_corner, car_corner);
         painter.restore();
 
         // Center
         painter.setBrush(col_center);
-        painter.drawEllipse(QPointF(x, y), car_h / 15.0, car_h / 15.0);
+        painter.drawEllipse(QPointF(x, y), car_w / 15.0, car_w / 15.0);
 
         // GPS Location
         painter.setBrush(col_gps);
-        painter.drawEllipse(QPointF(x_gps, y_gps), car_h / 15.0, car_h / 15.0);
+        painter.drawEllipse(QPointF(x_gps, y_gps), car_w / 15.0, car_w / 15.0);
 
         // Autopilot state
         LocPoint ap_goal = carInfo.getApGoal();
@@ -1826,15 +2046,19 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
 
         // Print data
         QTime t = QTime::fromMSecsSinceStartOfDay(carInfo.getTime());
+        QString solStr;
+        if (!carInfo.getLocationGps().getInfo().isEmpty()) {
+            solStr = QString("Sol: %1\n").arg(carInfo.getLocationGps().getInfo());
+        }
         txt.sprintf("%s\n"
-                    "Sol: %s\n"
+                    "%s"
                     "(%.3f, %.3f, %.0f)\n"
                     "%02d:%02d:%02d:%03d",
                     carInfo.getName().toLocal8Bit().data(),
-                    carInfo.getLocationGps().getInfo().toLocal8Bit().data(),
+                    solStr.toLocal8Bit().data(),
                     pos.getX(), pos.getY(), angle,
                     t.hour(), t.minute(), t.second(), t.msec());
-        pt_txt.setX(x + 120 + (car_w - 190) * ((cos(pos.getYaw()) + 1) / 2));
+        pt_txt.setX(x + 120 + (car_len - 190) * ((cos(pos.getYaw()) + 1) / 2));
         pt_txt.setY(y);
         painter.setTransform(txtTrans);
         pt_txt = drawTrans.map(pt_txt);
@@ -1930,7 +2154,7 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
 
         // GPS Location
         painter.setBrush(col_gps);
-        painter.drawEllipse(QPointF(x_gps, y_gps), car_h / 15.0, car_h / 15.0);
+        painter.drawEllipse(QPointF(x_gps, y_gps), 335.0 / 15.0, 335.0 / 15.0);
     }
 
     painter.setPen(QPen(textColor));
@@ -1976,8 +2200,26 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
     const double txtOffset = 145.0;
 
     painter.setTransform(txtTrans);
+
+    if (!mLastCameraImage.isNull() && mCameraImageWidth > 0.001) {
+        double imgWidth = (double)width * mCameraImageWidth;
+        double imgHeight = (double)mLastCameraImage.height() *
+                (imgWidth / (double)mLastCameraImage.width());
+
+        QRectF target(width - imgWidth, 0.0, imgWidth, imgHeight);
+        QRectF source(0.0, 0.0, mLastCameraImage.width(), mLastCameraImage.height());
+
+        start_txt += imgHeight;
+
+        painter.setOpacity(mCameraImageOpacity);
+        painter.drawImage(target, mLastCameraImage, source);
+        painter.setOpacity(1.0);
+    }
+
+    painter.setTransform(txtTrans);
     font.setPointSize(10);
     painter.setFont(font);
+    painter.setPen(QPen(textColor));
 
     // Draw units (m)
     if (mDrawGrid) {
@@ -2019,6 +2261,12 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
         }
     }
 
+    if (mInteractionMode != InteractionModeDefault) {
+        txt.sprintf("IMode: %d", mInteractionMode);
+        painter.drawText(width - txtOffset, start_txt, txt);
+        start_txt += txt_row_h;
+    }
+
     // Some info
     if (info_segments > 0) {
         txt.sprintf("Info seg: %d", info_segments);
@@ -2051,4 +2299,68 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
     }
 
     painter.end();
+}
+
+void MapWidget::updateTraces()
+{
+    // Store trace for the selected car or copter
+    if (mTraceCar >= 0) {
+        for (int i = 0;i < mCarInfo.size();i++) {
+            CarInfo &carInfo = mCarInfo[i];
+            if (carInfo.getId() == mTraceCar) {
+                if (mCarTrace.isEmpty()) {
+                    mCarTrace.append(carInfo.getLocation());
+                }
+                if (mCarTrace.last().getDistanceTo(carInfo.getLocation()) > mTraceMinSpaceCar) {
+                    mCarTrace.append(carInfo.getLocation());
+                }
+                // GPS trace
+                if (mCarTraceGps.isEmpty()) {
+                    mCarTraceGps.append(carInfo.getLocationGps());
+                }
+                if (mCarTraceGps.last().getDistanceTo(carInfo.getLocationGps()) > mTraceMinSpaceGps) {
+                    mCarTraceGps.append(carInfo.getLocationGps());
+                }
+                // UWB trace
+                if (mCarTraceUwb.isEmpty()) {
+                    mCarTraceUwb.append(carInfo.getLocationUwb());
+                }
+                if (mCarTraceUwb.last().getDistanceTo(carInfo.getLocationUwb()) > mTraceMinSpaceCar) {
+                    mCarTraceUwb.append(carInfo.getLocationUwb());
+                }
+            }
+        }
+
+        for (int i = 0;i < mCopterInfo.size();i++) {
+            CopterInfo &copterInfo = mCopterInfo[i];
+            if (copterInfo.getId() == mTraceCar) {
+                if (mCarTrace.isEmpty()) {
+                    mCarTrace.append(copterInfo.getLocation());
+                }
+                if (mCarTrace.last().getDistanceTo(copterInfo.getLocation()) > mTraceMinSpaceCar) {
+                    mCarTrace.append(copterInfo.getLocation());
+                }
+                // GPS trace
+                if (mCarTraceGps.isEmpty()) {
+                    mCarTraceGps.append(copterInfo.getLocationGps());
+                }
+                if (mCarTraceGps.last().getDistanceTo(copterInfo.getLocationGps()) > mTraceMinSpaceGps) {
+                    mCarTraceGps.append(copterInfo.getLocationGps());
+                }
+            }
+        }
+    }
+
+    // Truncate traces
+    while (mCarTrace.size() > 5000) {
+        mCarTrace.removeFirst();
+    }
+
+    while (mCarTraceGps.size() > 1800) {
+        mCarTraceGps.removeFirst();
+    }
+
+    while (mCarTraceUwb.size() > 5000) {
+        mCarTraceUwb.removeFirst();
+    }
 }

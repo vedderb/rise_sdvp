@@ -5,20 +5,20 @@
         <point>
             <x>42.53</x>
             <y>-899.569</y>
-            <speed>0.833333</speed>
-            <time>20000</time>
+            <speed>2.77778</speed>
+            <time>0</time>
         </point>
         <point>
             <x>39.283</x>
             <y>-898.536</y>
-            <speed>0.833333</speed>
-            <time>22000</time>
+            <speed>2.77778</speed>
+            <time>1226</time>
         </point>
         <point>
             <x>36.332</x>
             <y>-897.65</y>
-            <speed>0.833333</speed>
-            <time>24000</time>
+            <speed>2.77778</speed>
+            <time>2335</time>
         </point>
     </route>
     <route>
@@ -26,26 +26,26 @@
         <point>
             <x>59.545</x>
             <y>-905.193</y>
-            <speed>2.77778</speed>
-            <time>34000</time>
+            <speed>3.05556</speed>
+            <time>0</time>
         </point>
         <point>
             <x>53.895</x>
             <y>-903.138</y>
-            <speed>1.66667</speed>
-            <time>36000</time>
+            <speed>3.05556</speed>
+            <time>1967</time>
         </point>
         <point>
             <x>49.889</x>
             <y>-901.7</y>
-            <speed>1.66667</speed>
-            <time>38000</time>
+            <speed>3.05556</speed>
+            <time>3359</time>
         </point>
         <point>
             <x>45.883</x>
             <y>-900.673</y>
-            <speed>1.66667</speed>
-            <time>40000</time>
+            <speed>3.05556</speed>
+            <time>4712</time>
         </point>
     </route>
     <route>

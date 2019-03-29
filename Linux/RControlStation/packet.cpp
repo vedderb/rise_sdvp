@@ -1,5 +1,5 @@
 /*
-    Copyright 2016 Benjamin Vedder	benjamin@vedder.se
+    Copyright 2016 - 2019 Benjamin Vedder	benjamin@vedder.se
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -71,12 +71,17 @@ void Packet::sendPacket(const QByteArray &data)
     QByteArray to_send;
     unsigned int len_tot = data.size();
 
-    if (len_tot <= 256) {
+    if (len_tot <= 255) {
         to_send.append((char)2);
         to_send.append((char)len_tot);
-    } else {
+    } else if (len_tot <= 65535) {
         to_send.append((char)3);
         to_send.append((char)(len_tot >> 8));
+        to_send.append((char)(len_tot & 0xFF));
+    } else {
+        to_send.append((char)4);
+        to_send.append((char)((len_tot >> 16) & 0xFF));
+        to_send.append((char)((len_tot >> 8) & 0xFF));
         to_send.append((char)(len_tot & 0xFF));
     }
 
@@ -109,11 +114,16 @@ void Packet::processData(QByteArray data)
         switch (mRxState) {
         case 0:
             if (rx_data == 2) {
-                mRxState += 2;
+                mRxState += 3;
                 mRxTimer = mByteTimeout;
                 mRxBuffer.clear();
                 mPayloadLength = 0;
             } else if (rx_data == 3) {
+                mRxState += 2;
+                mRxTimer = mByteTimeout;
+                mRxBuffer.clear();
+                mPayloadLength = 0;
+            } else if (rx_data == 4) {
                 mRxState++;
                 mRxTimer = mByteTimeout;
                 mRxBuffer.clear();
@@ -124,18 +134,24 @@ void Packet::processData(QByteArray data)
             break;
 
         case 1:
-            mPayloadLength = (unsigned int)rx_data << 8;
+            mPayloadLength |= (unsigned int)rx_data << 16;
             mRxState++;
             mRxTimer = mByteTimeout;
             break;
 
         case 2:
-            mPayloadLength |= (unsigned int)rx_data;
+            mPayloadLength |= (unsigned int)rx_data << 8;
             mRxState++;
             mRxTimer = mByteTimeout;
             break;
 
         case 3:
+            mPayloadLength |= (unsigned int)rx_data;
+            mRxState++;
+            mRxTimer = mByteTimeout;
+            break;
+
+        case 4:
             mRxBuffer.append((char)rx_data);
             if (mRxBuffer.size() == (int)mPayloadLength) {
                 mRxState++;
@@ -143,19 +159,19 @@ void Packet::processData(QByteArray data)
             mRxTimer = mByteTimeout;
             break;
 
-        case 4:
+        case 5:
             mCrcHigh = rx_data;
             mRxState++;
             mRxTimer = mByteTimeout;
             break;
 
-        case 5:
+        case 6:
             mCrcLow = rx_data;
             mRxState++;
             mRxTimer = mByteTimeout;
             break;
 
-        case 6:
+        case 7:
             if (rx_data == 3) {
                 if (crc16((const unsigned char*)mRxBuffer.data(), mPayloadLength) ==
                         ((unsigned short)mCrcHigh << 8 | (unsigned short)mCrcLow)) {

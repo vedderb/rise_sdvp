@@ -1,5 +1,5 @@
 /*   Copyright (C) 2009  Nathaniel <linux.robotdude@gmail.com>
- *                 2012  Benjamin Vedder <benjamin@vedder.se>
+ *                 2012 - 2019  Benjamin Vedder <benjamin@vedder.se>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -37,11 +37,14 @@ Joystick::Joystick(QObject *parent) :
     mAxis_count = 0;
     mButton_count = 0;
     mName[0] = '\0';
+    mTimer = new QTimer(this);
+    mTimer->start(20);
 
     qRegisterMetaType<JoystickErrorType>("JoystickErrorType");
 
     connect(this, SIGNAL(joystickError(int,JoystickErrorType)),
             this, SLOT(errorSlot(int,JoystickErrorType)));
+    connect(mTimer, SIGNAL(timeout()), this, SLOT(timerSlot()));
 }
 
 Joystick::~Joystick()
@@ -62,6 +65,21 @@ void Joystick::errorSlot(int error, JoystickErrorType errorType)
     stop();
 }
 
+void Joystick::timerSlot()
+{
+    for (int i = 0;i < mButtonTime.size();i++) {
+        if (mButtons.at(i)) {
+            mButtonTime[i]++;
+
+            if (mButtonRepeats.at(i) && mButtonTime.at(i) > 10) {
+                emit buttonChanged(i, true);
+            }
+        } else {
+            mButtonTime[i] = 0;
+        }
+    }
+}
+
 int Joystick::init(QString joydev)
 {
     stop();
@@ -76,8 +94,10 @@ int Joystick::init(QString joydev)
     ioctl(mJs_fd, JSIOCGAXES, &mAxis_count);
     ioctl(mJs_fd, JSIOCGBUTTONS, &mButton_count);
     ioctl(mJs_fd, JSIOCGNAME(80), &mName);
-    mAxes = new int[mAxis_count];
-    mButtons = new char(mButton_count);
+    mAxes.resize(mAxis_count);
+    mButtons.resize(mButton_count);
+    mButtonRepeats.resize(mButton_count);
+    mButtonTime.resize(mButton_count);
     fcntl(mJs_fd, F_SETFL, O_NONBLOCK);
     mConnected = true;
 
@@ -100,8 +120,6 @@ void Joystick::stop()
         mConnected = false;
         mAxis_count = 0;
         mButton_count = 0;
-        delete mAxes;
-        delete mButtons;
     }
     mMutex.unlock();
 }
@@ -149,6 +167,13 @@ bool Joystick::isConnected()
     return mConnected;
 }
 
+void Joystick::setRepeats(int button, bool repeats)
+{
+    if (button >= 0 && button < mButtonRepeats.size()) {
+        mButtonRepeats[button] = repeats;
+    }
+}
+
 void Joystick::run()
 {
     struct js_event event;
@@ -181,8 +206,8 @@ void Joystick::run()
                 mMutex.lock();
                 mButtons[event.number] = event.value;
                 mMutex.unlock();
-                if (event.value == 0 && !(event.type & JS_EVENT_INIT)) {
-                    Q_EMIT buttonPressed(event.number);
+                if (!(event.type & JS_EVENT_INIT)) {
+                    Q_EMIT buttonChanged(event.number, event.value);
                 }
                 break;
             }

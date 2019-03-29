@@ -16,7 +16,6 @@
     */
 
 #define GL_GLEXT_PROTOTYPES
-#include <GL/gl.h>
 
 #include <QtGui>
 #include <QtOpenGL>
@@ -91,7 +90,7 @@ static void get_bounding_box (aiVector3D* min, aiVector3D* max, const aiScene *s
 }
 
 OrientationWidget::OrientationWidget(QWidget *parent, MODEL_TYPE model)
-    : QGLWidget(QGLFormat(QGL::SampleBuffers), parent)
+    : QOpenGLWidget(parent)
 {
     mXRot = 0;
     mYRot = 0;
@@ -379,12 +378,12 @@ void OrientationWidget::setZRotation(float angle)
 
 void OrientationWidget::updateTimerSlot()
 {
-    updateGL();
+    update();
 }
 
 void OrientationWidget::initializeGL()
 {
-    qglClearColor(mBgColor);
+    glClearColor(mBgColor.redF(), mBgColor.greenF(), mBgColor.blueF(), mBgColor.alphaF());
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glShadeModel(GL_SMOOTH);
@@ -398,6 +397,11 @@ void OrientationWidget::initializeGL()
 
 void OrientationWidget::paintGL()
 {
+    int width = size().width();
+    int height = size().height();
+    int side = qMin(width, height);
+    glViewport((width - side) / 2, (height - side) / 2, side, side);
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
     glTranslatef(0.0, 0.0, -10.0);
@@ -466,8 +470,8 @@ void OrientationWidget::paintGL()
 
 void OrientationWidget::resizeGL(int width, int height)
 {
-    int side = qMin(width, height);
-    glViewport((width - side) / 2, (height - side) / 2, side, side);
+    (void)width;
+    (void)height;
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();

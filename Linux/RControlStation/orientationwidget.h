@@ -18,11 +18,10 @@
 #ifndef ORIENTATIONWIDGET_H
 #define ORIENTATIONWIDGET_H
 
-#include <QGLWidget>
-#include <QtOpenGL/QGLFunctions>
+#include <QOpenGLWidget>
 #include <QTimer>
 
-class OrientationWidget : public QGLWidget, protected QGLFunctions
+class OrientationWidget : public QOpenGLWidget
 {
     Q_OBJECT
 

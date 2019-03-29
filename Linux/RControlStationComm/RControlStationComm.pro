@@ -7,6 +7,8 @@
 QT       += core network
 QT       -= gui
 
+CONFIG   += c++11
+
 TARGET = RControlStationComm
 TEMPLATE = lib
 

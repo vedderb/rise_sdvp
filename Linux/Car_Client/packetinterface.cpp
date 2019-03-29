@@ -1,5 +1,5 @@
 /*
-    Copyright 2012 - 2017 Benjamin Vedder	benjamin@vedder.se
+    Copyright 2012 - 2019 Benjamin Vedder	benjamin@vedder.se
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -57,7 +57,9 @@ const unsigned short crc16_tab[] = { 0x0000, 0x1021, 0x2042, 0x3063, 0x4084,
 PacketInterface::PacketInterface(QObject *parent) :
     QObject(parent)
 {
-    mSendBuffer = new quint8[mMaxBufferLen + 20];
+    mSendBuffer = new quint8[mMaxBufferLen];
+    mRxBuffer = new unsigned char[mMaxBufferLen];
+    mSendBufferAck = new unsigned char[mMaxBufferLen];
 
     mRxState = 0;
     mRxTimer = 0;
@@ -87,6 +89,8 @@ PacketInterface::PacketInterface(QObject *parent) :
 PacketInterface::~PacketInterface()
 {
     delete[] mSendBuffer;
+    delete[] mRxBuffer;
+    delete[] mSendBufferAck;
 }
 
 void PacketInterface::processData(QByteArray &data)
@@ -100,11 +104,16 @@ void PacketInterface::processData(QByteArray &data)
         switch (mRxState) {
         case 0:
             if (rx_data == 2) {
-                mRxState += 2;
+                mRxState += 3;
                 mRxTimer = rx_timeout;
                 mRxDataPtr = 0;
                 mPayloadLength = 0;
             } else if (rx_data == 3) {
+                mRxState += 2;
+                mRxTimer = rx_timeout;
+                mRxDataPtr = 0;
+                mPayloadLength = 0;
+            } else if (rx_data == 4) {
                 mRxState++;
                 mRxTimer = rx_timeout;
                 mRxDataPtr = 0;
@@ -115,12 +124,18 @@ void PacketInterface::processData(QByteArray &data)
             break;
 
         case 1:
-            mPayloadLength = (unsigned int)rx_data << 8;
+            mPayloadLength |= (unsigned int)rx_data << 16;
             mRxState++;
             mRxTimer = rx_timeout;
             break;
 
         case 2:
+            mPayloadLength |= (unsigned int)rx_data << 8;
+            mRxState++;
+            mRxTimer = rx_timeout;
+            break;
+
+        case 3:
             mPayloadLength |= (unsigned int)rx_data;
             if (mPayloadLength <= mMaxBufferLen && mPayloadLength > 0) {
                 mRxState++;
@@ -130,7 +145,7 @@ void PacketInterface::processData(QByteArray &data)
             }
             break;
 
-        case 3:
+        case 4:
             mRxBuffer[mRxDataPtr++] = rx_data;
             if (mRxDataPtr == mPayloadLength) {
                 mRxState++;
@@ -138,19 +153,19 @@ void PacketInterface::processData(QByteArray &data)
             mRxTimer = rx_timeout;
             break;
 
-        case 4:
+        case 5:
             mCrcHigh = rx_data;
             mRxState++;
             mRxTimer = rx_timeout;
             break;
 
-        case 5:
+        case 6:
             mCrcLow = rx_data;
             mRxState++;
             mRxTimer = rx_timeout;
             break;
 
-        case 6:
+        case 7:
             if (rx_data == 3) {
                 if (crc16(mRxBuffer, mPayloadLength) ==
                         ((unsigned short)mCrcHigh << 8 | (unsigned short)mCrcLow)) {
@@ -229,15 +244,21 @@ bool PacketInterface::sendPacket(const unsigned char *data, unsigned int len_pac
     int len_tot = len_packet;
     unsigned int data_offs = 0;
 
-    if (len_tot <= 256) {
+    if (len_tot <= 255) {
         mSendBufferAck[ind++] = 2;
         mSendBufferAck[ind++] = len_tot;
         data_offs = 2;
-    } else {
+    } else if (len_tot <= 65535) {
         mSendBufferAck[ind++] = 3;
         mSendBufferAck[ind++] = len_tot >> 8;
         mSendBufferAck[ind++] = len_tot & 0xFF;
         data_offs = 3;
+    } else {
+        mSendBufferAck[ind++] = 4;
+        mSendBufferAck[ind++] = (len_tot >> 16) & 0xFF;
+        mSendBufferAck[ind++] = (len_tot >> 8) & 0xFF;
+        mSendBufferAck[ind++] = len_tot & 0xFF;
+        data_offs = 4;
     }
 
     memcpy(mSendBufferAck + ind, data, len_packet);
@@ -289,7 +310,7 @@ bool PacketInterface::sendPacketAck(const unsigned char *data, unsigned int len_
 
     mWaitingAck = true;
 
-    unsigned char *buffer = new unsigned char[mMaxBufferLen];
+    unsigned char *buffer = new unsigned char[len_packet];
     bool ok = false;
     memcpy(buffer, data, len_packet);
 
@@ -301,7 +322,10 @@ bool PacketInterface::sendPacketAck(const unsigned char *data, unsigned int len_
         connect(this, SIGNAL(ackReceived(quint8, CMD_PACKET, QString)), &loop, SLOT(quit()));
         connect(&timeoutTimer, SIGNAL(timeout()), &loop, SLOT(quit()));
 
-        sendPacket(buffer, len_packet);
+        QTimer::singleShot(0, [this, buffer, len_packet]() {
+            sendPacket(buffer, len_packet);
+        });
+
         loop.exec();
 
         if (timeoutTimer.isActive()) {
@@ -313,7 +337,7 @@ bool PacketInterface::sendPacketAck(const unsigned char *data, unsigned int len_
     }
 
     mWaitingAck = false;
-    delete buffer;
+    delete[] buffer;
     return ok;
 }
 
@@ -608,6 +632,10 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
     case CMD_LOG_ETHERNET: {
         QByteArray tmpArray((char*)data, len);
         emit logEthernetReceived(id, tmpArray);
+    } break;
+
+    case CMD_CAMERA_IMAGE: {
+        emit cameraImageReceived(id, QImage::fromData(data, len), len);
     } break;
 
         // Car commands
@@ -1050,7 +1078,8 @@ bool PacketInterface::getRoutePart(quint8 id,
     quint8 idRx;
 
     auto conn = connect(this, &PacketInterface::routePartReceived,
-                        [&routeLen, &points, &idRx](quint8 id, int len, const QList<LocPoint> &route){
+                        [&routeLen, &points, &idRx](quint8 id, int len,
+                        const QList<LocPoint> &route){
         idRx = id;
         routeLen = len;
         points.append(route);
@@ -1065,7 +1094,10 @@ bool PacketInterface::getRoutePart(quint8 id,
         utility::buffer_append_int32(mSendBuffer, first, &send_index);
         mSendBuffer[send_index++] = num;
 
-        sendPacket(mSendBuffer, send_index);
+        QTimer::singleShot(0, [this, &send_index]() {
+            sendPacket(mSendBuffer, send_index);
+        });
+
         res = waitSignal(this, SIGNAL(routePartReceived(quint8,int,QList<LocPoint>)), 200);
 
         if (res) {
@@ -1353,4 +1385,28 @@ void PacketInterface::mrOverridePower(quint8 id, double fl_f, double bl_l, doubl
     utility::buffer_append_double32_auto(mSendBuffer, fr_r, &send_index);
     utility::buffer_append_double32_auto(mSendBuffer, br_b, &send_index);
     sendPacket(mSendBuffer, send_index);
+}
+
+void PacketInterface::startCameraStream(quint8 id, int camera, int quality,
+                                        int width, int height, int fps, int skip)
+{
+    qint32 send_index = 0;
+    mSendBuffer[send_index++] = id;
+    mSendBuffer[send_index++] = CMD_CAMERA_STREAM_START;
+    utility::buffer_append_int16(mSendBuffer, camera, &send_index);
+    utility::buffer_append_int16(mSendBuffer, quality, &send_index);
+    utility::buffer_append_int16(mSendBuffer, width, &send_index);
+    utility::buffer_append_int16(mSendBuffer, height, &send_index);
+    utility::buffer_append_int16(mSendBuffer, fps, &send_index);
+    utility::buffer_append_int16(mSendBuffer, skip, &send_index);
+    sendPacket(mSendBuffer, send_index);
+}
+
+void PacketInterface::sendCameraFrameAck(quint8 id)
+{
+    QByteArray packet;
+    packet.clear();
+    packet.append(id);
+    packet.append((char)CMD_CAMERA_FRAME_ACK);
+    sendPacket(packet);
 }
