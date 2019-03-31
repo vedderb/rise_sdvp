@@ -1,3 +1,19 @@
+/*
+    Copyright 2018 Benjamin Vedder	benjamin@vedder.se
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    */
 
 #include "rcontrolstationcomm_wrapper.h"
 #include "rcontrolstationcomm.h"
@@ -68,4 +84,14 @@ bool rcsc_rcControl(int car, int mode, double value, double steering)
 bool rcsc_getRoutePoints(int car, ROUTE_POINT *route, int *len, int maxLen, int mapRoute, int timeoutMs)
 {
     return rcsc.getRoutePoints(car, route, len, maxLen, mapRoute, timeoutMs);
+}
+
+bool rcsc_sendTerminalCmd(int car, char *cmd, char *reply, int timeoutMs)
+{
+    return rcsc.sendTerminalCmd(car, cmd, reply, timeoutMs);
+}
+
+void rcsc_clearBuffers()
+{
+    rcsc.clearBuffers();
 }

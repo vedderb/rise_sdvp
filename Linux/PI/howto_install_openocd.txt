@@ -1,0 +1,7 @@
+sudo apt install libusb-1.0-0-dev libtool autoconf texinfo libusb-dev git
+git clone git://git.code.sf.net/p/openocd/code openocd
+./bootstrap
+./configure --enable-stlink --enable-bcm2835gpio
+make -j4
+sudo make install
+

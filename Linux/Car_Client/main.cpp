@@ -1,5 +1,5 @@
 /*
-    Copyright 2016 Benjamin Vedder	benjamin@vedder.se
+    Copyright 2016 - 2018 Benjamin Vedder	benjamin@vedder.se
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -15,7 +15,14 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
     */
 
+#ifdef HAS_GUI
+#include <QApplication>
+#include <QQmlApplicationEngine>
+#include <QQmlContext>
+#else
 #include <QCoreApplication>
+#endif
+
 #include <QDebug>
 #include <signal.h>
 #include <QDir>
@@ -30,8 +37,9 @@ void showHelp()
     qDebug() << "-p, --ttyport : Serial port, e.g. /dev/ttyUSB0";
     qDebug() << "-b, --baudrate : Serial baud rate, e.g. 9600";
     qDebug() << "-l, --log : Log to file, e.g. /tmp/logfile.bin (TODO!)";
-    qDebug() << "--tcprtcmport : TCP server port for RTCM data";
-    qDebug() << "--tcpubxport : TCP server port for UBX data";
+    qDebug() << "--tcprtcmserver [port] : Start RTCM server on [port] (e.g. 8200)";
+    qDebug() << "--tcpubxserver [port] : Start server for UBX data on [port] (e.g. 8210)";
+    qDebug() << "--tcplogserver [port] : Start log server on [port] (e.g. 8410)";
     qDebug() << "--tcpnmeasrv : NMEA server address";
     qDebug() << "--tcpnmeaport : NMEA server port";
     qDebug() << "--useudp : Use UDP server";
@@ -46,6 +54,15 @@ void showHelp()
     qDebug() << "--chronos : Run CHRONOS client";
     qDebug() << "--ntrip [server]:[stream]:[user]:[password]:[port] : Connect to ntrip server";
     qDebug() << "--rtcmbasepos [lat]:[lon]:[height] : Inject RTCM base position message";
+    qDebug() << "--batterycells : Number of cells in series, e.g. for the GUI battery indicator";
+    qDebug() << "--simulatecars [num]:[firstid] : Simulate num cars where the first car has ID firstid";
+    qDebug() << "--dynosim : Run simulator together with output from AWITAR dyno instead of MotorSim";
+    qDebug() << "--simaprepeatroutes [1 or 0] : Repeat routes setting for the simulation (default: 1)";
+    qDebug() << "--simlogen [rateHz] : Enable simulator logging output at rateHz Hz";
+    qDebug() << "--simuwben [port]:[rateHz] : Enable simulator UWB emulation output on TCP port port at rateHz Hz";
+#ifdef HAS_GUI
+    qDebug() << "--usegui : Use QML GUI";
+#endif
 }
 
 static void m_cleanup(int sig)
@@ -57,14 +74,19 @@ static void m_cleanup(int sig)
 
 int main(int argc, char *argv[])
 {
+#ifdef HAS_GUI
+    QApplication a(argc, argv);
+#else
     QCoreApplication a(argc, argv);
+#endif
 
     QStringList args = QCoreApplication::arguments();
-    QString ttyPort = "/dev/ttyACM0";
+    QString ttyPort = "";
     QString logFile = "";
     int baudrate = 115200;
-    int tcpRtcmPort = 8200;
-    int tcpUbxPort = 8210;
+    int tcpRtcmPort = -1;
+    int tcpUbxPort = -1;
+    int tcpLogPort = -1;
     QString tcpNmeaServer = "127.0.0.1";
     int tcpNmeaPort = 2948;
     bool useUdp = false;
@@ -87,6 +109,18 @@ int main(int argc, char *argv[])
     double rtcmBaseLat = 0.0;
     double rtcmBaseLon = 0.0;
     double rtcmBaseHeight = 0.0;
+    int batteryCells = 10;
+    int simulateCarNum = 0;
+    int simulateCarFirst = 0;
+    bool dynoSim = false;
+    bool simApRepeatRoutes = true;
+    int simLogHz = -1;
+    int simUwbHz = -1;
+    int simUwbTcpPort = -1;
+
+#ifdef HAS_GUI
+    bool useGui = false;
+#endif
 
     signal(SIGINT, m_cleanup);
     signal(SIGTERM, m_cleanup);
@@ -138,7 +172,7 @@ int main(int argc, char *argv[])
             }
         }
 
-        if (str == "--tcprtcmport") {
+        if (str == "--tcprtcmserver") {
             if ((i - 1) < args.size()) {
                 i++;
                 bool ok;
@@ -147,11 +181,20 @@ int main(int argc, char *argv[])
             }
         }
 
-        if (str == "--tcpubxport") {
+        if (str == "--tcpubxserver") {
             if ((i - 1) < args.size()) {
                 i++;
                 bool ok;
                 tcpUbxPort = args.at(i).toInt(&ok);
+                found = ok;
+            }
+        }
+
+        if (str == "--tcplogserver") {
+            if ((i - 1) < args.size()) {
+                i++;
+                bool ok;
+                tcpLogPort = args.at(i).toInt(&ok);
                 found = ok;
             }
         }
@@ -275,6 +318,71 @@ int main(int argc, char *argv[])
             }
         }
 
+        if (str == "--batterycells") {
+            if ((i - 1) < args.size()) {
+                i++;
+                bool ok;
+                batteryCells = args.at(i).toInt(&ok);
+                found = ok;
+            }
+        }
+
+        if (str == "--simulatecars") {
+            if ((i - 1) < args.size()) {
+                i++;
+                QString tmp = args.at(i);
+                QStringList simData = tmp.split(":");
+
+                if (simData.size() == 2) {
+                    found = true;
+                    simulateCarNum = simData.at(0).toInt();
+                    simulateCarFirst = simData.at(1).toInt();
+                }
+            }
+        }
+
+        if (str == "--dynosim") {
+            dynoSim = true;
+            found = true;
+        }
+
+        if (str == "--simaprepeatroutes") {
+            if ((i - 1) < args.size()) {
+                i++;
+                bool ok;
+                simApRepeatRoutes = args.at(i).toInt(&ok);
+                found = ok;
+            }
+        }
+
+        if (str == "--simlogen") {
+            if ((i - 1) < args.size()) {
+                i++;
+                bool ok;
+                simLogHz = args.at(i).toInt(&ok);
+                found = ok;
+            }
+        }
+
+        if (str == "--simuwben") {
+            if ((i - 1) < args.size()) {
+                i++;
+                QStringList param = args.at(i).split(":");
+                if (param.size() == 2) {
+                    found = true;
+                    simUwbTcpPort = param.at(0).toInt();
+                    simUwbHz = param.at(1).toInt();
+                }
+            }
+        }
+
+#ifdef HAS_GUI
+        if (str == "--usegui") {
+            useGui = true;
+            found = true;
+        }
+#endif
+
         if (!found) {
             if (dash) {
                 qCritical() << "At least one of the flags is invalid:" << str;
@@ -289,11 +397,46 @@ int main(int argc, char *argv[])
 
     CarClient car;
     Chronos chronos;
+#ifdef HAS_GUI
+    QQmlApplicationEngine qmlEngine;
+#endif
 
-    car.connectSerial(ttyPort, baudrate);
-    car.startRtcmServer(tcpRtcmPort);
-    car.startUbxServer(tcpUbxPort);
+    if (!ttyPort.isEmpty()) {
+        car.connectSerial(ttyPort, baudrate);
+    } else {
+        // Not connected to any car, set default ID
+        if (simulateCarNum > 0) {
+            car.setCarId(simulateCarFirst);
+        } else {
+            car.setCarId(0);
+        }
+    }
+
+    for (int i = 0;i < simulateCarNum;i++) {
+        car.addSimulatedCar(i + simulateCarFirst);
+        car.getSimulatedCar(i + simulateCarFirst)->autopilot()->setRepeatRoutes(simApRepeatRoutes);
+        if (simLogHz > 0) {
+            car.getSimulatedCar(i + simulateCarFirst)->startLogBroadcast(simLogHz);
+        }
+        if (simUwbHz > 0) {
+            car.getSimulatedCar(i + simulateCarFirst)->startUwbBroadcast(simUwbTcpPort, simUwbHz);
+        }
+    }
+
+    if (tcpRtcmPort >= 0) {
+        car.startRtcmServer(tcpRtcmPort);
+    }
+
+    if (tcpUbxPort >= 0) {
+        car.startUbxServer(tcpUbxPort);
+    }
+
+    if (tcpLogPort >= 0) {
+        car.startLogServer(tcpLogPort);
+    }
+
     car.restartRtklib();
+    car.setBatteryCells(batteryCells);
 
     if (car.isRtklibRunning()) {
         car.connectNmea(tcpNmeaServer, tcpNmeaPort);
@@ -317,6 +460,13 @@ int main(int argc, char *argv[])
 
     if (useChronos) {
         chronos.startServer(car.packetInterface());
+
+        // In case we simulate, use CHRONOS-compatible settings
+        CarSim *sim = car.getSimulatedCar(simulateCarFirst);
+        if (sim) {
+            sim->autopilot()->setModeTime(2);
+            sim->autopilot()->setRepeatRoutes(false);
+        }
     }
 
     if (useNtrip) {
@@ -326,6 +476,28 @@ int main(int argc, char *argv[])
     if (sendRtcmBase) {
         car.setSendRtcmBasePos(true, rtcmBaseLat, rtcmBaseLon, rtcmBaseHeight);
     }
+
+    if (dynoSim) {
+        CarSim *sim = car.getSimulatedCar(simulateCarFirst);
+        if (sim) {
+            sim->listenDyno();
+            sim->autopilot()->setBaseRad(8.0);
+            sim->setAxisDistance(3.0);
+            sim->setCarTurnRad(6.0);
+        }
+    }
+
+#ifdef HAS_GUI
+    if (useGui) {
+        qmlRegisterType<PacketInterface>("Car.packetInterface", 1, 0, "PacketInterface");
+        qmlEngine.rootContext()->setContextProperty("carClient", &car);
+        qmlEngine.load(QUrl(QLatin1String("qrc:/res/main.qml")));
+
+        if (qmlEngine.rootObjects().isEmpty()) {
+            qWarning() << "Could not start QML GUI";
+        }
+    }
+#endif
 
     return a.exec();
 }

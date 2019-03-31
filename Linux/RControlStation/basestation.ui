@@ -40,7 +40,7 @@
        <item>
         <widget class="QGroupBox" name="groupBox_3">
          <property name="title">
-          <string>Connect Ublox</string>
+          <string>USB Connection</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_4">
           <item>
@@ -173,118 +173,176 @@
          <property name="checked">
           <bool>false</bool>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout_3">
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <property name="spacing">
+           <number>3</number>
+          </property>
+          <property name="leftMargin">
+           <number>3</number>
+          </property>
+          <property name="topMargin">
+           <number>3</number>
+          </property>
+          <property name="rightMargin">
+           <number>3</number>
+          </property>
+          <property name="bottomMargin">
+           <number>3</number>
+          </property>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_5">
-            <item>
-             <widget class="QCheckBox" name="sendBaseBox">
-              <property name="text">
-               <string>Send</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer_4">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>33</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item>
-             <widget class="QPushButton" name="refGetButton">
-              <property name="toolTip">
-               <string>Get average from nmea tab</string>
-              </property>
-              <property name="text">
-               <string/>
-              </property>
-              <property name="icon">
-               <iconset resource="resources.qrc">
-                <normaloff>:/models/Icons/Radio Tower-96.png</normaloff>:/models/Icons/Radio Tower-96.png</iconset>
-              </property>
-             </widget>
-            </item>
-           </layout>
+           <widget class="QDoubleSpinBox" name="refSendLatBox">
+            <property name="prefix">
+             <string>Lat: </string>
+            </property>
+            <property name="decimals">
+             <number>8</number>
+            </property>
+            <property name="minimum">
+             <double>-90.000000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>90.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>0.000000000000000</double>
+            </property>
+           </widget>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_6">
-            <item>
-             <widget class="QDoubleSpinBox" name="refSendLatBox">
-              <property name="prefix">
-               <string>Lat: </string>
-              </property>
-              <property name="decimals">
-               <number>8</number>
-              </property>
-              <property name="minimum">
-               <double>-90.000000000000000</double>
-              </property>
-              <property name="maximum">
-               <double>90.000000000000000</double>
-              </property>
-              <property name="value">
-               <double>0.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QDoubleSpinBox" name="refSendLonBox">
-              <property name="prefix">
-               <string>Lon: </string>
-              </property>
-              <property name="decimals">
-               <number>8</number>
-              </property>
-              <property name="minimum">
-               <double>-180.000000000000000</double>
-              </property>
-              <property name="maximum">
-               <double>180.000000000000000</double>
-              </property>
-              <property name="value">
-               <double>0.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QDoubleSpinBox" name="refSendHBox">
-              <property name="prefix">
-               <string>h: </string>
-              </property>
-              <property name="decimals">
-               <number>3</number>
-              </property>
-              <property name="minimum">
-               <double>-5000.000000000000000</double>
-              </property>
-              <property name="maximum">
-               <double>100000.000000000000000</double>
-              </property>
-              <property name="value">
-               <double>0.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QDoubleSpinBox" name="refSendAntHBox">
-              <property name="prefix">
-               <string>Ant h: </string>
-              </property>
-              <property name="decimals">
-               <number>3</number>
-              </property>
-              <property name="maximum">
-               <double>180.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-           </layout>
+           <widget class="QDoubleSpinBox" name="refSendLonBox">
+            <property name="prefix">
+             <string>Lon: </string>
+            </property>
+            <property name="decimals">
+             <number>8</number>
+            </property>
+            <property name="minimum">
+             <double>-180.000000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>180.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>0.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QDoubleSpinBox" name="refSendHBox">
+            <property name="prefix">
+             <string>h: </string>
+            </property>
+            <property name="decimals">
+             <number>3</number>
+            </property>
+            <property name="minimum">
+             <double>-5000.000000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>100000.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>0.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QDoubleSpinBox" name="refSendAntHBox">
+            <property name="prefix">
+             <string>Ant h: </string>
+            </property>
+            <property name="decimals">
+             <number>3</number>
+            </property>
+            <property name="maximum">
+             <double>180.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="sendBaseBox">
+            <property name="text">
+             <string>Send</string>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="surveyInBox">
+         <property name="title">
+          <string>Survey In</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <property name="spacing">
+           <number>3</number>
+          </property>
+          <property name="leftMargin">
+           <number>3</number>
+          </property>
+          <property name="topMargin">
+           <number>3</number>
+          </property>
+          <property name="rightMargin">
+           <number>3</number>
+          </property>
+          <property name="bottomMargin">
+           <number>3</number>
+          </property>
+          <item>
+           <widget class="QDoubleSpinBox" name="surveyInMinAccBox">
+            <property name="toolTip">
+             <string>Accuracy must be better than this</string>
+            </property>
+            <property name="prefix">
+             <string>Min Acc: </string>
+            </property>
+            <property name="suffix">
+             <string> m</string>
+            </property>
+            <property name="value">
+             <double>2.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QDoubleSpinBox" name="surveyInMaxDiffBox">
+            <property name="toolTip">
+             <string>Update if position moves more than this</string>
+            </property>
+            <property name="prefix">
+             <string>Max Diff: </string>
+            </property>
+            <property name="suffix">
+             <string> m</string>
+            </property>
+            <property name="singleStep">
+             <double>1.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>5.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
           </item>
          </layout>
         </widget>
@@ -295,6 +353,29 @@
           <widget class="QCheckBox" name="sendVehiclesBox">
            <property name="text">
             <string>Send to Vehicles</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="tcpServerBox">
+           <property name="text">
+            <string>TCP Server</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSpinBox" name="tcpServerPortBox">
+           <property name="prefix">
+            <string>TCP Port: </string>
+           </property>
+           <property name="maximum">
+            <number>65535</number>
+           </property>
+           <property name="value">
+            <number>8200</number>
            </property>
           </widget>
          </item>
@@ -314,155 +395,20 @@
         </layout>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_7">
-         <item>
-          <widget class="QCheckBox" name="tcpServerBox">
-           <property name="text">
-            <string>TCP Server</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QSpinBox" name="tcpServerPortBox">
-           <property name="prefix">
-            <string>Port: </string>
-           </property>
-           <property name="maximum">
-            <number>65535</number>
-           </property>
-           <property name="value">
-            <number>8200</number>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <spacer name="horizontalSpacer_6">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <spacer name="verticalSpacer">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
+        <widget class="QPlainTextEdit" name="ubxText">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
          </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>244</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="tab">
-      <attribute name="icon">
-       <iconset resource="resources.qrc">
-        <normaloff>:/models/Icons/NMEA-96.png</normaloff>:/models/Icons/NMEA-96.png</iconset>
-      </attribute>
-      <attribute name="title">
-       <string>NMEA</string>
-      </attribute>
-      <attribute name="toolTip">
-       <string>NMEA Client</string>
-      </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout">
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout">
-         <item>
-          <widget class="QLabel" name="label">
-           <property name="text">
-            <string>Connect NMEA Server</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLineEdit" name="nmeaServerEdit">
-           <property name="text">
-            <string>127.0.0.1</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QSpinBox" name="nmeaPortBox">
-           <property name="prefix">
-            <string>Port: </string>
-           </property>
-           <property name="maximum">
-            <number>65535</number>
-           </property>
-           <property name="value">
-            <number>2948</number>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="nmeaConnectButton">
-           <property name="toolTip">
-            <string>Connect</string>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-           <property name="icon">
-            <iconset resource="resources.qrc">
-             <normaloff>:/models/Icons/Connected-96.png</normaloff>:/models/Icons/Connected-96.png</iconset>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_2">
-         <item>
-          <spacer name="horizontalSpacer">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item>
-          <widget class="QLabel" name="nmeaSampleLabel">
-           <property name="text">
-            <string>Samples...</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="nmeaSampleClearButton">
-           <property name="text">
-            <string/>
-           </property>
-           <property name="icon">
-            <iconset resource="resources.qrc">
-             <normaloff>:/models/Icons/Delete2-96.png</normaloff>:/models/Icons/Delete2-96.png</iconset>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <widget class="QTextBrowser" name="nmeaBrowser">
          <property name="font">
           <font>
            <family>Monospace</family>
           </font>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
          </property>
         </widget>
        </item>

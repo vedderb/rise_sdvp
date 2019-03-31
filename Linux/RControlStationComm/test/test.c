@@ -69,9 +69,15 @@ int main(void) {
 		printf("RCSC Error: %s\r\n", rcsc_lastError());
 	}
 	
+	char reply[400];
+	ok = rcsc_sendTerminalCmd(0, "ping", reply, 1000);
+	if (ok) {
+		printf("Sent ping. Reply: %s", reply);
+	}
+	
 	ROUTE_POINT route_rx[20];
 	int len;
-	ok = rcsc_getRoutePoints(0, route_rx, &len, 20, 4, 5000);
+	ok = rcsc_getRoutePoints(0, route_rx, &len, 20, 0, 5000);
 	printf("OK: %d, len: %d\r\n", ok, len);
 	if (ok) {
 		for (int i = 0;i < len;i++) {

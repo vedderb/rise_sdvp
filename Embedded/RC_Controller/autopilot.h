@@ -25,7 +25,7 @@ void autopilot_init(void);
 bool autopilot_add_point(ROUTE_POINT *p, bool first);
 void autopilot_remove_last_point(void);
 void autopilot_clear_route(void);
-void autopilot_replace_route(ROUTE_POINT *p);
+bool autopilot_replace_route(ROUTE_POINT *p);
 void autopilot_sync_point(int32_t point, int32_t time, int32_t min_time_diff);
 void autopilot_set_active(bool active);
 bool autopilot_is_active(void);
@@ -38,5 +38,9 @@ void autopilot_set_motor_speed(float speed);
 float autopilot_get_steering_scale(void);
 float autopilot_get_rad_now(void);
 void autopilot_get_goal_now(ROUTE_POINT *rp);
+
+#if HAS_DIFF_STEERING
+void autopilot_set_turn_rad(float rad);
+#endif
 
 #endif /* AUTOPILOT_H_ */

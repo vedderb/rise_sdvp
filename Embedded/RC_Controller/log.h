@@ -28,8 +28,6 @@ void log_init(void);
 void log_set_rate(int rate_hz);
 void log_set_enabled(bool enabled);
 void log_set_name(char *name);
-void log_set_uart(int mode, int baud);
-void log_update_sw_pos(const POS_STATE *pos);
-void log_update_corr_pos(const POS_STATE *pos);
+void log_set_ext(LOG_EXT_MODE mode, int baud);
 
 #endif /* LOG_H_ */

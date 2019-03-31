@@ -1,0 +1,46 @@
+AddFault(uwb_range_50,AMPLIFICATION,5.0,49,1)
+RunSegment(List(rcontrolstationcomm.Utils$RpPoint@10508ba6, rcontrolstationcomm.Utils$RpPoint@da11873, rcontrolstationcomm.Utils$RpPoint@39159b14, rcontrolstationcomm.Utils$RpPoint@57ab4b33, rcontrolstationcomm.Utils$RpPoint@43b2e7db, rcontrolstationcomm.Utils$RpPoint@46d51d5e, rcontrolstationcomm.Utils$RpPoint@530df3ab, rcontrolstationcomm.Utils$RpPoint@5e72c82a))
+RunSegment(List(rcontrolstationcomm.Utils$RpPoint@aaa7000, rcontrolstationcomm.Utils$RpPoint@64fba3e6, rcontrolstationcomm.Utils$RpPoint@58d79479, rcontrolstationcomm.Utils$RpPoint@102c24d1, rcontrolstationcomm.Utils$RpPoint@495f7ca4))
+RunSegment(List(rcontrolstationcomm.Utils$RpPoint@700202fa, rcontrolstationcomm.Utils$RpPoint@141234df, rcontrolstationcomm.Utils$RpPoint@65698020, rcontrolstationcomm.Utils$RpPoint@57617a75, rcontrolstationcomm.Utils$RpPoint@3794b7b1, rcontrolstationcomm.Utils$RpPoint@3225d950, rcontrolstationcomm.Utils$RpPoint@1be427b4))
+AddFault(uwb_travel_dist,AMPLIFICATION,2.1,53,1)
+RunSegment(List(rcontrolstationcomm.Utils$RpPoint@470a446f, rcontrolstationcomm.Utils$RpPoint@55315a00, rcontrolstationcomm.Utils$RpPoint@4942e6af, rcontrolstationcomm.Utils$RpPoint@73a1a1b4, rcontrolstationcomm.Utils$RpPoint@669daa93, rcontrolstationcomm.Utils$RpPoint@39a30d1a))
+AddFault(uwb_range_50,AMPLIFICATION,5.0,54,6)
+RunSegment(List(rcontrolstationcomm.Utils$RpPoint@670ae31f, rcontrolstationcomm.Utils$RpPoint@1958524b, rcontrolstationcomm.Utils$RpPoint@129aaac1, rcontrolstationcomm.Utils$RpPoint@3370be55, rcontrolstationcomm.Utils$RpPoint@3d2b13f))
+AddFault(uwb_range_50,OFFSET,0.0,29,3)
+RunSegment(List(rcontrolstationcomm.Utils$RpPoint@58c36104, rcontrolstationcomm.Utils$RpPoint@1fc8047f, rcontrolstationcomm.Utils$RpPoint@29fc83c5, rcontrolstationcomm.Utils$RpPoint@3fb1948c, rcontrolstationcomm.Utils$RpPoint@7c39193f, rcontrolstationcomm.Utils$RpPoint@230d013b))
+RunSegment(List(rcontrolstationcomm.Utils$RpPoint@6e225c34, rcontrolstationcomm.Utils$RpPoint@5d84b088, rcontrolstationcomm.Utils$RpPoint@69c0bae6, rcontrolstationcomm.Utils$RpPoint@220f6a3c, rcontrolstationcomm.Utils$RpPoint@5eb041b5))
+
+New initial state created
+New SUT created
+[CarCmd] Clearing faults
+[CarCmd] Clearing route
+[CarCmd] Following recovery route (V2)
+Route shortened with 0.03 m in 16.32 ms (passes: 1, okChecks: 3653, removed: 0)
+Found direct valid recovery route in 301.78 ms
+Max UWB diff: 0.5968253429605653 m
+[CarCmd] Clearing route
+[CarCmd] Resetting UWB position
+[CarCmd] Activating autopilot
+[CarCmd] Adding fault; Probe: uwb_range_50 Type: AMPLIFICATION Param: 5.0 Start: 49 Duration: 1
+[CarCmd] Running generated segments
+Max UWB diff: 0.27969678224820094 m
+[CarCmd] Running generated segments
+Max UWB diff: 1.999516003936954 m
+[Error] Too large difference between the UWB-based and RTKGNSS-based positions.
+Postcondition failed
+[CarCmd] Running generated segments
+Max UWB diff: 0.48016898067242303 m
+[CarCmd] Adding fault; Probe: uwb_travel_dist Type: AMPLIFICATION Param: 2.1 Start: 53 Duration: 1
+[CarCmd] Running generated segments
+Max UWB diff: 0.6520995399476982 m
+[CarCmd] Adding fault; Probe: uwb_range_50 Type: AMPLIFICATION Param: 5.0 Start: 54 Duration: 6
+[CarCmd] Running generated segments
+Max UWB diff: 0.4017925459736614 m
+[CarCmd] Adding fault; Probe: uwb_range_50 Type: OFFSET Param: 0.0 Start: 29 Duration: 3
+[CarCmd] Running generated segments
+Max UWB diff: 0.570608631200056 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.9530671329974602 m
+[CarCmd] Deactivating autopilot
+Test sequence failed
+

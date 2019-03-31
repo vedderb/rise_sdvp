@@ -81,11 +81,13 @@ void ConfCommonWidget::getConfGui(MAIN_CONFIG &conf)
     strcpy(conf.log_name, ui->confLogNameEdit->text().toLocal8Bit().data());
 
     if (ui->confLogUartOffButton->isChecked()) {
-        conf.log_en_uart = 0;
+        conf.log_mode_ext = LOG_EXT_OFF;
     } else if (ui->confLogUartContButton->isChecked()) {
-        conf.log_en_uart = 1;
+        conf.log_mode_ext = LOG_EXT_UART;
     } else if (ui->confLogUartPolledButton->isChecked()) {
-        conf.log_en_uart = 2;
+        conf.log_mode_ext = LOG_EXT_UART_POLLED;
+    } else if (ui->confLogEthernetButton->isChecked()) {
+        conf.log_mode_ext = LOG_EXT_ETHERNET;
     }
 
     conf.log_uart_baud = ui->confLogUartBaudBox->value();
@@ -138,10 +140,11 @@ void ConfCommonWidget::setConfGui(const MAIN_CONFIG &conf)
     ui->confLogEnBox->setChecked(conf.log_en);
     ui->confLogNameEdit->setText(QString::fromLocal8Bit(conf.log_name));
 
-    switch (conf.log_en_uart) {
-    case 0: ui->confLogUartOffButton->setChecked(true); break;
-    case 1: ui->confLogUartContButton->setChecked(true); break;
-    case 2: ui->confLogUartPolledButton->setChecked(true); break;
+    switch (conf.log_mode_ext) {
+    case LOG_EXT_OFF: ui->confLogUartOffButton->setChecked(true); break;
+    case LOG_EXT_UART: ui->confLogUartContButton->setChecked(true); break;
+    case LOG_EXT_UART_POLLED: ui->confLogUartPolledButton->setChecked(true); break;
+    case LOG_EXT_ETHERNET: ui->confLogEthernetButton->setChecked(true); break;
     default: break;
     }
 

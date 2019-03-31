@@ -24,6 +24,8 @@
 #include <unistd.h>
 #include <QEventLoop>
 #include <QCoreApplication>
+#include <QNetworkInterface>
+#include <QBuffer>
 #include "rtcm3_simple.h"
 
 namespace {
@@ -50,6 +52,7 @@ CarClient::CarClient(QObject *parent) : QObject(parent)
     mPacketInterface = new PacketInterface(this);
     mRtcmBroadcaster = new TcpBroadcast(this);
     mUbxBroadcaster = new TcpBroadcast(this);
+    mLogBroadcaster = new TcpBroadcast(this);
     mUblox = new Ublox(this);
     mTcpSocket = new QTcpSocket(this);
     mTcpServer = new TcpServerSimple(this);
@@ -61,6 +64,10 @@ CarClient::CarClient(QObject *parent) : QObject(parent)
     mLogFlushTimer = new QTimer(this);
     mLogFlushTimer->start(2000);
     mRtklibRunning = false;
+    mBatteryCells = 10;
+    mOverrideUwbPos = false;
+    mOverrideUwbX = 0.0;
+    mOverrideUwbY = 0.0;
 
     mHostAddress = QHostAddress("0.0.0.0");
     mUdpPort = 0;
@@ -110,8 +117,24 @@ CarClient::CarClient(QObject *parent) : QObject(parent)
     connect(mUblox, SIGNAL(rxRawx(ubx_rxm_rawx)), this, SLOT(rxRawx(ubx_rxm_rawx)));
     connect(mTcpServer->packet(), SIGNAL(packetReceived(QByteArray&)),
             this, SLOT(tcpRx(QByteArray&)));
+    connect(mTcpServer, SIGNAL(connectionChanged(bool,QString)),
+            this, SLOT(tcpConnectionChanged(bool,QString)));
     connect(mRtcmClient, SIGNAL(rtcmReceived(QByteArray,int,bool)),
             this, SLOT(rtcmReceived(QByteArray,int,bool)));
+    connect(mPacketInterface, SIGNAL(logEthernetReceived(quint8,QByteArray)),
+            this, SLOT(logEthernetReceived(quint8,QByteArray)));
+    connect(mLogBroadcaster, SIGNAL(dataReceived(QByteArray&)),
+            this, SLOT(logBroadcasterDataReceived(QByteArray&)));
+
+#if HAS_CAMERA
+    mCameraJpgQuality = -1;
+    mCameraSkipFrames = 0;
+    mCameraSkipFrameCnt = 0;
+    mCameraNoAckCnt = 0;
+    mCamera = new Camera(this);
+    connect(mCamera->video(), SIGNAL(imageCaptured(QImage)),
+            this, SLOT(cameraImageCaptured(QImage)));
+#endif
 }
 
 CarClient::~CarClient()
@@ -138,6 +161,7 @@ void CarClient::connectSerial(QString port, int baudrate)
     qDebug() << "Serial port connected";
 
     mPacketInterface->stopUdpConnection();
+    mPacketInterface->getState(255); // To get car ID
 }
 
 void CarClient::connectSerialRtcm(QString port, int baudrate)
@@ -174,6 +198,11 @@ void CarClient::startRtcmServer(int port)
 void CarClient::startUbxServer(int port)
 {
     mUbxBroadcaster->startTcpServer(port);
+}
+
+void CarClient::startLogServer(int port)
+{
+    mLogBroadcaster->startTcpServer(port);
 }
 
 void CarClient::connectNmea(QString server, int port)
@@ -357,6 +386,11 @@ quint8 CarClient::carId()
     return mCarId;
 }
 
+void CarClient::setCarId(quint8 id)
+{
+    mCarId = id;
+}
+
 void CarClient::connectNtrip(QString server, QString stream, QString user, QString pass, int port)
 {
     mRtcmClient->connectNtrip(server, stream, user, pass, port);
@@ -370,11 +404,77 @@ void CarClient::setSendRtcmBasePos(bool send, double lat, double lon, double hei
     mRtcmBaseHeight = height;
 }
 
+void CarClient::rebootSystem(bool powerOff)
+{
+    // https://askubuntu.com/questions/159007/how-do-i-run-specific-sudo-commands-without-a-password
+    QStringList args;
+    QString cmd = "sudo";
+
+    if (powerOff) {
+        args << "shutdown" << "-h" << "now";
+    } else {
+        args << "reboot";
+    }
+
+    QProcess process;
+    process.setEnvironment(QProcess::systemEnvironment());
+    process.start(cmd, args);
+    waitProcess(process);
+
+    qApp->quit();
+}
+
+QVariantList CarClient::getNetworkAddresses()
+{
+    QVariantList res;
+
+    for(QHostAddress a: QNetworkInterface::allAddresses()) {
+        if(!a.isLoopback()) {
+            if (a.protocol() == QAbstractSocket::IPv4Protocol) {
+                res << a.toString();
+            }
+        }
+    }
+
+    return res;
+}
+
+int CarClient::getBatteryCells()
+{
+    return mBatteryCells;
+}
+
+void CarClient::setBatteryCells(int cells)
+{
+    mBatteryCells = cells;
+}
+
+void CarClient::addSimulatedCar(int id)
+{
+    CarSim *car = new CarSim(this);
+    car->setId(id);
+    connect(car, SIGNAL(dataToSend(QByteArray)), this, SLOT(processCarData(QByteArray)));
+    mSimulatedCars.append(car);
+}
+
+CarSim *CarClient::getSimulatedCar(int id)
+{
+    CarSim *sim = 0;
+
+    for (CarSim *s: mSimulatedCars) {
+        if (s->id() == id) {
+            sim = s;
+            break;
+        }
+    }
+
+    return sim;
+}
+
 void CarClient::serialDataAvailable()
 {
     while (mSerialPort->bytesAvailable() > 0) {
-        QByteArray data = mSerialPort->readAll();
-        mPacketInterface->processData(data);
+        processCarData(mSerialPort->readAll());
     }
 }
 
@@ -437,8 +537,85 @@ void CarClient::serialRtcmPortError(QSerialPort::SerialPortError error)
 
 void CarClient::packetDataToSend(QByteArray &data)
 {
-    if (mSerialPort->isOpen()) {
-        mSerialPort->writeData(data);
+    // This is a packet from RControlStation going to the car.
+    // Inspect data and possibly process it here.
+
+    bool packetConsumed = false;
+
+    VByteArray vb(data);
+    vb.remove(0, data[0]);
+
+    quint8 id = vb.vbPopFrontUint8();
+    CMD_PACKET cmd = (CMD_PACKET)vb.vbPopFrontUint8();
+    vb.chop(3);
+
+    (void)id;
+
+    if (id == mCarId || id == 255) {
+        if (cmd == CMD_CAMERA_STREAM_START) {
+#if HAS_CAMERA
+            int camera = vb.vbPopFrontInt16();
+            mCameraJpgQuality = vb.vbPopFrontInt16();
+            int width = vb.vbPopFrontInt16();
+            int height = vb.vbPopFrontInt16();
+            int fps = vb.vbPopFrontInt16();
+            mCameraSkipFrames = vb.vbPopFrontInt16();
+            mCameraNoAckCnt = 0;
+
+            mCamera->closeCamera();
+
+            if (camera >= 0) {
+                mCamera->openCamera(camera);
+                mCamera->startCameraStream(width, height, fps);
+            }
+
+        } else if (cmd == CMD_CAMERA_FRAME_ACK) {
+            mCameraNoAckCnt--;
+#endif
+        } else if (cmd == CMD_TERMINAL_CMD) {
+            QString str(vb);
+
+            if (str == "help") {
+#if HAS_CAMERA
+                printTerminal("camera_info\n"
+                              "  Print information about the available camera.");
+#endif
+            } else if (str == "camera_info") {
+#if HAS_CAMERA
+                bool res = true;
+                if (!mCamera->isLoaded()) {
+                    res = mCamera->openCamera();
+                }
+
+                if (res) {
+                    printTerminal(mCamera->cameraInfo());
+                } else {
+                    printTerminal("No camera available.");
+                }
+
+                packetConsumed = true;
+#endif
+            }
+        } else if (cmd == CMD_CLEAR_UWB_ANCHORS) {
+            mUwbAnchorsNow.clear();
+        } else if (cmd == CMD_ADD_UWB_ANCHOR) {
+            UWB_ANCHOR a;
+            a.id = vb.vbPopFrontInt16();
+            a.px = vb.vbPopFrontDouble32Auto();
+            a.py = vb.vbPopFrontDouble32Auto();
+            a.height = vb.vbPopFrontDouble32Auto();
+            mUwbAnchorsNow.append(a);
+        }
+    }
+
+    if (!packetConsumed) {
+        if (mSerialPort->isOpen()) {
+            mSerialPort->writeData(data);
+        }
+
+        for (CarSim *s: mSimulatedCars) {
+            s->processData(data);
+        }
     }
 }
 
@@ -518,15 +695,25 @@ void CarClient::readPendingDatagrams()
 
 void CarClient::carPacketRx(quint8 id, CMD_PACKET cmd, const QByteArray &data)
 {
-    mCarId = id;
+    QByteArray toSend = data;
 
-    if (QString::compare(mHostAddress.toString(), "0.0.0.0") != 0) {
-        if (cmd != CMD_LOG_LINE_USB) {
-            mUdpSocket->writeDatagram(data, mHostAddress, mUdpPort);
-        }
+    if (cmd == CMD_GET_STATE && mOverrideUwbPos) {
+        VByteArray vb;
+        vb.append(data.mid(0, 99));
+        vb.vbAppendDouble32(mOverrideUwbX, 1e4);
+        vb.vbAppendDouble32(mOverrideUwbY, 1e4);
+        toSend = vb;
     }
 
-    mTcpServer->packet()->sendPacket(data);
+    if (id != 254) {
+        mCarId = id;
+
+        if (QString::compare(mHostAddress.toString(), "0.0.0.0") != 0) {
+            mUdpSocket->writeDatagram(toSend, mHostAddress, mUdpPort);
+        }
+
+        mTcpServer->packet()->sendPacket(toSend);
+    }
 }
 
 void CarClient::logLineUsbReceived(quint8 id, QString str)
@@ -617,6 +804,15 @@ void CarClient::tcpRx(QByteArray &data)
     mPacketInterface->sendPacket(data);
 }
 
+void CarClient::tcpConnectionChanged(bool connected, QString address)
+{
+    if (connected) {
+        qDebug() << "TCP connection from" << address << "accepted";
+    } else {
+        qDebug() << "Disconnected TCP from" << address;
+    }
+}
+
 void CarClient::rtcmReceived(QByteArray data, int type, bool sync)
 {
     (void)type;
@@ -624,24 +820,130 @@ void CarClient::rtcmReceived(QByteArray data, int type, bool sync)
     mPacketInterface->sendRtcmUsb(255, data);
 }
 
-void CarClient::rebootSystem(bool powerOff)
+void CarClient::logEthernetReceived(quint8 id, QByteArray data)
 {
-    // https://askubuntu.com/questions/159007/how-do-i-run-specific-sudo-commands-without-a-password
-    QStringList args;
-    QString cmd = "sudo";
+    (void)id;
+    mLogBroadcaster->broadcastData(data);
+}
 
-    if (powerOff) {
-        args << "shutdown" << "-h" << "now";
-    } else {
-        args << "reboot";
+void CarClient::processCarData(QByteArray data)
+{
+    mPacketInterface->processData(data);
+}
+
+void CarClient::cameraImageCaptured(QImage img)
+{
+#if HAS_CAMERA
+    if (mCameraSkipFrames > 0) {
+        mCameraSkipFrameCnt++;
+
+        if (mCameraSkipFrameCnt <= mCameraSkipFrames) {
+            return;
+        }
     }
 
-    QProcess process;
-    process.setEnvironment(QProcess::systemEnvironment());
-    process.start(cmd, args);
-    waitProcess(process);
+    // No ack has been received for a couple of frames, meaning that
+    // the connection probably is bad. Drop frame.
+    if (mCameraNoAckCnt >= 3) {
+        return;
+    }
 
-    qApp->quit();
+    mCameraSkipFrameCnt = 0;
+
+    QByteArray data;
+    data.append((quint8)mCarId);
+    data.append((char)CMD_CAMERA_IMAGE);
+    QBuffer buffer;
+    buffer.open(QIODevice::WriteOnly);
+    img.save(&buffer, "jpg", mCameraJpgQuality);
+    buffer.close();
+    data.append(buffer.buffer());
+
+    if (data.size() > 100) {
+        carPacketRx(mCarId, CMD_CAMERA_IMAGE, data);
+        mCameraNoAckCnt++;
+    }
+#else
+    (void)img;
+#endif
+}
+
+void CarClient::logBroadcasterDataReceived(QByteArray &data)
+{
+    mLogBroadcasterDataBuffer.append(data);
+
+    int newLineIndex = mLogBroadcasterDataBuffer.indexOf("\n");
+    while (newLineIndex >= 0) {
+        QString line = mLogBroadcasterDataBuffer.left(newLineIndex);
+        mLogBroadcasterDataBuffer.remove(0, newLineIndex + 1);
+
+        QStringList tokens = line.split(" ");
+
+        if (tokens.at(0) == "plot_init") {
+            if (tokens.size() == 3) {
+                QByteArray data;
+                data.append((quint8)mCarId);
+                data.append((char)CMD_PLOT_INIT);
+                data.append(tokens.at(1).toLocal8Bit());
+                data.append('\0');
+                data.append(tokens.at(2).toLocal8Bit());
+                data.append('\0');
+                carPacketRx(mCarId, CMD_PLOT_INIT, data);
+            }
+        } else if (tokens.at(0) == "plot_add_graph") {
+            if (tokens.size() == 2) {
+                QByteArray data;
+                data.append((quint8)mCarId);
+                data.append((char)CMD_PLOT_ADD_GRAPH);
+                data.append(tokens.at(1).toLocal8Bit());
+                data.append('\0');
+                carPacketRx(mCarId, CMD_PLOT_ADD_GRAPH, data);
+            }
+        } else if (tokens.at(0) == "plot_set_graph") {
+            if (tokens.size() == 2) {
+                QByteArray data;
+                data.append((quint8)mCarId);
+                data.append((char)CMD_PLOT_SET_GRAPH);
+                data.append(tokens.at(1).toInt());
+                data.append('\0');
+                carPacketRx(mCarId, CMD_PLOT_SET_GRAPH, data);
+            }
+        } else if (tokens.at(0) == "plot_add_sample") {
+            if (tokens.size() == 3) {
+                VByteArray data;
+                data.append((quint8)mCarId);
+                data.append((char)CMD_PLOT_DATA);
+                data.vbAppendDouble32Auto(tokens.at(1).toDouble());
+                data.vbAppendDouble32Auto(tokens.at(2).toDouble());
+                carPacketRx(mCarId, CMD_PLOT_DATA, data);
+            }
+        } else if (tokens.at(0) == "uwb_pos_override") {
+            if (tokens.size() == 3) {
+                mOverrideUwbPos = true;
+                mOverrideUwbX = tokens.at(1).toDouble();
+                mOverrideUwbY = tokens.at(2).toDouble();
+            }
+        } else if (tokens.at(0) == "uwb_pos_override_stop") {
+            if (tokens.size() == 1) {
+                mOverrideUwbPos = false;
+            }
+        } else if (tokens.at(0) == "get_uwb_anchor_list") {
+            QString reply;
+            reply.append("anchors");
+            for (UWB_ANCHOR a: mUwbAnchorsNow) {
+                reply.append(QString(" %1 %2 %3 %4").
+                             arg(a.id).
+                             arg(a.px, 0, 'f', 3).
+                             arg(a.py, 0, 'f', 3).
+                             arg(a.height, 0, 'f', 3));
+            }
+            reply.append("\r\n");
+
+            mLogBroadcaster->broadcastData(reply.toLocal8Bit());
+        }
+
+        newLineIndex = mLogBroadcasterDataBuffer.indexOf("\n");
+    }
 }
 
 bool CarClient::setUnixTime(qint64 t)
@@ -656,7 +958,6 @@ bool CarClient::setUnixTime(qint64 t)
 void CarClient::printTerminal(QString str)
 {
     QByteArray packet;
-    packet.clear();
     packet.append((quint8)mCarId);
     packet.append((char)CMD_PRINTF);
     packet.append(str.toLocal8Bit());

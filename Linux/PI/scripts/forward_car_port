@@ -1,0 +1,2 @@
+ssh -L 8300:localhost:8300 -L 8080:localhost:8080 -L 8081:localhost:8081 -L 8082:localhost:8082 -L 8083:localhost:8083 -L 1935:localhost:1035 -D 9998 pi@HOST -p PORT -Y -o ServerAliveInterval=5 -o ServerAliveCountMax=2
+

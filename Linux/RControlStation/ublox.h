@@ -1,5 +1,5 @@
 /*
-    Copyright 2017 Benjamin Vedder	benjamin@vedder.se
+    Copyright 2017 - 2018 Benjamin Vedder	benjamin@vedder.se
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ public:
     bool connectSerial(QString port, int baudrate = 115200);
     void disconnectSerial();
     bool isSerialConnected();
+    void writeRaw(QByteArray data);
 
     void ubxPoll(uint8_t msg_class, uint8_t id);
     bool ubxCfgPrtUart(ubx_cfg_prt_uart *cfg);

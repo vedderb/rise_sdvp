@@ -27,6 +27,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <math.h>
 
 // Settings
 #define UART_DEV					UARTD1
@@ -37,19 +38,18 @@
 #define UART_ALT_PIN_FUNCTION		7
 #define UART_LOG_RX_BUFFER_SIZE		256
 
+// Defines
+#define LOG_MODE_IS_UART(mode)		(mode == LOG_EXT_UART || mode == LOG_EXT_UART_POLLED)
+
 // private variables
 static int m_log_rate_hz;
 static bool m_log_en;
 static bool m_write_split;
 static char m_log_name[LOG_NAME_MAX_LEN + 1];
-static int m_log_uart;
+static LOG_EXT_MODE m_log_ext_mode;
 static int m_log_uart_baud;
 static char m_log_uart_rx_buffer[UART_LOG_RX_BUFFER_SIZE];
 static int m_log_uart_rx_ptr;
-static POS_STATE m_pos_last_sw;
-static bool m_pos_last_sw_updated;
-static POS_STATE m_pos_last_corr;
-static bool m_pos_last_corr_updated;
 #ifdef LOG_EN_DW
 static int m_dw_anchor_now = 0;
 static DW_LOG_INFO m_dw_anchor_info[3];
@@ -66,14 +66,14 @@ static thread_t *log_uart_tp;
 #ifdef LOG_EN_DW
 static void range_callback(uint8_t id, uint8_t dest, float range);
 #endif
-static void print_log_uart(void);
+static void print_log_ext(void);
 static void txend1(UARTDriver *uartp);
 static void txend2(UARTDriver *uartp);
 static void rxerr(UARTDriver *uartp, uartflags_t e);
 static void rxchar(UARTDriver *uartp, uint16_t c);
 static void rxend(UARTDriver *uartp);
 static void set_baudrate(uint32_t baud);
-static void printf_blocking(char* format, ...);
+static void printf_blocking(bool ethernet, char* format, ...);
 static void write_blocking(unsigned char *data, unsigned int len);
 
 // Configuration structures
@@ -94,13 +94,9 @@ void log_init(void) {
 	m_log_en = false;
 	m_write_split = true;
 	strcpy(m_log_name, "Undefined");
-	m_log_uart = 0;
+	m_log_ext_mode = LOG_EXT_OFF;
 	m_log_uart_baud = 115200;
 	m_log_uart_rx_ptr = 0;
-	memset(&m_pos_last_sw, 0, sizeof(m_pos_last_sw));
-	m_pos_last_sw_updated = false;
-	memset(&m_pos_last_corr, 0, sizeof(m_pos_last_corr));
-	m_pos_last_corr_updated = false;
 	memset(m_log_uart_rx_buffer, 0, sizeof(m_log_uart_rx_buffer));
 
 	chThdCreateStatic(log_thread_wa, sizeof(log_thread_wa),
@@ -125,32 +121,22 @@ void log_set_name(char *name) {
 	strcpy(m_log_name, name);
 }
 
-void log_set_uart(int mode, int baud) {
-	if (mode > 0 && m_log_uart == 0) {
+void log_set_ext(LOG_EXT_MODE mode, int baud) {
+	if (LOG_MODE_IS_UART(mode) && !LOG_MODE_IS_UART(m_log_ext_mode)) {
 		palSetPadMode(UART_TX_PORT, UART_TX_PIN, PAL_MODE_ALTERNATE(UART_ALT_PIN_FUNCTION));
 		palSetPadMode(UART_RX_PORT, UART_RX_PIN, PAL_MODE_ALTERNATE(UART_ALT_PIN_FUNCTION));
 		uartStart(&UART_DEV, &uart_cfg);
-	} else if (mode == 0 && m_log_uart != 0) {
+	} else if (!LOG_MODE_IS_UART(mode) && LOG_MODE_IS_UART(m_log_ext_mode)) {
 		uartStop(&UART_DEV);
 		palSetPadMode(UART_TX_PORT, UART_TX_PIN, PAL_MODE_RESET);
 		palSetPadMode(UART_RX_PORT, UART_RX_PIN, PAL_MODE_RESET);
 	}
 
-	m_log_uart = mode;
+	m_log_ext_mode = mode;
 
-	if (m_log_uart > 0) {
+	if (LOG_MODE_IS_UART(m_log_ext_mode) > 0) {
 		set_baudrate(baud);
 	}
-}
-
-void log_update_sw_pos(const POS_STATE *pos) {
-	m_pos_last_sw = *pos;
-	m_pos_last_sw_updated = true;
-}
-
-void log_update_corr_pos(const POS_STATE *pos) {
-	m_pos_last_corr = *pos;
-	m_pos_last_corr_updated = true;
 }
 
 static THD_FUNCTION(log_thread, arg) {
@@ -161,8 +147,8 @@ static THD_FUNCTION(log_thread, arg) {
 	systime_t time_p = chVTGetSystemTimeX(); // T0
 
 	for(;;) {
-		if (m_log_uart == 1) {
-			print_log_uart();
+		if (m_log_ext_mode == LOG_EXT_UART || m_log_ext_mode == LOG_EXT_ETHERNET) {
+			print_log_ext();
 		}
 
 		if (m_log_en) {
@@ -346,46 +332,6 @@ static THD_FUNCTION(log_thread, arg) {
 
 			m_dw_anchor_now++;
 #endif
-
-#ifdef LOG_EN_SW
-			if (m_pos_last_sw_updated) {
-				m_pos_last_sw_updated = false;
-				commands_printf_log_usb(
-						"SW "
-						"%u "     // gps ms
-						"%u "     // fix type
-						"%.3f "   // x
-						"%.3f\n", // y
-
-						m_pos_last_sw.gps_ms,
-						m_pos_last_sw.gps_fix_type,
-						(double)m_pos_last_sw.px,
-						(double)m_pos_last_sw.py);
-			}
-#endif
-
-#ifdef LOG_EN_CORR
-			if (m_pos_last_corr_updated) {
-				m_pos_last_corr_updated = false;
-				commands_printf_log_usb(
-						"CORR "
-						"%u "     // gps ms
-						"%u "     // fix type
-						"%.3f "   // x
-						"%.3f "   // y
-						"%.3f "   // yaw
-						"%.3f "   // speed
-						"%.3f\n", // corr_diff
-
-						m_pos_last_corr.gps_ms,
-						m_pos_last_corr.gps_fix_type,
-						(double)m_pos_last_corr.px,
-						(double)m_pos_last_corr.py,
-						(double)m_pos_last_corr.yaw,
-						(double)m_pos_last_corr.speed,
-						(double)m_pos_last_corr.gps_last_corr_diff);
-			}
-#endif
 		}
 
 		time_p += CH_CFG_ST_FREQUENCY / m_log_rate_hz;
@@ -409,45 +355,75 @@ static THD_FUNCTION(log_uart_thread, arg) {
 		chEvtWaitAny((eventmask_t) 1);
 
 		if (strcmp(m_log_uart_rx_buffer, "READ_POS") == 0) {
-			print_log_uart();
+			print_log_ext();
 		}
 	}
 }
 
-static void print_log_uart(void) {
+static void print_log_ext(void) {
 	static mc_values val;
 	static POS_STATE pos;
 	static GPS_STATE gps;
+	float accel[3];
+	float mag[3];
 
 	pos_get_mc_val(&val);
 	pos_get_pos(&pos);
 	pos_get_gps(&gps);
+	pos_get_imu(accel, 0, mag);
 	uint32_t time = ST2MS(chVTGetSystemTimeX());
+	uint32_t ms_today = pos_get_ms_today();
 
-	printf_blocking(
+	printf_blocking(m_log_ext_mode == LOG_EXT_ETHERNET,
 			"%u,"     // timestamp (ms)
+			"%u,"     // timestamp pos today (ms)
 			"%.3f,"   // car x
 			"%.3f,"   // car y
 			"%.2f,"   // roll
 			"%.2f,"   // pitch
 			"%.2f,"   // yaw
+			"%.2f,"   // roll rate
+			"%.2f,"   // pitch rate
+			"%.2f,"   // yaw rate
+			"%.2f,"   // accel_x
+			"%.2f,"   // accel_y
+			"%.2f,"   // accel_z
+			"%.2f,"   // mag_x
+			"%.2f,"   // mag_y
+			"%.2f,"   // mag_z
 			"%.3f,"   // speed
 			"%d,"     // tachometer
+			"%u,"     // timestamp gps sample today (ms)
 			"%.7f,"   // lat
 			"%.7f,"   // lon
-			"%.3f\r\n",  // height
+			"%.3f,"  // height
+			"%.3f\r\n",  // Travel distance
 
 			time,
+			ms_today,
 			(double)pos.px,
 			(double)pos.py,
 			(double)pos.roll,
 			(double)pos.pitch,
 			(double)pos.yaw,
+			(double)pos.roll_rate,
+			(double)pos.pitch_rate,
+			(double)pos.yaw_rate,
+			(double)accel[0],
+			(double)accel[1],
+			(double)accel[2],
+			(double)mag[0],
+			(double)mag[1],
+			(double)mag[2],
 			(double)pos.speed,
 			val.tachometer,
+			gps.ms,
 			gps.lat,
 			gps.lon,
-			gps.height);
+			gps.height,
+			(double)(val.tachometer * main_config.car.gear_ratio
+			* (2.0 / main_config.car.motor_poles) * (1.0 / 6.0)
+			* main_config.car.wheel_diam * M_PI));
 }
 
 #ifdef LOG_EN_DW
@@ -505,7 +481,7 @@ static void rxerr(UARTDriver *uartp, uartflags_t e) {
 static void rxchar(UARTDriver *uartp, uint16_t c) {
 	(void)uartp;
 
-	if (m_log_uart == 2) {
+	if (m_log_ext_mode == LOG_EXT_UART_POLLED) {
 		if (c == '\n' || c == '\r') {
 			if (m_log_uart_rx_ptr > 0) {
 				m_log_uart_rx_buffer[m_log_uart_rx_ptr] = '\0';
@@ -540,7 +516,7 @@ static void set_baudrate(uint32_t baud) {
 	}
 }
 
-static void printf_blocking(char* format, ...) {
+static void printf_blocking(bool ethernet, char* format, ...) {
 	va_list arg;
 	va_start (arg, format);
 	int len;
@@ -552,7 +528,11 @@ static void printf_blocking(char* format, ...) {
 	print_buffer[len] = '\0';
 
 	if(len > 0) {
-		write_blocking((unsigned char*)print_buffer, (len < 511) ? len : 511);
+		if (ethernet) {
+			commands_send_log_ethernet((unsigned char*)print_buffer, (len < 511) ? len : 511);
+		} else {
+			write_blocking((unsigned char*)print_buffer, (len < 511) ? len : 511);
+		}
 	}
 }
 

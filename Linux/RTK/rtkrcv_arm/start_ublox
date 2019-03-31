@@ -1,4 +1,0 @@
-#!/bin/bash
-
-./rtkrcv -o rover_ublox.conf -s
-

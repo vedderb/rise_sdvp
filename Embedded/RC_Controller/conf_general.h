@@ -39,16 +39,22 @@
 #define MAIN_MODE_IS_BASE			(MAIN_MODE == MAIN_MODE_M8T_BASE_2400 || MAIN_MODE == MAIN_MODE_M8T_BASE_400)
 
 // Firmware version
-#define FW_VERSION_MAJOR			9
-#define FW_VERSION_MINOR			0
+#define FW_VERSION_MAJOR			10
+#define FW_VERSION_MINOR			2
 
 // Default car settings
 //#define CAR_TERO // Benjamins tero car
 //#define EBIKE_BENJAMIN // Benjamins ebike
 
-// Defaults for different cars
-#ifdef CAR_TERO
-#define BOARD_YAW_ROT				180.0
+// Differential steering
+#ifndef HAS_DIFF_STEERING
+#define HAS_DIFF_STEERING			0
+#endif
+#ifndef DIFF_STEERING_VESC_LEFT
+#define DIFF_STEERING_VESC_LEFT		0
+#endif
+#ifndef DIFF_STEERING_VESC_RIGHT
+#define DIFF_STEERING_VESC_RIGHT	1
 #endif
 
 // Ublox settings
@@ -71,8 +77,6 @@
 //#define LOG_EN_CARREL
 //#define LOG_EN_ITRANSIT
 //#define LOG_EN_DW
-#define LOG_EN_SW
-#define LOG_EN_CORR
 
 // Anchor IDs to range against in DW logging mode. -1 to disable.
 #define LOG_DW_ANCHOR0				122
@@ -88,8 +92,15 @@
 
 // General settings
 #define ID_ALL						255
-#define VESC_ID						ID_ALL // id, or ID_ALL for any VESC
+#define ID_CAR_CLIENT				254 // Packet for car client only
+#define VESC_ID						ID_ALL // id, or ID_ALL for any VESC (not used in diff steering mode)
 #define ID_MOTE						254 // If the packet is for the mote and not to be forwarded in mote mode
+
+#ifdef CAR_TERO
+#ifndef BOARD_YAW_ROT
+#define BOARD_YAW_ROT				90.0
+#endif
+#endif
 
 // Car parameters
 #ifndef BOARD_YAW_ROT

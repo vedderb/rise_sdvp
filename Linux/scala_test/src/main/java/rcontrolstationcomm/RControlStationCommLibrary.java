@@ -91,6 +91,11 @@ public class RControlStationCommLibrary {
 	 */
 	native public static Pointer<Byte > rcsc_lastError();
 	/**
+	 * Original signature : <code>void rcsc_clearBuffers()</code><br>
+	 * <i>native declaration : line 31</i>
+	 */
+	native public static void rcsc_clearBuffers();
+	/**
 	 * Original signature : <code>bool rcsc_getState(int, CAR_STATE*, int)</code><br>
 	 * <i>native declaration : line 31</i>
 	 */
@@ -130,4 +135,9 @@ public class RControlStationCommLibrary {
 	 * <i>native declaration : line 40</i>
 	 */
 	native public static boolean rcsc_getRoutePoints(int car, Pointer<ROUTE_POINT > route, Pointer<Integer > len, int maxLen, int mapRoute, int timeoutMs);
+	/**
+	 * Original signature : <code>bool rcsc_sendTerminalCmd(int, char*, char*, int)</code><br>
+	 * <i>native declaration : /usr/include/rcontrolstationcomm_types.h:74</i>
+	 */
+	native public static boolean rcsc_sendTerminalCmd(int car, Pointer<Byte > cmd, Pointer<Byte > reply, int timeoutMs);
 }

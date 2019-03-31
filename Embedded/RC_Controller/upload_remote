@@ -28,7 +28,7 @@ if [ "$mode" == "stlink" ]; then
 fi
 
 if [ "$mode" == "pi_gpio" ]; then
-	ssh $user@$server -p $port "sudo openocd -f interface/raspberrypi2-native.cfg -c 'transport select swd' -c 'set CHIPNAME stm32f4x' -f 'target/stm32f4x.cfg' -c 'reset_config  srst_nogate' -c 'adapter_nsrst_delay 100' -c 'adapter_nsrst_assert_width 100' -c 'program $filename verify reset exit 0x08000000'"
+	ssh $user@$server -p $port "sudo openocd -f interface/raspberrypi2-native.cfg -c 'transport select swd' -c 'set CHIPNAME stm32f4x' -f 'target/stm32f4x.cfg' -c 'reset_config  srst_nogate' -c 'adapter_nsrst_delay 100' -c 'adapter_nsrst_assert_width 100' -c 'bcm2835gpio_swd_nums 25 24' -c 'program $filename verify reset exit 0x08000000'"
 fi
 
 # Remove elf file from server

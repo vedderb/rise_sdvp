@@ -31,6 +31,7 @@ NmeaWidget::NmeaWidget(QWidget *parent) :
     layout()->setContentsMargins(0, 0, 0, 0);
 
     mNmeaForwardServer = new TcpBroadcast(this);
+    mFixType = "Unknown";
 }
 
 NmeaWidget::~NmeaWidget()
@@ -64,21 +65,25 @@ void NmeaWidget::inputNmea(QByteArray msg)
             satStr.sprintf("Satellites: %d", gga.n_sat);
             ui->nmeaSatsLabel->setText(satStr);
 
-            QString fix_type;
             switch (gga.fix_type) {
-            case 0: fix_type = "Solution: Invalid"; break;
-            case 1: fix_type = "Solution: SPP"; break;
-            case 2: fix_type = "Solution: DGPS"; break;
-            case 3: fix_type = "Solution: PPS"; break;
-            case 4: fix_type = "Solution: RTK Fix"; break;
-            case 5: fix_type = "Solution: RTK Float"; break;
-            default: fix_type = "Solution: Unknown"; break;
+            case 0: mFixType = "Invalid"; break;
+            case 1: mFixType = "SPP"; break;
+            case 2: mFixType = "DGPS" + QString(" (%1 s)").arg(gga.diff_age); break;
+            case 3: mFixType = "PPS"; break;
+            case 4: mFixType = "RTK Fix" + QString(" (%1 s)").arg(gga.diff_age);; break;
+            case 5: mFixType = "RTK Float" + QString(" (%1 s)").arg(gga.diff_age);; break;
+            default: mFixType = "Unknown"; break;
             }
 
-            ui->nmeaFixTypeLabel->setText(fix_type);
+            ui->nmeaFixTypeLabel->setText("Solution: " + mFixType);
             ui->nmeaCorrAgeLabel->setText(QString("Corr age: %1 s").arg(gga.diff_age));
         }
     }
+}
+
+QString NmeaWidget::fixType() const
+{
+    return mFixType;
 }
 
 void NmeaWidget::on_nmeaLogChooseButton_clicked()

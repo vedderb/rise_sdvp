@@ -44,6 +44,7 @@ public:
 
     void sendState(quint8 id, const CAR_STATE &state);
     void sendEnuRef(quint8 id, double lat, double lon, double height);
+    void sendPrint(quint8 id, QString str);
     void sendRoute(quint8 id, QList<LocPoint> route);
     void sendError(const QString &txt, const QString &cmd = "");
     void sendAck(const QString &cmd);
@@ -56,6 +57,7 @@ private slots:
 
     void stateReceived(quint8 id, CAR_STATE state);
     void enuRefReceived(quint8 id, double lat, double lon, double height);
+    void printReceived(quint8 id, QString str);
 
     void on_tcpActivateBox_toggled(bool checked);
     void on_udpActivateBox_toggled(bool checked);

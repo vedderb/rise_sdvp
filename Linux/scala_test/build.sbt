@@ -12,3 +12,8 @@ libraryDependencies ++= Seq(
 
 fork := true
 
+initialCommands in console := """
+	import rcontrolstationcomm._
+	CarTester.connect("localhost", 65191)
+	"""
+

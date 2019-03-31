@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# Exit on error
+set -e
+
+DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+cd $DIR
+
+sudo cp *.rules /etc/udev/rules.d
+sudo udevadm control --reload-rules && sudo udevadm trigger
+

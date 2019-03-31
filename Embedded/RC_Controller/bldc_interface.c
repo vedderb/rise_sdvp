@@ -1,5 +1,5 @@
 /*
-	Copyright 2016-2017 Benjamin Vedder	benjamin@vedder.se
+	Copyright 2016-2018 Benjamin Vedder	benjamin@vedder.se
 
 	This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,9 +19,8 @@
  * bldc_interface.c
  *
  * Compatible Firmware Versions
- * 3.20
- * 3.21
- * 3.22
+ * 3.39
+ * 3.40
  *
  */
 
@@ -157,6 +156,18 @@ void bldc_interface_process_packet(unsigned char *data, unsigned int len) {
 		values.tachometer_abs = buffer_get_int32(data, &ind);
 		values.fault_code = (mc_fault_code)data[ind++];
 
+		if (ind < (int)len) {
+			values.pid_pos = buffer_get_float32(data, 1e6, &ind);
+		} else {
+			values.pid_pos = 0.0;
+		}
+
+		if (ind < (int)len) {
+			values.vesc_id = data[ind++];
+		} else {
+			values.vesc_id = 255;
+		}
+
 		if (rx_value_func) {
 			rx_value_func(&values);
 		}
@@ -213,6 +224,7 @@ void bldc_interface_process_packet(unsigned char *data, unsigned int len) {
 		mcconf.l_temp_fet_end = buffer_get_float32_auto(data, &ind);
 		mcconf.l_temp_motor_start = buffer_get_float32_auto(data, &ind);
 		mcconf.l_temp_motor_end = buffer_get_float32_auto(data, &ind);
+		mcconf.l_temp_accel_dec = buffer_get_float32_auto(data, &ind);
 		mcconf.l_min_duty = buffer_get_float32_auto(data, &ind);
 		mcconf.l_max_duty = buffer_get_float32_auto(data, &ind);
 		mcconf.l_watt_max = buffer_get_float32_auto(data, &ind);
@@ -263,19 +275,23 @@ void bldc_interface_process_packet(unsigned char *data, unsigned int len) {
 		ind += 8;
 		mcconf.foc_sl_erpm = buffer_get_float32_auto(data, &ind);
 		mcconf.foc_sample_v0_v7 = data[ind++];
+		mcconf.foc_sample_high_current = data[ind++];
 		mcconf.foc_sat_comp = buffer_get_float32_auto(data, &ind);
 		mcconf.foc_temp_comp = data[ind++];
 		mcconf.foc_temp_comp_base_temp = buffer_get_float32_auto(data, &ind);
+		mcconf.foc_current_filter_const = buffer_get_float32_auto(data, &ind);
 
 		mcconf.s_pid_kp = buffer_get_float32_auto(data, &ind);
 		mcconf.s_pid_ki = buffer_get_float32_auto(data, &ind);
 		mcconf.s_pid_kd = buffer_get_float32_auto(data, &ind);
+		mcconf.s_pid_kd_filter = buffer_get_float32_auto(data, &ind);
 		mcconf.s_pid_min_erpm = buffer_get_float32_auto(data, &ind);
 		mcconf.s_pid_allow_braking = data[ind++];
 
 		mcconf.p_pid_kp = buffer_get_float32_auto(data, &ind);
 		mcconf.p_pid_ki = buffer_get_float32_auto(data, &ind);
 		mcconf.p_pid_kd = buffer_get_float32_auto(data, &ind);
+		mcconf.p_pid_kd_filter = buffer_get_float32_auto(data, &ind);
 		mcconf.p_pid_ang_div = buffer_get_float32_auto(data, &ind);
 
 		mcconf.cc_startup_boost_duty = buffer_get_float32_auto(data, &ind);
@@ -294,6 +310,8 @@ void bldc_interface_process_packet(unsigned char *data, unsigned int len) {
 		mcconf.m_bldc_f_sw_min = buffer_get_float32_auto(data, &ind);
 		mcconf.m_bldc_f_sw_max = buffer_get_float32_auto(data, &ind);
 		mcconf.m_dc_f_sw = buffer_get_float32_auto(data, &ind);
+		mcconf.m_ntc_motor_beta = buffer_get_float32_auto(data, &ind);
+		mcconf.m_out_aux_mode = data[ind++];
 
 		if (rx_mcconf_func) {
 			rx_mcconf_func(&mcconf);
@@ -308,6 +326,7 @@ void bldc_interface_process_packet(unsigned char *data, unsigned int len) {
 		appconf.timeout_brake_current = buffer_get_float32_auto(data, &ind);
 		appconf.send_can_status = data[ind++];
 		appconf.send_can_status_rate_hz = buffer_get_uint16(data, &ind);
+		appconf.can_baud_rate = data[ind++];
 
 		appconf.app_to_use = data[ind++];
 
@@ -320,6 +339,7 @@ void bldc_interface_process_packet(unsigned char *data, unsigned int len) {
 		appconf.app_ppm_conf.median_filter = data[ind++];
 		appconf.app_ppm_conf.safe_start = data[ind++];
 		appconf.app_ppm_conf.throttle_exp = buffer_get_float32_auto(data, &ind);
+		appconf.app_ppm_conf.throttle_exp_brake = buffer_get_float32_auto(data, &ind);
 		appconf.app_ppm_conf.throttle_exp_mode = data[ind++];
 		appconf.app_ppm_conf.ramp_time_pos = buffer_get_float32_auto(data, &ind);
 		appconf.app_ppm_conf.ramp_time_neg = buffer_get_float32_auto(data, &ind);
@@ -341,7 +361,10 @@ void bldc_interface_process_packet(unsigned char *data, unsigned int len) {
 		appconf.app_adc_conf.voltage_inverted = data[ind++];
 		appconf.app_adc_conf.voltage2_inverted = data[ind++];
 		appconf.app_adc_conf.throttle_exp = buffer_get_float32_auto(data, &ind);
+		appconf.app_adc_conf.throttle_exp_brake = buffer_get_float32_auto(data, &ind);
 		appconf.app_adc_conf.throttle_exp_mode = data[ind++];
+		appconf.app_adc_conf.ramp_time_pos = buffer_get_float32_auto(data, &ind);
+		appconf.app_adc_conf.ramp_time_neg = buffer_get_float32_auto(data, &ind);
 		appconf.app_adc_conf.multi_esc = data[ind++];
 		appconf.app_adc_conf.tc = data[ind++];
 		appconf.app_adc_conf.tc_max_diff = buffer_get_float32_auto(data, &ind);
@@ -355,6 +378,7 @@ void bldc_interface_process_packet(unsigned char *data, unsigned int len) {
 		appconf.app_chuk_conf.ramp_time_neg = buffer_get_float32_auto(data, &ind);
 		appconf.app_chuk_conf.stick_erpm_per_s_in_cc = buffer_get_float32_auto(data, &ind);
 		appconf.app_chuk_conf.throttle_exp = buffer_get_float32_auto(data, &ind);
+		appconf.app_chuk_conf.throttle_exp_brake = buffer_get_float32_auto(data, &ind);
 		appconf.app_chuk_conf.throttle_exp_mode = data[ind++];
 		appconf.app_chuk_conf.multi_esc = data[ind++];
 		appconf.app_chuk_conf.tc = data[ind++];
@@ -626,6 +650,7 @@ void bldc_interface_set_mcconf(const mc_configuration *mcconf) {
 	buffer_append_float32_auto(send_buffer, mcconf->l_temp_fet_end, &ind);
 	buffer_append_float32_auto(send_buffer, mcconf->l_temp_motor_start, &ind);
 	buffer_append_float32_auto(send_buffer, mcconf->l_temp_motor_end, &ind);
+	buffer_append_float32_auto(send_buffer, mcconf->l_temp_accel_dec, &ind);
 	buffer_append_float32_auto(send_buffer, mcconf->l_min_duty, &ind);
 	buffer_append_float32_auto(send_buffer, mcconf->l_max_duty, &ind);
 	buffer_append_float32_auto(send_buffer, mcconf->l_watt_max, &ind);
@@ -669,19 +694,23 @@ void bldc_interface_set_mcconf(const mc_configuration *mcconf) {
 	ind += 8;
 	buffer_append_float32_auto(send_buffer, mcconf->foc_sl_erpm, &ind);
 	send_buffer[ind++] = mcconf->foc_sample_v0_v7;
+	send_buffer[ind++] = mcconf->foc_sample_high_current;
 	buffer_append_float32_auto(send_buffer, mcconf->foc_sat_comp, &ind);
 	send_buffer[ind++] = mcconf->foc_temp_comp;
 	buffer_append_float32_auto(send_buffer, mcconf->foc_temp_comp_base_temp, &ind);
+	buffer_append_float32_auto(send_buffer, mcconf->foc_current_filter_const, &ind);
 
 	buffer_append_float32_auto(send_buffer, mcconf->s_pid_kp, &ind);
 	buffer_append_float32_auto(send_buffer, mcconf->s_pid_ki, &ind);
 	buffer_append_float32_auto(send_buffer, mcconf->s_pid_kd, &ind);
+	buffer_append_float32_auto(send_buffer, mcconf->s_pid_kd_filter, &ind);
 	buffer_append_float32_auto(send_buffer, mcconf->s_pid_min_erpm, &ind);
 	send_buffer[ind++] = mcconf->s_pid_allow_braking;
 
 	buffer_append_float32_auto(send_buffer, mcconf->p_pid_kp, &ind);
 	buffer_append_float32_auto(send_buffer, mcconf->p_pid_ki, &ind);
 	buffer_append_float32_auto(send_buffer, mcconf->p_pid_kd, &ind);
+	buffer_append_float32_auto(send_buffer, mcconf->p_pid_kd_filter, &ind);
 	buffer_append_float32_auto(send_buffer, mcconf->p_pid_ang_div, &ind);
 
 	buffer_append_float32_auto(send_buffer, mcconf->cc_startup_boost_duty, &ind);
@@ -700,6 +729,8 @@ void bldc_interface_set_mcconf(const mc_configuration *mcconf) {
 	buffer_append_float32_auto(send_buffer, mcconf->m_bldc_f_sw_min, &ind);
 	buffer_append_float32_auto(send_buffer, mcconf->m_bldc_f_sw_max, &ind);
 	buffer_append_float32_auto(send_buffer, mcconf->m_dc_f_sw, &ind);
+	buffer_append_float32_auto(send_buffer, mcconf->m_ntc_motor_beta, &ind);
+	send_buffer[ind++] = mcconf->m_out_aux_mode;
 
 	send_packet_no_fwd(send_buffer, ind);
 }
@@ -712,6 +743,7 @@ void bldc_interface_set_appconf(const app_configuration *appconf) {
 	buffer_append_float32_auto(send_buffer, appconf->timeout_brake_current, &ind);
 	send_buffer[ind++] = appconf->send_can_status;
 	buffer_append_uint16(send_buffer, appconf->send_can_status_rate_hz, &ind);
+	send_buffer[ind++] = appconf->can_baud_rate;
 
 	send_buffer[ind++] = appconf->app_to_use;
 
@@ -724,6 +756,7 @@ void bldc_interface_set_appconf(const app_configuration *appconf) {
 	send_buffer[ind++] = appconf->app_ppm_conf.median_filter;
 	send_buffer[ind++] = appconf->app_ppm_conf.safe_start;
 	buffer_append_float32_auto(send_buffer, appconf->app_ppm_conf.throttle_exp, &ind);
+	buffer_append_float32_auto(send_buffer, appconf->app_ppm_conf.throttle_exp_brake, &ind);
 	send_buffer[ind++] = appconf->app_ppm_conf.throttle_exp_mode;
 	buffer_append_float32_auto(send_buffer, appconf->app_ppm_conf.ramp_time_pos, &ind);
 	buffer_append_float32_auto(send_buffer, appconf->app_ppm_conf.ramp_time_neg, &ind);
@@ -745,7 +778,10 @@ void bldc_interface_set_appconf(const app_configuration *appconf) {
 	send_buffer[ind++] = appconf->app_adc_conf.voltage_inverted;
 	send_buffer[ind++] = appconf->app_adc_conf.voltage2_inverted;
 	buffer_append_float32_auto(send_buffer, appconf->app_adc_conf.throttle_exp, &ind);
+	buffer_append_float32_auto(send_buffer, appconf->app_adc_conf.throttle_exp_brake, &ind);
 	send_buffer[ind++] = appconf->app_adc_conf.throttle_exp_mode;
+	buffer_append_float32_auto(send_buffer, appconf->app_adc_conf.ramp_time_pos, &ind);
+	buffer_append_float32_auto(send_buffer, appconf->app_adc_conf.ramp_time_neg, &ind);
 	send_buffer[ind++] = appconf->app_adc_conf.multi_esc;
 	send_buffer[ind++] = appconf->app_adc_conf.tc;
 	buffer_append_float32_auto(send_buffer, appconf->app_adc_conf.tc_max_diff, &ind);
@@ -759,6 +795,7 @@ void bldc_interface_set_appconf(const app_configuration *appconf) {
 	buffer_append_float32_auto(send_buffer, appconf->app_chuk_conf.ramp_time_neg, &ind);
 	buffer_append_float32_auto(send_buffer, appconf->app_chuk_conf.stick_erpm_per_s_in_cc, &ind);
 	buffer_append_float32_auto(send_buffer, appconf->app_chuk_conf.throttle_exp, &ind);
+	buffer_append_float32_auto(send_buffer, appconf->app_chuk_conf.throttle_exp_brake, &ind);
 	send_buffer[ind++] = appconf->app_chuk_conf.throttle_exp_mode;
 	send_buffer[ind++] = appconf->app_chuk_conf.multi_esc;
 	send_buffer[ind++] = appconf->app_chuk_conf.tc;

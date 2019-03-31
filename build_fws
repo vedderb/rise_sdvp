@@ -16,7 +16,7 @@ mv build/rc_controller.bin precompiled/fw_vcc.bin
 
 # Tero
 touch conf_general.h
-make -j4 build_args="-DMAIN_MODE=MAIN_MODE_CAR -DCAR_TERO -DUBLOX_EN=0 -DGPS_EXT_PPS=1"
+make -j4 build_args="-DMAIN_MODE=MAIN_MODE_CAR -DCAR_TERO -DUBLOX_EN=1 -DBOARD_YAW_ROT=90.0"
 mv build/rc_controller.bin precompiled/fw_tero.bin
 
 # rise_ubx

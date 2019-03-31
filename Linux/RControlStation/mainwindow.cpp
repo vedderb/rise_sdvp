@@ -27,6 +27,7 @@
 #include <QXmlStreamWriter>
 #include <QXmlStreamReader>
 #include <QStringList>
+#include <QElapsedTimer>
 
 #include "utility.h"
 
@@ -85,12 +86,17 @@ MainWindow::MainWindow(QWidget *parent) :
 #ifdef HAS_JOYSTICK
     mJoystick = new Joystick(this);
     mJsType = JS_TYPE_HK;
+
+    connect(mJoystick, SIGNAL(buttonChanged(int,bool)),
+            this, SLOT(jsButtonChanged(int,bool)));
 #endif
 
     mPing = new Ping(this);
     mNmea = new NmeaServer(this);
     mUdpSocket = new QUdpSocket(this);
     mTcpSocket = new QTcpSocket(this);
+    mTcpSocket->setSocketOption(QAbstractSocket::LowDelayOption, true);
+    mUdpSocket->setSocketOption(QAbstractSocket::LowDelayOption, true);
 
     mIntersectionTest = new IntersectionTest(this);
     mIntersectionTest->setCars(&mCars);
@@ -98,6 +104,11 @@ MainWindow::MainWindow(QWidget *parent) :
     mIntersectionTest->setPacketInterface(mPacketInterface);
     connect(ui->nComWidget, SIGNAL(dataRx(ncom_data)),
             mIntersectionTest, SLOT(nComRx(ncom_data)));
+
+#ifdef HAS_LIME_SDR
+    mGpsSim = new GpsSim(this);
+    mGpsSim->setMap(ui->mapWidget);
+#endif
 
     mKeyUp = false;
     mKeyDown = false;
@@ -155,6 +166,34 @@ MainWindow::MainWindow(QWidget *parent) :
             qApp, SLOT(aboutQt()));
 
     on_serialRefreshButton_clicked();
+    on_mapCameraWidthBox_valueChanged(ui->mapCameraWidthBox->value());
+    on_mapCameraOpacityBox_valueChanged(ui->mapCameraOpacityBox->value());
+
+#ifdef HAS_JOYSTICK
+    // Connect micronav joystick by default
+    bool connectJs = false;
+
+    {
+        Joystick js;
+        if (js.init(ui->jsPortEdit->text()) == 0) {
+            if (js.getName().contains("micronav one", Qt::CaseInsensitive)) {
+                connectJs = true;
+            }
+        }
+    }
+
+    if (connectJs) {
+        on_jsConnectButton_clicked();
+    }
+#endif
+
+
+#ifdef HAS_SIM_SCEN
+    mSimScen = new PageSimScen;
+    ui->mainTabWidget->addTab(mSimScen, QIcon(":/models/Icons/Sedan-96.png"), "");
+    ui->mainTabWidget->setTabToolTip(ui->mainTabWidget->count() - 1,
+                                     "Simulation Scenarios");
+#endif
 
     qApp->installEventFilter(this);
 }
@@ -193,6 +232,15 @@ bool MainWindow::eventFilter(QObject *object, QEvent *e)
         QKeyEvent *keyEvent = static_cast<QKeyEvent *>(e);
         if (keyEvent->key() == Qt::Key_Escape) {
             on_stopButton_clicked();
+            return true;
+        }
+    }
+
+    // Handle F10 here as it won't be detected from the camera window otherwise.
+    if (e->type() == QEvent::KeyPress) {
+        QKeyEvent *keyEvent = static_cast<QKeyEvent *>(e);
+        if (keyEvent->key() == Qt::Key_F10) {
+            on_actionToggleCameraFullscreen_triggered();
             return true;
         }
     }
@@ -292,6 +340,19 @@ void MainWindow::timerSlot()
             js_mr_roll = -(double)mJoystick->getAxis(0) / 32768.0;
             js_mr_pitch = -(double)mJoystick->getAxis(1) / 32768.0;
             js_mr_yaw = -(double)mJoystick->getAxis(4) / 32768.0;
+            utility::truncate_number(&js_mr_thr, 0.0, 1.0);
+            utility::truncate_number_abs(&js_mr_roll, 1.0);
+            utility::truncate_number_abs(&js_mr_pitch, 1.0);
+            utility::truncate_number_abs(&js_mr_yaw, 1.0);
+        } else if (mJsType == JS_TYPE_MICRONAV_ONE) {
+            mThrottle = -(double)mJoystick->getAxis(1) / 32768.0;
+            deadband(mThrottle,0.1, 1.0);
+            mSteering = (double)mJoystick->getAxis(2) / 32768.0;
+
+            js_mr_thr = ((-(double)mJoystick->getAxis(1) / 32768.0) + 0.85) / 1.7;
+            js_mr_roll = (double)mJoystick->getAxis(2) / 32768.0;
+            js_mr_pitch = (double)mJoystick->getAxis(3) / 32768.0;
+            js_mr_yaw = (double)mJoystick->getAxis(0) / 32768.0;
             utility::truncate_number(&js_mr_thr, 0.0, 1.0);
             utility::truncate_number_abs(&js_mr_roll, 1.0);
             utility::truncate_number_abs(&js_mr_pitch, 1.0);
@@ -438,6 +499,11 @@ void MainWindow::timerSlot()
 
 void MainWindow::showStatusInfo(QString info, bool isGood)
 {
+    if (mStatusLabel->text() == info) {
+        mStatusInfoTime = 80;
+        return;
+    }
+
     if (isGood) {
         mStatusLabel->setStyleSheet("QLabel { background-color : lightgreen; color : black; }");
     } else {
@@ -512,13 +578,8 @@ void MainWindow::rtcmReceived(QByteArray data)
 
 void MainWindow::rtcmRefPosGet()
 {
-    double lat, lon, height;
-    if (ui->baseStationWidget->getAvgPosLlh(lat, lon, height) > 0) {
-        ui->rtcmWidget->setRefPos(lat, lon, height);
-    } else {
-        QMessageBox::warning(this, "Reference Position",
-                             "No samples collected yet.");
-    }
+    QMessageBox::warning(this, "Reference Position",
+                         "Not implemented yet");
 }
 
 void MainWindow::pingRx(int time, QString msg)
@@ -696,6 +757,47 @@ void MainWindow::tcpInputError(QAbstractSocket::SocketError socketError)
     mTcpSocket->close();
 }
 
+void MainWindow::jsButtonChanged(int button, bool pressed)
+{
+//    qDebug() << "JS BT:" << button << pressed;
+
+#ifdef HAS_JOYSTICK
+    if (mJsType == JS_TYPE_MICRONAV_ONE) {
+        QWidget *fw = QApplication::focusWidget();
+
+        if (button == 1 && pressed) {
+            on_actionToggleFullscreen_triggered();
+        } else if (button == 3 && pressed) {
+            on_actionToggleCameraFullscreen_triggered();
+        } else if (button == 14 && pressed) {
+            if (fw) {
+                QKeyEvent *event = new QKeyEvent(
+                            QEvent::KeyPress, Qt::Key_Up, Qt::NoModifier);
+                QCoreApplication::postEvent(fw, event);
+            }
+        } else if (button == 10 && pressed) {
+            if (fw) {
+                QKeyEvent *event = new QKeyEvent(
+                            QEvent::KeyPress, Qt::Key_Down, Qt::NoModifier);
+                QCoreApplication::postEvent(fw, event);
+            }
+        } else  if (button == 13 && pressed) {
+            ui->mapWidget->removeLastRoutePoint();
+        }
+
+        if (mJoystick->getButton(12)) {
+            ui->mapWidget->setInteractionMode(MapWidget::InteractionModeShiftDown);
+        } else if (mJoystick->getButton(5)) {
+            ui->mapWidget->setInteractionMode(MapWidget::InteractionModeCtrlDown);
+        } else if (mJoystick->getButton(6)) {
+            ui->mapWidget->setInteractionMode(MapWidget::InteractionModeCtrlShiftDown);
+        } else {
+            ui->mapWidget->setInteractionMode(MapWidget::InteractionModeDefault);
+        }
+    }
+#endif
+}
+
 void MainWindow::on_carAddButton_clicked()
 {
     CarInterface *car = new CarInterface(this);
@@ -866,7 +968,6 @@ void MainWindow::on_jsConnectButton_clicked()
         qDebug() << "Buttons:" << mJoystick->numButtons();
         qDebug() << "Name:" << mJoystick->getName();
 
-
         if (mJoystick->getName().contains("Sony PLAYSTATION(R)3")) {
             mJsType = JS_TYPE_PS3;
             qDebug() << "Treating joystick as PS3 USB controller.";
@@ -875,6 +976,12 @@ void MainWindow::on_jsConnectButton_clicked()
             mJsType = JS_TYPE_PS4;
             qDebug() << "Treating joystick as PS4 USB controller.";
             showStatusInfo("PS4 USB joystick connected!", true);
+        } else if (mJoystick->getName().contains("micronav one", Qt::CaseInsensitive)) {
+            mJsType = JS_TYPE_MICRONAV_ONE;
+            qDebug() << "Treating joystick as Micronav One.";
+            showStatusInfo("Micronav One joystick connected!", true);
+            mJoystick->setRepeats(10, true);
+            mJoystick->setRepeats(14, true);
         } else {
             mJsType = JS_TYPE_HK;
             qDebug() << "Treating joystick as hobbyking simulator.";
@@ -1091,6 +1198,9 @@ void MainWindow::on_mapUploadRouteButton_clicked()
         ok = mPacketInterface->clearRoute(car);
     }
 
+    QElapsedTimer timer;
+    timer.start();
+
     if (ok) {
         int ind = 0;
         for (ind = 0;ind < len;ind += 5) {
@@ -1107,7 +1217,10 @@ void MainWindow::on_mapUploadRouteButton_clicked()
                 break;
             }
 
-            ui->mapUploadRouteProgressBar->setValue((100 * (ind + 5)) / len);
+            if (timer.elapsed() >= 20) {
+                timer.restart();
+                ui->mapUploadRouteProgressBar->setValue((100 * (ind + 5)) / len);
+            }
         }
     }
 
@@ -1125,7 +1238,7 @@ void MainWindow::on_mapGetRouteButton_clicked()
 {
     if (!mSerialPort->isOpen() && !mPacketInterface->isUdpConnected() && !mTcpSocket->isOpen()) {
         QMessageBox::warning(this, "Get route",
-                             "Serial port not connected.");
+                             "Car not connected.");
         return;
     }
 
@@ -1135,9 +1248,15 @@ void MainWindow::on_mapGetRouteButton_clicked()
     int routeLen;
     bool ok = mPacketInterface->getRoutePart(ui->mapCarBox->value(), route.size(), 10, route, routeLen);
 
+    QElapsedTimer timer;
+    timer.start();
+
     while (route.size() < routeLen && ok) {
         ok = mPacketInterface->getRoutePart(ui->mapCarBox->value(), route.size(), 10, route, routeLen);
-        ui->mapUploadRouteProgressBar->setValue((100 * route.size()) / routeLen);
+        if (timer.elapsed() >= 20) {
+            timer.restart();
+            ui->mapUploadRouteProgressBar->setValue((100 * route.size()) / routeLen);
+        }
     }
 
     while (route.size() > routeLen) {
@@ -1148,7 +1267,7 @@ void MainWindow::on_mapGetRouteButton_clicked()
 
     if (ok) {
         if (route.size() > 0) {
-            ui->mapWidget->addRoute(route);
+            ui->mapWidget->setRoute(route);
             ui->mapUploadRouteProgressBar->setValue(100);
             showStatusInfo("GetRoute OK", true);
         } else {
@@ -1191,9 +1310,19 @@ void MainWindow::on_mapOffButton_clicked()
 void MainWindow::on_mapUpdateSpeedButton_clicked()
 {
     QList<LocPoint> route = ui->mapWidget->getRoute();
+    qint32 timeAcc = 0;
 
     for (int i = 0;i < route.size();i++) {
-        route[i].setSpeed(ui->mapRouteSpeedBox->value() / 3.6);
+        double speed = ui->mapRouteSpeedBox->value() / 3.6;
+        route[i].setSpeed(speed);
+
+        if (i == 0) {
+            route[i].setTime(0);
+        } else {
+            double dist = route[i].getDistanceTo(route[i - 1]);
+            timeAcc += (dist / speed) * 1000.0;
+            route[i].setTime(timeAcc);
+        }
     }
 
     ui->mapWidget->setRoute(route);
@@ -1979,4 +2108,65 @@ void MainWindow::saveRoutes(bool withId)
     stream.writeEndDocument();
     file.close();
     showStatusInfo("Saved routes", true);
+}
+
+void MainWindow::on_mapDrawRouteTextBox_toggled(bool checked)
+{
+    ui->mapWidget->setDrawRouteText(checked);
+}
+
+void MainWindow::on_actionGPSSimulator_triggered()
+{
+#ifdef HAS_LIME_SDR
+    mGpsSim->show();
+#else
+    QMessageBox::warning(this, "GPS Simulator",
+                         "This version of RControlStation is not built with LIME SDR support, which "
+                         "is required for the GPS simulator.");
+#endif
+}
+
+void MainWindow::on_mapDrawUwbTraceBox_toggled(bool checked)
+{
+    ui->mapWidget->setDrawUwbTrace(checked);
+}
+
+void MainWindow::on_actionToggleFullscreen_triggered()
+{
+    if (isFullScreen()) {
+        showNormal();
+    } else {
+        showFullScreen();
+    }
+}
+
+void MainWindow::on_mapCameraWidthBox_valueChanged(double arg1)
+{
+    ui->mapWidget->setCameraImageWidth(arg1);
+}
+
+void MainWindow::on_mapCameraOpacityBox_valueChanged(double arg1)
+{
+    ui->mapWidget->setCameraImageOpacity(arg1);
+}
+
+void MainWindow::on_actionToggleCameraFullscreen_triggered()
+{
+    if (mCars.size() == 1) {
+        mCars[0]->toggleCameraFullscreen();
+    } else {
+        for (int i = 0;i < mCars.size();i++) {
+            if (mCars[i]->getId() == ui->mapCarBox->value()) {
+                mCars[i]->toggleCameraFullscreen();
+            }
+        }
+    }
+}
+
+void MainWindow::on_tabWidget_currentChanged(int index)
+{
+    // Focus on map widget when changing tab to it
+    if (index == 1) {
+        ui->mapWidget->setFocus();
+    }
 }

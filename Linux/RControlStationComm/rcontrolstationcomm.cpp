@@ -1,9 +1,27 @@
+/*
+    Copyright 2018 Benjamin Vedder	benjamin@vedder.se
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    */
+
 #include "rcontrolstationcomm.h"
 #include <QDebug>
 #include <QElapsedTimer>
 #include <cstring>
 #include <QXmlStreamReader>
 #include <QXmlStreamWriter>
+#include <QHostAddress>
 
 RControlStationComm::RControlStationComm()
 {
@@ -80,6 +98,24 @@ char *RControlStationComm::lastError()
     }
 
     return mTextBuffer;
+}
+
+void RControlStationComm::clearBuffers()
+{
+    if (mTcpSocket->state() == QTcpSocket::ConnectedState) {
+        auto adr = mTcpSocket->peerAddress();
+        auto port = mTcpSocket->peerPort();
+
+        mTcpSocket->abort();
+        mTcpSocket->connectToHost(adr, port);
+        mTcpSocket->waitForConnected(1000);
+        mTcpSocket->readAll();
+    }
+
+    mRxBuffer.clear();
+    mXmlBuffer.clear();
+    mErrorMsgs.clear();
+    qDebug() << "libRControlStation: Buffers cleared";
 }
 
 bool RControlStationComm::getState(int car, CAR_STATE *state, int timeoutMs)
@@ -493,6 +529,90 @@ bool RControlStationComm::getRoutePoints(int car, ROUTE_POINT *route, int *len,
                             route[pointNow++] = p;
                             *len = pointNow;
                         }
+                    } else {
+                        qWarning() << "libRControlStation: argument not found:" << name2;
+                        stream.skipCurrentElement();
+                        ok = false;
+                    }
+                }
+
+                if (stream.hasError()) {
+                    break;
+                }
+
+                if (!ok) {
+                    continue;
+                }
+            } else {
+                qWarning() << "libRControlStation: Command not found: " << name;
+                stream.skipCurrentElement();
+            }
+        }
+
+        if (stream.hasError()) {
+            qWarning() << "libRControlStation: XML Parse error:" << stream.errorString();
+        }
+    } else {
+        ret = false;
+        qWarning() << "libRControlStation: No response";
+    }
+
+    return ret;
+}
+
+bool RControlStationComm::sendTerminalCmd(int car, char *cmd, char *reply, int timeoutMs)
+{
+    bool ret = true;
+
+    if (!isTcpConnected()) {
+        qWarning() << "libRControlStation: not connected";
+        ret = false;
+        return ret;
+    }
+
+    QString str;
+    QXmlStreamWriter stream(&str);
+    stream.setAutoFormatting(true);
+
+    stream.writeStartDocument();
+    stream.writeStartElement("message");
+    stream.writeStartElement("terminalCmd");
+    stream.writeTextElement("id", QString::number(car));
+    stream.writeTextElement("cmd", QString(cmd));
+    stream.writeEndDocument();
+
+    sendData(str.toLocal8Bit());
+
+    if (reply == 0) {
+        return ret;
+    }
+
+    QByteArray xml = waitForXml(timeoutMs);
+
+    if (!xml.isEmpty()) {
+        QXmlStreamReader stream(xml);
+        stream.readNextStartElement();
+        QString name;
+
+        while (stream.readNextStartElement()) {
+            if (stream.hasError()) {
+                break;
+            }
+
+            name = stream.name().toString();
+
+            if (name == "terminalCmd") {
+                bool ok = true;
+
+                while (stream.readNextStartElement()) {
+                    QString name2 = stream.name().toString();
+
+                    if (name2 == "id") {
+                        stream.readElementText(); // Skip
+                    } else if (name2 == "str") {
+                        QString str = stream.readElementText();
+                        memcpy(reply, str.toStdString().c_str(), str.size());
+                        reply[str.size()] = 0;
                     } else {
                         qWarning() << "libRControlStation: argument not found:" << name2;
                         stream.skipCurrentElement();

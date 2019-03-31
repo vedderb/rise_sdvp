@@ -1,0 +1,2 @@
+#!/bin/bash
+cvlc v4l2:///dev/video0:chroma=h264:width=1280:height=720:fps=30 --sout '#standard{access=http,mux=ts,dst=localhost:8080,name=stream,mime=video/ts}'

@@ -1,3 +1,20 @@
+/*
+    Copyright 2018 Benjamin Vedder	benjamin@vedder.se
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    */
+
 #ifndef RCONTROLSTATIONCOMM_H
 #define RCONTROLSTATIONCOMM_H
 
@@ -17,6 +34,7 @@ public:
     void setDebugLevel(int level);
     bool hasError();
     char *lastError();
+    void clearBuffers();
     bool getState(int car, CAR_STATE *state, int timeoutMs = 1000);
     bool getEnuRef(int car, bool fromMap, double *llh, int timeoutMs = 1000);
     bool setEnuRef(int car, double *llh, int timeoutMs = 1000);
@@ -28,6 +46,7 @@ public:
     bool rcControl(int car, int mode, double value, double steering);
     bool getRoutePoints(int car, ROUTE_POINT *route, int *len,
                         int maxLen = 500, int mapRoute = -1, int timeoutMs = 1000);
+    bool sendTerminalCmd(int car, char *cmd, char *reply, int timeoutMs = 1000);
 
 private:
     struct ERROR_MSG {

@@ -1,5 +1,5 @@
 /*
-    Copyright 2017 Benjamin Vedder	benjamin@vedder.se
+    Copyright 2017 - 2018 Benjamin Vedder	benjamin@vedder.se
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -267,6 +267,11 @@ void Ublox::disconnectSerial()
 bool Ublox::isSerialConnected()
 {
     return mSerialPort->isOpen();
+}
+
+void Ublox::writeRaw(QByteArray data)
+{
+    ubx_send(data);
 }
 
 void Ublox::ubxPoll(uint8_t msg_class, uint8_t id)
@@ -807,6 +812,9 @@ void Ublox::ubx_decode(uint8_t msg_class, uint8_t id, uint8_t *msg, int len)
             break;
         case UBX_NAV_SVIN:
             ubx_decode_svin(msg, len);
+            break;
+        case UBX_NAV_SOL:
+            ubx_decode_nav_sol(msg, len);
             break;
         default:
             break;

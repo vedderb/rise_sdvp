@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="/">
+        <file>res/main.qml</file>
+        <file>res/button.png</file>
+        <file>res/start.jpg</file>
+        <file>res/powerButton2.svg</file>
+        <file>res/CustomButton.qml</file>
+        <file>res/StatusDisp.qml</file>
+        <file>res/north-34068.svg</file>
+    </qresource>
+</RCC>

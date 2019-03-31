@@ -1,0 +1,25 @@
+== On the pi ==
+
+ssh-kegen
+cat ~/.ssh/id_rsa.pub
+
+** this is the key to put on the server
+
+== On the server ==
+
+(In case of autossh user)
+sudo su -s /bin/bash autossh
+
+cd
+nano .ssh/authorized_keys
+
+** add the key from above as a line, save and close
+
+== On the pi ==
+
+ssh without password should now work. Log in once manually to avoid prompt from e.g. scripts
+
+ssh user@server -p port
+
+where user can be e.g. autossh
+

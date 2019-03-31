@@ -19,7 +19,7 @@
 #include <cmath>
 
 LocPoint::LocPoint(double x, double y, double height, double roll, double pitch, double yaw, double speed,
-                   double radius, double sigma, qint32 time, int id, bool drawLine) :
+                   double radius, double sigma, QColor color, qint32 time, int id, bool drawLine) :
     mX(x), mY(y), mHeight(height), mRoll(roll), mPitch(pitch), mYaw(yaw), mSpeed(speed),
     mRadius(radius), mSigma(sigma), mColor(color), mTime(time), mId(id), mDrawLine(drawLine)
 {

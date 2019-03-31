@@ -25,12 +25,18 @@
 #include <QUdpSocket>
 #include <QFile>
 #include <QProcess>
+#include <QImage>
 #include "packetinterface.h"
 #include "tcpbroadcast.h"
 #include "serialport.h"
 #include "ublox.h"
 #include "tcpserversimple.h"
 #include "rtcmclient.h"
+#include "carsim/carsim.h"
+
+#if HAS_CAMERA
+#include "camera.h"
+#endif
 
 class CarClient : public QObject
 {
@@ -57,6 +63,7 @@ public:
     void connectSerialRtcm(QString port, int baudrate = 9600);
     void startRtcmServer(int port = 8200);
     void startUbxServer(int port = 8210);
+    void startLogServer(int port = 8410);
     void connectNmea(QString server, int port = 2948);
     void startUdpServer(int port = 8300);
     bool startTcpServer(int port = 8300);
@@ -64,11 +71,18 @@ public:
     void logStop();
     void rtcmRx(QByteArray data, int type);
     void restartRtklib();
-    PacketInterface* packetInterface();
+    Q_INVOKABLE PacketInterface* packetInterface();
     bool isRtklibRunning();
     quint8 carId();
+    void setCarId(quint8 id);
     void connectNtrip(QString server, QString stream, QString user = "", QString pass = "", int port = 80);
     void setSendRtcmBasePos(bool send, double lat = 0.0, double lon = 0.0, double height = 0.0);
+    Q_INVOKABLE void rebootSystem(bool powerOff = false);
+    Q_INVOKABLE QVariantList getNetworkAddresses();
+    Q_INVOKABLE int getBatteryCells();
+    void setBatteryCells(int cells);
+    void addSimulatedCar(int id);
+    CarSim *getSimulatedCar(int id);
 
 signals:
 
@@ -92,12 +106,20 @@ public slots:
     void ubxRx(const QByteArray &data);
     void rxRawx(ubx_rxm_rawx rawx);
     void tcpRx(QByteArray &data);
+    void tcpConnectionChanged(bool connected, QString address);
     void rtcmReceived(QByteArray data, int type, bool sync = false);
+    void logEthernetReceived(quint8 id, QByteArray data);
+
+private slots:
+    void processCarData(QByteArray data);
+    void cameraImageCaptured(QImage img);
+    void logBroadcasterDataReceived(QByteArray &data);
 
 private:
     PacketInterface *mPacketInterface;
     TcpBroadcast *mRtcmBroadcaster;
     TcpBroadcast *mUbxBroadcaster;
+    TcpBroadcast *mLogBroadcaster;
     SerialPort *mSerialPort;
     QSerialPort *mSerialPortRtcm;
     QTcpSocket *mTcpSocket;
@@ -114,13 +136,27 @@ private:
     QFile mLog;
     Ublox *mUblox;
     bool mRtklibRunning;
+    int mBatteryCells;
+    QList<CarSim*> mSimulatedCars;
+    QVector<UWB_ANCHOR> mUwbAnchorsNow;
+
+#if HAS_CAMERA
+    Camera *mCamera;
+    int mCameraJpgQuality;
+    int mCameraSkipFrames;
+    int mCameraSkipFrameCnt;
+    int mCameraNoAckCnt;
+#endif
 
     double mRtcmBaseLat;
     double mRtcmBaseLon;
     double mRtcmBaseHeight;
     bool mRtcmSendBase;
+    QString mLogBroadcasterDataBuffer;
+    bool mOverrideUwbPos;
+    double mOverrideUwbX;
+    double mOverrideUwbY;
 
-    void rebootSystem(bool powerOff = false);
     bool setUnixTime(qint64 t);
     void printTerminal(QString str);
     bool waitProcess(QProcess &process, int timeoutMs = 300000);

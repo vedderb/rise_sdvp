@@ -1,3 +1,0 @@
-#!/bin/bash
-./rtkrcv -o rover_skytraq.conf -s
-

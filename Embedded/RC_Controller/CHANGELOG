@@ -1,3 +1,26 @@
+=== FW 10.2 ===
+* Option to clamp IMU yaw when car is stationary.
+
+=== FW 10.1 ===
+* Multiple motor simulation support.
+* Differential steering fixes.
+* AP angle correction update.
+* Motor simulation bug fixes.
+
+=== FW 10.0 ===
+* Fault injection support.
+* First differential steering implementation.
+
+=== FW 9.3 ===
+* Added ID_CAR_CLIENT for packets not to be forwarded.
+
+=== FW 9.2 ===
+* Removed unused logging code.
+* Log more data.
+
+=== FW 9.1 ===
+* Ethernet logging support.
+
 === FW 9.0 ===
 * Initial UWB positioning support.
 

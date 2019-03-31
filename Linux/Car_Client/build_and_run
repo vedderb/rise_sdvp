@@ -1,0 +1,6 @@
+#!/bin/bash
+export DISPLAY=:0
+set -e
+/opt/Qt/5.9-pi/bin/qmake "DEFINES += HAS_GUI"
+make -j4
+./Car_Client -p /dev/car --usetcp --usegui --batterycells 10

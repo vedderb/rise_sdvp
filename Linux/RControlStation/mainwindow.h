@@ -32,6 +32,14 @@
 #include "rtcm3_simple.h"
 #include "intersectiontest.h"
 
+#ifdef HAS_LIME_SDR
+#include "gpssim.h"
+#endif
+
+#ifdef HAS_SIM_SCEN
+#include "pagesimscen.h"
+#endif
+
 #ifdef HAS_JOYSTICK
 #include "joystick.h"
 #endif
@@ -71,6 +79,7 @@ private slots:
     void tcpInputDisconnected();
     void tcpInputDataAvailable();
     void tcpInputError(QAbstractSocket::SocketError socketError);
+    void jsButtonChanged(int button, bool pressed);
 
     void on_carAddButton_clicked();
     void on_copterAddButton_clicked();
@@ -150,6 +159,14 @@ private slots:
     void on_anchorIdBox_valueChanged(int arg1);
     void on_anchorHeightBox_valueChanged(double arg1);
     void on_removeAnchorsButton_clicked();
+    void on_mapDrawRouteTextBox_toggled(bool checked);
+    void on_actionGPSSimulator_triggered();
+    void on_mapDrawUwbTraceBox_toggled(bool checked);
+    void on_actionToggleFullscreen_triggered();
+    void on_mapCameraWidthBox_valueChanged(double arg1);
+    void on_mapCameraOpacityBox_valueChanged(double arg1);
+    void on_actionToggleCameraFullscreen_triggered();
+    void on_tabWidget_currentChanged(int index);
 
 private:
     Ui::MainWindow *ui;
@@ -178,6 +195,14 @@ private:
 #ifdef HAS_JOYSTICK
     Joystick *mJoystick;
     JS_TYPE mJsType;
+#endif
+
+#ifdef HAS_LIME_SDR
+    GpsSim *mGpsSim;
+#endif
+
+#ifdef HAS_SIM_SCEN
+    PageSimScen *mSimScen;
 #endif
 
     void saveRoutes(bool withId);

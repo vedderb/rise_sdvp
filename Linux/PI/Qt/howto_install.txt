@@ -1,0 +1,6 @@
+sudo apt install qt-sdk
+sudo mkdir /opt/Qt
+sudo chown $USER /opt/Qt
+cp 5.9-pi.tar.gz /opt/Qt
+cd /opt/Qt
+tar -xvzf 5.9-pi.tar.gz

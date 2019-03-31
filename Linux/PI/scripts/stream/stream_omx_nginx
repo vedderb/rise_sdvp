@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Set up rtmp web server
+# https://github.com/arut/nginx-rtmp-module/wiki/Getting-started-with-nginx-rtmp
+# instead of their config, use the one here
+
+sudo /usr/local/nginx/sbin/nginx -s stop
+sudo /usr/local/nginx/sbin/nginx 
+
+# Get supported formats
+#ffmpeg -f v4l2 -list_formats all -i /dev/video0
+
+#ffmpeg -f v4l2 -framerate 30 -video_size 800x448 -input_format yuyv422 -i /dev/video0 -f alsa -i default:CARD=C920 -vcodec h264_omx -b:v 1000k -c:a libmp3lame -b:a 96k -ar 44100 -f flv rtmp://localhost:8083/myapp/mystream
+ffmpeg -f v4l2 -framerate 30 -video_size 800x448 -input_format yuyv422 -i /dev/video0 -vcodec h264_omx -b:v 1500k -g 60 -f flv rtmp://localhost:8083/myapp/mystream
+
+# To play
+#ffplay rtmp://localhost:8083/myapp/mystream -fflags nobuffer

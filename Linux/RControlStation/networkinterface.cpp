@@ -18,6 +18,7 @@
 #include "networkinterface.h"
 #include "ui_networkinterface.h"
 #include <QMessageBox>
+#include "utility.h"
 
 NetworkInterface::NetworkInterface(QWidget *parent) :
     QWidget(parent),
@@ -65,6 +66,8 @@ void NetworkInterface::setPacketInterface(PacketInterface *packetInterface)
             this, SLOT(stateReceived(quint8,CAR_STATE)));
     connect(mPacketInterface, SIGNAL(enuRefReceived(quint8,double,double,double)),
             this, SLOT(enuRefReceived(quint8,double,double,double)));
+    connect(mPacketInterface, SIGNAL(printReceived(quint8,QString)),
+            this, SLOT(printReceived(quint8,QString)));
 }
 
 void NetworkInterface::setCars(QList<CarInterface *> *cars)
@@ -139,6 +142,27 @@ void NetworkInterface::sendEnuRef(quint8 id, double lat, double lon, double heig
     stream.writeTextElement("lat", QString::number(lat, 'g', 10));
     stream.writeTextElement("lon", QString::number(lon, 'g', 10));
     stream.writeTextElement("height", QString::number(height));
+
+    stream.writeEndDocument();
+    sendData(data);
+}
+
+void NetworkInterface::sendPrint(quint8 id, QString str)
+{
+    if (ui->noForwardStateBox->isChecked()) {
+        return;
+    }
+
+    QByteArray data;
+    QXmlStreamWriter stream(&data);
+    stream.setAutoFormatting(true);
+
+    stream.writeStartDocument();
+    stream.writeStartElement("message");
+    stream.writeStartElement("terminalCmd");
+
+    stream.writeTextElement("id", QString::number(id));
+    stream.writeTextElement("str", str);
 
     stream.writeEndDocument();
     sendData(data);
@@ -262,6 +286,11 @@ void NetworkInterface::stateReceived(quint8 id, CAR_STATE state)
 void NetworkInterface::enuRefReceived(quint8 id, double lat, double lon, double height)
 {
     sendEnuRef(id, lat, lon, height);
+}
+
+void NetworkInterface::printReceived(quint8 id, QString str)
+{
+    sendPrint(id, str);
 }
 
 void NetworkInterface::on_tcpActivateBox_toggled(bool checked)
@@ -440,13 +469,13 @@ void NetworkInterface::processXml(const QByteArray &xml)
 
             if (!mapOnly && !ui->disableSendCarBox->isChecked() && mPacketInterface) {
                 if (name == "addRoutePoint") {
-                    if (!mPacketInterface->setRoutePoints(id, route)) {
+                    if (!utility::uploadRouteHelper(mPacketInterface, id, route)) {
                         ok = false;
                         sendError("No ACK received from car. Make sure that the car connection "
                                   "works.", name);
                     }
                 } else {
-                    if (!mPacketInterface->replaceRoute(id, route)) {
+                    if (!utility::replaceRouteHelper(mPacketInterface, id, route)) {
                         ok = false;
                         sendError("No ACK received from car. Make sure that the car connection "
                                   "works.", name);
@@ -801,6 +830,38 @@ void NetworkInterface::processXml(const QByteArray &xml)
                     sendError("Invaild mode", name);
                     break;
                 }
+            }
+        } else if (name == "terminalCmd") {
+            quint8 id = 0;
+            QString cmd;
+            bool ok = true;
+
+            while (stream.readNextStartElement()) {
+                QString name2 = stream.name().toString();
+
+                if (name2 == "id") {
+                    id = stream.readElementText().toInt();
+                } else if (name2 == "cmd") {
+                    cmd = stream.readElementText();
+                } else {
+                    QString str;
+                    str += "argument not found: " + name2;
+                    sendError(str, name);
+                    stream.skipCurrentElement();
+                    ok = false;
+                }
+            }
+
+            if (stream.hasError()) {
+                break;
+            }
+
+            if (!ok) {
+                continue;
+            }
+
+            if (!ui->disableSendCarBox->isChecked() && mPacketInterface) {
+                mPacketInterface->sendTerminalCmd(id, cmd);
             }
         } else if (name == "setStatusPoll") {
             int id = -1;

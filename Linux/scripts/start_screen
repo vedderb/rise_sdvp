@@ -1,3 +1,0 @@
-#!/bin/bash
-screen -d -m -S car bash -c 'cd /home/elpgem/rise_sdvp/Linux/Car_Client && ./Car_Client -p /dev/car --useudp --logusb --usetcp ; bash'
-

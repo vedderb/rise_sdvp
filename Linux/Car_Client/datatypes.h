@@ -21,13 +21,28 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#ifdef __cplusplus
+extern "C++" {
+#include <QObject>
+}
+#endif
+
 // Sizes
 #define LOG_NAME_MAX_LEN			20
 
 // Packet IDs
 #define ID_ALL						255
+#define ID_CAR_CLIENT				254 // Packet for car client only
 #define ID_MOTE						254
 #define ID_RTCM						211 // Same as RTCM3PREAMB
+
+// External log mode
+typedef enum {
+    LOG_EXT_OFF = 0,
+    LOG_EXT_UART,
+    LOG_EXT_UART_POLLED,
+    LOG_EXT_ETHERNET
+} LOG_EXT_MODE;
 
 // Orientation data
 typedef struct {
@@ -52,7 +67,36 @@ typedef enum {
     FAULT_CODE_OVER_TEMP_MOTOR
 } mc_fault_code;
 
-typedef struct {
+#ifdef __cplusplus
+extern "C++" {
+struct CAR_STATE {
+    Q_GADGET
+
+    Q_PROPERTY(uint8_t fw_major MEMBER fw_major)
+    Q_PROPERTY(uint8_t fw_minor MEMBER fw_minor)
+    Q_PROPERTY(double roll MEMBER roll)
+    Q_PROPERTY(double pitch MEMBER pitch)
+    Q_PROPERTY(double yaw MEMBER yaw)
+    Q_PROPERTY(QList<double> accel READ accelList)
+    Q_PROPERTY(QList<double> gyro READ gyroList)
+    Q_PROPERTY(QList<double> mag READ magList)
+    Q_PROPERTY(double px MEMBER px)
+    Q_PROPERTY(double py MEMBER py)
+    Q_PROPERTY(double speed MEMBER speed)
+    Q_PROPERTY(double vin MEMBER vin)
+    Q_PROPERTY(double temp_fet MEMBER temp_fet)
+    Q_PROPERTY(mc_fault_code mc_fault MEMBER mc_fault)
+    Q_PROPERTY(double px_gps MEMBER px_gps)
+    Q_PROPERTY(double py_gps MEMBER py_gps)
+    Q_PROPERTY(double ap_goal_px MEMBER ap_goal_px)
+    Q_PROPERTY(double ap_goal_py MEMBER ap_goal_py)
+    Q_PROPERTY(double ap_rad MEMBER ap_rad)
+    Q_PROPERTY(int32_t ms_today MEMBER ms_today)
+    Q_PROPERTY(int16_t ap_route_left MEMBER ap_route_left)
+    Q_PROPERTY(double px_uwb MEMBER px_uwb)
+    Q_PROPERTY(double py_uwb MEMBER py_uwb)
+
+public:
     uint8_t fw_major;
     uint8_t fw_minor;
     double roll;
@@ -76,7 +120,34 @@ typedef struct {
     int16_t ap_route_left;
     double px_uwb;
     double py_uwb;
-} CAR_STATE;
+
+    QList<double> accelList() {
+        QList<double> a;
+        a.append(accel[0]);
+        a.append(accel[1]);
+        a.append(accel[2]);
+        return a;
+    }
+
+    QList<double> gyroList() {
+        QList<double> a;
+        a.append(gyro[0]);
+        a.append(gyro[1]);
+        a.append(gyro[2]);
+        return a;
+    }
+
+    QList<double> magList() {
+        QList<double> a;
+        a.append(mag[0]);
+        a.append(mag[1]);
+        a.append(mag[2]);
+        return a;
+    }
+};
+Q_DECLARE_METATYPE(CAR_STATE)
+}
+#endif
 
 typedef struct {
     uint8_t fw_major;
@@ -111,6 +182,7 @@ typedef struct {
     float yaw_imu_gain; // Gain for yaw angle from IMU (vs odometry)
     bool disable_motor; // Disable motor drive commands to make sure that the motor does not move.
     bool simulate_motor; // Simulate motor movement without motor controller feedback
+    bool clamp_imu_yaw_stationary; // Clamp IMU yaw when car is stationary
 
     float gear_ratio;
     float wheel_diam;
@@ -231,7 +303,7 @@ typedef struct {
     int log_rate_hz;
     bool log_en;
     char log_name[LOG_NAME_MAX_LEN + 1];
-    int log_en_uart;
+    LOG_EXT_MODE log_mode_ext;
     int log_uart_baud;
 
     MAIN_CONFIG_CAR car;
@@ -281,6 +353,10 @@ typedef enum {
     CMD_GET_MAIN_CONFIG_DEFAULT,
     CMD_ADD_UWB_ANCHOR,
     CMD_CLEAR_UWB_ANCHORS,
+    CMD_LOG_ETHERNET,
+    CMD_CAMERA_IMAGE,
+    CMD_CAMERA_STREAM_START,
+    CMD_CAMERA_FRAME_ACK,
 
     // Car commands
     CMD_GET_STATE = 120,
@@ -339,7 +415,8 @@ typedef struct {
 typedef enum {
     JS_TYPE_HK = 0,
     JS_TYPE_PS4,
-    JS_TYPE_PS3
+    JS_TYPE_PS3,
+    JS_TYPE_MICRONAV_ONE
 } JS_TYPE;
 
 // ============== RTCM Datatypes ================== //
@@ -735,71 +812,6 @@ typedef struct {
      */
     uint8_t syncMode;
 } ubx_cfg_tp5;
-
-// Chronos messages
-
-typedef enum {
-    CHRONOS_MSG_DOPM = 1,
-    CHRONOS_MSG_OSEM,
-    CHRONOS_MSG_OSTM,
-    CHRONOS_MSG_STRT,
-    CHRONOS_MSG_HEAB,
-    CHRONOS_MSG_MONR,
-    CHRONOS_MSG_SYPM = 9,
-    CHRONOS_MSG_MTSP
-} CHRONOS_MSG;
-
-typedef struct {
-    uint32_t tRel;
-    double x;
-    double y;
-    double z;
-    double heading;
-    double speed;
-    int16_t accel;
-    int16_t curvature;
-    uint8_t mode;
-} chronos_dopm_pt;
-
-typedef struct {
-    double lat;
-    double lon;
-    double alt;
-    double heading;
-} chronos_osem;
-
-typedef struct {
-    int armed;
-} chronos_ostm;
-
-typedef struct {
-    uint8_t type;
-    uint64_t ts;
-} chronos_strt;
-
-typedef struct {
-    uint8_t status;
-} chronos_heab;
-
-typedef struct {
-    uint64_t ts;
-    double lat;
-    double lon;
-    double alt;
-    double speed;
-    double heading;
-    uint8_t direction; // 0: FWD 1: REV 2: Unavailable
-    uint8_t status; // 0: Init 1: Armed 2: Running 3: Stopped 4: General error
-} chronos_monr;
-
-typedef struct {
-    uint32_t sync_point;
-    uint32_t stop_time;
-} chronos_sypm;
-
-typedef struct {
-    uint64_t time_est;
-} chronos_mtsp;
 
 // RtRange
 

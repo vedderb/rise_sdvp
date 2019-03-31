@@ -160,7 +160,8 @@ CSRC = $(STARTUPSRC) \
        radar_cont.c \
        motor_sim.c \
        m8t_base.c \
-       pos_uwb.c
+       pos_uwb.c \
+       fi.c
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
@@ -275,8 +276,6 @@ build/$(PROJECT).bin: build/$(PROJECT).elf
 
 # Program
 upload: build/$(PROJECT).bin
-	#qstlink2 --cli --erase --write build/$(PROJECT).bin
-	#openocd -f interface/stlink-v2.cfg -c "set WORKAREASIZE 0x2000" -f target/stm32f4x_stlink.cfg -c "program build/$(PROJECT).elf verify reset"
 	openocd -f board/stm32f4discovery.cfg -c "reset_config trst_only combined" -c "program build/$(PROJECT).elf verify reset exit" # For openocd 0.9
 
 #program with olimex arm-usb-tiny-h and jtag-swd adapter board. needs openocd>=0.9
@@ -287,7 +286,8 @@ debug-start:
 	openocd -f stm32-bv_openocd.cfg
 	
 upload_remote: build/$(PROJECT).bin
-	./upload_remote build/$(PROJECT).bin elpgem 127.0.0.1 2230 pi_gpio
+#	./upload_remote build/$(PROJECT).bin pi 10.42.0.96 22 pi_gpio
+	./upload_remote build/$(PROJECT).bin pi 127.0.0.1 2230 pi_gpio
 
 RULESPATH = $(CHIBIOS)/os/common/ports/ARMCMx/compilers/GCC
 include $(RULESPATH)/rules.mk
