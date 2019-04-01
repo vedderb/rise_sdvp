@@ -1,0 +1,8 @@
+# Built executable file
+RControlStation
+
+# Build directory
+build/*
+
+# Qmake stash file
+.qmake.stash
