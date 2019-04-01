@@ -2,7 +2,7 @@
 #DEFINES += HAS_GUI
 
 # Build camera support
-DEFINES += HAS_CAMERA
+#DEFINES += HAS_CAMERA
 
 QT += core
 QT += widgets
