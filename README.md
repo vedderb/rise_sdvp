@@ -20,6 +20,8 @@ and then run the built file with
 ./RControlStation
 ```
 
+You must create a new car tab and then change its ID (on the right hand side) to something else than zero before connecting.
+
 ### RC car software
 On the RC car, build the Car_Client file:
 
