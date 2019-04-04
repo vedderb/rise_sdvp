@@ -22,6 +22,7 @@
 #include "eeprom.h"
 #include "utils.h"
 #include <string.h>
+#include <math.h>
 
 // Settings
 #define EEPROM_BASE_MAINCONF		1000
@@ -246,6 +247,13 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 	conf->gps_ant_x = 0.5;
 #endif
 
+	// Drangen robot
+#if HAS_HYDRAULIC_DRIVE
+	conf->car.steering_center = 0.5;
+	conf->car.steering_range = -0.9;
+	conf->car.axis_distance = 1.0;
+	conf->car.steering_max_angle_rad = atanf(conf->car.axis_distance / 1.5);
+#endif
 }
 
 /**

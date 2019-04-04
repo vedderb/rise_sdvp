@@ -66,6 +66,23 @@ void utils_norm_angle(float *angle) {
 }
 
 /**
+ * Make sure that 0 <= angle < 360
+ *
+ * @param angle
+ * The angle to normalize in degrees.
+ * WARNING: Don't use too large angles.
+ */
+void utils_norm_angle_360(float *angle) {
+	while (*angle < 0.0) {
+		*angle += 360.0;
+	}
+
+	while (*angle >  360.0) {
+		*angle -= 360.0;
+	}
+}
+
+/**
  * Make sure that -pi <= angle < pi,
  *
  * TODO: Maybe use fmodf instead?

@@ -52,6 +52,7 @@
 #include "m8t_base.h"
 #include "pos_uwb.h"
 #include "fi.h"
+#include "hydraulic.h"
 
 /*
  * Timers used:
@@ -102,6 +103,9 @@ int main(void) {
 #endif
 #if RADAR_CONT_EN
 	radar_cont_init();
+#endif
+#if HAS_HYDRAULIC_DRIVE
+	hydraulic_init();
 #endif
 #endif
 

@@ -1,5 +1,5 @@
 /*
-	Copyright 2012-2016 Benjamin Vedder	benjamin@vedder.se
+	Copyright 2012 - 2019 Benjamin Vedder	benjamin@vedder.se
 
 	This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -21,7 +21,9 @@
 #include "conf_general.h"
 #include "stm32f4xx_conf.h"
 #include "utils.h"
+#include "servo_vesc.h"
 
+#if SERVO_VESC_ID < 0
 // Settings
 #define TIM_CLOCK				1000000 // Hz
 #define RAMP_LOOP_HZ			100 // Hz
@@ -33,8 +35,12 @@ static THD_WORKING_AREA(ramp_thread_wa, 128);
 
 // Private functions
 static THD_FUNCTION(ramp_thread, arg);
+#endif
 
 void servo_simple_init(void) {
+#if SERVO_VESC_ID >= 0
+	servo_vesc_init();
+#else
 	TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
 	TIM_OCInitTypeDef  TIM_OCInitStructure;
 
@@ -69,31 +75,49 @@ void servo_simple_init(void) {
 
 	chThdCreateStatic(ramp_thread_wa, sizeof(ramp_thread_wa),
 			NORMALPRIO, ramp_thread, NULL);
+#endif
 }
 
 void servo_simple_set_pos(float pos) {
 	utils_truncate_number(&pos, 0.0, 1.0);
+#if SERVO_VESC_ID < 0
 	m_pos_now = pos;
 	m_pos_set = pos;
 
 	float us = (float)SERVO_OUT_PULSE_MIN_US + pos * (float)(SERVO_OUT_PULSE_MAX_US - SERVO_OUT_PULSE_MIN_US);
 	us *= (float)TIM_CLOCK / 1000000.0;
 	TIM3->CCR3 = (uint32_t)us;
+#else
+	servo_vesc_set_pos(pos);
+#endif
 }
 
 void servo_simple_set_pos_ramp(float pos) {
 	utils_truncate_number(&pos, 0.0, 1.0);
+#if SERVO_VESC_ID < 0
 	m_pos_set = pos;
+#else
+	servo_vesc_set_pos(pos);
+#endif
 }
 
 float servo_simple_get_pos_now(void) {
+#if SERVO_VESC_ID < 0
 	return m_pos_now;
+#else
+	return servo_vesc_get_pos();
+#endif
 }
 
 float servo_simple_get_pos_set(void) {
+#if SERVO_VESC_ID < 0
 	return m_pos_set;
+#else
+	return servo_vesc_get_pos_set();
+#endif
 }
 
+#if SERVO_VESC_ID < 0
 static THD_FUNCTION(ramp_thread, arg) {
 	(void)arg;
 
@@ -112,3 +136,4 @@ static THD_FUNCTION(ramp_thread, arg) {
 		chThdSleep(CH_CFG_ST_FREQUENCY / RAMP_LOOP_HZ);
 	}
 }
+#endif

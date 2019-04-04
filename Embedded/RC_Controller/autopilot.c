@@ -28,6 +28,7 @@
 #include "commands.h"
 #include "terminal.h"
 #include "comm_can.h"
+#include "hydraulic.h"
 
 // Defines
 #define AP_HZ						100 // Hz
@@ -386,11 +387,16 @@ void autopilot_set_motor_speed(float speed) {
 		bldc_interface_set_rpm((int)rpm_r);
 		comm_can_unlock_vesc();
 #else
+#if HAS_HYDRAULIC_DRIVE
+		hydraulic_set_speed(speed);
+#else
 		float rpm = speed / (main_config.car.gear_ratio
 					* (2.0 / main_config.car.motor_poles) * (1.0 / 60.0)
 					* main_config.car.wheel_diam * M_PI);
 
+		comm_can_set_vesc_id(VESC_ID);
 		bldc_interface_set_rpm((int)rpm);
+#endif
 #endif
 	}
 }

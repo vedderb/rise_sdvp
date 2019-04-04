@@ -31,8 +31,6 @@ void bldc_interface_set_rx_value_func(void(*func)(mc_values *values));
 void bldc_interface_set_rx_printf_func(void(*func)(char *str));
 void bldc_interface_set_rx_fw_func(void(*func)(int major, int minor));
 void bldc_interface_set_rx_rotor_pos_func(void(*func)(float pos));
-void bldc_interface_set_rx_mcconf_func(void(*func)(mc_configuration *conf));
-void bldc_interface_set_rx_appconf_func(void(*func)(app_configuration *conf));
 void bldc_interface_set_rx_detect_func(void(*func)(float cycle_int_limit, float coupling_k,
 		const signed char *hall_table, signed char hall_res));
 void bldc_interface_set_rx_dec_ppm_func(void(*func)(float val, float ms));
@@ -53,8 +51,6 @@ void bldc_interface_set_rpm(int rpm);
 void bldc_interface_set_pos(float pos);
 void bldc_interface_set_handbrake(float current);
 void bldc_interface_set_servo_pos(float pos);
-void bldc_interface_set_mcconf(const mc_configuration *mcconf);
-void bldc_interface_set_appconf(const app_configuration *appconf);
 
 // Getters
 void bldc_interface_get_fw_version(void);
