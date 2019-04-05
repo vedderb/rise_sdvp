@@ -23,7 +23,7 @@
 #include "pwm_esc.h"
 
 // Settings
-#define ESC_UPDATE_RATE			400	// Hz
+#define ESC_UPDATE_RATE			200	// Hz
 #define TIM_CLOCK				5e6 // Hz
 #define ALL_CHANNELS			0xFF
 

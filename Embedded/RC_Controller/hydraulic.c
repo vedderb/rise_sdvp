@@ -26,10 +26,13 @@
 // Settings
 #define SERVO_LEFT				1
 #define SERVO_RIGHT				2
+#define SPEED_M_S				0.6
+#define TIMEOUT_SECONDS			2.0
 
 // Private variables
 static float m_speed_now = 0.0;
 static float m_distance_now = 0.0;
+static float m_timeout_cnt = 0.0;
 
 // Threads
 static THD_WORKING_AREA(hydro_thread_wa, 1024);
@@ -81,6 +84,8 @@ float hydraulic_get_distance(bool reset) {
  * Speed in m/s
  */
 void hydraulic_set_speed(float speed) {
+	m_timeout_cnt = 0.0;
+
 	if (fabsf(speed) < 0.01) {
 		pwm_esc_set(SERVO_LEFT, 0.5);
 		pwm_esc_set(SERVO_RIGHT, 0.5);
@@ -89,15 +94,16 @@ void hydraulic_set_speed(float speed) {
 		// TODO: Update this
 		pwm_esc_set(SERVO_LEFT, speed > 0.0 ? 1.0 : 0.0);
 		pwm_esc_set(SERVO_RIGHT, speed > 0.0 ? 0.0 : 1.0);
-		m_speed_now = SIGN(speed) * 0.8;
+		m_speed_now = SIGN(speed) * SPEED_M_S;
 	}
 }
 
 void hydraulic_set_throttle_raw(float throttle) {
+	m_timeout_cnt = 0.0;
 	utils_truncate_number_abs(&throttle, 1.0);
 
 	if (fabsf(throttle) > 0.9) {
-		m_speed_now = SIGN(throttle) * 0.8;
+		m_speed_now = SIGN(throttle) * SPEED_M_S;
 	} else {
 		m_speed_now = 0.0;
 	}
@@ -118,5 +124,13 @@ static THD_FUNCTION(hydro_thread, arg) {
 		}
 
 		chThdSleepMilliseconds(10);
+
+		m_timeout_cnt += 0.01;
+
+		if (m_timeout_cnt >= TIMEOUT_SECONDS) {
+			pwm_esc_set(SERVO_LEFT, 0.5);
+			pwm_esc_set(SERVO_RIGHT, 0.5);
+			m_speed_now = 0.0;
+		}
 	}
 }
