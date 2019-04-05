@@ -74,13 +74,22 @@
  * of S1 and S2.
  */
 #ifndef SERVO_VESC_S1
-#define SERVO_VESC_S1				335.0
+#define SERVO_VESC_S1				331.0
 #endif
 #ifndef SERVO_VESC_S2
-#define SERVO_VESC_S2				27.0
+#define SERVO_VESC_S2				30.0
 #endif
 #ifndef SERVO_VESC_P_GAIN
-#define SERVO_VESC_P_GAIN			5.0
+#define SERVO_VESC_P_GAIN			2.0
+#endif
+#ifndef SERVO_VESC_I_GAIN
+#define SERVO_VESC_I_GAIN			1.0
+#endif
+#ifndef SERVO_VESC_D_GAIN
+#define SERVO_VESC_D_GAIN			0.1
+#endif
+#ifndef SERVO_VESC_D_FILTER
+#define SERVO_VESC_D_FILTER			0.05
 #endif
 #ifndef SERVO_VESC_INVERTED
 #define SERVO_VESC_INVERTED			0

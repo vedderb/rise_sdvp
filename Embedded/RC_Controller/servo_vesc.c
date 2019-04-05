@@ -90,8 +90,15 @@ static THD_FUNCTION(servo_thread, arg) {
 
 	chRegSetThreadName("Servo VESC");
 
+	// Control loop state
+	float i_term = 0.0;
+	float prev_error = 0.0;
+	float dt_int = 0.0;
+	float d_filter = 0.0;
+	int not_ok_cnt = 0;
+
 	for(;;) {
-		// Map s1 to 0 and s2 to 1
+		// Map s1 to 0.0 and s2 to 1.0
 		bool ok = false;
 		m_pos_now_raw = as5047_read(&ok);
 		float pos = m_pos_now_raw;
@@ -108,19 +115,53 @@ static THD_FUNCTION(servo_thread, arg) {
 
 		m_pos_now = utils_map(pos, 0.0, end, 0.0, 1.0);
 
-		// Run a simple P controller for now
+		// Run PID-controller on the output
+
 		float error = m_pos_set - m_pos_now;
-		float output = error * SERVO_VESC_P_GAIN;
-		utils_truncate_number_abs(&output, 1.0);
+
+		float dt = 0.01;
+		float p_term = error * SERVO_VESC_P_GAIN;
+		i_term += error * (SERVO_VESC_I_GAIN * dt);
+
+		// Average DT for the D term when the error does not change. This likely
+		// happens at low speed when the position resolution is low and several
+		// control iterations run without position updates.
+		// TODO: Are there problems with this approach?
+		float d_term = 0.0;
+		dt_int += dt;
+		if (error == prev_error) {
+			d_term = 0.0;
+		} else {
+			d_term = (error - prev_error) * (SERVO_VESC_D_GAIN / dt_int);
+			dt_int = 0.0;
+		}
+
+		// Filter D
+		UTILS_LP_FAST(d_filter, d_term, SERVO_VESC_D_FILTER);
+		d_term = d_filter;
+
+		// I-term wind-up protection
+		utils_truncate_number_abs(&p_term, 1.0);
+		utils_truncate_number_abs(&i_term, 1.0 - fabsf(p_term));
+
+		// Store previous error
+		prev_error = error;
+
+		// Calculate output
+		float output = p_term + i_term + d_term;
+		utils_truncate_number(&output, -1.0, 1.0);
 
 		if (ok) {
-			// TODO: Make better control loop
+			not_ok_cnt = 0;
+		} else {
+			not_ok_cnt++;
+		}
+
+		if (not_ok_cnt < 100) {
 			comm_can_set_vesc_id(SERVO_VESC_ID);
-			if (fabsf(output) > 0.2) {
-				bldc_interface_set_duty_cycle(SERVO_VESC_INVERTED ? output : -output);
-			} else {
-				bldc_interface_set_duty_cycle(0.0);
-			}
+			bldc_interface_set_duty_cycle(SERVO_VESC_INVERTED ? output : -output);
+		} else {
+			bldc_interface_set_current(0.0);
 		}
 
 		chThdSleepMilliseconds(10);

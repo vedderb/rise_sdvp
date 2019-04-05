@@ -938,7 +938,8 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 					comm_can_unlock_vesc();
 #else
 #if HAS_HYDRAULIC_DRIVE
-					hydraulic_set_speed(throttle * 10);
+//					hydraulic_set_speed(throttle * 10);
+					hydraulic_set_throttle_raw(throttle / 0.15);
 #else
 					comm_can_set_vesc_id(VESC_ID);
 					bldc_interface_set_duty_cycle(throttle);
