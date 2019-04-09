@@ -389,6 +389,7 @@ quint32 ChronosComm::gpsMsOfWeekToUtcToday(quint64 time)
 
 void ChronosComm::tcpRx(QByteArray data)
 {
+    uint8_t sender_id = 0;
     for (char c: data) {
         switch (mTcpState) {
         case 0: // first byte of sync word
@@ -408,7 +409,7 @@ void ChronosComm::tcpRx(QByteArray data)
             mTcpState++;
             break;
         case 2: // Transmitter ID
-            // Ignore for now
+            sender_id = (uint8_t)c;
             mTcpState++;
             break;
         case 3: // Sequence number
@@ -466,7 +467,7 @@ void ChronosComm::tcpRx(QByteArray data)
             mTcpState = 0;
 
             if (mTcpChecksum == 0) {
-                decodeMsg(mTcpType, mTcpLen, mTcpData);
+                decodeMsg(mTcpType, mTcpLen, mTcpData, sender_id);
             } else {
                 qWarning() << "Invalid checksum";
             }
@@ -494,7 +495,7 @@ void ChronosComm::readPendingDatagrams()
         VByteArrayLe vb(datagram);
 
         /*quint16 sync_word   = */ vb.vbPopFrontUint16();
-        /*quint8  sender_id   = */ vb.vbPopFrontUint8();
+        uint8_t sender_id = vb.vbPopFrontUint8();
         /*quint8  seq_num     = */ vb.vbPopFrontUint8();
         /*quint8  prot_ver    = */ vb.vbPopFrontUint8();  // includes ack bit
         quint16 message_id  = vb.vbPopFrontUint16();
@@ -512,7 +513,7 @@ void ChronosComm::readPendingDatagrams()
         vb.remove(vb.size() - 2, 2);
 
         if (checksum == 0) {
-            decodeMsg(message_id, message_len, vb);
+            decodeMsg(message_id, message_len, vb, sender_id);
         } else {
             qDebug() << "Checksum Error";
         }
@@ -569,7 +570,7 @@ void ChronosComm::appendChronosChecksum(VByteArrayLe &vb)
     vb.vbAppendUint16(0);
 }
 
-bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload)
+bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8_t sender_id)
 {
     (void)len;
 
@@ -791,6 +792,7 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload)
         monr.status = vb.vbPopFrontUint8();
         monr.rdyToArm = vb.vbPopFrontUint8();
         monr.error = vb.vbPopFrontUint8();
+        monr.sender_id = sender_id;
         emit monrRx(monr);
     } break;
 
