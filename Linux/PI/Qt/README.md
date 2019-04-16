@@ -1,4 +1,4 @@
-# Setting up your system to cross compile for Raspberry Pi
+## Setting up your system to cross compile for Raspberry Pi
 This guide is a modified version of Qt's [official guide](https://wiki.qt.io/RaspberryPi2EGLFS). It has been tested with a Raspberry Pi 3 model B running Ubuntu Mate version 18.04 and Qt versions 5.9.1 and 5.12.0.
 
 1. Prepare the Raspberry Pi (do this step on the Raspberry Pi)
