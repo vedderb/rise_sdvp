@@ -10,11 +10,13 @@ This guide is a modified version of Qt's [official guide](https://wiki.qt.io/Ras
       sudo apt-get build-dep libqt5gui5
       sudo apt-get install libudev-dev libinput-dev libts-dev libxcb-xinerama0-dev libxcb-xinerama0
       ```
+      
    b) Create a directory to hold the Qt installation:
       ```
       sudo mkdir /opt/Qt
       sudo chown $USER /opt/Qt
       ```
+      
    c) Fix the EGL/GLES graphics libraries. The device may have the Mesa version of libEGL and libGLESv2 in /usr/lib/arm-linux-gnueabihf, resulting in Qt apps picking these instead of the real thing from /opt/vc/lib:
       ```
       sudo mv /usr/lib/arm-linux-gnueabihf/libEGL.so.1.0.0 /usr/lib/arm-linux-gnueabihf/libEGL.so.1.0.0_backup
@@ -28,6 +30,7 @@ This guide is a modified version of Qt's [official guide](https://wiki.qt.io/Ras
       ```
 
 2. Some preliminaries to preprare your system for cross compiling:
+
    a) If you do not have an RSA key, generate one. Then, assuming your user on the Raspberry Pi is 'pi', and the IP address of the Raspberry Pi is 192.168.123.123, add yourself to the list of trusted users:
       ```
       cat ~/.ssh/id_rsa.pub | ssh -o StrictHostKeyChecking=no pi@192.168.123.123 "mkdir -p .ssh && chmod 700 .ssh && cat >> .ssh/authorized_keys"
@@ -66,6 +69,7 @@ This guide is a modified version of Qt's [official guide](https://wiki.qt.io/Ras
       ```
 
 3. Build and install Qt:
+
    a) Download your chosen Qt version (note also that 5.9.x does not support OpenSSL 1.1, and that 5.9.0 does not build properly with this configuration), and extract it:
       ```
       wget https://download.qt.io/official_releases/qt/5.9/5.9.1/single/qt-everywhere-opensource-src-5.9.1.tar.xz
@@ -114,6 +118,7 @@ This guide is a modified version of Qt's [official guide](https://wiki.qt.io/Ras
       ```
       
 4) Setup Qt creator to use your new toolchain:
+
    a) Create a new device:
       ```
       Go to Tools > Options...
@@ -123,12 +128,14 @@ This guide is a modified version of Qt's [official guide](https://wiki.qt.io/Ras
          Enter username, password/RSA key, IP address
       Click Test to ensure everything is configured properly
       ```
+      
    b) Add the compiler to the list of compilers if it is not autodetected:
       ```
       Go to Tools > Options...
       Under Kits > Compilers, add the arm-linux-gnueabihf-g++/gcc compiler
          or select one of the arm-32 bit compilers
       ```
+      
    c) Add the newly built Qt version:
       ```
       Go to Tools > Options...
@@ -136,6 +143,7 @@ This guide is a modified version of Qt's [official guide](https://wiki.qt.io/Ras
          Navigate to /opt/Qt5Pi/sysroot/opt/Qt/5.9-pi/bin and select qmake
          Name the Qt version (e.g. Qt5.9 for Raspberry Pi 3)
       ```
+      
    d) Create a new kit:
       ```
       Go to Tools > Options...
