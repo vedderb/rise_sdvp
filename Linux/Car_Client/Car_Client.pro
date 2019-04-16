@@ -1,7 +1,7 @@
 # Build GUI
 #DEFINES += HAS_GUI
 
-# Build camera support
+# Build camera support (needs qtmultimedia)
 #DEFINES += HAS_CAMERA
 
 QT += core
