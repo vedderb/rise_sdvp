@@ -28,8 +28,8 @@ This guide is a modified version of Qt's [official guide](https://wiki.qt.io/Ras
       sudo ln -s /opt/vc/lib/libEGL.so /opt/vc/lib/libEGL.so.1
       sudo ln -s /opt/vc/lib/libGLESv2.so /opt/vc/lib/libGLESv2.so.2
       ```
-      
-From here on, all steps are to be performed on your system, not the Raspberry Pi:
+      From here on, all steps are to be performed on your system, not the Raspberry Pi:
+
 2. Some preliminaries to preprare your system for cross compiling:
 
    a) If you do not have an RSA key, generate one. Then, assuming your user on the Raspberry Pi is 'pi', and the IP address of the Raspberry Pi is 192.168.123.123, add yourself to the list of trusted users:
