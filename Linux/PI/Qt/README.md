@@ -14,7 +14,7 @@ This guide is a modified version of Qt's [official guide](https://wiki.qt.io/Ras
       sudo mkdir /opt/Qt
       sudo chown $USER /opt/Qt
       ```
-   c) Fix the EGL/GLES libraries. The device may have the Mesa version of libEGL and libGLESv2 in /usr/lib/arm-linux-gnueabihf, resulting in Qt apps picking these instead of the real thing from /opt/vc/lib
+   c) Fix the EGL/GLES graphics libraries. The device may have the Mesa version of libEGL and libGLESv2 in /usr/lib/arm-linux-gnueabihf, resulting in Qt apps picking these instead of the real thing from /opt/vc/lib:
       ```
       sudo mv /usr/lib/arm-linux-gnueabihf/libEGL.so.1.0.0 /usr/lib/arm-linux-gnueabihf/libEGL.so.1.0.0_backup
       sudo mv /usr/lib/arm-linux-gnueabihf/libGLESv2.so.2.0.0 /usr/lib/arm-linux-gnueabihf/libGLESv2.so.2.0.0_backup
@@ -59,7 +59,7 @@ This guide is a modified version of Qt's [official guide](https://wiki.qt.io/Ras
 
    e) Convert absolute symlinks to relative ones:
       ```
-      wget https://raw.githubusercontent.com/Kukkimonsuta/rpi-buildqt/master/scripts/utils/sysroot-relativelinks.py
+      wget https://github.com/RI-SE/rise_sdvp/blob/master/Linux/PI/Qt/sysroot-relativelinks.py
       chmod +x sysroot-relativelinks.py
       python sysroot-relativelinks.py sysroot
       ```
