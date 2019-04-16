@@ -1,7 +1,7 @@
 ## Setting up your system to cross compile for Raspberry Pi
 This guide is a modified version of Qt's [official guide](https://wiki.qt.io/RaspberryPi2EGLFS). It has been tested with a Raspberry Pi 3 model B running Ubuntu Mate version 18.04 and Qt versions 5.9.1 and 5.12.0.
 
-1. Prepare the Raspberry Pi (do this step on the Raspberry Pi)
+1. Prepare the Raspberry Pi (do this step on the Raspberry Pi):
 
    a) Install dependencies for running Qt executables:
       ```
@@ -17,7 +17,7 @@ This guide is a modified version of Qt's [official guide](https://wiki.qt.io/Ras
       sudo chown $USER /opt/Qt
       ```
       
-   c) Fix the EGL/GLES graphics libraries. The device may have the Mesa version of libEGL and libGLESv2 in /usr/lib/arm-linux-gnueabihf, resulting in Qt apps picking these instead of the real thing from /opt/vc/lib:
+   c) Fix the linking to EGL/GLES graphics libraries. The device may have the Mesa version of libEGL and libGLESv2 in /usr/lib/arm-linux-gnueabihf, resulting in Qt apps picking these instead of the real thing from /opt/vc/lib:
       ```
       sudo mv /usr/lib/arm-linux-gnueabihf/libEGL.so.1.0.0 /usr/lib/arm-linux-gnueabihf/libEGL.so.1.0.0_backup
       sudo mv /usr/lib/arm-linux-gnueabihf/libGLESv2.so.2.0.0 /usr/lib/arm-linux-gnueabihf/libGLESv2.so.2.0.0_backup
@@ -28,7 +28,8 @@ This guide is a modified version of Qt's [official guide](https://wiki.qt.io/Ras
       sudo ln -s /opt/vc/lib/libEGL.so /opt/vc/lib/libEGL.so.1
       sudo ln -s /opt/vc/lib/libGLESv2.so /opt/vc/lib/libGLESv2.so.2
       ```
-
+      
+From here on, all steps are to be performed on your system, not the Raspberry Pi:
 2. Some preliminaries to preprare your system for cross compiling:
 
    a) If you do not have an RSA key, generate one. Then, assuming your user on the Raspberry Pi is 'pi', and the IP address of the Raspberry Pi is 192.168.123.123, add yourself to the list of trusted users:
