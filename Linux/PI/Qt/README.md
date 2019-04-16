@@ -1,3 +1,4 @@
+# Setting up your system to cross compile for Raspberry Pi
 This guide is a modified version of Qt's [official guide](https://wiki.qt.io/RaspberryPi2EGLFS). It has been tested with a Raspberry Pi 3 model B running Ubuntu Mate version 18.04 and Qt versions 5.9.1 and 5.12.0.
 
 1. Prepare the Raspberry Pi (do this step on the Raspberry Pi)
@@ -65,7 +66,7 @@ This guide is a modified version of Qt's [official guide](https://wiki.qt.io/Ras
       ```
 
 3. Build and install Qt:
-   a) Download your chosen Qt version (note that 5.9.x does not support OpenSSL 1.1, and that 5.9.0 does not build properly with this configuration), and extract it:
+   a) Download your chosen Qt version (note also that 5.9.x does not support OpenSSL 1.1, and that 5.9.0 does not build properly with this configuration), and extract it:
       ```
       wget https://download.qt.io/official_releases/qt/5.9/5.9.1/single/qt-everywhere-opensource-src-5.9.1.tar.xz
       tar xf qt-everywhere-opensource-src-5.9.1.tar.xz
@@ -77,8 +78,11 @@ This guide is a modified version of Qt's [official guide](https://wiki.qt.io/Ras
       sed -i -e 's/arm-linux-gnueabi-/arm-linux-gnueabihf-/g' qt-everywhere-opensource-src-5.9.1/qtbase/mkspecs/linux-arm-gnueabihf-g++/qmake.conf
       ```
 
-   c) Modify mkspecs for the target device (linux-rasp-pi3-g++) and for your platform (here: linux-g++):
-(TODO)
+   c) Modify mkspecs for the target device (linux-rasp-pi3-g++):
+      ```
+      mv qt-everywhere-opensource-src-5.9.1/qtbase/mkspecs/devices/linux-rasp-pi3-g++/qmake.conf qt-everywhere-opensource-src-5.9.1/qtbase/mkspecs/devices/linux-rasp-pi3-g++/backup.conf
+      wget -q https://github.com/RI-SE/rise_sdvp/blob/master/Linux/PI/Qt/mkspecs/devices/linux-rasp-pi3-g++/qmake.conf -O qt-everywhere-opensource-src-5.9.1/qtbase/mkspecs/devices/linux-rasp-pi3-g++/qmake.conf
+      ```
 
    d) Create a separate build directory which you can nuke if something goes wrong:
       ```
@@ -88,6 +92,8 @@ This guide is a modified version of Qt's [official guide](https://wiki.qt.io/Ras
 
    e) Run the qt configure script:
       ```
+      wget -q https://github.com/RI-SE/rise_sdvp/blob/master/Linux/PI/Qt/rpi_conf_qt.sh
+      chmod +x rpi_conf_qt.sh
       ./rpi_conf_qt.sh
       ```
 
@@ -108,3 +114,36 @@ This guide is a modified version of Qt's [official guide](https://wiki.qt.io/Ras
       ```
       
 4) Setup Qt creator to use your new toolchain:
+   a) Create a new device:
+      ```
+      Go to Tools > Options...
+      Under Devices, click Add...
+         Generic Linux Device
+         Name the device (e.g. RC-car)
+         Enter username, password/RSA key, IP address
+      Click Test to ensure everything is configured properly
+      ```
+   b) Add the compiler to the list of compilers if it is not autodetected:
+      ```
+      Go to Tools > Options...
+      Under Kits > Compilers, add the arm-linux-gnueabihf-g++/gcc compiler
+         or select one of the arm-32 bit compilers
+      ```
+   c) Add the newly built Qt version:
+      ```
+      Go to Tools > Options...
+      Under Kits > Qt Versions, click Add...
+         Navigate to /opt/Qt5Pi/sysroot/opt/Qt/5.9-pi/bin and select qmake
+         Name the Qt version (e.g. Qt5.9 for Raspberry Pi 3)
+      ```
+   d) Create a new kit:
+      ```
+      Go to Tools > Options...
+      Under Kits > Kits, click Add, then modify the settings:
+         Device type: Generic Linux Device
+         Device: RC-car
+         sysroot: /opt/Qt5Pi/sysroot
+         Compiler: Select the compilers you chose in step b)
+         Qt version: Qt5.9 for Raspberry Pi 3
+      ```
+
