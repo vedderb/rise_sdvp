@@ -23,7 +23,7 @@ and then run the built file with
 You must create a new car tab and then change its ID (on the right hand side) to something else than zero before connecting.
 
 ### RC car software
-On the RC car, build the Car_Client file:
+If you wish to perform compilation of the Car_Client binary on your own system, follow the README in Linux/PI/Qt. If not, build the Car_Client file on the RC car:
 
 cd ${SDVP_ROOT}
 cd Linux/Car_Client
