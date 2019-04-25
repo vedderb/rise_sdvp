@@ -1766,7 +1766,7 @@
               <number>8</number>
              </property>
              <property name="value">
-              <number>1280</number>
+              <number>800</number>
              </property>
             </widget>
            </item>
@@ -1788,7 +1788,7 @@
               <number>8</number>
              </property>
              <property name="value">
-              <number>720</number>
+              <number>448</number>
              </property>
             </widget>
            </item>

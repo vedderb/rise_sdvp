@@ -14,6 +14,7 @@ Chronos::Chronos(QObject *parent) : QObject(parent)
     mIsStarted = false;
 
     mHeabPollCnt = 0;
+    mChronos->setTransmitterId(9); // TODO: Set this properly
 
     connect(mStartTimer, SIGNAL(timeout()),
             this, SLOT(startTimerSlot()));

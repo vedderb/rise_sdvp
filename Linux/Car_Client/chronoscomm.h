@@ -90,6 +90,7 @@ typedef struct {
     uint8_t  rdyToArm;  // [ 0 : Not ready, 1 : Ready, 2 : Unavailable ]
     uint8_t  error;     // Each bit represents an error status:
                         // [AbortReq, BrokeGeoFence, PoorPosAccuracy, EngineFault, BatFault, OtherObjError, Vendor, Vendor]
+    uint8_t sender_id;
 } chronos_monr;
 
 typedef struct {
@@ -224,7 +225,7 @@ private:
                          quint8 protocol_ver, // 7 bits
                          quint16 message_id);
     void appendChronosChecksum(VByteArrayLe &vb);
-    bool decodeMsg(quint16 type, quint32 len, QByteArray payload);
+    bool decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8_t sender_id);
     void sendData(QByteArray data, bool isUdp);
 
 };

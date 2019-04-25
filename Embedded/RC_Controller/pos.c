@@ -35,6 +35,7 @@
 #include "terminal.h"
 #include "pos_uwb.h"
 #include "comm_can.h"
+#include "hydraulic.h"
 
 // Defines
 #define ITERATION_TIMER_FREQ			50000
@@ -90,6 +91,7 @@ static void ubx_rx_rawx(ubx_rxm_rawx *rawx);
 
 #if MAIN_MODE == MAIN_MODE_CAR
 static void mc_values_received(mc_values *val);
+static void car_update_pos(float distance, float turn_rad_rear, float angle_diff, float speed);
 #elif MAIN_MODE == MAIN_MODE_MULTIROTOR
 static void srf_distance_received(float distance);
 #endif
@@ -768,6 +770,33 @@ static void mpu9150_read(void) {
 	if (mc_read_cnt >= 10) {
 		mc_read_cnt = 0;
 		bldc_interface_get_values();
+
+#if HAS_HYDRAULIC_DRIVE
+		float turn_rad_rear = 0.0;
+		float angle_diff = 0.0;
+		float distance = hydraulic_get_distance(true);
+		float speed = hydraulic_get_speed();
+
+		float steering_angle = (servo_simple_get_pos_now()
+				- main_config.car.steering_center)
+							* ((2.0 * main_config.car.steering_max_angle_rad)
+									/ main_config.car.steering_range);
+
+		if (fabsf(steering_angle) >= 1e-6) {
+			turn_rad_rear = main_config.car.axis_distance / tanf(steering_angle);
+			float turn_rad_front = sqrtf(
+					main_config.car.axis_distance * main_config.car.axis_distance
+					+ turn_rad_rear * turn_rad_rear);
+
+			if (turn_rad_rear < 0) {
+				turn_rad_front = -turn_rad_front;
+			}
+
+			angle_diff = (distance * 2.0) / (turn_rad_rear + turn_rad_front);
+		}
+
+		car_update_pos(distance, turn_rad_rear, angle_diff, speed);
+#endif
 	}
 #endif
 #endif
@@ -1251,6 +1280,7 @@ static void mc_values_received(mc_values *val) {
 
 	m_mc_val = *val;
 
+#if !HAS_HYDRAULIC_DRIVE
 	static float last_tacho = 0;
 	static bool tacho_read = false;
 
@@ -1317,6 +1347,15 @@ static void mc_values_received(mc_values *val) {
 	}
 #endif
 
+	float speed = rpm * main_config.car.gear_ratio
+			* (2.0 / main_config.car.motor_poles) * (1.0 / 60.0)
+			* main_config.car.wheel_diam * M_PI;
+
+	car_update_pos(distance, turn_rad_rear, angle_diff, speed);
+#endif
+}
+
+static void car_update_pos(float distance, float turn_rad_rear, float angle_diff, float speed) {
 	chMtxLock(&m_mutex_pos);
 
 	if (fabsf(distance) > 1e-6) {
@@ -1338,9 +1377,7 @@ static void mc_values_received(mc_values *val) {
 		}
 	}
 
-	m_pos.speed = rpm * main_config.car.gear_ratio
-			* (2.0 / main_config.car.motor_poles) * (1.0 / 60.0)
-			* main_config.car.wheel_diam * M_PI;
+	m_pos.speed = speed;
 
 	// TODO: eventually use yaw from IMU and implement yaw correction
 	pos_uwb_update_dr(m_pos.yaw, distance, turn_rad_rear, m_pos.speed);
@@ -1350,6 +1387,7 @@ static void mc_values_received(mc_values *val) {
 
 	chMtxUnlock(&m_mutex_pos);
 }
+
 #endif
 
 #if MAIN_MODE == MAIN_MODE_MULTIROTOR

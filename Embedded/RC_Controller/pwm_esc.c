@@ -23,8 +23,8 @@
 #include "pwm_esc.h"
 
 // Settings
-#define ESC_UPDATE_RATE			400	// Hz
-#define TIM_CLOCK				10e6 // Hz
+#define ESC_UPDATE_RATE			200	// Hz
+#define TIM_CLOCK				5e6 // Hz
 #define ALL_CHANNELS			0xFF
 
 // Pins
@@ -99,6 +99,19 @@ void pwm_esc_set_all(float pulse_width) {
 	pwm_esc_set(ALL_CHANNELS, pulse_width);
 }
 
+/**
+ * Set output pulsewidth.
+ *
+ * @param channel
+ * Channel to use
+ * Range: [0 - 3]
+ * 0xFF: All Channels
+ *
+ * @param pulse_width
+ * Pulsewidth to use
+ * Range: [0.0 - 1.0]
+ *
+ */
 void pwm_esc_set(uint8_t channel, float pulse_width) {
 	uint32_t cnt_val;
 

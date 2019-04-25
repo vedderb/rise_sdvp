@@ -25,6 +25,7 @@
 void utils_step_towards(float *value, float goal, float step);
 float utils_calc_ratio(float low, float high, float val);
 void utils_norm_angle(float *angle);
+void utils_norm_angle_360(float *angle);
 void utils_norm_angle_rad(float *angle);
 int utils_truncate_number(float *number, float min, float max);
 int utils_truncate_number_abs(float *number, float max);
