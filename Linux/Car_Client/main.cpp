@@ -19,6 +19,8 @@
 #include <QApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QFont>
+#include <QFontDatabase>
 #else
 #include <QCoreApplication>
 #endif
@@ -489,6 +491,12 @@ int main(int argc, char *argv[])
 
 #ifdef HAS_GUI
     if (useGui) {
+        QString fontPath = ":/res/DejaVuSans.ttf";
+        QFontDatabase::addApplicationFont(fontPath);
+
+        QFont font("DejaVuSans", 12);
+        a.setFont(font);
+
         qmlRegisterType<PacketInterface>("Car.packetInterface", 1, 0, "PacketInterface");
         qmlEngine.rootContext()->setContextProperty("carClient", &car);
         qmlEngine.load(QUrl(QLatin1String("qrc:/res/main.qml")));

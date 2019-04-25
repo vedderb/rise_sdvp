@@ -1,8 +1,8 @@
 # Build GUI
-#DEFINES += HAS_GUI
+DEFINES += HAS_GUI
 
-# Build camera support
-DEFINES += HAS_CAMERA
+# Build camera support (needs qtmultimedia)
+#DEFINES += HAS_CAMERA
 
 QT += core
 QT += widgets
@@ -73,3 +73,7 @@ contains(DEFINES, HAS_CAMERA) {
 }
 
 include(carsim/carsim.pri)
+
+target.path = /home/elpgem
+
+INSTALLS += target
