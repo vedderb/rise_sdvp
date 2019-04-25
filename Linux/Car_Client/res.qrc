@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
+        <file>res/DejaVuSans.ttf</file>
         <file>res/main.qml</file>
         <file>res/button.png</file>
         <file>res/start.jpg</file>
@@ -7,5 +8,6 @@
         <file>res/CustomButton.qml</file>
         <file>res/StatusDisp.qml</file>
         <file>res/north-34068.svg</file>
+        <file>res/main_copy.qml</file>
     </qresource>
 </RCC>
