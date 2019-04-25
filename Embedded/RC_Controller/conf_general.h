@@ -57,6 +57,44 @@
 #define DIFF_STEERING_VESC_RIGHT	1
 #endif
 
+// Hydraulic drive
+#ifndef HAS_HYDRAULIC_DRIVE
+#define HAS_HYDRAULIC_DRIVE			0
+#endif
+
+// VESC for steering
+// ID of VESC for steering.
+// -1: No steering VESC
+#ifndef SERVO_VESC_ID
+#define SERVO_VESC_ID				-1
+#endif
+/*
+ * Angle should be increasing from S1 to S2 (possibly
+ * passing 0). The steering mapping is done on top
+ * of S1 and S2.
+ */
+#ifndef SERVO_VESC_S1
+#define SERVO_VESC_S1				331.0
+#endif
+#ifndef SERVO_VESC_S2
+#define SERVO_VESC_S2				30.0
+#endif
+#ifndef SERVO_VESC_P_GAIN
+#define SERVO_VESC_P_GAIN			2.0
+#endif
+#ifndef SERVO_VESC_I_GAIN
+#define SERVO_VESC_I_GAIN			1.0
+#endif
+#ifndef SERVO_VESC_D_GAIN
+#define SERVO_VESC_D_GAIN			0.1
+#endif
+#ifndef SERVO_VESC_D_FILTER
+#define SERVO_VESC_D_FILTER			0.05
+#endif
+#ifndef SERVO_VESC_INVERTED
+#define SERVO_VESC_INVERTED			0
+#endif
+
 // Ublox settings
 #ifndef UBLOX_EN
 #define UBLOX_EN					1
@@ -93,7 +131,9 @@
 // General settings
 #define ID_ALL						255
 #define ID_CAR_CLIENT				254 // Packet for car client only
+#ifndef VESC_ID
 #define VESC_ID						ID_ALL // id, or ID_ALL for any VESC (not used in diff steering mode)
+#endif
 #define ID_MOTE						254 // If the packet is for the mote and not to be forwarded in mote mode
 
 #ifdef CAR_TERO

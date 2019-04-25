@@ -40,6 +40,7 @@
 #include "pos_uwb.h"
 #include "fi.h"
 #include "comm_can.h"
+#include "hydraulic.h"
 
 #include <math.h>
 #include <string.h>
@@ -915,7 +916,12 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 					bldc_interface_set_current(throttle - throttle * steering);
 					comm_can_unlock_vesc();
 #else
+#if HAS_HYDRAULIC_DRIVE
+					hydraulic_set_speed(throttle / 10);
+#else
+					comm_can_set_vesc_id(VESC_ID);
 					bldc_interface_set_current(throttle);
+#endif
 #endif
 				}
 				break;
@@ -931,7 +937,13 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 					bldc_interface_set_duty_cycle(throttle - throttle * steering);
 					comm_can_unlock_vesc();
 #else
+#if HAS_HYDRAULIC_DRIVE
+//					hydraulic_set_speed(throttle * 10);
+					hydraulic_set_throttle_raw(throttle / 0.15);
+#else
+					comm_can_set_vesc_id(VESC_ID);
 					bldc_interface_set_duty_cycle(throttle);
+#endif
 #endif
 				}
 				break;
@@ -955,7 +967,12 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 					bldc_interface_set_current_brake(throttle);
 					comm_can_unlock_vesc();
 #else
+#if HAS_HYDRAULIC_DRIVE
+					hydraulic_set_speed(0.0);
+#else
+					comm_can_set_vesc_id(VESC_ID);
 					bldc_interface_set_current_brake(throttle);
+#endif
 #endif
 				}
 				break;
