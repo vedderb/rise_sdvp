@@ -68,6 +68,7 @@ This guide is a modified version of Qt's [official guide](https://wiki.qt.io/Ras
       chmod +x sysroot-relativelinks.py
       python sysroot-relativelinks.py sysroot
       ```
+      when this is done, double check so that the symlinks in `sysroot` for the GLESv2 and EGL libraries actually work (i.e. no red background/foreground when checking them with `ls -la`).
 
 3. Build and install Qt:
 
