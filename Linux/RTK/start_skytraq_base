@@ -1,4 +1,0 @@
-#!/bin/bash
-
-./str2str -in serial://ttyUSB0:115200#stq -out tcpsvr://:65300#rtcm3 -msg "1002, 1019"
-

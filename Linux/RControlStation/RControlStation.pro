@@ -28,10 +28,10 @@ unix:!macx {
 !android: DEFINES += HAS_OPENGL
 
 # Lime SDR support
-#DEFINES += HAS_LIME_SDR
+DEFINES += HAS_LIME_SDR
 
 # Simulation Scennarios
-#DEFINES += HAS_SIM_SCEN
+DEFINES += HAS_SIM_SCEN
 
 TARGET = RControlStation
 TEMPLATE = app

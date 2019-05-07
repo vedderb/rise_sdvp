@@ -1,4 +1,0 @@
-SP Base: 57.71495867, 12.89134921, 219.0
-ntrip: www.igs-ip.net
-port: 80
-

@@ -1,0 +1,188 @@
+EESchema Schematic File Version 2
+LIBS:RCCAR_IF_Board_GPS-rescue
+LIBS:power
+LIBS:device
+LIBS:transistors
+LIBS:conn
+LIBS:linear
+LIBS:regul
+LIBS:74xx
+LIBS:cmos4000
+LIBS:adc-dac
+LIBS:memory
+LIBS:xilinx
+LIBS:microcontrollers
+LIBS:dsp
+LIBS:microchip
+LIBS:analog_switches
+LIBS:motorola
+LIBS:texas
+LIBS:intel
+LIBS:audio
+LIBS:interface
+LIBS:digital-audio
+LIBS:philips
+LIBS:display
+LIBS:cypress
+LIBS:siliconi
+LIBS:opto
+LIBS:atmel
+LIBS:contrib
+LIBS:valves
+LIBS:crf_1
+LIBS:dips-s
+LIBS:RCCAR_IF_Board_GPS-cache
+EELAYER 26 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 10 10
+Title ""
+Date ""
+Rev ""
+Comp "RISE"
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L MPU9250 U14
+U 1 1 59E9DC35
+P 5650 3700
+F 0 "U14" H 5650 4687 60  0000 C CNN
+F 1 "MPU9250" H 5650 4581 60  0000 C CNN
+F 2 "Housings_DFN_QFN:QFN-24_3x3mm_Pitch0.4mm" H 5850 3350 60  0001 C CNN
+F 3 "" H 5850 3350 60  0000 C CNN
+	1    5650 3700
+	1    0    0    -1  
+$EndComp
+Text HLabel 5100 4300 0    60   Input ~ 0
+SCL
+Text HLabel 5100 4400 0    60   Input ~ 0
+SDA
+$Comp
+L GND #PWR022
+U 1 1 59E9DD30
+P 4750 4350
+F 0 "#PWR022" H 4750 4100 50  0001 C CNN
+F 1 "GND" H 4755 4177 50  0000 C CNN
+F 2 "" H 4750 4350 50  0001 C CNN
+F 3 "" H 4750 4350 50  0001 C CNN
+	1    4750 4350
+	1    0    0    -1  
+$EndComp
+$Comp
+L VCC #PWR023
+U 1 1 59E9DDA5
+P 4600 4000
+F 0 "#PWR023" H 4600 3850 50  0001 C CNN
+F 1 "VCC" H 4617 4173 50  0000 C CNN
+F 2 "" H 4600 4000 50  0001 C CNN
+F 3 "" H 4600 4000 50  0001 C CNN
+	1    4600 4000
+	1    0    0    -1  
+$EndComp
+NoConn ~ 5100 3800
+NoConn ~ 5100 3300
+NoConn ~ 5100 3100
+NoConn ~ 5100 3000
+$Comp
+L C C76
+U 1 1 59E9DE24
+P 6350 4000
+F 0 "C76" H 6350 4100 50  0000 L CNN
+F 1 "100n" H 6350 3900 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0603" H 6388 3850 50  0001 C CNN
+F 3 "" H 6350 4000 50  0001 C CNN
+	1    6350 4000
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	6200 3700 6350 3700
+Wire Wire Line
+	6350 3700 6350 3850
+Wire Wire Line
+	6350 4150 6350 4500
+Wire Wire Line
+	6200 4400 6750 4400
+Wire Wire Line
+	6200 4300 6350 4300
+Connection ~ 6350 4300
+$Comp
+L GND #PWR027
+U 1 1 59E9DE84
+P 6350 4500
+F 0 "#PWR027" H 6350 4250 50  0001 C CNN
+F 1 "GND" H 6355 4327 50  0000 C CNN
+F 2 "" H 6350 4500 50  0001 C CNN
+F 3 "" H 6350 4500 50  0001 C CNN
+	1    6350 4500
+	1    0    0    -1  
+$EndComp
+Connection ~ 6350 4400
+$Comp
+L C C78
+U 1 1 59E9DEA5
+P 6750 4000
+F 0 "C78" H 6750 4100 50  0000 L CNN
+F 1 "2.2u" H 6750 3900 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0603" H 6788 3850 50  0001 C CNN
+F 3 "" H 6750 4000 50  0001 C CNN
+	1    6750 4000
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	6750 4400 6750 4150
+$Comp
+L C C77
+U 1 1 59E9DF54
+P 6550 4000
+F 0 "C77" H 6550 4100 50  0000 L CNN
+F 1 "2.2u" H 6550 3900 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0603" H 6588 3850 50  0001 C CNN
+F 3 "" H 6550 4000 50  0001 C CNN
+	1    6550 4000
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	6550 3000 6550 3850
+Wire Wire Line
+	6550 4150 6550 4400
+Connection ~ 6550 4400
+$Comp
+L VCC #PWR033
+U 1 1 59E9E01F
+P 6750 2900
+F 0 "#PWR033" H 6750 2750 50  0001 C CNN
+F 1 "VCC" H 6767 3073 50  0000 C CNN
+F 2 "" H 6750 2900 50  0001 C CNN
+F 3 "" H 6750 2900 50  0001 C CNN
+	1    6750 2900
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5100 4200 4600 4200
+Wire Wire Line
+	4600 4200 4600 4000
+Wire Wire Line
+	5100 4100 4750 4100
+Wire Wire Line
+	4750 3700 4750 4350
+Wire Wire Line
+	4750 3700 5100 3700
+Connection ~ 4750 4100
+Wire Wire Line
+	6200 3000 6750 3000
+Wire Wire Line
+	6750 3000 6750 2900
+Wire Wire Line
+	6200 3200 6750 3200
+Wire Wire Line
+	6200 3100 6550 3100
+Connection ~ 6550 3200
+Connection ~ 6550 3000
+Connection ~ 6550 3100
+Wire Wire Line
+	6750 3200 6750 3850
+$EndSCHEMATC
