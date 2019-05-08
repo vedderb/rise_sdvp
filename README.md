@@ -59,7 +59,7 @@ The repository is organized as follows:
 
 Figure 2 shows a hardware diagram of a working configuration of the RISE-SDVP platform. The cyan-colored boxes to the left are the components on a model car, and the green boxes to the right are a laptop computer connected over 4G to the model car. The laptop computer also runs a RTK-GNSS base station, so that the model car can position itself with around 3 cm accuracy relative to the GNSS antenna connected to the receiver on the laptop.
 
-![Hardware Diagram](Documentation/Pictures/block_diagram.pdf)
+![Hardware Diagram](Documentation/Pictures/block_diagram.png)
 
 Here is a video that shows how a model car like the one in the block diagram above was built:
 
@@ -187,6 +187,6 @@ The desired latitude, longitude and height can then simply be set in the dialog.
 
 ## User Guides, Tutorials and other Resources
 - A work-in-progress user guide with several details on how to use RControlStation can be found [here](https://github.com/svenssonjoel/rise_sdvp_documentation/raw/master/RControlStationManual/RControlStation_doc_version_0_1.pdf).
-- A tutorial on how to implement new functionality both in the embedded control software and in RControlStation can be found [here](https://github.com/svenssonjoel/rise_sdvp_documentation/tree/master/EmbeddedProgrammingExample)
+- A tutorial on how to implement new functionality both in the embedded control software and in RControlStation can be found [here](https://github.com/svenssonjoel/rise_sdvp_documentation/raw/master/EmbeddedProgrammingExample/main.pdf)
 - Our [published article](https://www.hindawi.com/journals/jr/2018/4907536/)
 
