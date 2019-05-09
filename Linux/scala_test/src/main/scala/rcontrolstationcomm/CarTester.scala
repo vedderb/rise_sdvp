@@ -31,6 +31,9 @@ import org.scalacheck.Prop
 import org.scalacheck.Test
 import util.{ Try, Success, Failure }
 
+import java.time.format._
+import java.time.LocalDateTime
+
 // Var so that they can be changed from the interactive console.
 object TestSettings {
   var carId = 0
@@ -59,12 +62,12 @@ class Car {
   var recoveryOk = true
   var routeInfo = new RouteInfo
   var lastSegments = List.empty[RpPoint]
-  
+
   def clearRoute(): Boolean = {
     println("[CarCmd] Clearing route")
     rcsc_clearRoute(TestSettings.carId, TestSettings.carRoute, 1000)
   }
-  
+
   def activateAutopilot(active: Boolean): Boolean = {
     if (active) {
       println("[CarCmd] Activating autopilot")
@@ -73,7 +76,7 @@ class Car {
     }
     rcsc_setAutopilotActive(TestSettings.carId, active, 2000)
   }
-  
+
   def stopCar(): Unit = {
     if (routeInfo.hasRoute() && !lastSegments.isEmpty) {
       println("[CarCmd] Running slowdown route")
@@ -81,11 +84,11 @@ class Car {
       addRoute(TestSettings.carId, r.subList(lastSegments.size, r.size), false, false, TestSettings.carRoute, 2000)
       waitUntilRouteAlmostEnded(TestSettings.carId, 3)
     }
-    
+
     println("[CarCmd] Stopping car")
     brakeAndWaitUntilStoppedPolling(TestSettings.carId, 50.0)
   }
-  
+
   def waitCarPolling(ms: Int): Unit = {
     println("[CarCmd] Waiting for " + ms + " ms while polling the car position")
     waitPolling(TestSettings.carId, ms)
@@ -111,14 +114,14 @@ class Car {
       false
     }
   }
-  
+
   def runRecoveryRoute(): Boolean = {
     println("[CarCmd] Following recovery route")
     followRecoveryRoute(TestSettings.carId, TestSettings.recoveryRoute)
     recoveryOk = true
     true
   }
-  
+
   def runRecoveryRouteV2(ri: RouteInfo, carRoute: Int): Boolean = {
     println("[CarCmd] Following recovery route (V2)")
     recoveryOk = followRecoveryRouteV2(TestSettings.carId, TestSettings.recoveryRoute, ri,
@@ -143,7 +146,7 @@ class Car {
     println("[CarCmd] Clearing faults")
     fiClearFaults(TestSettings.carId, 1000)
   }
-  
+
   def resetUwbPosNow(): Boolean = {
     println("[CarCmd] Resetting UWB position")
     resetUwbPos(TestSettings.carId, 1000)
@@ -214,7 +217,7 @@ object CarSpec extends Commands2 {
     println("Segment size: " + r.size)
     RunSegment(r.subList(state.route.size, r.size).asScala.toList)
   }
-  
+
   def genFaultTest(state: State): Gen[AddFault] = for {
     probe <- Gen.oneOf("px", "px")
     faultType <- Gen.oneOf("OFFSET", "AMPLIFICATION")
@@ -230,13 +233,13 @@ object CarSpec extends Commands2 {
     start <- Gen.choose(0, 100)
     duration <- Gen.choose(1, 8)
   } yield AddFault(probe, faultType, param, start, duration)
-  
+
   def genFaultWheelSlip(state: State): Gen[AddFault] = for {
     param <- Gen.choose(10, 50)
     start <- Gen.choose(0, 100)
     duration <- Gen.choose(1, 10)
   } yield AddFault("uwb_travel_dist", "AMPLIFICATION", param.toDouble / 10.0, start, duration)
-  
+
   def genFaultYaw(state: State): Gen[AddFault] = for {
     param <- Gen.choose(-20, 20)
     start <- Gen.choose(0, 100)
@@ -292,7 +295,7 @@ object CarTester {
     //    randomGenTest()
 
     testScala(3)
-    
+
     //    runLastTest()
     //    runLastTestHdd()
 
@@ -303,7 +306,7 @@ object CarTester {
     rcsc_connectTcp(pointerToCString(host), port)
 
   def disconnect(): Unit = rcsc_disconnectTcp()
-  
+
   def clearBuffers(): Unit = rcsc_clearBuffers()
 
   def testScala(tests: Int) {
@@ -329,11 +332,11 @@ object CarTester {
       println("Tests failed. Failing command sequence:")
       for (cmd <- TestResult.commands) println(cmd.toString())
     }
-    
+
     println("test_diff = [")
     for (diff <- TestResult.uwbDiff) println(diff)
     println("]';")
-    
+
     println("test_speed = [")
     for (speed <- TestResult.maxSpeed) println(speed)
     println("]';")
@@ -342,11 +345,11 @@ object CarTester {
     val oos = new ObjectOutputStream(new FileOutputStream("last_test.bin"))
     oos.writeObject(TestResult.commands.toList)
     oos.close
-    
+
     val oos2 = new ObjectOutputStream(new FileOutputStream("last_test_uwb_diff.bin"))
     oos2.writeObject(TestResult.uwbDiff.toList)
     oos2.close
-    
+
     val oos3 = new ObjectOutputStream(new FileOutputStream("last_test_speed.bin"))
     oos3.writeObject(TestResult.maxSpeed.toList)
     oos3.close
@@ -360,30 +363,30 @@ object CarTester {
     ois.close
     rerunTest(cmds)
   }
-  
+
   def printLastTest() {
     for (cmd <- TestResult.commands) println(cmd)
   }
-  
+
   def printLastTestUwbDiff() {
     println("test_diff = [")
     for (diff <- TestResult.uwbDiff) println(diff)
     println("]';")
   }
-  
+
   def printLastTestMaxSpeed() {
     println("test_speed = [")
     for (speed <- TestResult.maxSpeed) println(speed * 3.6)
     println("]';")
   }
-  
+
   def printLastTestHdd() {
     val ois = new ObjectInputStream(new FileInputStream("last_test.bin"))
     val cmds = ois.readObject.asInstanceOf[List[CarSpec.Command]].toBuffer
     ois.close
     for (cmd <- cmds) println(cmd)
   }
-  
+
   def printLastTestUwbDiffHdd() {
     val ois = new ObjectInputStream(new FileInputStream("last_test_uwb_diff.bin"))
     val diffs = ois.readObject.asInstanceOf[List[Double]].toBuffer
@@ -392,7 +395,7 @@ object CarTester {
     for (diff <- diffs) println(diff)
     println("]';")
   }
-  
+
   def printLastTestMaxSpeedHdd() {
     val ois = new ObjectInputStream(new FileInputStream("last_test_speed.bin"))
     val speeds = ois.readObject.asInstanceOf[List[Double]].toBuffer
@@ -404,7 +407,7 @@ object CarTester {
 
   def rerunTest(cmds: Buffer[CarSpec.Command]) {
     println("Re-running test...")
-    
+
     println("Commands to re-run")
     for (cmd <- cmds) println(cmd.toString())
     println("")
@@ -421,7 +424,7 @@ object CarTester {
         println("Postcondition failed")
       }
     }
-    
+
     CarSpec.destroySut(sut);
 
     if (ok) {
@@ -461,7 +464,7 @@ object CarTester {
       brakeAndWaitUntilStoppedPolling(TestSettings.carId, 50.0)
     }
   }
-  
+
   def recoveryTest() {
     val edgeRoute = getRoute(0, TestSettings.outerRoute, 5000);
     val r = new RouteInfo(edgeRoute);
@@ -472,7 +475,7 @@ object CarTester {
         TestSettings.recoveryGenAttampts, TestSettings.shorenRecoveryRoute)
     brakeAndWaitUntilStoppedPolling(TestSettings.carId, 50.0)
   }
-  
+
   def recoveryTestGenOnly() {
     val edgeRoute = getRoute(0, TestSettings.outerRoute, 5000);
     val r = new RouteInfo(edgeRoute);
@@ -529,7 +532,7 @@ object CarTester {
     println("Point usage average: " +
       (usedPoints.toDouble / genPoints.toDouble) * 100.0 + " %")
   }
-  
+
   def longGenTest(points: Int) {
     val edgeRoute = getRoute(0, TestSettings.outerRoute, 5000);
     val startRoute = getRoute(0, TestSettings.startRoute, 5000);
@@ -555,7 +558,7 @@ object CarTester {
       usedPoints += 5
 
       addRoute(0, rGen, true, true, TestSettings.carRoute, 2000)
-      
+
       Thread.sleep(5)
       indLast = rGen.size()
     }
@@ -574,6 +577,19 @@ object CarTester {
       rcsc_setAutopilotActive(TestSettings.carId, true, 2000)
       waitUntilRouteAlmostEnded(TestSettings.carId, 2)
       brakeAndWaitUntilStoppedPolling(TestSettings.carId, 50.0)
+    }
+  }
+
+  def driveRouteDataCollector(route: Int) {
+    val r = getRoute(TestSettings.carId, route, 1000)
+    if (!r.isEmpty()) {
+      val fileName = "filename_" +
+          DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss").format(LocalDateTime.now())
+      addRoute(TestSettings.carId, r, true, false, -2, 5000)
+      rcsc_setAutopilotActive(TestSettings.carId, true, 2000)
+      waitUntilRouteAlmostEndedAndLog(TestSettings.carId, 2, fileName + ".csv")		
+      brakeAndWaitUntilStoppedPolling(TestSettings.carId, 50.0)
+      saveRouteToXml(0, route, fileName + "_route")
     }
   }
 
