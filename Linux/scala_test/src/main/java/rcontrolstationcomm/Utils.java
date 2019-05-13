@@ -353,7 +353,10 @@ public final class Utils {
 		pLast.y = st.py();
 		yaw = st.yaw(); 
 		
-		writer.println("Accumulated distance; Abs error distance; Yaw diff; Speed; Abs error x; Abs error y");
+		writer.println("");
+		writer.println("% Accumulated distance, Abs error distance," +
+						"Yaw diff, Speed, Abs error x, Abs error y, ms_today");
+		writer.println("log_data = [");
 		
 		while (st.ap_route_left() > points_left) {
 			try {
@@ -377,12 +380,13 @@ public final class Utils {
 				double angChange = Math.abs(st.yaw() - yaw);
 				yaw = st.yaw();
 
-				writer.println(String.valueOf(accDist) + "; " +
-						String.valueOf(uwbDiff) + "; " +
-						String.valueOf(angChange) + "; " +
-						String.valueOf(speed) + "; " +
-						String.valueOf(xDiff) + "; " +
-						String.valueOf(yDiff));
+				writer.println(String.valueOf(accDist) + ", " +
+						String.valueOf(uwbDiff) + ", " +
+						String.valueOf(angChange) + ", " +
+						String.valueOf(speed) + ", " +
+						String.valueOf(xDiff) + ", " +
+						String.valueOf(yDiff) + ", " +
+						String.valueOf(st.ms_today()) + "; ");
 				writer.flush();
 
 				pLast.x = st.px();
@@ -392,7 +396,9 @@ public final class Utils {
 				break;
 			}
 		}
-
+		
+		writer.println("];");
+		writer.println("");
 		writer.close();
 /*
 		out.println("Max UWB diff: " + maxUwbDiff + " m");

@@ -599,7 +599,7 @@ object CarTester {
           DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss").format(LocalDateTime.now())
       addRoute(TestSettings.carId, r, true, false, -2, 5000)
       rcsc_setAutopilotActive(TestSettings.carId, true, 2000)
-      waitUntilRouteAlmostEndedAndLog(TestSettings.carId, 2, fileName + ".csv")
+      waitUntilRouteAlmostEndedAndLog(TestSettings.carId, 2, fileName + ".m")
       brakeAndWaitUntilStoppedPolling(TestSettings.carId, 50.0)
       saveRouteToXml(0, route, fileName + "_route")
     }
