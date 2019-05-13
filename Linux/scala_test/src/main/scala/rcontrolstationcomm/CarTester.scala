@@ -25,6 +25,7 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable.Buffer
 import scala.collection.mutable.ArrayBuffer
 import java.io._
+import java.nio.file._
 
 import org.scalacheck.Gen
 import org.scalacheck.Prop
@@ -36,7 +37,7 @@ import java.time.LocalDateTime
 
 // Var so that they can be changed from the interactive console.
 object TestSettings {
-  var carId = 0
+  var carId = 1
   var carRoute = 3
   var startRoute = 0
   var recoveryRoute = 1
@@ -50,6 +51,7 @@ object TestSettings {
   var fiActive = true
   var uwbMaxDiff = 1.0
   var shorenRecoveryRoute = true
+  var currentDir = "Experiments/0"
 }
 
 object TestResult {
@@ -580,14 +582,24 @@ object CarTester {
     }
   }
 
+
+  def setNewExperimentDir(dir : String) {
+    TestSettings.currentDir = "Experiments/" + dir
+  }
+
   def driveRouteDataCollector(route: Int) {
     val r = getRoute(TestSettings.carId, route, 1000)
     if (!r.isEmpty()) {
-      val fileName = "filename_" +
+      if (! Files.exists(Paths.get(TestSettings.currentDir)) ) {
+          new File(TestSettings.currentDir).mkdirs()
+      }
+      recoveryTest();
+      resetUwbPos(TestSettings.carId, 1000)
+      val fileName = TestSettings.currentDir + "/filename_" +
           DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss").format(LocalDateTime.now())
       addRoute(TestSettings.carId, r, true, false, -2, 5000)
       rcsc_setAutopilotActive(TestSettings.carId, true, 2000)
-      waitUntilRouteAlmostEndedAndLog(TestSettings.carId, 2, fileName + ".csv")		
+      waitUntilRouteAlmostEndedAndLog(TestSettings.carId, 2, fileName + ".csv")
       brakeAndWaitUntilStoppedPolling(TestSettings.carId, 50.0)
       saveRouteToXml(0, route, fileName + "_route")
     }

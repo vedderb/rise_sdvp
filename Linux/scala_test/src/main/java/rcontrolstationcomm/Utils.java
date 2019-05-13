@@ -371,10 +371,10 @@ public final class Utils {
 				double uwbDiff = pointDistance(pNow, pNowUwb);
 				double speed   = st.speed();
 				
-				double xDiff = Math.abs(st.px() - st.px_uwb()); 
+				double xDiff = Math.abs(st.px() - st.px_uwb());
 				double yDiff = Math.abs(st.py() - st.py_uwb());
 
-				double angChange = Math.abs(st.yaw() - yaw); 
+				double angChange = Math.abs(st.yaw() - yaw);
 				yaw = st.yaw();
 
 				writer.println(String.valueOf(accDist) + "; " +
