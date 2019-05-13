@@ -118,6 +118,7 @@ public:
     void setAnchorId(int id);
     void setAnchorHeight(double height);
     void removeLastRoutePoint();
+    void zoomInOnRoute(int id, double margins);
 
     int getOsmMaxZoomLevel() const;
     void setOsmMaxZoomLevel(int osmMaxZoomLevel);

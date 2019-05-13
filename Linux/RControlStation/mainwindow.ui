@@ -888,6 +888,23 @@
                  </property>
                 </widget>
                </item>
+               <item>
+                <widget class="QPushButton" name="routeZeroButton">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="icon">
+                  <iconset resource="resources.qrc">
+                   <normaloff>:/models/Icons/Center Direction-96.png</normaloff>:/models/Icons/Center Direction-96.png</iconset>
+                 </property>
+                </widget>
+               </item>
               </layout>
              </item>
              <item>

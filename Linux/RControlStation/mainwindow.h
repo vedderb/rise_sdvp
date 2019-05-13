@@ -167,6 +167,7 @@ private slots:
     void on_mapCameraOpacityBox_valueChanged(double arg1);
     void on_actionToggleCameraFullscreen_triggered();
     void on_tabWidget_currentChanged(int index);
+    void on_routeZeroButton_clicked();
 
 private:
     Ui::MainWindow *ui;

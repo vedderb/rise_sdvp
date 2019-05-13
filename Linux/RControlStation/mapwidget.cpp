@@ -1413,6 +1413,55 @@ void MapWidget::removeLastRoutePoint()
     update();
 }
 
+void MapWidget::zoomInOnRoute(int id, double margins)
+{
+    auto route = getRoute(id);
+
+    if (route.size() > 0) {
+        double xMin = 1e12;
+        double xMax = -1e12;
+        double yMin = 1e12;
+        double yMax = -1e12;
+
+        for (auto p: route) {
+            if (p.getX() < xMin) {
+                xMin = p.getX();
+            }
+            if (p.getX() > xMax) {
+                xMax = p.getX();
+            }
+            if (p.getY() < yMin) {
+                yMin = p.getY();
+            }
+            if (p.getY() > yMax) {
+                yMax = p.getY();
+            }
+        }
+
+        double width = xMax - xMin;
+        double height = yMax - yMin;
+        double wWidth = this->width();
+        double wHeight = this->height();
+
+        xMax += width * margins * 0.5;
+        xMin -= width * margins * 0.5;
+        yMax += height * margins * 0.5;
+        yMin -= height * margins * 0.5;
+
+        width = xMax - xMin;
+        height = yMax - yMin;
+
+        double scaleX = 1.0 / ((width * 1000) / wWidth);
+        double scaleY = 1.0 / ((height * 1000) / wHeight);
+
+        mScaleFactor = qMin(scaleX, scaleY);
+        mXOffset = -(xMin + width / 2.0) * mScaleFactor * 1000.0;
+        mYOffset = -(yMin + height / 2.0) * mScaleFactor * 1000.0;
+
+        update();
+    }
+}
+
 double MapWidget::getOsmRes() const
 {
     return mOsmRes;

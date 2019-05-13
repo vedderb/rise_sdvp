@@ -2171,3 +2171,8 @@ void MainWindow::on_tabWidget_currentChanged(int index)
         ui->mapWidget->setFocus();
     }
 }
+
+void MainWindow::on_routeZeroButton_clicked()
+{
+    ui->mapWidget->zoomInOnRoute(ui->mapRouteBox->value(), 0.1);
+}
