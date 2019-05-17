@@ -1075,32 +1075,37 @@ bool PacketInterface::getRoutePart(quint8 id,
                                    int &routeLen,
                                    int retries)
 {
-    quint8 idRx;
+    bool appendDone = false;
 
     auto conn = connect(this, &PacketInterface::routePartReceived,
-                        [&routeLen, &points, &idRx](quint8 id, int len,
-                        const QList<LocPoint> &route){
-        idRx = id;
-        routeLen = len;
-        points.append(route);
-    }
-    );
+                        [&routeLen, &points, &appendDone](quint8 id, int len,
+                        const QList<LocPoint> &route) {
+        (void)id;
+
+        if (points.isEmpty() || route.isEmpty() ||
+                points.last().getDistanceTo(route.last()) > 1e-4) {
+            routeLen = len;
+            points.append(route);
+            appendDone = true;
+        }
+    });
 
     bool res = false;
     for (int i = 0;i < retries;i++) {
         qint32 send_index = 0;
-        mSendBuffer[send_index++] = id;
-        mSendBuffer[send_index++] = CMD_AP_GET_ROUTE_PART;
-        utility::buffer_append_int32(mSendBuffer, first, &send_index);
-        mSendBuffer[send_index++] = num;
+        quint8 buffer[20];
+        buffer[send_index++] = id;
+        buffer[send_index++] = CMD_AP_GET_ROUTE_PART;
+        utility::buffer_append_int32(buffer, first, &send_index);
+        buffer[send_index++] = num;
 
-        QTimer::singleShot(0, [this, &send_index]() {
-            sendPacket(mSendBuffer, send_index);
+        QTimer::singleShot(0, [this, &send_index, &buffer]() {
+            sendPacket(buffer, send_index);
         });
 
         res = waitSignal(this, SIGNAL(routePartReceived(quint8,int,QList<LocPoint>)), 200);
 
-        if (res) {
+        if (res && appendDone) {
             break;
         }
 
@@ -1109,7 +1114,12 @@ bool PacketInterface::getRoutePart(quint8 id,
 
     disconnect(conn);
 
-    return res;
+    if (res && !appendDone) {
+        qDebug() << "Route contains the same part multiple times. Make sure that it is not "
+                    "corrupted.";
+    }
+
+    return res && appendDone;
 }
 
 bool PacketInterface::getRoute(quint8 id, QList<LocPoint> &points, int retries)
