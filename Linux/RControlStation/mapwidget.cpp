@@ -455,6 +455,11 @@ void MapWidget::addRoute(const QList<LocPoint> &route)
     update();
 }
 
+int MapWidget::getRouteNum()
+{
+    return mRoutes.size();
+}
+
 void MapWidget::clearRoute()
 {
     mRoutes[mRouteNow].clear();

@@ -90,6 +90,7 @@ public:
     QList<QList<LocPoint> > getRoutes();
     void setRoute(const QList<LocPoint> &route);
     void addRoute(const QList<LocPoint> &route);
+    int getRouteNum();
     void clearRoute();
     void clearAllRoutes();
     void setRoutePointSpeed(double speed);
