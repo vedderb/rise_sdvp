@@ -2060,3 +2060,8 @@ void MainWindow::on_routeZeroButton_clicked()
 {
     ui->mapWidget->zoomInOnRoute(ui->mapRouteBox->value(), 0.1);
 }
+
+void MainWindow::on_routeZeroAllButton_clicked()
+{
+    ui->mapWidget->zoomInOnRoute(-1, 0.1);
+}

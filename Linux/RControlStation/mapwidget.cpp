@@ -1413,9 +1413,17 @@ void MapWidget::removeLastRoutePoint()
     update();
 }
 
-void MapWidget::zoomInOnRoute(int id, double margins)
+void MapWidget::zoomInOnRoute(int id, double margins, double wWidth, double wHeight)
 {
-    auto route = getRoute(id);
+    QList<LocPoint> route;
+
+    if (id >= 0) {
+        route = getRoute(id);
+    } else {
+        for (auto r: mRoutes) {
+            route.append(r);
+        }
+    }
 
     if (route.size() > 0) {
         double xMin = 1e12;
@@ -1440,8 +1448,11 @@ void MapWidget::zoomInOnRoute(int id, double margins)
 
         double width = xMax - xMin;
         double height = yMax - yMin;
-        double wWidth = this->width();
-        double wHeight = this->height();
+
+        if (wWidth <= 0 || wHeight <= 0) {
+            wWidth = this->width();
+            wHeight = this->height();
+        }
 
         xMax += width * margins * 0.5;
         xMin -= width * margins * 0.5;
