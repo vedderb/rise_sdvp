@@ -31,6 +31,7 @@
 #include "nmeaserver.h"
 #include "rtcm3_simple.h"
 #include "intersectiontest.h"
+#include "tcpclientmulti.h"
 
 #ifdef HAS_LIME_SDR
 #include "gpssim.h"
@@ -57,6 +58,9 @@ public:
     ~MainWindow();
     bool eventFilter(QObject *object, QEvent *e);
 
+    void addCar(int id);
+    void connectJoystick(QString dev);
+
 private slots:
     void serialDataAvailable();
     void serialPortError(QSerialPort::SerialPortError error);
@@ -75,10 +79,6 @@ private slots:
     void nmeaGgaRx(int fields, NmeaServer::nmea_gga_info_t gga);
     void routePointAdded(LocPoint pos);
     void infoTraceChanged(int traceNow);
-    void tcpInputConnected();
-    void tcpInputDisconnected();
-    void tcpInputDataAvailable();
-    void tcpInputError(QAbstractSocket::SocketError socketError);
     void jsButtonChanged(int button, bool pressed);
 
     void on_carAddButton_clicked();
@@ -188,7 +188,7 @@ private:
     Ping *mPing;
     NmeaServer *mNmea;
     QUdpSocket *mUdpSocket;
-    QTcpSocket *mTcpSocket;
+    TcpClientMulti *mTcpClientMulti;
     QString mVersion;
     rtcm3_state mRtcmState;
     IntersectionTest *mIntersectionTest;

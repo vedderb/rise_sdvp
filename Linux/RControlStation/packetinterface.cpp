@@ -184,179 +184,6 @@ void PacketInterface::processData(QByteArray &data)
     }
 }
 
-void PacketInterface::timerSlot()
-{
-    if (mRxTimer) {
-        mRxTimer--;
-    } else {
-        mRxState = 0;
-    }
-}
-
-void PacketInterface::readPendingDatagrams()
-{
-    while (mUdpSocket->hasPendingDatagrams()) {
-        QByteArray datagram;
-        datagram.resize(mUdpSocket->pendingDatagramSize());
-        QHostAddress sender;
-        quint16 senderPort;
-
-        mUdpSocket->readDatagram(datagram.data(), datagram.size(),
-                                 &sender, &senderPort);
-
-        if (mUdpServer) {
-            mHostAddress = sender;
-        }
-
-        processPacket((unsigned char*)datagram.data(), datagram.length());
-    }
-}
-
-unsigned short PacketInterface::crc16(const unsigned char *buf, unsigned int len)
-{
-    unsigned int i;
-    unsigned short cksum = 0;
-    for (i = 0; i < len; i++) {
-        cksum = crc16_tab[(((cksum >> 8) ^ *buf++) & 0xFF)] ^ (cksum << 8);
-    }
-    return cksum;
-}
-
-bool PacketInterface::sendPacket(const unsigned char *data, unsigned int len_packet)
-{
-    unsigned int ind = 0;
-
-    // If the IP is valid, send the packet over UDP
-    if (QString::compare(mHostAddress.toString(), "0.0.0.0") != 0) {
-        memcpy(mSendBufferAck + ind, data, len_packet);
-        ind += len_packet;
-
-        QByteArray toSend = QByteArray::fromRawData((const char*)mSendBufferAck, ind);
-        mUdpSocket->writeDatagram(toSend, mHostAddress, mUdpPort);
-
-        if (QString::compare(mHostAddress2.toString(), "0.0.0.0") != 0) {
-            mUdpSocket->writeDatagram(toSend, mHostAddress2, mUdpPort);
-        }
-
-        return true;
-    }
-
-    int len_tot = len_packet;
-    unsigned int data_offs = 0;
-
-    if (len_tot <= 255) {
-        mSendBufferAck[ind++] = 2;
-        mSendBufferAck[ind++] = len_tot;
-        data_offs = 2;
-    } else if (len_tot <= 65535) {
-        mSendBufferAck[ind++] = 3;
-        mSendBufferAck[ind++] = len_tot >> 8;
-        mSendBufferAck[ind++] = len_tot & 0xFF;
-        data_offs = 3;
-    } else {
-        mSendBufferAck[ind++] = 4;
-        mSendBufferAck[ind++] = (len_tot >> 16) & 0xFF;
-        mSendBufferAck[ind++] = (len_tot >> 8) & 0xFF;
-        mSendBufferAck[ind++] = len_tot & 0xFF;
-        data_offs = 4;
-    }
-
-    memcpy(mSendBufferAck + ind, data, len_packet);
-    ind += len_packet;
-
-    unsigned short crc = crc16(mSendBufferAck + data_offs, len_tot);
-    mSendBufferAck[ind++] = crc >> 8;
-    mSendBufferAck[ind++] = crc;
-    mSendBufferAck[ind++] = 3;
-
-    QByteArray sendData = QByteArray::fromRawData((char*)mSendBufferAck, ind);
-
-    emit dataToSend(sendData);
-
-    return true;
-}
-
-bool PacketInterface::sendPacket(QByteArray data)
-{
-    return sendPacket((const unsigned char*)data.data(), data.size());
-}
-
-/**
- * @brief PacketInterface::sendPacketAck
- * Send packet and wait for acknoledgement.
- *
- * @param data
- * The data to be sent.
- *
- * @param len_packet
- * Size of the data.
- *
- * @param retries
- * The maximum number of retries before giving up.
- *
- * @param timeoutMs
- * Time to wait before trying again.
- *
- * @return
- * True for success, false otherwise.
- */
-bool PacketInterface::sendPacketAck(const unsigned char *data, unsigned int len_packet,
-                                    int retries, int timeoutMs)
-{
-    if (mWaitingAck) {
-        qDebug() << "Already waiting for packet";
-        return false;
-    }
-
-    mWaitingAck = true;
-
-    unsigned char *buffer = new unsigned char[len_packet];
-    bool ok = false;
-    memcpy(buffer, data, len_packet);
-
-    for (int i = 0;i < retries;i++) {
-        QEventLoop loop;
-        QTimer timeoutTimer;
-        timeoutTimer.setSingleShot(true);
-        timeoutTimer.start(timeoutMs);
-        connect(this, SIGNAL(ackReceived(quint8, CMD_PACKET, QString)), &loop, SLOT(quit()));
-        connect(&timeoutTimer, SIGNAL(timeout()), &loop, SLOT(quit()));
-
-        QTimer::singleShot(0, [this, buffer, len_packet]() {
-            sendPacket(buffer, len_packet);
-        });
-
-        loop.exec();
-
-        if (timeoutTimer.isActive()) {
-            ok = true;
-            break;
-        }
-
-        qDebug() << "Retrying to send packet...";
-    }
-
-    mWaitingAck = false;
-    delete[] buffer;
-    return ok;
-}
-
-bool PacketInterface::waitSignal(QObject *sender, const char *signal, int timeoutMs)
-{
-    QEventLoop loop;
-    QTimer timeoutTimer;
-    timeoutTimer.setSingleShot(true);
-    timeoutTimer.start(timeoutMs);
-    auto conn1 = connect(sender, signal, &loop, SLOT(quit()));
-    auto conn2 = connect(&timeoutTimer, SIGNAL(timeout()), &loop, SLOT(quit()));
-    loop.exec();
-
-    disconnect(conn1);
-    disconnect(conn2);
-
-    return timeoutTimer.isActive();
-}
-
 void PacketInterface::processPacket(const unsigned char *data, int len)
 {
     QByteArray pkt = QByteArray((const char*)data, len);
@@ -773,6 +600,179 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
     default:
         break;
     }
+}
+
+void PacketInterface::timerSlot()
+{
+    if (mRxTimer) {
+        mRxTimer--;
+    } else {
+        mRxState = 0;
+    }
+}
+
+void PacketInterface::readPendingDatagrams()
+{
+    while (mUdpSocket->hasPendingDatagrams()) {
+        QByteArray datagram;
+        datagram.resize(mUdpSocket->pendingDatagramSize());
+        QHostAddress sender;
+        quint16 senderPort;
+
+        mUdpSocket->readDatagram(datagram.data(), datagram.size(),
+                                 &sender, &senderPort);
+
+        if (mUdpServer) {
+            mHostAddress = sender;
+        }
+
+        processPacket((unsigned char*)datagram.data(), datagram.length());
+    }
+}
+
+unsigned short PacketInterface::crc16(const unsigned char *buf, unsigned int len)
+{
+    unsigned int i;
+    unsigned short cksum = 0;
+    for (i = 0; i < len; i++) {
+        cksum = crc16_tab[(((cksum >> 8) ^ *buf++) & 0xFF)] ^ (cksum << 8);
+    }
+    return cksum;
+}
+
+bool PacketInterface::sendPacket(const unsigned char *data, unsigned int len_packet)
+{
+    unsigned int ind = 0;
+
+    // If the IP is valid, send the packet over UDP
+    if (QString::compare(mHostAddress.toString(), "0.0.0.0") != 0) {
+        memcpy(mSendBufferAck + ind, data, len_packet);
+        ind += len_packet;
+
+        QByteArray toSend = QByteArray::fromRawData((const char*)mSendBufferAck, ind);
+        mUdpSocket->writeDatagram(toSend, mHostAddress, mUdpPort);
+
+        if (QString::compare(mHostAddress2.toString(), "0.0.0.0") != 0) {
+            mUdpSocket->writeDatagram(toSend, mHostAddress2, mUdpPort);
+        }
+
+        return true;
+    }
+
+    int len_tot = len_packet;
+    unsigned int data_offs = 0;
+
+    if (len_tot <= 255) {
+        mSendBufferAck[ind++] = 2;
+        mSendBufferAck[ind++] = len_tot;
+        data_offs = 2;
+    } else if (len_tot <= 65535) {
+        mSendBufferAck[ind++] = 3;
+        mSendBufferAck[ind++] = len_tot >> 8;
+        mSendBufferAck[ind++] = len_tot & 0xFF;
+        data_offs = 3;
+    } else {
+        mSendBufferAck[ind++] = 4;
+        mSendBufferAck[ind++] = (len_tot >> 16) & 0xFF;
+        mSendBufferAck[ind++] = (len_tot >> 8) & 0xFF;
+        mSendBufferAck[ind++] = len_tot & 0xFF;
+        data_offs = 4;
+    }
+
+    memcpy(mSendBufferAck + ind, data, len_packet);
+    ind += len_packet;
+
+    unsigned short crc = crc16(mSendBufferAck + data_offs, len_tot);
+    mSendBufferAck[ind++] = crc >> 8;
+    mSendBufferAck[ind++] = crc;
+    mSendBufferAck[ind++] = 3;
+
+    QByteArray sendData = QByteArray::fromRawData((char*)mSendBufferAck, ind);
+
+    emit dataToSend(sendData);
+
+    return true;
+}
+
+bool PacketInterface::sendPacket(QByteArray data)
+{
+    return sendPacket((const unsigned char*)data.data(), data.size());
+}
+
+/**
+ * @brief PacketInterface::sendPacketAck
+ * Send packet and wait for acknoledgement.
+ *
+ * @param data
+ * The data to be sent.
+ *
+ * @param len_packet
+ * Size of the data.
+ *
+ * @param retries
+ * The maximum number of retries before giving up.
+ *
+ * @param timeoutMs
+ * Time to wait before trying again.
+ *
+ * @return
+ * True for success, false otherwise.
+ */
+bool PacketInterface::sendPacketAck(const unsigned char *data, unsigned int len_packet,
+                                    int retries, int timeoutMs)
+{
+    if (mWaitingAck) {
+        qDebug() << "Already waiting for packet";
+        return false;
+    }
+
+    mWaitingAck = true;
+
+    unsigned char *buffer = new unsigned char[len_packet];
+    bool ok = false;
+    memcpy(buffer, data, len_packet);
+
+    for (int i = 0;i < retries;i++) {
+        QEventLoop loop;
+        QTimer timeoutTimer;
+        timeoutTimer.setSingleShot(true);
+        timeoutTimer.start(timeoutMs);
+        connect(this, SIGNAL(ackReceived(quint8, CMD_PACKET, QString)), &loop, SLOT(quit()));
+        connect(&timeoutTimer, SIGNAL(timeout()), &loop, SLOT(quit()));
+
+        QTimer::singleShot(0, [this, buffer, len_packet]() {
+            sendPacket(buffer, len_packet);
+        });
+
+        loop.exec();
+
+        if (timeoutTimer.isActive()) {
+            ok = true;
+            break;
+        }
+
+        qDebug() << "Retrying to send packet...";
+    }
+
+    mWaitingAck = false;
+    delete[] buffer;
+    return ok;
+}
+
+bool PacketInterface::waitSignal(QObject *sender, const char *signal, int timeoutMs)
+{
+    QEventLoop loop;
+    QTimer timeoutTimer;
+    timeoutTimer.setSingleShot(true);
+    timeoutTimer.start(timeoutMs);
+    auto conn1 = connect(sender, signal, &loop, SLOT(quit()));
+    auto conn2 = connect(&timeoutTimer, SIGNAL(timeout()), &loop, SLOT(quit()));
+    loop.exec();
+
+    disconnect(conn1);
+    disconnect(conn2);
+
+    return timeoutTimer.isActive();
 }
 
 void PacketInterface::startUdpConnection(QHostAddress ip, int port)

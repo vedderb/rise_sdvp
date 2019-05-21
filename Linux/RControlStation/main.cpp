@@ -32,6 +32,8 @@ void showHelp()
     qDebug() << "--plotroutesselect [id] : Select route with id";
     qDebug() << "--plotroutesshowgrid : Show grid in plot";
     qDebug() << "--plotroutesshowtext : Show text next to route points";
+    qDebug() << "--addcar [id] : Add car tab with car id";
+    qDebug() << "--connectjs [dev] : Connect to joystick dev (e.g. /dev/input/js0)";
 }
 
 int main(int argc, char *argv[])
@@ -65,6 +67,8 @@ int main(int argc, char *argv[])
     int plotRoutesSelect = -1;
     bool plotRoutesShowGrid = false;
     bool plotRoutesShowText = false;
+    QVector<int> carsToAdd;
+    QString jsStr;
 
     for (int i = 0;i < args.size();i++) {
         // Skip the program argument
@@ -89,7 +93,7 @@ int main(int argc, char *argv[])
         }
 
         if (str == "--plotroutes") {
-            if ((i - 1) < args.size()) {
+            if ((i + 1) < args.size()) {
                 i++;
                 plotRoutesFile = args.at(i);
                 found = true;
@@ -97,7 +101,7 @@ int main(int argc, char *argv[])
         }
 
         if (str == "--plotroutessize") {
-            if ((i - 1) < args.size()) {
+            if ((i + 1) < args.size()) {
                 i++;
                 QString tmp = args.at(i);
                 QStringList numbers = tmp.split(":");
@@ -111,7 +115,7 @@ int main(int argc, char *argv[])
         }
 
         if (str == "--plotroutesformat") {
-            if ((i - 1) < args.size()) {
+            if ((i + 1) < args.size()) {
                 i++;
 
                 QString str2 = args.at(i).toLower();
@@ -130,7 +134,7 @@ int main(int argc, char *argv[])
         }
 
         if (str == "--plotroutesmargins") {
-            if ((i - 1) < args.size()) {
+            if ((i + 1) < args.size()) {
                 i++;
                 plotRoutesMargins = args.at(i).toDouble();
                 found = true;
@@ -138,7 +142,7 @@ int main(int argc, char *argv[])
         }
 
         if (str == "--plotroutesselect") {
-            if ((i - 1) < args.size()) {
+            if ((i + 1) < args.size()) {
                 i++;
                 plotRoutesSelect = args.at(i).toInt();
                 found = true;
@@ -153,6 +157,22 @@ int main(int argc, char *argv[])
         if (str == "--plotroutesshowtext") {
             plotRoutesShowText = true;
             found = true;
+        }
+
+        if (str == "--addcar") {
+            if ((i + 1) < args.size()) {
+                i++;
+                carsToAdd.append(args.at(i).toInt());
+                found = true;
+            }
+        }
+
+        if (str == "--connectjs") {
+            if ((i + 1) < args.size()) {
+                i++;
+                jsStr = args.at(i);
+                found = true;
+            }
         }
 
         if (!found) {
@@ -193,6 +213,14 @@ int main(int argc, char *argv[])
     } else {
         MainWindow w;
         w.show();
+
+        for (int c: carsToAdd) {
+            w.addCar(c);
+        }
+
+        if (!jsStr.isEmpty()) {
+            w.connectJoystick(jsStr);
+        }
 
         return a.exec();
     }

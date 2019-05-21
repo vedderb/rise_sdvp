@@ -102,7 +102,8 @@ SOURCES += main.cpp\
     ncom.cpp \
     correctionanalysis.cpp \
     historylineedit.cpp \
-    imagewidget.cpp
+    imagewidget.cpp \
+    tcpclientmulti.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
@@ -139,7 +140,8 @@ HEADERS  += mainwindow.h \
     ncom.h \
     correctionanalysis.h \
     historylineedit.h \
-    imagewidget.h
+    imagewidget.h \
+    tcpclientmulti.h
 
 FORMS    += mainwindow.ui \
     carinterface.ui \

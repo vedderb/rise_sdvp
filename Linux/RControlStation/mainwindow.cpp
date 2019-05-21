@@ -94,8 +94,7 @@ MainWindow::MainWindow(QWidget *parent) :
     mPing = new Ping(this);
     mNmea = new NmeaServer(this);
     mUdpSocket = new QUdpSocket(this);
-    mTcpSocket = new QTcpSocket(this);
-    mTcpSocket->setSocketOption(QAbstractSocket::LowDelayOption, true);
+    mTcpClientMulti = new TcpClientMulti(this);
     mUdpSocket->setSocketOption(QAbstractSocket::LowDelayOption, true);
 
     mIntersectionTest = new IntersectionTest(this);
@@ -155,15 +154,22 @@ MainWindow::MainWindow(QWidget *parent) :
             this, SLOT(routePointAdded(LocPoint)));
     connect(ui->mapWidget, SIGNAL(infoTraceChanged(int)),
             this, SLOT(infoTraceChanged(int)));
-    connect(mTcpSocket, SIGNAL(readyRead()), this, SLOT(tcpInputDataAvailable()));
-    connect(mTcpSocket, SIGNAL(connected()), this, SLOT(tcpInputConnected()));
-    connect(mTcpSocket, SIGNAL(disconnected()),
-            this, SLOT(tcpInputDisconnected()));
-    connect(mTcpSocket, SIGNAL(error(QAbstractSocket::SocketError)),
-            this, SLOT(tcpInputError(QAbstractSocket::SocketError)));
 
     connect(ui->actionAboutQt, SIGNAL(triggered(bool)),
             qApp, SLOT(aboutQt()));
+
+    connect(mTcpClientMulti, &TcpClientMulti::packetRx, [this](QByteArray data) {
+        mPacketInterface->processPacket((unsigned char*)data.data(), data.size());
+    });
+
+    connect(mTcpClientMulti, &TcpClientMulti::stateChanged, [this](QString msg, bool isError) {
+        showStatusInfo(msg, !isError);
+
+        if (isError) {
+            qWarning() << "TCP Error:" << msg;
+            QMessageBox::warning(this, "TCP Error", msg);
+        }
+    });
 
     on_serialRefreshButton_clicked();
     on_mapCameraWidthBox_valueChanged(ui->mapCameraWidthBox->value());
@@ -285,6 +291,57 @@ bool MainWindow::eventFilter(QObject *object, QEvent *e)
     }
 
     return false;
+}
+
+void MainWindow::addCar(int id)
+{
+    CarInterface *car = new CarInterface(this);
+    mCars.append(car);
+    QString name;
+    name.sprintf("Car %d", id);
+    car->setID(id);
+    ui->carsWidget->addTab(car, name);
+    car->setMap(ui->mapWidget);
+    car->setPacketInterface(mPacketInterface);
+    connect(car, SIGNAL(showStatusInfo(QString,bool)), this, SLOT(showStatusInfo(QString,bool)));
+}
+
+void MainWindow::connectJoystick(QString dev)
+{
+#ifdef HAS_JOYSTICK
+    if (mJoystick->init(dev) == 0) {
+        qDebug() << "JS Axes:" << mJoystick->numAxes();
+        qDebug() << "JS Buttons:" << mJoystick->numButtons();
+        qDebug() << "JS Name:" << mJoystick->getName();
+
+        if (mJoystick->getName().contains("Sony PLAYSTATION(R)3")) {
+            mJsType = JS_TYPE_PS3;
+            qDebug() << "Treating joystick as PS3 USB controller.";
+            showStatusInfo("PS4 USB joystick connected!", true);
+        } else if (mJoystick->getName().contains("sony", Qt::CaseInsensitive) ||
+                   mJoystick->getName().contains("wireless controller", Qt::CaseInsensitive)) {
+            mJsType = JS_TYPE_PS4;
+            qDebug() << "Treating joystick as PS4 USB controller.";
+            showStatusInfo("PS4 USB joystick connected!", true);
+        } else if (mJoystick->getName().contains("micronav one", Qt::CaseInsensitive)) {
+            mJsType = JS_TYPE_MICRONAV_ONE;
+            qDebug() << "Treating joystick as Micronav One.";
+            showStatusInfo("Micronav One joystick connected!", true);
+            mJoystick->setRepeats(10, true);
+            mJoystick->setRepeats(14, true);
+        } else {
+            mJsType = JS_TYPE_HK;
+            qDebug() << "Treating joystick as hobbyking simulator.";
+            showStatusInfo("HK joystick connected!", true);
+        }
+    } else {
+        qWarning() << "Opening joystick failed.";
+        showStatusInfo("Opening joystick failed.", false);
+    }
+#else
+    QMessageBox::warning(this, "Joystick",
+                         "This build does not have joystick support.");
+#endif
 }
 
 void MainWindow::serialDataAvailable()
@@ -410,7 +467,7 @@ void MainWindow::timerSlot()
             mStatusLabel->setStyleSheet(qApp->styleSheet());
         }
     } else {
-        if (mSerialPort->isOpen() || mPacketInterface->isUdpConnected() || mTcpSocket->isOpen()) {
+        if (mSerialPort->isOpen() || mPacketInterface->isUdpConnected() || mTcpClientMulti->isAnyConnected()) {
             mStatusLabel->setText("Connected");
         } else {
             mStatusLabel->setText("Not connected");
@@ -520,9 +577,7 @@ void MainWindow::packetDataToSend(QByteArray &data)
         mSerialPort->write(data);
     }
 
-    if (mTcpSocket->isOpen()) {
-        mTcpSocket->write(data);
-    }
+    mTcpClientMulti->sendAll(data);
 }
 
 void MainWindow::stateReceived(quint8 id, CAR_STATE state)
@@ -728,35 +783,6 @@ void MainWindow::infoTraceChanged(int traceNow)
     ui->mapInfoTraceBox->setValue(traceNow);
 }
 
-void MainWindow::tcpInputConnected()
-{
-    showStatusInfo(tr("TCP Connected"), true);
-}
-
-void MainWindow::tcpInputDisconnected()
-{
-    showStatusInfo(tr("TCP Disconnected"), false);
-}
-
-void MainWindow::tcpInputDataAvailable()
-{
-    while (mTcpSocket->bytesAvailable() > 0) {
-        QByteArray data = mTcpSocket->readAll();
-        mPacketInterface->processData(data);
-    }
-}
-
-void MainWindow::tcpInputError(QAbstractSocket::SocketError socketError)
-{
-    (void)socketError;
-
-    QString errorStr = mTcpSocket->errorString();
-    qWarning() << "TCP Error:" << errorStr;
-    QMessageBox::warning(this, "TCP Error", errorStr);
-
-    mTcpSocket->close();
-}
-
 void MainWindow::jsButtonChanged(int button, bool pressed)
 {
 //    qDebug() << "JS BT:" << button << pressed;
@@ -799,18 +825,8 @@ void MainWindow::jsButtonChanged(int button, bool pressed)
 }
 
 void MainWindow::on_carAddButton_clicked()
-{
-    CarInterface *car = new CarInterface(this);
-    int id = mCars.size() + mCopters.size();
-    mCars.append(car);
-    QString name;
-    name.sprintf("Car %d", id);
-    car->setID(id);
-    ui->carsWidget->addTab(car, name);
-    car->setMap(ui->mapWidget);
-    car->setPacketInterface(mPacketInterface);
-
-    connect(car, SIGNAL(showStatusInfo(QString,bool)), this, SLOT(showStatusInfo(QString,bool)));
+{    
+    addCar(mCars.size() + mCopters.size());
 }
 
 void MainWindow::on_copterAddButton_clicked()
@@ -849,9 +865,7 @@ void MainWindow::on_serialConnectButton_clicked()
 
     mPacketInterface->stopUdpConnection();
 
-    if (mTcpSocket->isOpen()) {
-        mTcpSocket->close();
-    }
+    mTcpClientMulti->disconnectAll();
 }
 
 void MainWindow::on_serialRefreshButton_clicked()
@@ -889,9 +903,7 @@ void MainWindow::on_disconnectButton_clicked()
         mPacketInterface->stopUdpConnection();
     }
 
-    if (mTcpSocket->isOpen()) {
-        mTcpSocket->close();
-    }
+    mTcpClientMulti->disconnectAll();
 }
 
 void MainWindow::on_mapRemoveTraceButton_clicked()
@@ -913,9 +925,7 @@ void MainWindow::on_udpConnectButton_clicked()
             mSerialPort->close();
         }
 
-        if (mTcpSocket->isOpen()) {
-            mTcpSocket->close();
-        }
+        mTcpClientMulti->disconnectAll();
 
         mPacketInterface->startUdpConnection(ip, ui->udpPortBox->value());
 
@@ -935,13 +945,31 @@ void MainWindow::on_udpPingButton_clicked()
 
 void MainWindow::on_tcpConnectButton_clicked()
 {
-    mTcpSocket->abort();
-    mTcpSocket->connectToHost(ui->tcpIpEdit->text(), ui->tcpPortBox->value());
+    mTcpClientMulti->disconnectAll();
+    QStringList conns = ui->tcpConnEdit->toPlainText().split("\n");
+
+    for (QString c: conns) {
+        QStringList ipPort = c.split(":");
+
+        if (ipPort.size() == 2) {
+            mTcpClientMulti->addConnection(ipPort.at(0),
+                                           ipPort.at(1).toInt());
+        }
+    }
 }
 
 void MainWindow::on_tcpPingButton_clicked()
 {
-    mPing->pingHost(ui->tcpIpEdit->text(), 64, "TCP Host");
+    QStringList conns = ui->tcpConnEdit->toPlainText().split("\n");
+
+    for (QString c: conns) {
+        QStringList ipPort = c.split(":");
+
+        if (ipPort.size() == 2) {
+            mPing->pingHost(ipPort.at(0), 64, "TCP Host");
+            break;
+        }
+    }
 }
 
 void MainWindow::on_mapZeroButton_clicked()
@@ -962,40 +990,7 @@ void MainWindow::on_mapRouteSpeedBox_valueChanged(double arg1)
 
 void MainWindow::on_jsConnectButton_clicked()
 {
-#ifdef HAS_JOYSTICK
-    if (mJoystick->init(ui->jsPortEdit->text()) == 0) {
-        qDebug() << "Axes:" << mJoystick->numAxes();
-        qDebug() << "Buttons:" << mJoystick->numButtons();
-        qDebug() << "Name:" << mJoystick->getName();
-
-        if (mJoystick->getName().contains("Sony PLAYSTATION(R)3")) {
-            mJsType = JS_TYPE_PS3;
-            qDebug() << "Treating joystick as PS3 USB controller.";
-            showStatusInfo("PS4 USB joystick connected!", true);
-        } else if (mJoystick->getName().contains("sony", Qt::CaseInsensitive) ||
-                   mJoystick->getName().contains("wireless controller", Qt::CaseInsensitive)) {
-            mJsType = JS_TYPE_PS4;
-            qDebug() << "Treating joystick as PS4 USB controller.";
-            showStatusInfo("PS4 USB joystick connected!", true);
-        } else if (mJoystick->getName().contains("micronav one", Qt::CaseInsensitive)) {
-            mJsType = JS_TYPE_MICRONAV_ONE;
-            qDebug() << "Treating joystick as Micronav One.";
-            showStatusInfo("Micronav One joystick connected!", true);
-            mJoystick->setRepeats(10, true);
-            mJoystick->setRepeats(14, true);
-        } else {
-            mJsType = JS_TYPE_HK;
-            qDebug() << "Treating joystick as hobbyking simulator.";
-            showStatusInfo("HK joystick connected!", true);
-        }
-    } else {
-        qWarning() << "Opening joystick failed.";
-        showStatusInfo("Opening joystick failed.", false);
-    }
-#else
-    QMessageBox::warning(this, "Joystick",
-                         "This build does not have joystick support.");
-#endif
+    connectJoystick(ui->jsPortEdit->text());
 }
 
 void MainWindow::on_jsDisconnectButton_clicked()
@@ -1125,7 +1120,7 @@ void MainWindow::on_mapSetAbsYawButton_clicked()
 {
     CarInfo *car = ui->mapWidget->getCarInfo(ui->mapCarBox->value());
     if (car) {
-        if (mSerialPort->isOpen() || mPacketInterface->isUdpConnected() || mTcpSocket->isOpen()) {
+        if (mSerialPort->isOpen() || mPacketInterface->isUdpConnected() || mTcpClientMulti->isAnyConnected()) {
             ui->mapSetAbsYawButton->setEnabled(false);
             ui->mapAbsYawSlider->setEnabled(false);
             bool ok = mPacketInterface->setYawOffsetAck(car->getId(), (double)ui->mapAbsYawSlider->value());
@@ -1167,7 +1162,7 @@ void MainWindow::on_stopButton_clicked()
 
 void MainWindow::on_mapUploadRouteButton_clicked()
 {
-    if (!mSerialPort->isOpen() && !mPacketInterface->isUdpConnected() && !mTcpSocket->isOpen()) {
+    if (!mSerialPort->isOpen() && !mPacketInterface->isUdpConnected() && !mTcpClientMulti->isAnyConnected()) {
         QMessageBox::warning(this, "Upload route",
                              "Serial port not connected.");
         return;
@@ -1237,7 +1232,7 @@ void MainWindow::on_mapUploadRouteButton_clicked()
 
 void MainWindow::on_mapGetRouteButton_clicked()
 {
-    if (!mSerialPort->isOpen() && !mPacketInterface->isUdpConnected() && !mTcpSocket->isOpen()) {
+    if (!mSerialPort->isOpen() && !mPacketInterface->isUdpConnected() && !mTcpClientMulti->isAnyConnected()) {
         QMessageBox::warning(this, "Get route",
                              "Car not connected.");
         return;
