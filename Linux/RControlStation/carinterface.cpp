@@ -150,6 +150,11 @@ bool CarInterface::pollData()
     return ui->pollBox->isChecked();
 }
 
+void CarInterface::setPollData(bool poll)
+{
+    ui->pollBox->setChecked(poll);
+}
+
 bool CarInterface::updateRouteFromMap()
 {
     return ui->updateRouteFromMapBox->isChecked();

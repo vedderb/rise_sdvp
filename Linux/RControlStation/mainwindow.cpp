@@ -293,7 +293,7 @@ bool MainWindow::eventFilter(QObject *object, QEvent *e)
     return false;
 }
 
-void MainWindow::addCar(int id)
+void MainWindow::addCar(int id, bool pollData)
 {
     CarInterface *car = new CarInterface(this);
     mCars.append(car);
@@ -303,6 +303,7 @@ void MainWindow::addCar(int id)
     ui->carsWidget->addTab(car, name);
     car->setMap(ui->mapWidget);
     car->setPacketInterface(mPacketInterface);
+    car->setPollData(pollData);
     connect(car, SIGNAL(showStatusInfo(QString,bool)), this, SLOT(showStatusInfo(QString,bool)));
 }
 
@@ -342,6 +343,21 @@ void MainWindow::connectJoystick(QString dev)
     QMessageBox::warning(this, "Joystick",
                          "This build does not have joystick support.");
 #endif
+}
+
+void MainWindow::addTcpConnection(QString ip, int port)
+{
+    mTcpClientMulti->addConnection(ip, port);
+}
+
+void MainWindow::setNetworkTcpEnabled(bool enabled, int port)
+{
+    ui->networkInterface->setTcpEnabled(enabled, port);
+}
+
+void MainWindow::setNetworkUdpEnabled(bool enabled, int port)
+{
+    ui->networkInterface->setUdpEnabled(enabled, port);
 }
 
 void MainWindow::serialDataAvailable()
@@ -951,7 +967,10 @@ void MainWindow::on_tcpConnectButton_clicked()
     for (QString c: conns) {
         QStringList ipPort = c.split(":");
 
-        if (ipPort.size() == 2) {
+        if (ipPort.size() == 1) {
+            mTcpClientMulti->addConnection(ipPort.at(0),
+                                           8300);
+        } else if (ipPort.size() == 2) {
             mTcpClientMulti->addConnection(ipPort.at(0),
                                            ipPort.at(1).toInt());
         }

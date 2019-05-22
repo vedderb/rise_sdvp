@@ -47,6 +47,7 @@ public:
     void setID(int id);
     int getId();
     bool pollData();
+    void setPollData(bool poll);
     bool updateRouteFromMap();
     void setOrientation(double roll, double pitch, double yaw);
     void setStateData(CAR_STATE data);

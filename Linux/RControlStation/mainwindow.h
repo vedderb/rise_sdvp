@@ -58,8 +58,11 @@ public:
     ~MainWindow();
     bool eventFilter(QObject *object, QEvent *e);
 
-    void addCar(int id);
+    void addCar(int id, bool pollData = false);
     void connectJoystick(QString dev);
+    void addTcpConnection(QString ip, int port);
+    void setNetworkTcpEnabled(bool enabled, int port = -1);
+    void setNetworkUdpEnabled(bool enabled, int port = -1);
 
 private slots:
     void serialDataAvailable();

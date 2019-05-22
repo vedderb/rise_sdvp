@@ -44,8 +44,9 @@ void showHelp()
     qDebug() << "--tcpnmeaport : NMEA server port";
     qDebug() << "--useudp : Use UDP server";
     qDebug() << "--udpport : Port to use for the UDP server";
-    qDebug() << "--usetcp : Use TCP server";
-    qDebug() << "--tcpport : Port to use for the TCP server";
+    qDebug() << "--usetcp : Use TCP server (will be used by default)";
+    qDebug() << "--notcp : Do not use TCP server";
+    qDebug() << "--tcpport : Specify port to use for the TCP server (default: 8300)";
     qDebug() << "--logusb : Store log files";
     qDebug() << "--logusbdir : Directory to store USB logs to";
     qDebug() << "--inputrtcm : Input RTCM data from serial port";
@@ -91,7 +92,7 @@ int main(int argc, char *argv[])
     int tcpNmeaPort = 2948;
     bool useUdp = false;
     int udpPort = 8300;
-    bool useTcp = false;
+    bool useTcp = true;
     int tcpPort = 8300;
     bool logUsb = false;
     QString logUsbDir = QDir::currentPath() + "/logs";
@@ -148,7 +149,7 @@ int main(int argc, char *argv[])
         }
 
         if ((dash && str.contains('p')) || str == "--ttyport") {
-            if ((i - 1) < args.size()) {
+            if ((i + 1) < args.size()) {
                 i++;
                 ttyPort = args.at(i);
                 found = true;
@@ -156,7 +157,7 @@ int main(int argc, char *argv[])
         }
 
         if ((dash && str.contains('b')) || str == "--baudrate") {
-            if ((i - 1) < args.size()) {
+            if ((i + 1) < args.size()) {
                 i++;
                 bool ok;
                 baudrate = args.at(i).toInt(&ok);
@@ -165,7 +166,7 @@ int main(int argc, char *argv[])
         }
 
         if ((dash && str.contains('l')) || str == "--log") {
-            if ((i - 1) < args.size()) {
+            if ((i + 1) < args.size()) {
                 i++;
                 logFile = args.at(i);
                 found = true;
@@ -173,7 +174,7 @@ int main(int argc, char *argv[])
         }
 
         if (str == "--tcprtcmserver") {
-            if ((i - 1) < args.size()) {
+            if ((i + 1) < args.size()) {
                 i++;
                 bool ok;
                 tcpRtcmPort = args.at(i).toInt(&ok);
@@ -182,7 +183,7 @@ int main(int argc, char *argv[])
         }
 
         if (str == "--tcpubxserver") {
-            if ((i - 1) < args.size()) {
+            if ((i + 1) < args.size()) {
                 i++;
                 bool ok;
                 tcpUbxPort = args.at(i).toInt(&ok);
@@ -191,7 +192,7 @@ int main(int argc, char *argv[])
         }
 
         if (str == "--tcplogserver") {
-            if ((i - 1) < args.size()) {
+            if ((i + 1) < args.size()) {
                 i++;
                 bool ok;
                 tcpLogPort = args.at(i).toInt(&ok);
@@ -200,7 +201,7 @@ int main(int argc, char *argv[])
         }
 
         if (str == "--tcpnmeasrv") {
-            if ((i - 1) < args.size()) {
+            if ((i + 1) < args.size()) {
                 i++;
                 tcpNmeaServer = args.at(i);
                 found = true;
@@ -208,7 +209,7 @@ int main(int argc, char *argv[])
         }
 
         if (str == "--tcpnmeaport") {
-            if ((i - 1) < args.size()) {
+            if ((i + 1) < args.size()) {
                 i++;
                 bool ok;
                 tcpNmeaPort = args.at(i).toInt(&ok);
@@ -222,7 +223,7 @@ int main(int argc, char *argv[])
         }
 
         if (str == "--udpport") {
-            if ((i - 1) < args.size()) {
+            if ((i + 1) < args.size()) {
                 i++;
                 bool ok;
                 udpPort = args.at(i).toInt(&ok);
@@ -235,8 +236,13 @@ int main(int argc, char *argv[])
             found = true;
         }
 
+        if (str == "--notcp") {
+            useTcp = false;
+            found = true;
+        }
+
         if (str == "--tcpport") {
-            if ((i - 1) < args.size()) {
+            if ((i + 1) < args.size()) {
                 i++;
                 bool ok;
                 tcpPort = args.at(i).toInt(&ok);
@@ -250,7 +256,7 @@ int main(int argc, char *argv[])
         }
 
         if (str == "--logusbdir") {
-            if ((i - 1) < args.size()) {
+            if ((i + 1) < args.size()) {
                 i++;
                 logUsbDir = args.at(i);
                 found = true;
@@ -263,7 +269,7 @@ int main(int argc, char *argv[])
         }
 
         if (str == "--ttyportrtcm") {
-            if ((i - 1) < args.size()) {
+            if ((i + 1) < args.size()) {
                 i++;
                 ttyPortRtcm = args.at(i);
                 found = true;
@@ -271,7 +277,7 @@ int main(int argc, char *argv[])
         }
 
         if (str == "--rtcmbaud") {
-            if ((i - 1) < args.size()) {
+            if ((i + 1) < args.size()) {
                 i++;
                 bool ok;
                 rtcmBaud = args.at(i).toInt(&ok);
@@ -285,7 +291,7 @@ int main(int argc, char *argv[])
         }
 
         if (str == "--ntrip") {
-            if ((i - 1) < args.size()) {
+            if ((i + 1) < args.size()) {
                 i++;
                 QString tmp = args.at(i);
                 QStringList ntripData = tmp.split(":");
@@ -303,7 +309,7 @@ int main(int argc, char *argv[])
         }
 
         if (str == "--rtcmbasepos") {
-            if ((i - 1) < args.size()) {
+            if ((i + 1) < args.size()) {
                 i++;
                 QString tmp = args.at(i);
                 QStringList baseData = tmp.split(":");
@@ -319,7 +325,7 @@ int main(int argc, char *argv[])
         }
 
         if (str == "--batterycells") {
-            if ((i - 1) < args.size()) {
+            if ((i + 1) < args.size()) {
                 i++;
                 bool ok;
                 batteryCells = args.at(i).toInt(&ok);
@@ -328,7 +334,7 @@ int main(int argc, char *argv[])
         }
 
         if (str == "--simulatecars") {
-            if ((i - 1) < args.size()) {
+            if ((i + 1) < args.size()) {
                 i++;
                 QString tmp = args.at(i);
                 QStringList simData = tmp.split(":");
@@ -347,7 +353,7 @@ int main(int argc, char *argv[])
         }
 
         if (str == "--simaprepeatroutes") {
-            if ((i - 1) < args.size()) {
+            if ((i + 1) < args.size()) {
                 i++;
                 bool ok;
                 simApRepeatRoutes = args.at(i).toInt(&ok);
@@ -356,7 +362,7 @@ int main(int argc, char *argv[])
         }
 
         if (str == "--simlogen") {
-            if ((i - 1) < args.size()) {
+            if ((i + 1) < args.size()) {
                 i++;
                 bool ok;
                 simLogHz = args.at(i).toInt(&ok);
@@ -365,7 +371,7 @@ int main(int argc, char *argv[])
         }
 
         if (str == "--simuwben") {
-            if ((i - 1) < args.size()) {
+            if ((i + 1) < args.size()) {
                 i++;
                 QStringList param = args.at(i).split(":");
                 if (param.size() == 2) {

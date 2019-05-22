@@ -49,6 +49,9 @@ public:
     void sendError(const QString &txt, const QString &cmd = "");
     void sendAck(const QString &cmd);
 
+    void setTcpEnabled(bool enabled, int port = -1);
+    void setUdpEnabled(bool enabled, int port = -1);
+
 private slots:
     void tcpDataRx(const QByteArray &data);
     void tcpConnectionChanged(bool connected);
@@ -59,8 +62,8 @@ private slots:
     void enuRefReceived(quint8 id, double lat, double lon, double height);
     void printReceived(quint8 id, QString str);
 
-    void on_tcpActivateBox_toggled(bool checked);
-    void on_udpActivateBox_toggled(bool checked);
+    void on_tcpActivateBox_clicked(bool checked);
+    void on_udpActivateBox_clicked(bool checked);
 
 private:
     Ui::NetworkInterface *ui;

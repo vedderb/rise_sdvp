@@ -26,14 +26,17 @@ void showHelp()
     qDebug() << "Arguments";
     qDebug() << "-h, --help : Show help text";
     qDebug() << "--plotroutes [xmlFile] : Plot routes from XML file";
-    qDebug() << "--plotroutessize [w:h] : Size to plot with in pixels";
+    qDebug() << "--plotroutessize [w]:[h] : Size to plot with in pixels";
     qDebug() << "--plotroutesformat [format] : plot format; PDF or PNG";
     qDebug() << "--plotroutesmargins [margins] : Margins around the plot";
     qDebug() << "--plotroutesselect [id] : Select route with id";
     qDebug() << "--plotroutesshowgrid : Show grid in plot";
     qDebug() << "--plotroutesshowtext : Show text next to route points";
-    qDebug() << "--addcar [id] : Add car tab with car id";
+    qDebug() << "--addcar [id]:[pollData] : Add car tab with car id";
     qDebug() << "--connectjs [dev] : Connect to joystick dev (e.g. /dev/input/js0)";
+    qDebug() << "--connecttcp [ip]:[port] : Connect to car over TCP (multiple connections possible)";
+    qDebug() << "--xmltcpserver [port] : Run XML TCP server on port";
+    qDebug() << "--xmludpserver [port] : Run XML UDP server on port";
 }
 
 int main(int argc, char *argv[])
@@ -59,6 +62,16 @@ int main(int argc, char *argv[])
         PLOT_ROUTE_FORMAT_PNG
     } PLOT_ROUTE_FORMAT;
 
+    struct CarConn {
+        QString ip;
+        int port;
+    };
+
+    struct CarToAdd {
+        int id;
+        bool pollData;
+    };
+
     QString plotRoutesFile;
     int plotRoutesW = 640;
     int plotRoutesH = 480;
@@ -67,8 +80,11 @@ int main(int argc, char *argv[])
     int plotRoutesSelect = -1;
     bool plotRoutesShowGrid = false;
     bool plotRoutesShowText = false;
-    QVector<int> carsToAdd;
+    QVector<CarToAdd> carsToAdd;
     QString jsStr;
+    QList<CarConn> carsToConn;
+    int xmlTcpPort = -2;
+    int xmlUdpPort = -2;
 
     for (int i = 0;i < args.size();i++) {
         // Skip the program argument
@@ -162,8 +178,22 @@ int main(int argc, char *argv[])
         if (str == "--addcar") {
             if ((i + 1) < args.size()) {
                 i++;
-                carsToAdd.append(args.at(i).toInt());
-                found = true;
+                QString tmp = args.at(i);
+                QStringList numbers = tmp.split(":");
+
+                if (numbers.size() == 1) {
+                    found = true;
+                    CarToAdd c;
+                    c.id = numbers.at(0).toInt();
+                    c.pollData = false;
+                    carsToAdd.append(c);
+                } else if (numbers.size() == 2) {
+                    found = true;
+                    CarToAdd c;
+                    c.id = numbers.at(0).toInt();
+                    c.pollData = numbers.at(1).toInt();
+                    carsToAdd.append(c);
+                }
             }
         }
 
@@ -171,6 +201,44 @@ int main(int argc, char *argv[])
             if ((i + 1) < args.size()) {
                 i++;
                 jsStr = args.at(i);
+                found = true;
+            }
+        }
+
+        if (str == "--connecttcp") {
+            if ((i + 1) < args.size()) {
+                i++;
+                QString tmp = args.at(i);
+                QStringList numbers = tmp.split(":");
+
+                if (numbers.size() == 1) {
+                    found = true;
+                    CarConn c;
+                    c.ip = numbers.at(0);
+                    c.port = 8300;
+                    carsToConn.append(c);
+                } else if (numbers.size() == 2) {
+                    found = true;
+                    CarConn c;
+                    c.ip = numbers.at(0);
+                    c.port = numbers.at(1).toInt();
+                    carsToConn.append(c);
+                }
+            }
+        }
+
+        if (str == "--xmltcpserver") {
+            if ((i + 1) < args.size()) {
+                i++;
+                xmlTcpPort = args.at(i).toInt();
+                found = true;
+            }
+        }
+
+        if (str == "--xmludpserver") {
+            if ((i + 1) < args.size()) {
+                i++;
+                xmlUdpPort = args.at(i).toInt();
                 found = true;
             }
         }
@@ -214,12 +282,24 @@ int main(int argc, char *argv[])
         MainWindow w;
         w.show();
 
-        for (int c: carsToAdd) {
-            w.addCar(c);
+        for (auto c: carsToAdd) {
+            w.addCar(c.id, c.pollData);
         }
 
         if (!jsStr.isEmpty()) {
             w.connectJoystick(jsStr);
+        }
+
+        for (auto c: carsToConn) {
+            w.addTcpConnection(c.ip, c.port);
+        }
+
+        if (xmlTcpPort >= -1) {
+            w.setNetworkTcpEnabled(true, xmlTcpPort);
+        }
+
+        if (xmlUdpPort >= -1) {
+            w.setNetworkUdpEnabled(true, xmlUdpPort);
         }
 
         return a.exec();
