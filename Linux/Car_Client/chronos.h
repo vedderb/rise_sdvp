@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QUdpSocket>
 #include <QTimer>
+#include <QElapsedTimer>
 
 #include "tcpserversimple.h"
 #include "packetinterface.h"
@@ -34,6 +35,7 @@ private:
     PacketInterface *mPacket;
     ChronosComm *mChronos;
     QTimer *mStartTimer;
+    QElapsedTimer mScenarioTimer;
     bool mIsArmed;
     bool mIsStarted;
 

@@ -57,6 +57,7 @@ void Chronos::startTimerSlot()
 
     if (mPacket) {
         mPacket->setApActive(255, true);
+        mScenarioTimer.start();
     }
 }
 
@@ -135,6 +136,8 @@ void Chronos::processTraj(chronos_traj traj)
             path_reduced.append(pt);
         }
     }
+
+//    qDebug() << "Last PT time" << path_reduced.last().tRel - mScenarioTimer.elapsed();
 
     if (mPacket) {
         mRouteLast.clear();
