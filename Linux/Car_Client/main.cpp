@@ -53,6 +53,7 @@ void showHelp()
     qDebug() << "--ttyportrtcm : Serial port for RTCM, e.g. /dev/ttyUSB0";
     qDebug() << "--rtcmbaud : RTCM port baud rate, e.g. 9600";
     qDebug() << "--chronos : Run CHRONOS client";
+    qDebug() << "--chronossettxid : Set CHRONOS transmitter id";
     qDebug() << "--ntrip [server]:[stream]:[user]:[password]:[port] : Connect to ntrip server";
     qDebug() << "--rtcmbasepos [lat]:[lon]:[height] : Inject RTCM base position message";
     qDebug() << "--batterycells : Number of cells in series, e.g. for the GUI battery indicator";
@@ -100,6 +101,7 @@ int main(int argc, char *argv[])
     QString ttyPortRtcm = "/dev/ttyUSB0";
     int rtcmBaud = 9600;
     bool useChronos = false;
+    int chronosTxId = -1;
     bool useNtrip = false;
     QString ntripServer;
     QString ntripStream;
@@ -290,6 +292,15 @@ int main(int argc, char *argv[])
             found = true;
         }
 
+        if (str == "--chronossettxid") {
+            if ((i + 1) < args.size()) {
+                i++;
+                bool ok;
+                chronosTxId = args.at(i).toInt(&ok);
+                found = ok;
+            }
+        }
+
         if (str == "--ntrip") {
             if ((i + 1) < args.size()) {
                 i++;
@@ -466,6 +477,10 @@ int main(int argc, char *argv[])
 
     if (useChronos) {
         chronos.startServer(car.packetInterface());
+
+        if (chronosTxId >= 0) {
+            chronos.comm()->setTransmitterId(chronosTxId);
+        }
 
         // In case we simulate, use CHRONOS-compatible settings
         CarSim *sim = car.getSimulatedCar(simulateCarFirst);

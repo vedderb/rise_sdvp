@@ -15,6 +15,7 @@ class Chronos : public QObject
 public:
     Chronos(QObject *parent = 0);
     bool startServer(PacketInterface *packet);
+    ChronosComm *comm();
 
 private slots:
     void startTimerSlot();
