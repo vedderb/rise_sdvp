@@ -747,6 +747,23 @@
             </spacer>
            </item>
            <item>
+            <widget class="QPushButton" name="experimentScatterButton">
+             <property name="toolTip">
+              <string>Use Scatterplot</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="icon">
+              <iconset resource="resources.qrc">
+               <normaloff>:/models/Icons/Polyline-96.png</normaloff>:/models/Icons/Polyline-96.png</iconset>
+             </property>
+             <property name="checkable">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QPushButton" name="experimentGraph1Button">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">

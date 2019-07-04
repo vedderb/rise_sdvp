@@ -448,6 +448,9 @@ void CarInterface::timerSlot()
             ui->experimentPlot->graph()->setData(mExperimentPlots.at(i).xData, mExperimentPlots.at(i).yData);
             ui->experimentPlot->graph()->setName(mExperimentPlots.at(i).label);
             ui->experimentPlot->graph()->setPen(QPen(mExperimentPlots.at(i).color));
+            if (ui->experimentScatterButton->isChecked()) {
+                ui->experimentPlot->graph()->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssDisc, 5));
+            }
         }
 
         ui->experimentPlot->legend->setVisible(mExperimentPlots.size() > 1);
