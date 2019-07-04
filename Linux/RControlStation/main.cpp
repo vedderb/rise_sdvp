@@ -37,6 +37,7 @@ void showHelp()
     qDebug() << "--connecttcp [ip]:[port] : Connect to car over TCP (multiple connections possible)";
     qDebug() << "--xmltcpserver [port] : Run XML TCP server on port";
     qDebug() << "--xmludpserver [port] : Run XML UDP server on port";
+    qDebug() << "--loadroutes [xmlFile] : Load routes from XML file";
 }
 
 int main(int argc, char *argv[])
@@ -85,6 +86,7 @@ int main(int argc, char *argv[])
     QList<CarConn> carsToConn;
     int xmlTcpPort = -2;
     int xmlUdpPort = -2;
+    QString loadRoutesFile;
 
     for (int i = 0;i < args.size();i++) {
         // Skip the program argument
@@ -243,6 +245,14 @@ int main(int argc, char *argv[])
             }
         }
 
+        if (str == "--loadroutes") {
+            if ((i + 1) < args.size()) {
+                i++;
+                loadRoutesFile = args.at(i);
+                found = true;
+            }
+        }
+
         if (!found) {
             if (dash) {
                 qCritical() << "At least one of the flags is invalid:" << str;
@@ -281,6 +291,17 @@ int main(int argc, char *argv[])
     } else {
         MainWindow w;
         w.show();
+
+        if (!loadRoutesFile.isEmpty()) {
+            MapWidget *map = w.map();
+            int res = utility::loadRoutes(loadRoutesFile, map);
+
+            if (res >= 0) {
+                map->zoomInOnRoute(-1, 0.8, 400, 400);
+            } else {
+                qCritical() << "Could not load routes from" << plotRoutesFile;
+            }
+        }
 
         for (auto c: carsToAdd) {
             w.addCar(c.id, c.pollData);

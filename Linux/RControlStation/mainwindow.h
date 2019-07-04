@@ -24,6 +24,7 @@
 #include <QSerialPort>
 #include <QLabel>
 #include <QTcpSocket>
+#include <bits/stl_map.h>
 #include "carinterface.h"
 #include "copterinterface.h"
 #include "packetinterface.h"
@@ -63,6 +64,7 @@ public:
     void addTcpConnection(QString ip, int port);
     void setNetworkTcpEnabled(bool enabled, int port = -1);
     void setNetworkUdpEnabled(bool enabled, int port = -1);
+    MapWidget *map();
 
 private slots:
     void serialDataAvailable();

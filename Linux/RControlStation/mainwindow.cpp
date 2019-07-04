@@ -360,6 +360,11 @@ void MainWindow::setNetworkUdpEnabled(bool enabled, int port)
     ui->networkInterface->setUdpEnabled(enabled, port);
 }
 
+MapWidget *MainWindow::map()
+{
+    return ui->mapWidget;
+}
+
 void MainWindow::serialDataAvailable()
 {
     while (mSerialPort->bytesAvailable() > 0) {
