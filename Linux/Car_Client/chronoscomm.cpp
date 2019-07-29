@@ -869,19 +869,40 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
         chronos_ACCM accm;
         VByteArrayLe vb(payload);
 
+         while (!vb.isEmpty()) {
+             uint16_t valueID = vb.vbPopFrontUint16();
+             uint16_t contentLength = vb.vbPopFrontUint16();
+
+
+         }
+
+
+        //ACCM message
         accm.actionID = vb.vbPopFrontUint16();
         accm.actionType = vb.vbPopFrontUint16();
         accm.actionTypeParam1 = vb.vbPopFrontUint32();
         accm.actionTypeParam2 = vb.vbPopFrontUint32();
         accm.actionTypeParam3 = vb.vbPopFrontUint32();
+
+        //TODO: handle ACCM message
     } break;
 
     case ISO_MSG_EXAC: {
         chronos_EXAC exac;
         VByteArrayLe vb(payload);
 
+        //Message Content
+        uint16_t valueID = vb.vbPopFrontUint16();
+        uint16_t contentLength = vb.vbPopFrontUint16();
+
+        //EXAC message
+        quint16 value_id = vb.vbPopFrontUint16();
+        quint16 value_len = vb.vbPopFrontUint16();
+
         exac.actionID = vb.vbPopFrontUint16();
-        exac.ecexuteTime = vb.vbPopFrontUint32();
+        exac.executeTime = vb.vbPopFrontUint32();
+
+        //TODO: handle EXAC message
     } break;
 
     default:
