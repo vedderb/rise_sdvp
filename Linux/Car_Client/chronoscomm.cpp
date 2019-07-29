@@ -804,17 +804,28 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
              uint16_t valueID = vb.vbPopFrontUint16();
              uint16_t contentLength = vb.vbPopFrontUint16();
 
-
+             switch(valueID) {
+             case ISO_VALUE_ID_ACTION_ID:
+                 accm.actionID = vb.vbPopFrontUint16();
+                 break;
+             case ISO_VALUE_ID_ACTION_TYPE:
+                 accm.actionType = vb.vbPopFrontUint16();
+                 break;
+             case ISO_VALUE_ID_ACTION_TYPE_PARAM1:
+                 accm.actionTypeParam1 = vb.vbPopFrontUint32();
+                 break;
+             case ISO_VALUE_ID_ACTION_TYPE_PARAM2:
+                 accm.actionTypeParam2 = vb.vbPopFrontUint32();
+                 break;
+             case ISO_VALUE_ID_ACTION_TYPE_PARAM3:
+                 accm.actionTypeParam3 = vb.vbPopFrontUint32();
+                 break;
+             default:
+                 qDebug() << "ACCM: Unknown value id: " << valueID;
+                 vb.remove(0, contentLength);
+                 break;
+             }
          }
-
-
-        //ACCM message
-        accm.actionID = vb.vbPopFrontUint16();
-        accm.actionType = vb.vbPopFrontUint16();
-        accm.actionTypeParam1 = vb.vbPopFrontUint32();
-        accm.actionTypeParam2 = vb.vbPopFrontUint32();
-        accm.actionTypeParam3 = vb.vbPopFrontUint32();
-
         //TODO: handle ACCM message
     } break;
 
@@ -822,22 +833,28 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
         chronos_EXAC exac;
         VByteArrayLe vb(payload);
 
-        //Message Content
-        uint16_t valueID = vb.vbPopFrontUint16();
-        uint16_t contentLength = vb.vbPopFrontUint16();
+        while (!vb.isEmpty()) {
+            uint16_t valueID = vb.vbPopFrontUint16();
+            uint16_t contentLength = vb.vbPopFrontUint16();
 
-        //EXAC message
-        quint16 value_id = vb.vbPopFrontUint16();
-        quint16 value_len = vb.vbPopFrontUint16();
-
-        exac.actionID = vb.vbPopFrontUint16();
-        exac.executeTime = vb.vbPopFrontUint32();
-
+            switch(valueID) {
+            case ISO_VALUE_ID_ACTION_ID:
+                exac.actionID = vb.vbPopFrontUint16();
+                break;
+            case ISO_VALUE_ID_ACTION_TYPE:
+                exac.executeTime = vb.vbPopFrontUint32();
+                break;
+            default:
+                qDebug() << "EXAC: Unknown value id: " << valueID;
+                vb.remove(0, contentLength);
+                break;
+            }
+        }
         //TODO: handle EXAC message
     } break;
 
     default:
-        break;
+            break;
     }
 
     return true;
