@@ -95,7 +95,7 @@ typedef struct {
 
 typedef struct {
     uint16_t actionID;
-    uint32_t ecexuteTime;
+    uint32_t executeTime;
 } chronos_EXAC;
 
 typedef struct {
