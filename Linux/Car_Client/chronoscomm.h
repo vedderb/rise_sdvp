@@ -122,6 +122,13 @@ typedef struct {
 #define ISO_MSG_HEAB                    0x0005
 #define ISO_MSG_MONR                    0x0006
 
+#define ISO_MSG_TRCM                    0x0011
+#define ISO_MSG_ACCM                    0x0012
+#define ISO_MSG_TREO                    0x0013
+#define ISO_MSG_EXAC                    0x0014
+#define ISO_MSG_CATA                    0x0015
+
+
 #define ISO_MSG_INIT_SUP                0xA102
 
 // ISO Value Types
