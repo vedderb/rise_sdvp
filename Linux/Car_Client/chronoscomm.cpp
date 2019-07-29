@@ -797,7 +797,6 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
     } break;
 
     case ISO_MSG_ACCM: {
-        qDebug() << "ACCM RECEIVED";
         chronos_ACCM accm;
         VByteArrayLe vb(payload);
 
@@ -806,11 +805,9 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
         accm.actionTypeParam1 = vb.vbPopFrontUint32();
         accm.actionTypeParam2 = vb.vbPopFrontUint32();
         accm.actionTypeParam3 = vb.vbPopFrontUint32();
-
     } break;
 
     case ISO_MSG_EXAC: {
-        qDebug() << "EXAC RECEIVED";
         chronos_EXAC exac;
         VByteArrayLe vb(payload);
 
