@@ -94,6 +94,19 @@ typedef struct {
 } chronos_monr;
 
 typedef struct {
+    uint16_t actionID;
+    uint32_t executeTime;
+} chronos_EXAC;
+
+typedef struct {
+    uint16_t actionID;
+    uint16_t actionType;
+    uint32_t actionTypeParam1;
+    uint32_t actionTypeParam2;
+    uint32_t actionTypeParam3;
+} chronos_ACCM;
+
+typedef struct {
     uint32_t sync_point;
     uint32_t stop_time;
 } chronos_sypm;
@@ -122,6 +135,12 @@ typedef struct {
 #define ISO_MSG_HEAB                    0x0005
 #define ISO_MSG_MONR                    0x0006
 
+#define ISO_MSG_TRCM                    0x0011
+#define ISO_MSG_ACCM                    0x0012
+#define ISO_MSG_TREO                    0x0013
+#define ISO_MSG_EXAC                    0x0014
+#define ISO_MSG_CATA                    0x0015
+
 #define ISO_MSG_INIT_SUP                0xA102
 
 // ISO Value Types
@@ -146,6 +165,15 @@ typedef struct {
 #define ISO_VALUE_ID_LONG_ACC           0x0050
 #define ISO_VALUE_ID_LAT_ACC            0x0051
 #define ISO_VALUE_ID_CURVATURE          0x0052
+
+#define ISO_VALUE_ID_ACTION_ID          0x0002
+#define ISO_VALUE_ID_ACTION_TYPE        0x0003
+#define ISO_VALUE_ID_ACTION_TYPE_PARAM1    0x00A1
+#define ISO_VALUE_ID_ACTION_TYPE_PARAM2    0x00A2
+#define ISO_VALUE_ID_ACTION_TYPE_PARAM3    0x00A3
+
+#define ISO_VALUE_ID_ACTION_ID          0x0002
+#define ISO_VALUE_ID_EXECUTE_TIME       0x0003
 
 #define ISO_VALUE_ID_TRAJECTORY_ID      0x0101
 #define ISO_VALUE_ID_TRAJECTORY_NAME    0x0102
