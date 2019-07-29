@@ -94,6 +94,19 @@ typedef struct {
 } chronos_monr;
 
 typedef struct {
+    uint16_t actionID;
+    uint32_t ecexuteTime;
+} chronos_EXAC;
+
+typedef struct {
+    uint16_t actionEvent;
+    uint16_t actionType;
+    uint32_t actionTypeParam1;
+    uint32_t actionTypeParam2;
+    uint32_t actionTypeParam3;
+} chronos_ACCM;
+
+typedef struct {
     uint32_t sync_point;
     uint32_t stop_time;
 } chronos_sypm;
@@ -127,7 +140,6 @@ typedef struct {
 #define ISO_MSG_TREO                    0x0013
 #define ISO_MSG_EXAC                    0x0014
 #define ISO_MSG_CATA                    0x0015
-
 
 #define ISO_MSG_INIT_SUP                0xA102
 
