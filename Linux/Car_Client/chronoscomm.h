@@ -99,7 +99,7 @@ typedef struct {
 } chronos_EXAC;
 
 typedef struct {
-    uint16_t actionEvent;
+    uint16_t actionID;
     uint16_t actionType;
     uint32_t actionTypeParam1;
     uint32_t actionTypeParam2;
