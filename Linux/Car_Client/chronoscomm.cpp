@@ -865,6 +865,16 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
         }
     } break;
 
+    case ISO_MSG_ACCM: {
+        //emit accnRec();
+
+    } break;
+
+    case ISO_MSG_EXAC: {
+
+        //emit exacRec();
+    } break;
+
     default:
         break;
     }
