@@ -18,6 +18,7 @@
 #include "chronoscomm.h"
 #include <QDateTime>
 #include <cmath>
+#include <wiringPi.h>
 
 ChronosComm::ChronosComm(QObject *parent) : QObject(parent)
 {
@@ -826,7 +827,8 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
                  break;
              }
          }
-        //TODO: handle ACCM message
+         digitalWrite (21, HIGH); delay(500);
+         digitalWrite (21,  LOW); delay(500);
     } break;
 
     case ISO_MSG_EXAC: {
@@ -850,7 +852,8 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
                 break;
             }
         }
-        //TODO: handle EXAC message
+        digitalWrite (21, HIGH); delay(500);
+        digitalWrite (21,  LOW); delay(500);
     } break;
 
     default:
