@@ -20,6 +20,8 @@
 #include <cmath>
 #include <wiringPi.h>
 
+#define PIN_NUMBER 0
+
 ChronosComm::ChronosComm(QObject *parent) : QObject(parent)
 {
     mTcpServer = new TcpServerSimple(this);
@@ -47,6 +49,12 @@ ChronosComm::ChronosComm(QObject *parent) : QObject(parent)
             this, SLOT(tcpInputDisconnected()));
     connect(mTcpSocket, SIGNAL(error(QAbstractSocket::SocketError)),
             this, SLOT(tcpInputError(QAbstractSocket::SocketError)));
+
+    wiringPiSetup() ;
+    pinMode (PIN_NUMBER, OUTPUT) ;
+    //TEMP ENSURE PIN IS LOW
+
+    digitalWrite (PIN_NUMBER,  LOW);
 }
 
 bool ChronosComm::startObject()
@@ -827,8 +835,6 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
                  break;
              }
          }
-         digitalWrite (21, HIGH); delay(500);
-         digitalWrite (21,  LOW); delay(500);
     } break;
 
     case ISO_MSG_EXAC: {
@@ -852,8 +858,7 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
                 break;
             }
         }
-        digitalWrite (21, HIGH); delay(500);
-        digitalWrite (21,  LOW); delay(500);
+        digitalWrite (PIN_NUMBER, HIGH);
     } break;
 
     default:
