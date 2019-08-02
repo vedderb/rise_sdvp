@@ -18,15 +18,13 @@
 #include "chronoscomm.h"
 #include <QDateTime>
 #include <cmath>
-#include <wiringPi.h>
-
-#define PIN_NUMBER 0
 
 ChronosComm::ChronosComm(QObject *parent) : QObject(parent)
 {
     mTcpServer = new TcpServerSimple(this);
     mUdpSocket = new QUdpSocket(this);
     mTcpSocket = new QTcpSocket(this);
+    mGpioControl = new GPIO();
 
     mTcpSocket->setSocketOption(QAbstractSocket::LowDelayOption, true);
     mUdpSocket->setSocketOption(QAbstractSocket::LowDelayOption, true);
@@ -50,11 +48,7 @@ ChronosComm::ChronosComm(QObject *parent) : QObject(parent)
     connect(mTcpSocket, SIGNAL(error(QAbstractSocket::SocketError)),
             this, SLOT(tcpInputError(QAbstractSocket::SocketError)));
 
-    wiringPiSetup() ;
-    pinMode (PIN_NUMBER, OUTPUT) ;
-    //TEMP ENSURE PIN IS LOW
-
-    digitalWrite (PIN_NUMBER,  LOW);
+    mGpioControl->setGPIO_Out(4);
 }
 
 bool ChronosComm::startObject()
@@ -858,7 +852,7 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
                 break;
             }
         }
-        digitalWrite (PIN_NUMBER, HIGH);
+    mGpioControl->GPIO_Write(4, 1);
     } break;
 
     default:
