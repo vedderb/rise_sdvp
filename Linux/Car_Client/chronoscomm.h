@@ -23,6 +23,8 @@
 #include <QTimer>
 #include <vbytearrayle.h>
 #include <tcpserversimple.h>
+#include "gpio.h"
+
 
 typedef enum {
     COMM_MODE_UNDEFINED = 0,
@@ -273,6 +275,7 @@ private:
     TcpServerSimple *mTcpServer;
     QTcpSocket *mTcpSocket;
     QUdpSocket *mUdpSocket;
+    GPIO* mGpioControl;
     QHostAddress mUdpHostAddress;
     quint16 mUdpPort;
     quint8 mTransmitterId;
@@ -284,6 +287,8 @@ private:
     quint32 mTcpLen;
     quint16 mTcpChecksum;
     VByteArrayLe mTcpData;
+
+
 
     void mkChronosHeader(VByteArrayLe &vb,
                          quint8 transmitter_id,
