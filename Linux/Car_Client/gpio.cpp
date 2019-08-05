@@ -76,14 +76,14 @@ int GPIO::GPIO_Write(int pin, int value)
         fprintf(stderr, "ERROR: Invalid value!\nValue must be 0 or 1\n");
         return -1;
     }
-    FILE *sysfs_handle = NULL;
+    FILE *sysfsHandle = NULL;
     char strValueFile[STR_LENGTH];
 
     snprintf (strValueFile, (STR_LENGTH*sizeof(char)), "/sys/class/gpio/gpio%d/value", pin);
 
-    if ((sysfs_handle = fopen(strValueFile, "w")) == NULL)
+    if ((sysfsHandle = fopen(strValueFile, "w")) == NULL)
     {
-        fprintf(stderr, "ERROR: Cannot open value file for pin %d...\n Has the pin been exported?\n", pin);
+        fprintf(stderr, "ERROR: Cannot open value file for pin %d...\nHas the pin been exported?\n", pin);
         return 1;
     }
 
