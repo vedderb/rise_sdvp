@@ -134,6 +134,8 @@ void ChronosComm::closeConnection()
     mTcpSocket->close();
     mUdpSocket->close();
     mTcpState = 0;
+    mGpioControl->GPIO_Write(4, 0);
+    mGpioControl->unsetGPIO(4);
     mCommMode = COMM_MODE_UNDEFINED;
 }
 
