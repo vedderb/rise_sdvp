@@ -14,6 +14,10 @@ GPIO::~GPIO(){
 
 }
 
+/*!
+ * \brief GPIO::setGPIO_Out defines a specific GPIO pin to be used as output
+ * \param pin number of the specified pin to be set as output
+ */
 int GPIO::setGPIO_Out(int pin)
 {
     int gpio_pins[]={GPIO_PINS};
@@ -140,4 +144,9 @@ int GPIO::unsetGPIO(int pin)
     }
     fclose(sysfsHandle);
     return 0;
+}
+
+int GPIO::checkGPIOstatus(int pin){
+
+
 }
