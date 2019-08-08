@@ -49,8 +49,6 @@ ChronosComm::ChronosComm(QObject *parent) : QObject(parent)
             this, SLOT(tcpInputDisconnected()));
     connect(mTcpSocket, SIGNAL(error(QAbstractSocket::SocketError)),
             this, SLOT(tcpInputError(QAbstractSocket::SocketError)));
-
-    mGpioControl->setGPIO_Out(PIN_OUT);
 }
 
 bool ChronosComm::startObject()
@@ -833,7 +831,9 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
                  break;
              }
          }
-    } break;
+         mGpioControl->unsetGPIO(PIN_OUT);
+         mGpioControl->setGPIO_Out(PIN_OUT);
+       } break;
 
     case ISO_MSG_EXAC: {
         chronos_EXAC exac;
@@ -856,7 +856,8 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
                 break;
             }
         }
-    mGpioControl->GPIO_Write(PIN_OUT, 1);
+    if(exac.actionID == )
+        mGpioControl->GPIO_Write(PIN_OUT, 1);
     } break;
 
     default:
