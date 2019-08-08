@@ -19,6 +19,8 @@
 #include <QDateTime>
 #include <cmath>
 
+#define PIN_OUT 4
+
 ChronosComm::ChronosComm(QObject *parent) : QObject(parent)
 {
     mTcpServer = new TcpServerSimple(this);
@@ -48,7 +50,7 @@ ChronosComm::ChronosComm(QObject *parent) : QObject(parent)
     connect(mTcpSocket, SIGNAL(error(QAbstractSocket::SocketError)),
             this, SLOT(tcpInputError(QAbstractSocket::SocketError)));
 
-    mGpioControl->setGPIO_Out(4);
+    mGpioControl->setGPIO_Out(PIN_OUT);
 }
 
 bool ChronosComm::startObject()
@@ -134,8 +136,8 @@ void ChronosComm::closeConnection()
     mTcpSocket->close();
     mUdpSocket->close();
     mTcpState = 0;
-    mGpioControl->GPIO_Write(4, 0);
-    mGpioControl->unsetGPIO(4);
+    mGpioControl->GPIO_Write(PIN_OUT, 0);
+    mGpioControl->unsetGPIO(PIN_OUT);
     mCommMode = COMM_MODE_UNDEFINED;
 }
 
@@ -854,7 +856,7 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
                 break;
             }
         }
-    mGpioControl->GPIO_Write(4, 1);
+    mGpioControl->GPIO_Write(PIN_OUT, 1);
     } break;
 
     default:
