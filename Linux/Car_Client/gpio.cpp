@@ -90,12 +90,12 @@ int GPIO::GPIO_Write(int pin, int value)
     char strVal[2];
     snprintf (strVal, (2*sizeof(char)), "%d", value);
 
-    if(fwrite(strVal, sizeof(char), 2, sysfs_handle) != 2)
+    if(fwrite(strVal, sizeof(char), 2, sysfsHandle) != 2)
     {
         fprintf(stderr, "ERROR: Cannot write value %d to GPIO pin %d\n", value, pin);
         return 2;
     }
-    fclose(sysfs_handle);
+    fclose(sysfsHandle);
 
     return 0;
 }
