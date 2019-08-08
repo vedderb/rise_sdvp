@@ -925,7 +925,6 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
                 break;
             }
         }
-    if(exac.actionID == )
         mGpioControl->GPIO_Write(PIN_OUT, 1);
     } break;
 
