@@ -34,7 +34,7 @@ int GPIO::setGPIO_Out(int pin)
 
     if(!valid)
     {
-        fprintf(stderr, "ERROR: Tried setting invalid pin to Out!\nPin %d is not a GPIO pin or already in use\n", pin);
+        fprintf(stderr, "ERROR: Tried setting invalid pin to OUT!\nPin %d is not a GPIO pin or already in use\n", pin);
         return -1;
     }
 
@@ -42,7 +42,7 @@ int GPIO::setGPIO_Out(int pin)
 
     if ((sysfsHandle = fopen("/sys/class/gpio/export", "w")) == NULL)
     {
-        fprintf(stderr, "ERROR: Tried setting pin %d to Out. Cannot open GPIO export...\n", pin);
+        fprintf(stderr, "ERROR: Tried setting pin %d to OUT. Cannot open GPIO export...\n", pin);
         return 1;
     }
 
@@ -53,7 +53,7 @@ int GPIO::setGPIO_Out(int pin)
     //Eport pin by writing to the gpio/export file
     if (fwrite(&strPin, sizeof(char), 3, sysfsHandle)!=3)
     {
-        fprintf(stderr, "ERROR: Tried setting pin %d to Out. Unable to export GPIO pin %d\n", pin, pin);
+        fprintf(stderr, "ERROR: Tried setting pin %d to OUT. Unable to export GPIO pin %d\n", pin, pin);
         return 2;
     }
     fclose(sysfsHandle);
@@ -63,17 +63,19 @@ int GPIO::setGPIO_Out(int pin)
     snprintf(str_direction_file, (STR_LENGTH*sizeof(char)), "/sys/class/gpio/gpio%d/direction", pin);
     if ((sysfsHandle = fopen(str_direction_file, "w")) == NULL)
     {
-        fprintf(stderr, "ERROR: Tried setting pin %d to Out. Cannot open direction file...\n", pin);
+        fprintf(stderr, "ERROR: Tried setting pin %d to OUT. Cannot open direction file...\n", pin);
         return 3;
     }
 
     //write "out" to the direction file.
     if (fwrite("out", sizeof(char), 4, sysfsHandle) != 4)
     {
-        fprintf(stderr, "ERROR: Tried setting pin %d to Out. Unable to write direction for GPIO%d\n", pin, pin);
+        fprintf(stderr, "ERROR: Tried setting pin %d to OUT. Unable to write direction for GPIO %d\n", pin, pin);
         return 4;
     }
     fclose(sysfsHandle);
+
+    fprintf(stdout,"Set Pin %d as OUT\n", pin);
 
     return 0;
 }
@@ -105,6 +107,8 @@ int GPIO::GPIO_Write(int pin, int value)
         return 2;
     }
     fclose(sysfsHandle);
+
+    fprintf(stdout, "Set Pin %d to %d\n", pin, value);
 
     return 0;
 }
@@ -143,6 +147,9 @@ int GPIO::unsetGPIO(int pin)
         return 2;
     }
     fclose(sysfsHandle);
+
+    fprintf(stdout,"Unset Pin %d\n", pin);
+
     return 0;
 }
 
