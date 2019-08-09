@@ -34,7 +34,7 @@ int GPIO::setGPIO_Out(int pin)
 
     if(!valid)
     {
-        fprintf(stderr, "ERROR: Invalid pin!\nPin %d is not a GPIO pin or already in use\n", pin);
+        fprintf(stderr, "ERROR: Tried setting invalid pin to Out!\nPin %d is not a GPIO pin or already in use\n", pin);
         return -1;
     }
 
@@ -42,7 +42,7 @@ int GPIO::setGPIO_Out(int pin)
 
     if ((sysfsHandle = fopen("/sys/class/gpio/export", "w")) == NULL)
     {
-        fprintf(stderr, "ERROR: Cannot open GPIO export...\n");
+        fprintf(stderr, "ERROR: Tried setting pin %d to Out. Cannot open GPIO export...\n", pin);
         return 1;
     }
 
@@ -53,7 +53,7 @@ int GPIO::setGPIO_Out(int pin)
     //Eport pin by writing to the gpio/export file
     if (fwrite(&strPin, sizeof(char), 3, sysfsHandle)!=3)
     {
-        fprintf(stderr, "ERROR: Unable to export GPIO pin %d\n", pin);
+        fprintf(stderr, "ERROR: Tried setting pin %d to Out. Unable to export GPIO pin %d\n", pin, pin);
         return 2;
     }
     fclose(sysfsHandle);
@@ -63,14 +63,14 @@ int GPIO::setGPIO_Out(int pin)
     snprintf(str_direction_file, (STR_LENGTH*sizeof(char)), "/sys/class/gpio/gpio%d/direction", pin);
     if ((sysfsHandle = fopen(str_direction_file, "w")) == NULL)
     {
-        fprintf(stderr, "ERROR: Cannot open direction file...\n");
+        fprintf(stderr, "ERROR: Tried setting pin %d to Out. Cannot open direction file...\n", pin);
         return 3;
     }
 
     //write "out" to the direction file.
     if (fwrite("out", sizeof(char), 4, sysfsHandle) != 4)
     {
-        fprintf(stderr, "ERROR: Unable to write direction for GPIO%d\n", pin);
+        fprintf(stderr, "ERROR: Tried setting pin %d to Out. Unable to write direction for GPIO%d\n", pin, pin);
         return 4;
     }
     fclose(sysfsHandle);
@@ -82,7 +82,7 @@ int GPIO::GPIO_Write(int pin, int value)
 {
     if ((value!=0)&&(value!=1))
     {
-        fprintf(stderr, "ERROR: Invalid value!\nValue must be 0 or 1\n");
+        fprintf(stderr, "ERROR: Tried writing to pin %d with invalid value %d!\nValue must be 0 or 1\n", pin, value);
         return -1;
     }
     FILE *sysfsHandle = NULL;
@@ -92,7 +92,7 @@ int GPIO::GPIO_Write(int pin, int value)
 
     if ((sysfsHandle = fopen(strValueFile, "w")) == NULL)
     {
-        fprintf(stderr, "ERROR: Cannot open value file for pin %d...\nHas the pin been exported?\n", pin);
+        fprintf(stderr, "ERROR: Tried writing to pin %d. Cannot open value file for pin.\nHas pin %d been exported?\n", pin, pin);
         return 1;
     }
 
@@ -101,7 +101,7 @@ int GPIO::GPIO_Write(int pin, int value)
 
     if(fwrite(strVal, sizeof(char), 2, sysfsHandle) != 2)
     {
-        fprintf(stderr, "ERROR: Cannot write value %d to GPIO pin %d\n", value, pin);
+        fprintf(stderr, "ERROR: Tried writing to pin %d. Cannot write value %d to GPIO pin %d\n", value, pin, pin);
         return 2;
     }
     fclose(sysfsHandle);
@@ -120,33 +120,30 @@ int GPIO::unsetGPIO(int pin)
 
     if ((sysfsHandle = fopen(strValueFile, "w")) == NULL)
     {
-        fprintf(stderr, "ERROR: Cannot open value file for pin %d...\n", pin);
+        fprintf(stderr, "ERROR: Tried unsetting pin %d. Unable open value file.", pin);
         return 1;
     }
 
     if(fwrite("0", sizeof(char), 2, sysfsHandle) != 2)
     {
-        fprintf(stderr, "ERROR: Cannot write to GPIO pin %d\n", pin);
+        fprintf(stderr, "ERROR: Tried unsetting pin %d. Cannot write to GPIO pin\n", pin);
         return 2;
     }
     fclose(sysfsHandle);
 
     if ((sysfsHandle = fopen("/sys/class/gpio/unexport", "w")) == NULL)
     {
-        fprintf(stderr, "ERROR: Cannot open GPIO unexport...\n");
+        fprintf(stderr, "ERROR: Tried unsetting pin %d. Cannot open GPIO unexport.\n", pin);
         return 1;
     }
 
     if (fwrite(&strPin, sizeof(char), 3, sysfsHandle)!=3)
     {
-        fprintf(stderr, "ERROR: Unable to unexport GPIO pin %d\n", pin);
+        fprintf(stderr, "ERROR: Tried unsetting pin %d. Unable to unexport GPIO pin.\n", pin);
         return 2;
     }
     fclose(sysfsHandle);
     return 0;
 }
 
-int GPIO::checkGPIOstatus(int pin){
 
-
-}
