@@ -80,8 +80,10 @@ int GPIO::setGPIO_Out(int pin)
     return 0;
 }
 
-int GPIO::GPIO_Write(int pin, int value)
+int GPIO::GPIO_Write(GPIO::PinOperation_t pinOp)
 {
+    int pin = pinOp.first, value = pinOp.second;
+
     if ((value!=0)&&(value!=1))
     {
         fprintf(stderr, "ERROR: Tried writing to pin %d with invalid value %d!\nValue must be 0 or 1\n", pin, value);
