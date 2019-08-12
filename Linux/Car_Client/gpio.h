@@ -11,8 +11,10 @@ public:
     explicit GPIO(QObject *parent = 0);
     ~GPIO();
 
+    typedef std::pair<int,bool> PinOperation_t;
+
     int setGPIO_Out(int pin);
-    int GPIO_Write(int pin, int value);
+    int GPIO_Write(PinOperation_t pinOp);
     int unsetGPIO(int pin);
     int checkGPIOstatus(int pin);
 };
