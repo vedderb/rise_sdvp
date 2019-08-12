@@ -134,7 +134,8 @@ void ChronosComm::closeConnection()
     mTcpSocket->close();
     mUdpSocket->close();
     mTcpState = 0;
-    mGpioControl->GPIO_Write(PIN_OUT, 0);
+    GPIO::PinOperation_t po(PIN_OUT,false);
+    mGpioControl->GPIO_Write(po);
     mGpioControl->unsetGPIO(PIN_OUT);
     mCommMode = COMM_MODE_UNDEFINED;
 }
@@ -581,8 +582,8 @@ void ChronosComm::configureAction(chronos_ACCM accm)
     GPIO::PinOperation_t pinOperation;
     if (accm.actionType == ISO_ACTION_TYPE_MISC_DIGITAL_OUT)
     {
-        pinOperation.first = accm.actionID;
         // TODO: Decide which pin to set as digital out
+        pinOperation.first = PIN_OUT;
         if (accm.actionTypeParam1 == ISO_ACTION_TYPE_PARAM_SET_TRUE
                 || accm.actionTypeParam2 == ISO_ACTION_TYPE_PARAM_SET_TRUE
                 || accm.actionTypeParam3 == ISO_ACTION_TYPE_PARAM_SET_TRUE)
