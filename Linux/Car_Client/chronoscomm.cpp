@@ -395,7 +395,9 @@ quint32 ChronosComm::gpsMsOfWeekToUtcToday(quint64 time)
 void ChronosComm::tcpRx(QByteArray data)
 {
     uint8_t sender_id = 0;
+
     for (char c: data) {
+
         switch (mTcpState) {
         case 0: // first byte of sync word
             if (!(c == ISO_PART_SYNC_WORD)) {
@@ -470,7 +472,6 @@ void ChronosComm::tcpRx(QByteArray data)
         case 13: // checksum
             mTcpChecksum |= ((uint8_t)c) << 8;
             mTcpState = 0;
-
             if (mTcpChecksum == 0) {
                 decodeMsg(mTcpType, mTcpLen, mTcpData, sender_id);
             } else {
@@ -573,6 +574,48 @@ void ChronosComm::mkChronosHeader(VByteArrayLe &vb, quint8 transmitter_id, quint
 void ChronosComm::appendChronosChecksum(VByteArrayLe &vb)
 {
     vb.vbAppendUint16(0);
+}
+
+void ChronosComm::configureAction(chronos_ACCM accm)
+{
+    GPIO::PinOperation_t pinOperation;
+    if (accm.actionType == ISO_ACTION_TYPE_MISC_DIGITAL_OUT)
+    {
+        pinOperation.first = accm.actionID;
+        // TODO: Decide which pin to set as digital out
+        if (accm.actionTypeParam1 == ISO_ACTION_TYPE_PARAM_SET_TRUE
+                || accm.actionTypeParam2 == ISO_ACTION_TYPE_PARAM_SET_TRUE
+                || accm.actionTypeParam3 == ISO_ACTION_TYPE_PARAM_SET_TRUE)
+        {
+            pinOperation.second = true;
+        }
+        else if (accm.actionTypeParam1 == ISO_ACTION_TYPE_PARAM_SET_FALSE
+                 || accm.actionTypeParam2 == ISO_ACTION_TYPE_PARAM_SET_FALSE
+                 || accm.actionTypeParam3 == ISO_ACTION_TYPE_PARAM_SET_FALSE)
+        {
+            pinOperation.second = false;
+        }
+        else
+        {
+            qWarning() << "Invalid digital out action in ACCM";
+            return;
+        }
+
+        mGpioControl->unsetGPIO(PIN_OUT);
+        mGpioControl->setGPIO_Out(PIN_OUT);
+
+        std::pair<quint16,GPIO::PinOperation_t> actionPinConnection(accm.actionID,pinOperation);
+        actionPinConnections.append(actionPinConnection);
+    }
+}
+
+void ChronosComm::executeAction(chronos_EXAC exac)
+{
+    for (const std::pair<quint16,GPIO::PinOperation_t> &actionToPin : actionPinConnections )
+    {
+        if (actionToPin.first == exac.actionID)
+            mGpioControl->GPIO_Write(actionToPin.second);
+    }
 }
 
 bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8_t sender_id)
@@ -805,36 +848,36 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
         chronos_ACCM accm;
         VByteArrayLe vb(payload);
 
-         while (!vb.isEmpty()) {
-             uint16_t valueID = vb.vbPopFrontUint16();
-             uint16_t contentLength = vb.vbPopFrontUint16();
+        while (!vb.isEmpty()) {
+            uint16_t valueID = vb.vbPopFrontUint16();
+            uint16_t contentLength = vb.vbPopFrontUint16();
 
-             switch(valueID) {
-             case ISO_VALUE_ID_ACTION_ID:
-                 accm.actionID = vb.vbPopFrontUint16();
-                 break;
-             case ISO_VALUE_ID_ACTION_TYPE:
-                 accm.actionType = vb.vbPopFrontUint16();
-                 break;
-             case ISO_VALUE_ID_ACTION_TYPE_PARAM1:
-                 accm.actionTypeParam1 = vb.vbPopFrontUint32();
-                 break;
-             case ISO_VALUE_ID_ACTION_TYPE_PARAM2:
-                 accm.actionTypeParam2 = vb.vbPopFrontUint32();
-                 break;
-             case ISO_VALUE_ID_ACTION_TYPE_PARAM3:
-                 accm.actionTypeParam3 = vb.vbPopFrontUint32();
-                 break;
-             default:
-                 qDebug() << "ACCM: Unknown value id: " << valueID;
-                 vb.remove(0, contentLength);
-                 break;
-             }
-         }
-         mGpioControl->unsetGPIO(PIN_OUT);
-         mGpioControl->setGPIO_Out(PIN_OUT);
-       } break;
+            switch(valueID) {
+            case ISO_VALUE_ID_ACTION_ID:
+                accm.actionID = vb.vbPopFrontUint16();
+                break;
+            case ISO_VALUE_ID_ACTION_TYPE:
+                accm.actionType = vb.vbPopFrontUint16();
+                break;
+            case ISO_VALUE_ID_ACTION_TYPE_PARAM1:
+                accm.actionTypeParam1 = vb.vbPopFrontUint32();
+                break;
+            case ISO_VALUE_ID_ACTION_TYPE_PARAM2:
+                accm.actionTypeParam2 = vb.vbPopFrontUint32();
+                break;
+            case ISO_VALUE_ID_ACTION_TYPE_PARAM3:
+                accm.actionTypeParam3 = vb.vbPopFrontUint32();
+                break;
+            default:
+                qDebug() << "ACCM: Unknown value id: " << valueID;
+                vb.remove(0, contentLength);
+                break;
+            }
+        }
 
+        configureAction(accm);
+        qDebug() << "ACCM Rx";
+    } break;
     case ISO_MSG_EXAC: {
         chronos_EXAC exac;
         VByteArrayLe vb(payload);
@@ -856,9 +899,10 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
                 break;
             }
         }
-        mGpioControl->GPIO_Write(PIN_OUT, 1);
-    } break;
 
+        executeAction(exac);
+        qDebug() << "EXAC Rx";
+    } break;
     default:
             break;
     }
