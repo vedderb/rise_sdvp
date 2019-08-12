@@ -211,6 +211,9 @@ typedef struct {
 #define ISO_VALUE_ID_ACTION_TYPE_PARAM1    0x00A1
 #define ISO_VALUE_ID_ACTION_TYPE_PARAM2    0x00A2
 #define ISO_VALUE_ID_ACTION_TYPE_PARAM3    0x00A3
+#define ISO_ACTION_TYPE_MISC_DIGITAL_OUT 0x00E0
+#define ISO_ACTION_TYPE_PARAM_SET_FALSE 0x0000
+#define ISO_ACTION_TYPE_PARAM_SET_TRUE 0x0001
 
 #define ISO_VALUE_ID_ACTION_ID          0x0002
 #define ISO_VALUE_ID_EXECUTE_TIME       0x0003
@@ -288,8 +291,6 @@ private:
     quint16 mTcpChecksum;
     VByteArrayLe mTcpData;
 
-
-
     void mkChronosHeader(VByteArrayLe &vb,
                          quint8 transmitter_id,
                          quint8 sequence_num, // per object sequence num
@@ -299,7 +300,9 @@ private:
     void appendChronosChecksum(VByteArrayLe &vb);
     bool decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8_t sender_id);
     void sendData(QByteArray data, bool isUdp);
-
+    void configureAction(chronos_ACCM accm);
+    void executeAction(chronos_EXAC exac);
+    QList<std::pair<quint16,GPIO::PinOperation_t>> actionPinConnections;
 };
 
 #endif // CHRONOSCOMM_H
