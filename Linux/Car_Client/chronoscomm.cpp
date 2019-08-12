@@ -19,11 +19,14 @@
 #include <QDateTime>
 #include <cmath>
 
+#define PIN_OUT 4
+
 ChronosComm::ChronosComm(QObject *parent) : QObject(parent)
 {
     mTcpServer = new TcpServerSimple(this);
     mUdpSocket = new QUdpSocket(this);
     mTcpSocket = new QTcpSocket(this);
+    mGpioControl = new GPIO();
 
     mTcpSocket->setSocketOption(QAbstractSocket::LowDelayOption, true);
     mUdpSocket->setSocketOption(QAbstractSocket::LowDelayOption, true);
@@ -131,6 +134,8 @@ void ChronosComm::closeConnection()
     mTcpSocket->close();
     mUdpSocket->close();
     mTcpState = 0;
+    mGpioControl->GPIO_Write(PIN_OUT, 0);
+    mGpioControl->unsetGPIO(PIN_OUT);
     mCommMode = COMM_MODE_UNDEFINED;
 }
 
@@ -826,8 +831,9 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
                  break;
              }
          }
-        //TODO: handle ACCM message
-    } break;
+         mGpioControl->unsetGPIO(PIN_OUT);
+         mGpioControl->setGPIO_Out(PIN_OUT);
+       } break;
 
     case ISO_MSG_EXAC: {
         chronos_EXAC exac;
@@ -850,7 +856,7 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
                 break;
             }
         }
-        //TODO: handle EXAC message
+        mGpioControl->GPIO_Write(PIN_OUT, 1);
     } break;
 
     default:
