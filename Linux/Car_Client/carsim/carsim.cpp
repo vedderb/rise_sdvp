@@ -266,7 +266,8 @@ void CarSim::logBroadcastTimerSlot()
                 "%.7f,"   // lat
                 "%.7f,"   // lon
                 "%.3f,"  // height
-                "%.3f\r\n",  // Travel distance
+                "%.3f,"  // Travel distance
+                "%.2f\r\n",  // Yaw IMU
                 0,
                 QTime::currentTime().msecsSinceStartOfDay(),
                 mSimState.px,
@@ -289,7 +290,8 @@ void CarSim::logBroadcastTimerSlot()
                 0.0,
                 0.0,
                 0.0,
-                travel_dist);
+                travel_dist,
+                yaw);
 
     VByteArray pkt;
     pkt.vbAppendUint8(mId);

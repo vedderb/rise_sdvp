@@ -67,6 +67,7 @@ typedef struct {
 	float roll; // Degrees
 	float pitch; // Degrees
 	float yaw; // Degrees
+	float yaw_imu;
 	float roll_rate; // Degrees / second
 	float pitch_rate; // Degrees / second
 	float yaw_rate; // Degrees / second

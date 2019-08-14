@@ -397,7 +397,8 @@ static void print_log_ext(void) {
 			"%.7f,"   // lat
 			"%.7f,"   // lon
 			"%.3f,"  // height
-			"%.3f\r\n",  // Travel distance
+			"%.3f,"  // Travel distance
+			"%.2f\r\n",  // Yaw IMU
 
 			time,
 			ms_today,
@@ -423,7 +424,8 @@ static void print_log_ext(void) {
 			gps.height,
 			(double)(val.tachometer * main_config.car.gear_ratio
 			* (2.0 / main_config.car.motor_poles) * (1.0 / 6.0)
-			* main_config.car.wheel_diam * M_PI));
+			* main_config.car.wheel_diam * M_PI),
+			(double)pos.yaw_imu);
 }
 
 #ifdef LOG_EN_DW
