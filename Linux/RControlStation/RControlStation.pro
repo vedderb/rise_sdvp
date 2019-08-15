@@ -32,6 +32,10 @@ unix:!macx {
 
 # Simulation Scennarios
 #DEFINES += HAS_SIM_SCEN
+# Usage: From the RControlStation root do:
+# git clone https://github.com/esmini/esmini esmini
+# and uncomment this define. The the editor will show up
+# as the last tab in RControlStation.
 
 TARGET = RControlStation
 TEMPLATE = app
@@ -177,7 +181,7 @@ contains(DEFINES, HAS_LIME_SDR) {
 }
 
 contains(DEFINES, HAS_SIM_SCEN) {
-    include(env_sim/EnvironmentSimulator.pri)
+    include(esmini/EnvironmentSimulator.pri)
     SOURCES += pagesimscen.cpp
     HEADERS += pagesimscen.h \
             simscentree.h
