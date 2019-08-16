@@ -226,6 +226,7 @@ typedef struct {
 	bool disable_motor; // Disable motor drive commands to make sure that the motor does not move.
 	bool simulate_motor; // Simulate motor movement without motor controller feedback
 	bool clamp_imu_yaw_stationary; // Clamp IMU yaw when car is stationary
+	bool use_uwb_pos; // Use UWB positioning instead of RTK positioning
 
 	float gear_ratio;
 	float wheel_diam;

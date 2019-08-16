@@ -29,13 +29,14 @@
 #include "terminal.h"
 #include "comm_can.h"
 #include "hydraulic.h"
+#include "pos_uwb.h"
 
 // Defines
 #define AP_HZ						100 // Hz
 
 // Private variables
 static THD_WORKING_AREA(ap_thread_wa, 2048);
-static ROUTE_POINT m_route[AP_ROUTE_SIZE];
+__attribute__((section(".ram4"))) static ROUTE_POINT m_route[AP_ROUTE_SIZE];
 static bool m_is_active;
 static int m_point_last; // The last point on the route
 static int m_point_now; // The first point in the currently considered part of the route
@@ -246,7 +247,12 @@ void autopilot_sync_point(int32_t point, int32_t time, int32_t min_time_diff) {
 	}
 
 	POS_STATE p;
-	pos_get_pos(&p);
+
+	if (main_config.car.use_uwb_pos) {
+		pos_uwb_get_pos(&p);
+	} else {
+		pos_get_pos(&p);
+	}
 
 	// Car center
 	const float car_cx = p.px;
@@ -475,7 +481,11 @@ static THD_FUNCTION(ap_thread, arg) {
 
 		if (len >= 2) {
 			POS_STATE pos_now;
-			pos_get_pos(&pos_now);
+			if (main_config.car.use_uwb_pos) {
+				pos_uwb_get_pos(&pos_now);
+			} else {
+				pos_get_pos(&pos_now);
+			}
 
 			// Car center
 			const float car_cx = pos_now.px;

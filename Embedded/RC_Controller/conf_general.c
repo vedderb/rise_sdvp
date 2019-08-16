@@ -120,6 +120,7 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 	conf->car.disable_motor = false;
 	conf->car.simulate_motor = false;
 	conf->car.clamp_imu_yaw_stationary = true;
+	conf->car.use_uwb_pos = false;
 
 	conf->car.gear_ratio = (1.0 / 3.0) * (21.0 / 37.0);
 	conf->car.wheel_diam = 0.11;

@@ -39,8 +39,8 @@
 #define MAIN_MODE_IS_BASE			(MAIN_MODE == MAIN_MODE_M8T_BASE_2400 || MAIN_MODE == MAIN_MODE_M8T_BASE_400)
 
 // Firmware version
-#define FW_VERSION_MAJOR			10
-#define FW_VERSION_MINOR			2
+#define FW_VERSION_MAJOR			11
+#define FW_VERSION_MINOR			0
 
 // Default car settings
 //#define CAR_TERO // Benjamins tero car
@@ -170,7 +170,7 @@
 #define SERVO_OUT_PULSE_MAX_US		2000
 
 // Autopilot settings
-#define AP_ROUTE_SIZE				500
+#define AP_ROUTE_SIZE				1000
 
 // Global variables
 extern MAIN_CONFIG main_config;

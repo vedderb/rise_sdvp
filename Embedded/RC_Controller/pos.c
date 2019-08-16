@@ -1377,10 +1377,7 @@ static void car_update_pos(float distance, float turn_rad_rear, float angle_diff
 
 	m_pos.speed = speed;
 
-	// TODO: eventually use yaw from IMU and implement yaw correction
-	pos_uwb_update_dr(m_pos.yaw, distance, turn_rad_rear, m_pos.speed);
-	//	pos_uwb_update_dr(m_imu_yaw, distance, steering_angle, m_pos.speed);
-
+	pos_uwb_update_dr(m_pos.yaw_imu, m_pos.yaw, distance, turn_rad_rear, m_pos.speed);
 	save_pos_history();
 
 	chMtxUnlock(&m_mutex_pos);

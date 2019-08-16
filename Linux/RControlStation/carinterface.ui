@@ -464,25 +464,6 @@
               </property>
              </widget>
             </item>
-            <item row="3" column="2">
-             <widget class="QDoubleSpinBox" name="confYawImuGainBox">
-              <property name="toolTip">
-               <string>IMU gain vs odometry gain. Higer values give the IMU more gain.</string>
-              </property>
-              <property name="prefix">
-               <string>Yaw IMU Gain: </string>
-              </property>
-              <property name="decimals">
-               <number>5</number>
-              </property>
-              <property name="maximum">
-               <double>1000.000000000000000</double>
-              </property>
-              <property name="singleStep">
-               <double>0.010000000000000</double>
-              </property>
-             </widget>
-            </item>
             <item row="2" column="0">
              <widget class="QDoubleSpinBox" name="confServoCenterBox">
               <property name="prefix">
@@ -600,6 +581,32 @@
               </property>
               <property name="text">
                <string>Clamp IMU yaw stat</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="2">
+             <widget class="QDoubleSpinBox" name="confYawImuGainBox">
+              <property name="toolTip">
+               <string>IMU gain vs odometry gain. Higer values give the IMU more gain.</string>
+              </property>
+              <property name="prefix">
+               <string>Yaw IMU Gain: </string>
+              </property>
+              <property name="decimals">
+               <number>5</number>
+              </property>
+              <property name="maximum">
+               <double>1000.000000000000000</double>
+              </property>
+              <property name="singleStep">
+               <double>0.010000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="2">
+             <widget class="QCheckBox" name="confUseUwbPosBox">
+              <property name="text">
+               <string>Use UWB Position</string>
               </property>
              </widget>
             </item>

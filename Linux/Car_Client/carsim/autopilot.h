@@ -84,7 +84,7 @@ private slots:
     void timerSlot();
 
 private:
-    static const int ap_route_size = 500;
+    static const int ap_route_size = 800;
     static const int ms_per_day = (24 * 60 * 60 * 1000);
 
     QTimer *mTimer;

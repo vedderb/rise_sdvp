@@ -580,6 +580,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			main_config.car.disable_motor = data[ind++];
 			main_config.car.simulate_motor = data[ind++];
 			main_config.car.clamp_imu_yaw_stationary = data[ind++];
+			main_config.car.use_uwb_pos = data[ind++];
 
 			main_config.car.gear_ratio = buffer_get_float32_auto(data, &ind);
 			main_config.car.wheel_diam = buffer_get_float32_auto(data, &ind);
@@ -727,6 +728,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			m_send_buffer[send_index++] = main_cfg_tmp.car.disable_motor;
 			m_send_buffer[send_index++] = main_cfg_tmp.car.simulate_motor;
 			m_send_buffer[send_index++] = main_cfg_tmp.car.clamp_imu_yaw_stationary;
+			m_send_buffer[send_index++] = main_cfg_tmp.car.use_uwb_pos;
 
 			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.car.gear_ratio, &send_index);
 			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.car.wheel_diam, &send_index);
@@ -853,7 +855,11 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			m_send_buffer[send_index++] = FW_VERSION_MINOR; // 4
 			buffer_append_float32(m_send_buffer, pos.roll, 1e6, &send_index); // 8
 			buffer_append_float32(m_send_buffer, pos.pitch, 1e6, &send_index); // 12
-			buffer_append_float32(m_send_buffer, pos.yaw, 1e6, &send_index); // 16
+			if (main_config.car.use_uwb_pos) {
+				buffer_append_float32(m_send_buffer, pos_uwb.yaw, 1e6, &send_index); // 16
+			} else {
+				buffer_append_float32(m_send_buffer, pos.yaw, 1e6, &send_index); // 16
+			}
 			buffer_append_float32(m_send_buffer, accel[0], 1e6, &send_index); // 20
 			buffer_append_float32(m_send_buffer, accel[1], 1e6, &send_index); // 24
 			buffer_append_float32(m_send_buffer, accel[2], 1e6, &send_index); // 28
@@ -863,8 +869,13 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			buffer_append_float32(m_send_buffer, mag[0], 1e6, &send_index); // 44
 			buffer_append_float32(m_send_buffer, mag[1], 1e6, &send_index); // 48
 			buffer_append_float32(m_send_buffer, mag[2], 1e6, &send_index); // 52
-			buffer_append_float32(m_send_buffer, pos.px, 1e4, &send_index); // 56
-			buffer_append_float32(m_send_buffer, pos.py, 1e4, &send_index); // 60
+			if (main_config.car.use_uwb_pos) {
+				buffer_append_float32(m_send_buffer, pos_uwb.px, 1e4, &send_index); // 56
+				buffer_append_float32(m_send_buffer, pos_uwb.py, 1e4, &send_index); // 60
+			} else {
+				buffer_append_float32(m_send_buffer, pos.px, 1e4, &send_index); // 56
+				buffer_append_float32(m_send_buffer, pos.py, 1e4, &send_index); // 60
+			}
 			buffer_append_float32(m_send_buffer, pos.speed, 1e6, &send_index); // 64
 			buffer_append_float32(m_send_buffer, mcval.v_in, 1e6, &send_index); // 68
 			buffer_append_float32(m_send_buffer, mcval.temp_mos, 1e6, &send_index); // 72
@@ -876,8 +887,13 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			buffer_append_float32(m_send_buffer, autopilot_get_rad_now(), 1e6, &send_index); // 93
 			buffer_append_int32(m_send_buffer, pos_get_ms_today(), &send_index); // 97
 			buffer_append_int16(m_send_buffer, autopilot_get_route_left(), &send_index); // 99
-			buffer_append_float32(m_send_buffer, pos_uwb.px, 1e4, &send_index); // 103
-			buffer_append_float32(m_send_buffer, pos_uwb.py, 1e4, &send_index); // 107
+			if (main_config.car.use_uwb_pos) {
+				buffer_append_float32(m_send_buffer, pos.px, 1e4, &send_index); // 103
+				buffer_append_float32(m_send_buffer, pos.py, 1e4, &send_index); // 107
+			} else {
+				buffer_append_float32(m_send_buffer, pos_uwb.px, 1e4, &send_index); // 103
+				buffer_append_float32(m_send_buffer, pos_uwb.py, 1e4, &send_index); // 107
+			}
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
 

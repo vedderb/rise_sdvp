@@ -1,3 +1,9 @@
+=== FW 11.0 ===
+* UWB yaw correction.
+* Option to use UWB alone for positioning.
+* Increased AP route size.
+* Moved AP route to CCM.
+
 === FW 10.2 ===
 * Option to clamp IMU yaw when car is stationary.
 
