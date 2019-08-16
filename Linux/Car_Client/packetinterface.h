@@ -38,6 +38,7 @@ public:
     bool sendPacketAck(const unsigned char *data, unsigned int len_packet,
                        int retries, int timeoutMs = 200);
     void processData(QByteArray &data);
+    void processPacket(const unsigned char *data, int len);
     void startUdpConnection(QHostAddress ip, int port);
     void startUdpConnection2(QHostAddress ip);
     void startUdpConnectionServer(int port);
@@ -133,7 +134,6 @@ public slots:
 
 private:
     unsigned short crc16(const unsigned char *buf, unsigned int len);
-    void processPacket(const unsigned char *data, int len);
     bool waitSignal(QObject *sender, const char *signal, int timeoutMs);
 
     QTimer *mTimer;
