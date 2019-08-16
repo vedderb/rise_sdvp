@@ -109,8 +109,12 @@ void pos_uwb_update_dr(float imu_yaw, float rtk_yaw, float travel_dist,
 	float dt = (float)chVTTimeElapsedSinceX(m_uwb_state.last_update_time) / (float)CH_CFG_ST_FREQUENCY;
 	m_uwb_state.last_update_time = chVTGetSystemTimeX();
 
-	m_uwb_state.yaw = -imu_yaw * M_PI / 180.0;
+	m_uwb_state.yaw = -imu_yaw;
 	m_uwb_state.is_clamped = fabsf(speed * 3.6) < YAW_CLAMP_THRESHOLD;
+	
+	if (!main_config.car.clamp_imu_yaw_stationary) {
+		m_uwb_state.is_clamped = false;
+	}
 
 	if (m_uwb_state.is_clamped) {
 		m_uwb_state.gyro_offset = m_uwb_state.clamp_last_value - m_uwb_state.yaw;
@@ -119,9 +123,9 @@ void pos_uwb_update_dr(float imu_yaw, float rtk_yaw, float travel_dist,
 	}
 
 	m_uwb_state.px += cosf((m_uwb_state.yaw + m_uwb_state.gyro_offset)
-			* M_PI/180) * (travel_dist );
+			* M_PI / 180) * (travel_dist );
 	m_uwb_state.py += sinf((m_uwb_state.yaw + m_uwb_state.gyro_offset)
-			* M_PI/180) * (travel_dist);
+			* M_PI / 180) * (travel_dist);
 
 	if (!m_uwb_state.is_clamped) {
 		m_uwb_state.gyro_offset += m_uwb_state.yaw_drift * dt;
@@ -152,7 +156,7 @@ void pos_uwb_get_pos(POS_STATE *p) {
 	p->px = m_uwb_state.px;
 	p->py = m_uwb_state.py;
 	p->speed = m_uwb_state.speed;
-	p->yaw = m_uwb_state.yaw;
+	p->yaw = -(m_uwb_state.yaw + m_uwb_state.gyro_offset);
 	chMtxUnlock(&m_mutex_pos);
 }
 
@@ -161,8 +165,8 @@ void pos_uwb_set_xya(float x, float y, float angle) {
 
 	m_uwb_state.px = x;
 	m_uwb_state.py = y;
-	m_uwb_state.clamp_last_value = angle;
-	m_uwb_state.gyro_offset = angle - m_uwb_state.yaw;
+	m_uwb_state.gyro_offset = -angle - m_uwb_state.yaw;
+	m_uwb_state.clamp_last_value = -angle;
 
 	chMtxUnlock(&m_mutex_pos);
 }
@@ -208,13 +212,13 @@ static void dw_range(uint8_t id, uint8_t dest, float range) {
 		const float py = m_uwb_state.py + (s_yaw * OFFSET_X + c_yaw * OFFSET_Y);
 
 		float c = 0.0;
-		float d_estimated=sqrtf((m_uwb_state.px - px) * (m_uwb_state.px - px) +
-				(m_uwb_state.py - py) * (m_uwb_state.py - py));
-		float vuwb_x = (px - m_uwb_state.px) / d_estimated;
-		float vuwb_y = (py - m_uwb_state.py) / d_estimated;
+		float d_estimated=sqrtf((px - a->px) * (px - a->px) +
+				(py - a->py) * (py - a->py));
+		float vuwb_x = (a->px - px) / d_estimated;
+		float vuwb_y = (a->py - py) / d_estimated;
 		float diff = d_estimated - a->dist_last;
 
-		if (fabsf(diff)<0.2){
+		if (fabsf(diff) < 0.2){
 			c = diff;
 		} else{
 			c = 0.2 * diff / fabsf(diff);
