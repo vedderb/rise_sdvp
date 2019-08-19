@@ -159,8 +159,8 @@ class ChronosComm : public QObject
     Q_OBJECT
 public:
     explicit ChronosComm(QObject *parent = nullptr);
-    bool startObject();
-    bool startSupervisor();
+    bool startObject(QHostAddress addr = QHostAddress::Any);
+    bool startSupervisor(QHostAddress addr = QHostAddress::Any);
     bool connectAsServer(QString address);
     void closeConnection();
     COMM_MODE getCommMode();

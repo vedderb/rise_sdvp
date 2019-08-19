@@ -31,11 +31,11 @@ Chronos::Chronos(QObject *parent) : QObject(parent)
             this, SLOT(processStrt(chronos_strt)));
 }
 
-bool Chronos::startServer(PacketInterface *packet)
+bool Chronos::startServer(PacketInterface *packet, QHostAddress addr)
 {
     mPacket = packet;
 
-    bool res = mChronos->startObject();
+    bool res = mChronos->startObject(addr);
 
     if (res && mPacket) {
         connect(mPacket, SIGNAL(stateReceived(quint8,CAR_STATE)),

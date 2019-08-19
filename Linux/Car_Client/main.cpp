@@ -26,6 +26,7 @@
 #include <QDebug>
 #include <signal.h>
 #include <QDir>
+#include <QNetworkInterface>
 
 #include "carclient.h"
 #include "chronos.h"
@@ -54,6 +55,7 @@ void showHelp()
     qDebug() << "--rtcmbaud : RTCM port baud rate, e.g. 9600";
     qDebug() << "--chronos : Run CHRONOS client";
     qDebug() << "--chronossettxid : Set CHRONOS transmitter id";
+    qDebug() << "--chronoshostaddr [address] : Use network interface with address (default: any interface)";
     qDebug() << "--ntrip [server]:[stream]:[user]:[password]:[port] : Connect to ntrip server";
     qDebug() << "--rtcmbasepos [lat]:[lon]:[height] : Inject RTCM base position message";
     qDebug() << "--batterycells : Number of cells in series, e.g. for the GUI battery indicator";
@@ -102,6 +104,7 @@ int main(int argc, char *argv[])
     int rtcmBaud = 9600;
     bool useChronos = false;
     int chronosTxId = -1;
+    QString chronosHostAddr;
     bool useNtrip = false;
     QString ntripServer;
     QString ntripStream;
@@ -301,6 +304,14 @@ int main(int argc, char *argv[])
             }
         }
 
+        if (str == "--chronoshostaddr") {
+            if ((i + 1) < args.size()) {
+                i++;
+                chronosHostAddr = args.at(i);
+                found = true;
+            }
+        }
+
         if (str == "--ntrip") {
             if ((i + 1) < args.size()) {
                 i++;
@@ -476,7 +487,24 @@ int main(int argc, char *argv[])
     }
 
     if (useChronos) {
-        chronos.startServer(car.packetInterface());
+        if (!chronosHostAddr.isEmpty()) {
+            QHostAddress addr(chronosHostAddr);
+            if (!addr.isNull()) {
+                if (QNetworkInterface::allAddresses().contains(addr)) {
+                    chronos.startServer(car.packetInterface(), addr);
+                    chronos.comm()->setTransmitterId(addr.toIPv4Address() & 0xFF);
+                } else {
+                    chronos.startServer(car.packetInterface());
+                    qWarning() << "There is no interface with address" <<
+                                  chronosHostAddr;
+                }
+            } else {
+                chronos.startServer(car.packetInterface());
+                qWarning() << chronosHostAddr << "is not a valid address";
+            }
+        } else {
+            chronos.startServer(car.packetInterface());
+        }
 
         if (chronosTxId >= 0) {
             chronos.comm()->setTransmitterId(chronosTxId);

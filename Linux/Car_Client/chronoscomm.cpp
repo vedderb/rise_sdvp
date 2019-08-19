@@ -48,18 +48,18 @@ ChronosComm::ChronosComm(QObject *parent) : QObject(parent)
             this, SLOT(tcpInputError(QAbstractSocket::SocketError)));
 }
 
-bool ChronosComm::startObject()
+bool ChronosComm::startObject(QHostAddress addr)
 {
     closeConnection();
 
-    bool res = mTcpServer->startServer(53241);
+    bool res = mTcpServer->startServer(53241, addr);
 
     if (!res) {
         qWarning() << "Starting TCP server failed:" << mTcpServer->errorString();
     }
 
     if (res) {
-        res = mUdpSocket->bind(QHostAddress::Any, 53240);
+        res = mUdpSocket->bind(addr, 53240);
     }
 
     if (!res) {
@@ -79,11 +79,11 @@ bool ChronosComm::startObject()
     return res;
 }
 
-bool ChronosComm::startSupervisor()
+bool ChronosComm::startSupervisor(QHostAddress addr)
 {
     closeConnection();
 
-    bool res = mTcpServer->startServer(53010);
+    bool res = mTcpServer->startServer(53010, addr);
 
     if (res) {
         qDebug() << "Started CHRONOS supervisor";

@@ -15,7 +15,7 @@ class Chronos : public QObject
     Q_OBJECT
 public:
     Chronos(QObject *parent = 0);
-    bool startServer(PacketInterface *packet);
+    bool startServer(PacketInterface *packet, QHostAddress addr = QHostAddress::Any);
     ChronosComm *comm();
 
 private slots:
