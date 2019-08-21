@@ -222,9 +222,10 @@ void CarClient::startUdpServer(int port)
     mUdpSocket->bind(QHostAddress::Any, port);
 }
 
-bool CarClient::startTcpServer(int port)
+bool CarClient::startTcpServer(int port, QHostAddress addr)
 {
-    bool res = mTcpServer->startServer(port);
+
+    bool res = mTcpServer->startServer(port,addr);
 
     if (!res) {
         qWarning() << "Starting TCP server failed:" << mTcpServer->errorString();

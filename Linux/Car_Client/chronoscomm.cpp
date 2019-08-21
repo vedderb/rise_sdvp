@@ -53,9 +53,9 @@ bool ChronosComm::startObject(QHostAddress addr)
     closeConnection();
 
     bool res = mTcpServer->startServer(53241, addr);
-
+    qDebug() << "Starting TCP server at" << addr.toString();
     if (!res) {
-        qWarning() << "Starting TCP server failed:" << mTcpServer->errorString();
+      qWarning() << "Starting TCP server at" << addr.toString() << "failed:" << mTcpServer->errorString();
     }
 
     if (res) {

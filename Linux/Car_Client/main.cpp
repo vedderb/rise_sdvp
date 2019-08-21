@@ -475,7 +475,12 @@ int main(int argc, char *argv[])
     }
 
     if (useTcp) {
-        car.startTcpServer(tcpPort);
+        if (chronosHostAddr.isNull()) {
+            car.startTcpServer(tcpPort);
+        } else {
+            // Start Car Tcp server at same addr as chronos host addr
+            car.startTcpServer(tcpPort,QHostAddress(chronosHostAddr));
+        }
     }
 
     if (logUsb) {
@@ -487,6 +492,7 @@ int main(int argc, char *argv[])
     }
 
     if (useChronos) {
+        qDebug() << "CHRONOS!!!";
         if (!chronosHostAddr.isEmpty()) {
             QHostAddress addr(chronosHostAddr);
             if (!addr.isNull()) {
