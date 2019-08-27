@@ -577,6 +577,11 @@ void ChronosComm::appendChronosChecksum(VByteArrayLe &vb)
     vb.vbAppendUint16(0);
 }
 
+void ChronosComm::configureTrigger(chronos_TRCM trcm)
+{
+
+}
+
 void ChronosComm::configureAction(chronos_ACCM accm)
 {
     GPIO::PinOperation_t pinOperation;
@@ -843,6 +848,65 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
         monr.error = vb.vbPopFrontUint8();
         monr.sender_id = sender_id;
         emit monrRx(monr);
+    } break;
+
+    case ISO_MSG_TRCM: {
+        chronos_TRCM trcm;
+        VByteArrayLe vb(payload);
+
+        while (!vb.isEmpty()) {
+            uint16_t valueID = vb.vbPopFrontUint16();
+            uint16_t contentLength = vb.vbPopFrontUint16();
+
+            switch(valueID) {
+            case ISO_VALUE_ID_TRIGGER_ID:
+                trcm.triggerID = vb.vbPopFrontUint16();
+                break;
+            case ISO_VALUE_ID_TRIGGER_TYPE:
+                trcm.triggerType = vb.vbPopFrontUint16();
+                break;
+            case ISO_VALUE_ID_TRIGGER_TYPE_PARAM1:
+                trcm.triggerType = vb.vbPopFrontUint32();
+                break;
+            case ISO_VALUE_ID_TRIGGER_TYPE_PARAM2:
+                trcm.triggerType = vb.vbPopFrontUint32();
+                break;
+            case ISO_VALUE_ID_TRIGGER_TYPE_PARAM3:
+                trcm.triggerType = vb.vbPopFrontUint32();
+                break;
+            default:
+                qDebug() << "TRCM: Unknown value id: " << valueID;
+                vb.remove(0, contentLength);
+                break;
+            }
+        }
+        configureTrigger(trcm);
+        qDebug() << "TRCM Rx";
+    } break;
+
+    case ISO_MSG_TREO: {
+        chronos_TRCM trcm;
+        VByteArrayLe vb(payload);
+
+        while (!vb.isEmpty()) {
+            uint16_t valueID = vb.vbPopFrontUint16();
+            uint16_t contentLength = vb.vbPopFrontUint16();
+
+            switch(valueID) {
+            case ISO_VALUE_ID_TRIGGER_ID:
+                trcm.triggerID = vb.vbPopFrontUint16();
+                break;
+            case ISO_VALUE_ID_TRIGGER_TIMESTAMP:
+                trcm.triggerType = vb.vbPopFrontUint32();
+                break;
+            default:
+                qDebug() << "TREO: Unknown value id: " << valueID;
+                vb.remove(0, contentLength);
+                break;
+            }
+        }
+
+        qDebug() << "TREO Rx";
     } break;
 
     case ISO_MSG_ACCM: {

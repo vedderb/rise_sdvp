@@ -109,6 +109,21 @@ typedef struct {
 } chronos_ACCM;
 
 typedef struct {
+    uint16_t triggerID;
+    uint16_t triggerType;
+    uint32_t triggerTypeParam1;
+} chronos_TRCM;
+
+typedef struct {
+    uint16_t triggerID;
+    uint32_t triggerTimeStamp;
+} chronos_TREO;
+
+typedef struct {
+    uint16_t triggerID;
+} chronos_CATA;
+
+typedef struct {
     uint32_t sync_point;
     uint32_t stop_time;
 } chronos_sypm;
@@ -168,6 +183,7 @@ typedef struct {
 #define ISO_VALUE_ID_LAT_ACC            0x0051
 #define ISO_VALUE_ID_CURVATURE          0x0052
 
+//ACCM
 #define ISO_VALUE_ID_ACTION_ID          0x0002
 #define ISO_VALUE_ID_ACTION_TYPE        0x0003
 #define ISO_VALUE_ID_ACTION_TYPE_PARAM1    0x00A1
@@ -177,6 +193,17 @@ typedef struct {
 #define ISO_ACTION_TYPE_PARAM_SET_FALSE 0x0000
 #define ISO_ACTION_TYPE_PARAM_SET_TRUE 0x0001
 
+//TRCM
+#define ISO_VALUE_ID_TRIGGER_ID          0x0001
+#define ISO_VALUE_ID_TRIGGER_TYPE        0x0002
+#define ISO_VALUE_ID_TRIGGER_TYPE_PARAM1    0x00A1
+#define ISO_VALUE_ID_TRIGGER_TYPE_PARAM2    0x00A2
+#define ISO_VALUE_ID_TRIGGER_TYPE_PARAM3    0x00A3
+
+//TREO
+#define ISO_VALUE_ID_TRIGGER_TIMESTAMP       0x0004
+
+//EXAC
 #define ISO_VALUE_ID_ACTION_ID          0x0002
 #define ISO_VALUE_ID_EXECUTE_TIME       0x0003
 
@@ -261,6 +288,7 @@ private:
     void appendChronosChecksum(VByteArrayLe &vb);
     bool decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8_t sender_id);
     void sendData(QByteArray data, bool isUdp);
+    void configureTrigger(chronos_TRCM trcm);
     void configureAction(chronos_ACCM accm);
     void executeAction(chronos_EXAC exac);
     QList<std::pair<quint16,GPIO::PinOperation_t>> actionPinConnections;
