@@ -584,7 +584,7 @@ void ChronosComm::configureTrigger(chronos_TRCM trcm)
 
 void ChronosComm::triggerEventOccured(chronos_TREO treo)
 {
-    //TODO: Configure trigger
+    //TODO: do trigger event occured stuff
 }
 
 void ChronosComm::configureAction(chronos_ACCM accm)
