@@ -579,7 +579,12 @@ void ChronosComm::appendChronosChecksum(VByteArrayLe &vb)
 
 void ChronosComm::configureTrigger(chronos_TRCM trcm)
 {
+    //TODO: Configure trigger
+}
 
+void ChronosComm::triggerEventOccured(chronos_TREO treo)
+{
+    //TODO: Configure trigger
 }
 
 void ChronosComm::configureAction(chronos_ACCM accm)
@@ -885,7 +890,7 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
     } break;
 
     case ISO_MSG_TREO: {
-        chronos_TRCM trcm;
+        chronos_TREO treo;
         VByteArrayLe vb(payload);
 
         while (!vb.isEmpty()) {
@@ -894,10 +899,10 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
 
             switch(valueID) {
             case ISO_VALUE_ID_TRIGGER_ID:
-                trcm.triggerID = vb.vbPopFrontUint16();
+                treo.triggerID = vb.vbPopFrontUint16();
                 break;
             case ISO_VALUE_ID_TRIGGER_TIMESTAMP:
-                trcm.triggerType = vb.vbPopFrontUint32();
+                treo.triggerTimeStamp = vb.vbPopFrontUint32();
                 break;
             default:
                 qDebug() << "TREO: Unknown value id: " << valueID;
@@ -905,8 +910,8 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
                 break;
             }
         }
-
         qDebug() << "TREO Rx";
+        triggerEventOccured(treo);
     } break;
 
     case ISO_MSG_ACCM: {
