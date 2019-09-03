@@ -49,16 +49,16 @@ void LimeSDR::run()
 {
     mStop = false;
 
-    double gain = 0.1;
+    double gain = 1.0;
     double gainBase = 1.0;
     int32_t antenna = LMS_PATH_TX1;
     int32_t antennaBase = LMS_PATH_TX1;
     int32_t channel = 0;
     int32_t channelBase = 1;
     int32_t index = 0;
-    double sampleRate = 3e6;
+    double sampleRate = 1.5e6;
     double frequency = 1575.42e6;
-    double bandwidth = 2.5e6;
+    double bandwidth = 100e6;
 
     mGps.allocateBuffers(sampleRate);
     mGps.resetState();
