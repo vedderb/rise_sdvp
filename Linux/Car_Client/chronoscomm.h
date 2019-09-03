@@ -321,7 +321,6 @@ private:
     bool decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8_t sender_id);
     void sendData(QByteArray data, bool isUdp);
     void configureTrigger(chronos_TRCM trcm);
-    void triggerEventOccured(chronos_TREO treo);
     void configureAction(chronos_ACCM accm);
     void executeAction(chronos_EXAC exac);
     QList<std::pair<quint16,GPIO::PinOperation_t>> actionPinConnections;

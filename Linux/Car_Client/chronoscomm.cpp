@@ -586,11 +586,6 @@ void ChronosComm::configureTrigger(chronos_TRCM trcm)
     //TODO: Configure trigger
 }
 
-void ChronosComm::triggerEventOccured(chronos_TREO treo)
-{
-    //TODO: do trigger event occured stuff
-}
-
 void ChronosComm::configureAction(chronos_ACCM accm)
 {
     GPIO::PinOperation_t pinOperation;
