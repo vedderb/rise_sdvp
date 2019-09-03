@@ -114,10 +114,6 @@ typedef struct {
     uint32_t triggerTypeParam1;
 } chronos_TRCM;
 
-typedef struct {
-    uint16_t triggerID;
-    uint32_t triggerTimeStamp;
-} chronos_TREO;
 
 typedef struct {
     uint16_t triggerID;
@@ -199,9 +195,6 @@ typedef struct {
 #define ISO_VALUE_ID_TRIGGER_TYPE_PARAM1    0x00A1
 #define ISO_VALUE_ID_TRIGGER_TYPE_PARAM2    0x00A2
 #define ISO_VALUE_ID_TRIGGER_TYPE_PARAM3    0x00A3
-
-//TREO
-#define ISO_VALUE_ID_TRIGGER_TIMESTAMP       0x0004
 
 //EXAC
 #define ISO_VALUE_ID_ACTION_ID          0x0002

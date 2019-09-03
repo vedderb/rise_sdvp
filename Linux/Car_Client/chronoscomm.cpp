@@ -890,28 +890,8 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
     } break;
 
     case ISO_MSG_TREO: {
-        chronos_TREO treo;
-        VByteArrayLe vb(payload);
-
-        while (!vb.isEmpty()) {
-            uint16_t valueID = vb.vbPopFrontUint16();
-            uint16_t contentLength = vb.vbPopFrontUint16();
-
-            switch(valueID) {
-            case ISO_VALUE_ID_TRIGGER_ID:
-                treo.triggerID = vb.vbPopFrontUint16();
-                break;
-            case ISO_VALUE_ID_TRIGGER_TIMESTAMP:
-                treo.triggerTimeStamp = vb.vbPopFrontUint32();
-                break;
-            default:
-                qDebug() << "TREO: Unknown value id: " << valueID;
-                vb.remove(0, contentLength);
-                break;
-            }
-        }
-        qDebug() << "TREO Rx";
-        triggerEventOccured(treo);
+        // should only be object -> server directed.
+        qDebug() << "Warning: Received TREO message.";
     } break;
 
     case ISO_MSG_ACCM: {
