@@ -37,6 +37,10 @@ GpsSim::GpsSim(QWidget *parent) :
     ui->latBox->setValue(57.71495867);
     ui->lonBox->setValue(12.89134921);
     ui->heightBox->setValue(219.0);
+
+    ui->latBaseBox->setValue(57.71495867);
+    ui->lonBaseBox->setValue(12.89134921);
+    ui->heightBaseBox->setValue(219.0);
 }
 
 GpsSim::~GpsSim()
@@ -83,6 +87,10 @@ void GpsSim::statusUpdate(QString str)
 
 void GpsSim::on_startButton_clicked()
 {
+    mSdr->setPosBase(ui->latBaseBox->value(),
+                     ui->lonBaseBox->value(),
+                     ui->heightBaseBox->value());
+    mSdr->setBaseEnabled(ui->simBaseBox->isChecked());
     mSdr->start();
 }
 
@@ -99,4 +107,11 @@ void GpsSim::on_setPosButton_clicked()
 void GpsSim::on_clearButton_clicked()
 {
     ui->textBrowser->clear();
+}
+
+void GpsSim::on_simBaseBox_toggled(bool checked)
+{
+    ui->latBaseBox->setEnabled(checked);
+    ui->lonBaseBox->setEnabled(checked);
+    ui->heightBaseBox->setEnabled(checked);
 }

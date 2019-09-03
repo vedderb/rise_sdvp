@@ -679,7 +679,7 @@ void MainWindow::enuRx(quint8 id, double lat, double lon, double height)
 void MainWindow::nmeaGgaRx(int fields, NmeaServer::nmea_gga_info_t gga)
 {
     if (fields >= 5) {
-        if (gga.fix_type == 4 || gga.fix_type == 5 ||
+        if (gga.fix_type == 4 || gga.fix_type == 5 || gga.fix_type == 2 ||
                 (gga.fix_type == 1 && !ui->mapStreamNmeaRtkOnlyBox->isChecked())) {
             double i_llh[3];
 
@@ -719,10 +719,12 @@ void MainWindow::nmeaGgaRx(int fields, NmeaServer::nmea_gga_info_t gga)
 
             info.sprintf("Fix type: %s\n"
                          "Sats    : %d\n"
-                         "Height  : %.2f",
+                         "Height  : %.2f\n"
+                         "Age     : %.2f",
                          fix_t.toLocal8Bit().data(),
                          gga.n_sat,
-                         gga.height);
+                         gga.height,
+                         gga.diff_age);
 
             p.setInfo(info);
             ui->mapWidget->addInfoPoint(p);
