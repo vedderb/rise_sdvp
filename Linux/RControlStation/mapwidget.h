@@ -171,6 +171,8 @@ public:
     void removeMapModule(MapModule *m);
     void removeMapModuleLast();
 
+    quint32 getRoutePointAttributes() const;
+    void setRoutePointAttributes(const quint32 &routePointAttributes);
 
 signals:
     void scaleChanged(double newScale);
@@ -206,6 +208,7 @@ private:
     QList<PerspectivePixmap> mPerspectivePixmaps;
     double mRoutePointSpeed;
     qint32 mRoutePointTime;
+    quint32 mRoutePointAttributes;
     qint32 mAnchorId;
     double mAnchorHeight;
     double mScaleFactor;

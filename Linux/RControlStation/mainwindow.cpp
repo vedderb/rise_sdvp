@@ -69,7 +69,8 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    mVersion = "0.6";
+    mVersion = "0.7";
+    mSupportedFirmwares.append(qMakePair(12, 0));
 
     qRegisterMetaType<LocPoint>("LocPoint");
 
@@ -603,6 +604,14 @@ void MainWindow::packetDataToSend(QByteArray &data)
 
 void MainWindow::stateReceived(quint8 id, CAR_STATE state)
 {
+    if (!mSupportedFirmwares.contains(qMakePair(state.fw_major, state.fw_minor))) {
+        on_disconnectButton_clicked();
+        QMessageBox::warning(this, "Unsupported Firmware",
+                             "This version of RControlStation is not compatible with the "
+                             "firmware of the connected car. Update RControlStation, the car "
+                             "firmware or both.");
+    }
+
     for(QList<CarInterface*>::Iterator it_car = mCars.begin();it_car < mCars.end();it_car++) {
         CarInterface *car = *it_car;
         if (car->getId() == id) {
@@ -2085,4 +2094,12 @@ void MainWindow::on_routeZeroButton_clicked()
 void MainWindow::on_routeZeroAllButton_clicked()
 {
     ui->mapWidget->zoomInOnRoute(-1, 0.1);
+}
+
+void MainWindow::on_mapRoutePosAttrBox_currentIndexChanged(int index)
+{
+    quint32 attr = ui->mapWidget->getRoutePointAttributes();
+    attr &= ~0b111;
+    attr |= index;
+    ui->mapWidget->setRoutePointAttributes(attr);
 }

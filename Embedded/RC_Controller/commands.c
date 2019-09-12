@@ -228,8 +228,10 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 				ROUTE_POINT p;
 				p.px = buffer_get_float32(data, 1e4, &ind);
 				p.py = buffer_get_float32(data, 1e4, &ind);
+				p.pz = buffer_get_float32(data, 1e4, &ind);
 				p.speed = buffer_get_float32(data, 1e6, &ind);
 				p.time = buffer_get_int32(data, &ind);
+				p.attributes = buffer_get_uint32(data, &ind);
 				bool res = autopilot_add_point(&p, first);
 				first = false;
 
@@ -291,8 +293,10 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 				ROUTE_POINT rp = autopilot_get_route_point(i);
 				buffer_append_float32_auto(m_send_buffer, rp.px, &send_index);
 				buffer_append_float32_auto(m_send_buffer, rp.py, &send_index);
+				buffer_append_float32_auto(m_send_buffer, rp.pz, &send_index);
 				buffer_append_float32_auto(m_send_buffer, rp.speed, &send_index);
 				buffer_append_int32(m_send_buffer, rp.time, &send_index);
+				buffer_append_uint32(m_send_buffer, rp.attributes, &send_index);
 			}
 
 			commands_send_packet(m_send_buffer, send_index);
@@ -322,8 +326,10 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 				ROUTE_POINT p;
 				p.px = buffer_get_float32(data, 1e4, &ind);
 				p.py = buffer_get_float32(data, 1e4, &ind);
+				p.pz = buffer_get_float32(data, 1e4, &ind);
 				p.speed = buffer_get_float32(data, 1e6, &ind);
 				p.time = buffer_get_int32(data, &ind);
+				p.attributes = buffer_get_uint32(data, &ind);
 
 				if (first) {
 					first = !autopilot_replace_route(&p);
@@ -558,6 +564,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 			main_config.ap_repeat_routes = data[ind++];
 			main_config.ap_base_rad = buffer_get_float32_auto(data, &ind);
+			main_config.ap_rad_time_ahead = buffer_get_float32_auto(data, &ind);
 			main_config.ap_mode_time = data[ind++];
 			main_config.ap_max_speed = buffer_get_float32_auto(data, &ind);
 			main_config.ap_time_add_repeat_ms = buffer_get_int32(data, &ind);
@@ -711,6 +718,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 			m_send_buffer[send_index++] = main_cfg_tmp.ap_repeat_routes;
 			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.ap_base_rad, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.ap_rad_time_ahead, &send_index);
 			m_send_buffer[send_index++] = main_cfg_tmp.ap_mode_time;
 			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.ap_max_speed, &send_index);
 			buffer_append_int32(m_send_buffer, main_cfg_tmp.ap_time_add_repeat_ms, &send_index);

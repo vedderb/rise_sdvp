@@ -27,6 +27,7 @@ typedef struct {
     float pz;
     float speed;
     int32_t time;
+    uint32_t attributes;
 } ROUTE_POINT;
 
 class Autopilot : public QObject
@@ -66,6 +67,9 @@ public:
     double baseRad() const;
     void setBaseRad(double baseRad);
 
+    double radTime() const;
+    void setRadTime(double radTime);
+
     int timeAddMs() const;
     void setTimeAddMs(int timeAddMs);
 
@@ -98,6 +102,7 @@ private:
     bool mRepeatRoutes;
     double mSpeedMax;
     double mBaseRad;
+    double mRadTime;
     int mTimeAddMs;
     int mModeTime;
 

@@ -224,8 +224,10 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
             LocPoint p;
             p.setX(utility::buffer_get_double32_auto(data, &ind));
             p.setY(utility::buffer_get_double32_auto(data, &ind));
+            p.setHeight(utility::buffer_get_double32_auto(data, &ind));
             p.setSpeed(utility::buffer_get_double32_auto(data, &ind));
             p.setTime(utility::buffer_get_int32(data, &ind));
+            p.setAttributes(utility::buffer_get_uint32(data, &ind));
             route.append(p);
         }
 
@@ -278,6 +280,7 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
 
         conf.ap_repeat_routes = data[ind++];
         conf.ap_base_rad = utility::buffer_get_double32_auto(data, &ind);
+        conf.ap_rad_time_ahead = utility::buffer_get_double32_auto(data, &ind);
         conf.ap_mode_time = data[ind++];
         conf.ap_max_speed = utility::buffer_get_double32_auto(data, &ind);
         conf.ap_time_add_repeat_ms = utility::buffer_get_int32(data, &ind);
@@ -822,8 +825,10 @@ bool PacketInterface::setRoutePoints(quint8 id, QList<LocPoint> points, int retr
         LocPoint *p = &points[i];
         utility::buffer_append_double32(mSendBuffer, p->getX(), 1e4, &send_index);
         utility::buffer_append_double32(mSendBuffer, p->getY(), 1e4, &send_index);
+        utility::buffer_append_double32(mSendBuffer, p->getHeight(), 1e4, &send_index);
         utility::buffer_append_double32(mSendBuffer, p->getSpeed(), 1e6, &send_index);
         utility::buffer_append_int32(mSendBuffer, p->getTime(), &send_index);
+        utility::buffer_append_uint32(mSendBuffer, p->getAttributes(), &send_index);
     }
 
     return sendPacketAck(mSendBuffer, send_index, retries);
@@ -839,8 +844,10 @@ bool PacketInterface::replaceRoute(quint8 id, QList<LocPoint> points, int retrie
         LocPoint *p = &points[i];
         utility::buffer_append_double32(mSendBuffer, p->getX(), 1e4, &send_index);
         utility::buffer_append_double32(mSendBuffer, p->getY(), 1e4, &send_index);
+        utility::buffer_append_double32(mSendBuffer, p->getHeight(), 1e4, &send_index);
         utility::buffer_append_double32(mSendBuffer, p->getSpeed(), 1e6, &send_index);
         utility::buffer_append_int32(mSendBuffer, p->getTime(), &send_index);
+        utility::buffer_append_uint32(mSendBuffer, p->getAttributes(), &send_index);
     }
 
     return sendPacketAck(mSendBuffer, send_index, retries);
@@ -911,6 +918,7 @@ bool PacketInterface::setConfiguration(quint8 id, MAIN_CONFIG &conf, int retries
 
     mSendBuffer[send_index++] = conf.ap_repeat_routes;
     utility::buffer_append_double32_auto(mSendBuffer, conf.ap_base_rad, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.ap_rad_time_ahead, &send_index);
     mSendBuffer[send_index++] = conf.ap_mode_time;
     utility::buffer_append_double32_auto(mSendBuffer, conf.ap_max_speed, &send_index);
     utility::buffer_append_int32(mSendBuffer, conf.ap_time_add_repeat_ms, &send_index);

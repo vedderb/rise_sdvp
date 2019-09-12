@@ -103,7 +103,8 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 	conf->gps_ubx_max_acc = 0.12;
 
 	conf->ap_repeat_routes = true;
-	conf->ap_base_rad = 1.2;
+	conf->ap_base_rad = 0.8;
+	conf->ap_rad_time_ahead = 0.8;
 	conf->ap_mode_time = false;
 	conf->ap_max_speed = 30.0 / 3.6;
 	conf->ap_time_add_repeat_ms = 60 * 1000;
@@ -128,7 +129,7 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 	conf->car.steering_max_angle_rad = 0.42041;
 	conf->car.steering_center = 0.5;
 	conf->car.steering_range = 0.58;
-	conf->car.steering_ramp_time = 0.6;
+	conf->car.steering_ramp_time = 0.0;
 	conf->car.axis_distance = 0.475;
 
 	// Default multirotor settings

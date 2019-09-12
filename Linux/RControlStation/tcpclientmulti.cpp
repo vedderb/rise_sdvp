@@ -46,7 +46,7 @@ bool TcpClientMulti::isAnyConnected()
 void TcpClientMulti::disconnectAll()
 {
     for (auto c: mTcpConns) {
-        delete c;
+        c->deleteLater();
     }
     mTcpConns.clear();
 }

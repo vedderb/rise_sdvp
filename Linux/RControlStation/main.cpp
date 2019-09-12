@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
     // Settings
     a.setOrganizationName("RISE");
     a.setOrganizationDomain("ri.se");
-    a.setApplicationName("RC Car Tool");
+    a.setApplicationName("RControlStation");
 
     QStringList args = QCoreApplication::arguments();
 

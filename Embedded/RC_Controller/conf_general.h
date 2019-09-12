@@ -39,7 +39,7 @@
 #define MAIN_MODE_IS_BASE			(MAIN_MODE == MAIN_MODE_M8T_BASE_2400 || MAIN_MODE == MAIN_MODE_M8T_BASE_400)
 
 // Firmware version
-#define FW_VERSION_MAJOR			11
+#define FW_VERSION_MAJOR			12
 #define FW_VERSION_MINOR			0
 
 // Default car settings

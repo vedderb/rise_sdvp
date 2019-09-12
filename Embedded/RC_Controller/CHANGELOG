@@ -1,3 +1,7 @@
+=== FW 12.0 ===
+* Added route point attributes.
+* AP radius based on time.
+
 === FW 11.0 ===
 * UWB yaw correction.
 * Option to use UWB alone for positioning.

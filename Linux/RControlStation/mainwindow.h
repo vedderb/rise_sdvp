@@ -173,6 +173,7 @@ private slots:
     void on_tabWidget_currentChanged(int index);
     void on_routeZeroButton_clicked();
     void on_routeZeroAllButton_clicked();
+    void on_mapRoutePosAttrBox_currentIndexChanged(int index);
 
 private:
     Ui::MainWindow *ui;
@@ -197,6 +198,7 @@ private:
     rtcm3_state mRtcmState;
     IntersectionTest *mIntersectionTest;
     QString mLastImgFileName;
+    QList<QPair<int, int> > mSupportedFirmwares;
 
 #ifdef HAS_JOYSTICK
     Joystick *mJoystick;

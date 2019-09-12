@@ -41,9 +41,9 @@ signals:
 public slots:
 
 private:
-    class TcpConn {
+    class TcpConn : public QObject {
     public:
-        TcpConn(QString ip, int port, TcpClientMulti *client) {
+        TcpConn(QString ip, int port, TcpClientMulti *client) : QObject(client) {
             socket.abort();
             socket.connectToHost(ip, port);
 

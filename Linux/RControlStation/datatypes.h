@@ -295,7 +295,8 @@ typedef struct {
 
     // Autopilot parameters
     bool ap_repeat_routes; // Repeat the same route when the end is reached
-    float ap_base_rad; // Radius around car at 0 speed
+    float ap_base_rad; // Smallest allowed radius around car
+    float ap_rad_time_ahead; // Radius ahead time
     int ap_mode_time; // Drive to route points based on time (1 = abs time, 2 = rel since start)
     float ap_max_speed; // Maximum allowed speed for autopilot
     int32_t ap_time_add_repeat_ms; // Time to add to each point for each repetition of the route

@@ -554,8 +554,10 @@ void CarSim::processPacket(VByteArray vb)
                 ROUTE_POINT p;
                 p.px = vb.vbPopFrontDouble32(1e4);
                 p.py = vb.vbPopFrontDouble32(1e4);
+                p.pz = vb.vbPopFrontDouble32(1e4);
                 p.speed = vb.vbPopFrontDouble32(1e6);
                 p.time = vb.vbPopFrontInt32();
+                p.attributes = vb.vbPopFrontUint32();
                 bool res = mAutoPilot->autopilot_add_point(&p, first);
                 first = false;
 
@@ -610,8 +612,10 @@ void CarSim::processPacket(VByteArray vb)
                 ROUTE_POINT rp = mAutoPilot->autopilot_get_route_point(i);
                 res.vbAppendDouble32Auto(rp.px);
                 res.vbAppendDouble32Auto(rp.py);
+                res.vbAppendDouble32Auto(rp.pz);
                 res.vbAppendDouble32Auto(rp.speed);
                 res.vbAppendInt32(rp.time);
+                res.vbAppendUint32(rp.attributes);
             }
 
             sendPacket(res);
@@ -634,8 +638,10 @@ void CarSim::processPacket(VByteArray vb)
                 ROUTE_POINT p;
                 p.px = vb.vbPopFrontDouble32(1e4);
                 p.py = vb.vbPopFrontDouble32(1e4);
+                p.pz = vb.vbPopFrontDouble32(1e4);
                 p.speed = vb.vbPopFrontDouble32(1e6);
                 p.time = vb.vbPopFrontInt32();
+                p.attributes = vb.vbPopFrontUint32();
 
                 if (first) {
                     first = !mAutoPilot->autopilot_replace_route(&p);

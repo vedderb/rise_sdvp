@@ -19,9 +19,10 @@
 #include <cmath>
 
 LocPoint::LocPoint(double x, double y, double height, double roll, double pitch, double yaw, double speed,
-                   double radius, double sigma, qint32 time, int id, bool drawLine) :
+                   double radius, double sigma, QColor color, qint32 time, int id, bool drawLine, quint32 attributes) :
     mX(x), mY(y), mHeight(height), mRoll(roll), mPitch(pitch), mYaw(yaw), mSpeed(speed),
-    mRadius(radius), mSigma(sigma), mTime(time), mId(id), mDrawLine(drawLine)
+    mRadius(radius), mSigma(sigma), mColor(color), mTime(time), mId(id), mDrawLine(drawLine),
+    mAttributes(attributes)
 {
 
 }
@@ -122,6 +123,11 @@ QString LocPoint::getInfo() const
     return mInfo;
 }
 
+QColor LocPoint::getColor() const
+{
+    return mColor;
+}
+
 qint32 LocPoint::getTime() const
 {
     return mTime;
@@ -144,15 +150,22 @@ LocPoint &LocPoint::operator =(const LocPoint &point)
     mRadius = point.mRadius;
     mSigma = point.mSigma;
     mInfo = point.mInfo;
+    mColor = point.mColor;
     mTime = point.mTime;
     mId = point.mId;
     mDrawLine = point.mDrawLine;
+    mAttributes = point.mAttributes;
     return *this;
 }
 
 bool LocPoint::getDrawLine() const
 {
     return mDrawLine;
+}
+
+quint32 LocPoint::getAttributes() const
+{
+    return mAttributes;
 }
 
 double LocPoint::getDistanceTo(const LocPoint &point) const
@@ -180,9 +193,11 @@ bool LocPoint::operator ==(const LocPoint &point)
             mRadius == point.mRadius &&
             mSigma == point.mSigma &&
             mInfo == point.mInfo &&
+            mColor == point.mColor &&
             mTime == point.mTime &&
             mId == point.mId &&
-            mDrawLine == point.mDrawLine) {
+            mDrawLine == point.mDrawLine &&
+            mAttributes == point.mAttributes) {
         return true;
     } else {
         return false;
@@ -229,7 +244,17 @@ void LocPoint::setSigma(double sigma)
     mSigma = sigma;
 }
 
+void LocPoint::setColor(const QColor &color)
+{
+    mColor = color;
+}
+
 void LocPoint::setDrawLine(bool drawLine)
 {
     mDrawLine = drawLine;
+}
+
+void LocPoint::setAttributes(quint32 attributes)
+{
+    mAttributes = attributes;
 }
