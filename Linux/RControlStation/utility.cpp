@@ -505,6 +505,8 @@ int loadRoutes(QString filename, MapWidget *map)
                                 p.setSpeed(stream.readElementText().toDouble());
                             } else if (name3 == "time") {
                                 p.setTime(stream.readElementText().toInt());
+                            } else if (name3 == "attributes") {
+                                p.setAttributes(stream.readElementText().toInt());
                             } else {
                                 qWarning() << ": Unknown XML element :" << name2;
                                 stream.skipCurrentElement();

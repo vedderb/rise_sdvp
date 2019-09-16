@@ -40,7 +40,7 @@
 
 // Firmware version
 #define FW_VERSION_MAJOR			12
-#define FW_VERSION_MINOR			0
+#define FW_VERSION_MINOR			1
 
 // Default car settings
 //#define CAR_TERO // Benjamins tero car
@@ -114,13 +114,6 @@
 // Log configuration to enable. Choose one only.
 //#define LOG_EN_CARREL
 //#define LOG_EN_ITRANSIT
-//#define LOG_EN_DW
-
-// Anchor IDs to range against in DW logging mode. -1 to disable.
-#define LOG_DW_ANCHOR0				122
-#define LOG_DW_ANCHOR1				234
-#define LOG_DW_ANCHOR2				35
-#define LOG_DW_FORCE_CC1120			1
 
 // CC2520 Settings
 #define CC2520_RF_CHANNEL			12
@@ -146,23 +139,6 @@
 #ifndef BOARD_YAW_ROT
 #define BOARD_YAW_ROT				-90.0
 #endif
-
-// Radar settings
-#ifndef RADAR_EN
-#define RADAR_EN					0
-#endif
-#define RADAR_CENTER_FREQ			76.5e9
-#define RADAR_FREQ_SPAN				1.0e9
-#define RADAR_FREQ_PONTS			1024
-#define RADAR_SWEEP_TIME			0.075
-#define RADAR_MAP_PLOT_AVG_FACTOR	3.0
-#define RADAR_MAP_PLOT_MAX_DIV		6.0
-#define RADAR_PLOT_MODE				0
-#define RADAR_MAP_PLOT_START		20
-#define RADAR_MAP_PLOT_END			300
-
-// radar_cont
-#define RADAR_CONT_EN				0
 
 // Servo settings
 #define SERVO_OUT_RATE_HZ			50

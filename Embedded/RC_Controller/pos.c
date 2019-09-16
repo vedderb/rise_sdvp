@@ -995,7 +995,7 @@ static void update_orientation_angles(float *accel, float *gyro, float *mag, flo
 		utils_norm_angle(&m_pos.yaw);
 	}
 #else
-	m_pos.yaw = m_imu_yaw - m_yaw_offset_gps;
+	m_pos.yaw = m_pos.yaw_imu - m_imu_yaw_offset;
 	utils_norm_angle(&m_pos.yaw);
 #endif
 

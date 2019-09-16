@@ -345,10 +345,6 @@ typedef enum {
     CMD_SET_SYSTEM_TIME_ACK,
     CMD_REBOOT_SYSTEM,
     CMD_REBOOT_SYSTEM_ACK,
-    CMD_RADAR_SETUP_SET,
-    CMD_RADAR_SETUP_GET,
-    CMD_RADAR_SAMPLES,
-    CMD_DW_SAMPLE,
     CMD_EMERGENCY_STOP,
     CMD_SET_MAIN_CONFIG,
     CMD_GET_MAIN_CONFIG,
@@ -383,36 +379,6 @@ typedef enum {
     RC_MODE_PID,
     RC_MODE_CURRENT_BRAKE
 } RC_MODE;
-
-typedef struct {
-    bool log_en;
-    float f_center;
-    float f_span;
-    int points;
-    float t_sweep;
-    float cc_x;
-    float cc_y;
-    float cc_rad;
-    int log_rate_ms;
-    float map_plot_avg_factor;
-    float map_plot_max_div;
-    int plot_mode; // 0 = off, 1 = sample, 2 = fft
-    int map_plot_start;
-    int map_plot_end;
-} radar_settings_t;
-
-// DW Logging Info
-typedef struct {
-    bool valid;
-    uint8_t dw_anchor;
-    int32_t time_today_ms;
-    float dw_dist;
-    float px;
-    float py;
-    float px_gps;
-    float py_gps;
-    float pz_gps;
-} DW_LOG_INFO;
 
 typedef enum {
     JS_TYPE_HK = 0,

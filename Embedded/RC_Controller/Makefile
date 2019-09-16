@@ -148,7 +148,6 @@ CSRC = $(STARTUPSRC) \
        eeprom.c \
        timeout.c \
        log.c \
-       radar.c \
        digital_filter.c \
        comm_cc1120.c \
        ublox.c \
@@ -157,7 +156,6 @@ CSRC = $(STARTUPSRC) \
        pwm_esc.c \
        mr_control.c \
        actuator.c \
-       radar_cont.c \
        motor_sim.c \
        m8t_base.c \
        pos_uwb.c \

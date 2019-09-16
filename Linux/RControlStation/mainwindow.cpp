@@ -69,8 +69,8 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    mVersion = "0.7";
-    mSupportedFirmwares.append(qMakePair(12, 0));
+    mVersion = "0.8";
+    mSupportedFirmwares.append(qMakePair(12, 1));
 
     qRegisterMetaType<LocPoint>("LocPoint");
 
@@ -2014,6 +2014,7 @@ void MainWindow::saveRoutes(bool withId)
                 stream.writeTextElement("y", QString::number(p.getY()));
                 stream.writeTextElement("speed", QString::number(p.getSpeed()));
                 stream.writeTextElement("time", QString::number(p.getTime()));
+                stream.writeTextElement("attributes", QString::number(p.getAttributes()));
                 stream.writeEndElement();
             }
             stream.writeEndElement();

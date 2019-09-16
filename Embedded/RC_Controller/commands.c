@@ -30,7 +30,6 @@
 #include "comm_usb.h"
 #include "timeout.h"
 #include "log.h"
-#include "radar.h"
 #include "ublox.h"
 #include "comm_cc1120.h"
 #include "mr_control.h"
@@ -419,70 +418,6 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 				m_send_buffer[send_index++] = packet_id;
 				commands_send_packet(m_send_buffer, send_index);
 			}
-		} break;
-
-		case CMD_RADAR_SETUP_SET: {
-#if RADAR_EN
-			timeout_reset();
-			commands_set_send_func(func);
-
-			radar_settings_t s;
-			int32_t ind = 0;
-
-			s.f_center = buffer_get_float32_auto(data, &ind);
-			s.f_span = buffer_get_float32_auto(data, &ind);
-			s.points = buffer_get_int16(data, &ind);
-			s.t_sweep = buffer_get_float32_auto(data, &ind);
-			s.cc_x = buffer_get_float32_auto(data, &ind);
-			s.cc_y = buffer_get_float32_auto(data, &ind);
-			s.cc_rad = buffer_get_float32_auto(data, &ind);
-			s.log_rate_ms = buffer_get_int32(data, &ind);
-			s.log_en = data[ind++];
-			s.map_plot_avg_factor = buffer_get_float32_auto(data, &ind);
-			s.map_plot_max_div = buffer_get_float32_auto(data, &ind);
-			s.plot_mode = data[ind++];
-			s.map_plot_start = buffer_get_uint16(data, &ind);
-			s.map_plot_end = buffer_get_uint16(data, &ind);
-
-			// Send ack
-			int32_t send_index = 0;
-			m_send_buffer[send_index++] = id_ret;
-			m_send_buffer[send_index++] = packet_id;
-			commands_send_packet(m_send_buffer, send_index);
-
-			timeout_reset();
-
-			radar_setup_measurement(&s);
-#endif
-		} break;
-
-		case CMD_RADAR_SETUP_GET: {
-#if RADAR_EN
-			timeout_reset();
-			commands_set_send_func(func);
-
-			const radar_settings_t *s = radar_get_settings();
-			int32_t send_index = 0;
-
-			m_send_buffer[send_index++] = id_ret;
-			m_send_buffer[send_index++] = packet_id;
-			buffer_append_float32_auto(m_send_buffer, s->f_center, &send_index);
-			buffer_append_float32_auto(m_send_buffer, s->f_span, &send_index);
-			buffer_append_int16(m_send_buffer, s->points, &send_index);
-			buffer_append_float32_auto(m_send_buffer, s->t_sweep, &send_index);
-			buffer_append_float32_auto(m_send_buffer, s->cc_x, &send_index);
-			buffer_append_float32_auto(m_send_buffer, s->cc_y, &send_index);
-			buffer_append_float32_auto(m_send_buffer, s->cc_rad, &send_index);
-			buffer_append_int32(m_send_buffer, s->log_rate_ms, &send_index);
-			m_send_buffer[send_index++] = s->log_en;
-			buffer_append_float32_auto(m_send_buffer, s->map_plot_avg_factor, &send_index);
-			buffer_append_float32_auto(m_send_buffer, s->map_plot_max_div, &send_index);
-			m_send_buffer[send_index++] = s->plot_mode;
-			buffer_append_uint16(m_send_buffer, s->map_plot_start, &send_index);
-			buffer_append_uint16(m_send_buffer, s->map_plot_end, &send_index);
-
-			commands_send_packet(m_send_buffer, send_index);
-#endif
 		} break;
 
 		case CMD_SET_MS_TODAY: {
@@ -1252,45 +1187,6 @@ void commands_send_plot_points(float x, float y) {
 	buffer_append_float32_auto(m_send_buffer, x, &ind);
 	buffer_append_float32_auto(m_send_buffer, y, &ind);
 	commands_send_packet((unsigned char*)m_send_buffer, ind);
-}
-
-void commands_send_radar_samples(float *dists, int num) {
-	if (num > 24) {
-		num = 24;
-	}
-
-	int32_t ind = 0;
-	m_send_buffer[ind++] = main_id;
-	m_send_buffer[ind++] = CMD_RADAR_SAMPLES;
-	for (int i = 0;i < num;i++) {
-		buffer_append_float32_auto(m_send_buffer, dists[i], &ind);
-	}
-	commands_send_packet((unsigned char*)m_send_buffer, ind);
-}
-
-void commands_send_dw_sample(DW_LOG_INFO *dw) {
-	int32_t ind = 0;
-	m_send_buffer[ind++] = main_id;
-	m_send_buffer[ind++] = CMD_DW_SAMPLE;
-	m_send_buffer[ind++] = dw->valid;
-	m_send_buffer[ind++] = dw->dw_anchor;
-	buffer_append_int32(m_send_buffer, dw->time_today_ms, &ind);
-	buffer_append_float32_auto(m_send_buffer, dw->dw_dist, &ind);
-	buffer_append_float32_auto(m_send_buffer, dw->px, &ind);
-	buffer_append_float32_auto(m_send_buffer, dw->py, &ind);
-	buffer_append_float32_auto(m_send_buffer, dw->px_gps, &ind);
-	buffer_append_float32_auto(m_send_buffer, dw->py_gps, &ind);
-	buffer_append_float32_auto(m_send_buffer, dw->pz_gps, &ind);
-
-#if LOG_DW_FORCE_CC1120
-	if (comm_cc1120_init_done()) {
-		comm_cc1120_send_buffer(m_send_buffer, ind);
-	} else {
-		commands_send_packet(m_send_buffer, ind);
-	}
-#else
-	commands_send_packet(m_send_buffer, ind);
-#endif
 }
 
 void commands_send_log_ethernet(unsigned char *data, int len) {

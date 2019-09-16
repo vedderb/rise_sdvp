@@ -42,8 +42,6 @@ void commands_init_plot(char *namex, char *namey);
 void commands_plot_add_graph(char *name);
 void commands_plot_set_graph(int graph);
 void commands_send_plot_points(float x, float y);
-void commands_send_radar_samples(float *dists, int num);
-void commands_send_dw_sample(DW_LOG_INFO *dw);
 void commands_send_log_ethernet(unsigned char *data, int len);
 rtcm3_state* commands_get_rtcm3_state(void);
 

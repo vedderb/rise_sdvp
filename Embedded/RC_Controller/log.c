@@ -19,7 +19,6 @@
 #include "pos.h"
 #include "commands.h"
 #include "servo_simple.h"
-#include "radar.h"
 #include "comm_can.h"
 #include "ch.h"
 #include "hal.h"
@@ -50,10 +49,6 @@ static LOG_EXT_MODE m_log_ext_mode;
 static int m_log_uart_baud;
 static char m_log_uart_rx_buffer[UART_LOG_RX_BUFFER_SIZE];
 static int m_log_uart_rx_ptr;
-#ifdef LOG_EN_DW
-static int m_dw_anchor_now = 0;
-static DW_LOG_INFO m_dw_anchor_info[3];
-#endif
 
 // Threads
 static THD_WORKING_AREA(log_thread_wa, 2048);
@@ -63,9 +58,6 @@ static THD_FUNCTION(log_uart_thread, arg);
 static thread_t *log_uart_tp;
 
 // Private functions
-#ifdef LOG_EN_DW
-static void range_callback(uint8_t id, uint8_t dest, float range);
-#endif
 static void print_log_ext(void);
 static void txend1(UARTDriver *uartp);
 static void txend2(UARTDriver *uartp);
@@ -152,12 +144,10 @@ static THD_FUNCTION(log_thread, arg) {
 		}
 
 		if (m_log_en) {
-#ifndef LOG_EN_DW
 			if (m_write_split) {
 				commands_printf_log_usb("//%s\n", m_log_name);
 				m_write_split = false;
 			}
-#endif
 
 #ifdef LOG_EN_CARREL
 			mc_values val;
@@ -301,36 +291,6 @@ static THD_FUNCTION(log_thread, arg) {
 					(double)mag[2],
 					val.tachometer,
 					(double)steering_angle);
-#elif defined(LOG_EN_DW)
-			comm_can_set_range_func(range_callback);
-
-			if (m_dw_anchor_now == 0 && LOG_DW_ANCHOR0 >= 0) {
-				memset(m_dw_anchor_info, 0, sizeof(m_dw_anchor_info));
-				comm_can_dw_range(CAN_DW_ID_ANY, LOG_DW_ANCHOR0, 5);
-			} else if (m_dw_anchor_now == 1 && LOG_DW_ANCHOR1 >= 0) {
-				comm_can_dw_range(CAN_DW_ID_ANY, LOG_DW_ANCHOR1, 5);
-			} else if (m_dw_anchor_now == 2 && LOG_DW_ANCHOR2 >= 0) {
-				comm_can_dw_range(CAN_DW_ID_ANY, LOG_DW_ANCHOR2, 5);
-			} else if (m_dw_anchor_now >= 3) {
-				int closest = -1;
-				float min_dist = 1e20;
-
-				for (int i = 0;i < 3;i++) {
-					if (m_dw_anchor_info[i].valid &&
-							m_dw_anchor_info[i].dw_dist < min_dist) {
-						closest = i;
-						min_dist = m_dw_anchor_info[i].dw_dist;
-					}
-				}
-
-				if (closest >= 0) {
-					commands_send_dw_sample(&m_dw_anchor_info[closest]);
-				}
-
-				m_dw_anchor_now = -1;
-			}
-
-			m_dw_anchor_now++;
 #endif
 		}
 
@@ -427,29 +387,6 @@ static void print_log_ext(void) {
 			* main_config.car.wheel_diam * M_PI),
 			(double)pos.yaw_imu);
 }
-
-#ifdef LOG_EN_DW
-static void range_callback(uint8_t id, uint8_t dest, float range) {
-	(void)id;
-
-	int now = m_dw_anchor_now - 1;
-
-	if (now >= 0 && now < 3) {
-		POS_STATE pos;
-		pos_get_pos(&pos);
-
-		m_dw_anchor_info[now].valid = true;
-		m_dw_anchor_info[now].dw_anchor = dest;
-		m_dw_anchor_info[now].time_today_ms = pos_get_ms_today();
-		m_dw_anchor_info[now].dw_dist = range;
-		m_dw_anchor_info[now].px = pos.px;
-		m_dw_anchor_info[now].py = pos.py;
-		m_dw_anchor_info[now].px_gps = pos.px_gps;
-		m_dw_anchor_info[now].py_gps = pos.py_gps;
-		m_dw_anchor_info[now].pz_gps = pos.pz_gps;
-	}
-}
-#endif
 
 /*
  * This callback is invoked when a transmission buffer has been completely

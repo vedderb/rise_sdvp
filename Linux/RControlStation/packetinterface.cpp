@@ -395,58 +395,6 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         emit plotSetGraphReceived(id, data[0]);
     } break;
 
-    case CMD_RADAR_SETUP_GET: {
-        int32_t ind = 0;
-        radar_settings_t s;
-
-        s.f_center = utility::buffer_get_double32_auto(data, &ind);
-        s.f_span = utility::buffer_get_double32_auto(data, &ind);
-        s.points = utility::buffer_get_int16(data, &ind);
-        s.t_sweep = utility::buffer_get_double32_auto(data, &ind);
-        s.cc_x = utility::buffer_get_double32_auto(data, &ind);
-        s.cc_y = utility::buffer_get_double32_auto(data, &ind);
-        s.cc_rad = utility::buffer_get_double32_auto(data, &ind);
-        s.log_rate_ms = utility::buffer_get_int32(data, &ind);
-        s.log_en = data[ind++];
-        s.map_plot_avg_factor = utility::buffer_get_double32_auto(data, &ind);
-        s.map_plot_max_div = utility::buffer_get_double32_auto(data, &ind);
-        s.plot_mode = data[ind++];
-        s.map_plot_start = utility::buffer_get_uint16(data, &ind);
-        s.map_plot_end = utility::buffer_get_uint16(data, &ind);
-
-        emit radarSetupReceived(id, s);
-    } break;
-
-    case CMD_RADAR_SAMPLES: {
-        int32_t ind = 0;
-        QVector<QPair<double, double> > samples;
-        while (ind < len) {
-            QPair<double, double> p;
-            p.first = utility::buffer_get_double32_auto(data, &ind);
-            p.second = utility::buffer_get_double32_auto(data, &ind);
-            samples.append(p);
-        }
-
-        emit radarSamplesReceived(id, samples);
-    } break;
-
-    case CMD_DW_SAMPLE: {
-        int32_t ind = 0;
-        DW_LOG_INFO dw;
-
-        dw.valid = data[ind++];
-        dw.dw_anchor = data[ind++];
-        dw.time_today_ms = utility::buffer_get_int32(data, &ind);
-        dw.dw_dist = utility::buffer_get_double32_auto(data, &ind);
-        dw.px = utility::buffer_get_double32_auto(data, &ind);
-        dw.py = utility::buffer_get_double32_auto(data, &ind);
-        dw.px_gps = utility::buffer_get_double32_auto(data, &ind);
-        dw.py_gps = utility::buffer_get_double32_auto(data, &ind);
-        dw.pz_gps = utility::buffer_get_double32_auto(data, &ind);
-
-        emit dwSampleReceived(id, dw);
-    } break;
-
     case CMD_SET_SYSTEM_TIME: {
         int32_t ind = 0;
         qint32 sec = utility::buffer_get_int32(data, &ind);
@@ -581,9 +529,6 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         break;
     case CMD_SET_YAW_OFFSET_ACK:
         emit ackReceived(id, cmd, "CMD_SET_YAW_OFFSET_ACK");
-        break;
-    case CMD_RADAR_SETUP_SET:
-        emit ackReceived(id, cmd, "CMD_RADAR_SETUP_SET");
         break;
     case CMD_SET_SYSTEM_TIME_ACK:
         emit ackReceived(id, cmd, "CMD_SET_SYSTEM_TIME_ACK");
@@ -1037,28 +982,6 @@ bool PacketInterface::setEnuRef(quint8 id, double *llh, int retries)
     return sendPacketAck(mSendBuffer, send_index, retries);
 }
 
-bool PacketInterface::radarSetupSet(quint8 id, radar_settings_t *s, int retries)
-{
-    qint32 send_index = 0;
-    mSendBuffer[send_index++] = id;
-    mSendBuffer[send_index++] = CMD_RADAR_SETUP_SET;
-    utility::buffer_append_double32_auto(mSendBuffer, s->f_center, &send_index);
-    utility::buffer_append_double32_auto(mSendBuffer, s->f_span, &send_index);
-    utility::buffer_append_int16(mSendBuffer, s->points, &send_index);
-    utility::buffer_append_double32_auto(mSendBuffer, s->t_sweep, &send_index);
-    utility::buffer_append_double32_auto(mSendBuffer, s->cc_x, &send_index);
-    utility::buffer_append_double32_auto(mSendBuffer, s->cc_y, &send_index);
-    utility::buffer_append_double32_auto(mSendBuffer, s->cc_rad, &send_index);
-    utility::buffer_append_int32(mSendBuffer, s->log_rate_ms, &send_index);
-    mSendBuffer[send_index++] = s->log_en;
-    utility::buffer_append_double32_auto(mSendBuffer, s->map_plot_avg_factor, &send_index);
-    utility::buffer_append_double32_auto(mSendBuffer, s->map_plot_max_div, &send_index);
-    mSendBuffer[send_index++] = s->plot_mode;
-    utility::buffer_append_uint16(mSendBuffer, s->map_plot_start, &send_index);
-    utility::buffer_append_uint16(mSendBuffer, s->map_plot_end, &send_index);
-    return sendPacketAck(mSendBuffer, send_index, retries);
-}
-
 bool PacketInterface::setSystemTime(quint8 id, qint32 sec, qint32 usec, int retries)
 {
     qint32 send_index = 0;
@@ -1372,15 +1295,6 @@ void PacketInterface::setMsToday(quint8 id, qint32 time)
     mSendBuffer[send_index++] = CMD_SET_MS_TODAY;
     utility::buffer_append_int32(mSendBuffer, time, &send_index);
     sendPacket(mSendBuffer, send_index);
-}
-
-void PacketInterface::radarSetupGet(quint8 id)
-{
-    QByteArray packet;
-    packet.clear();
-    packet.append(id);
-    packet.append((char)CMD_RADAR_SETUP_GET);
-    sendPacket(packet);
 }
 
 void PacketInterface::mrRcControl(quint8 id, double throttle, double roll, double pitch, double yaw)

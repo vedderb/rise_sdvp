@@ -83,19 +83,13 @@ private slots:
     void plotDataReceived(quint8 id, double x, double y);
     void plotAddGraphReceived(quint8 id, QString name);
     void plotSetGraphReceived(quint8 id, int graph);
-    void radarSetupReceived(quint8 id, radar_settings_t s);
-    void radarSamplesReceived(quint8 id, QVector<QPair<double, double> > samples);
-    void dwSampleReceived(quint8 id, DW_LOG_INFO dw);
-    void updateAnchorsMap();
     void loadMagCal();
     void cameraImageReceived(quint8 id, QImage image, int bytes);
 
     void on_terminalSendButton_clicked();
     void on_terminalSendVescButton_clicked();
-    void on_terminalSendRadarButton_clicked();
     void on_terminalClearButton_clicked();
     void on_idBox_valueChanged(int arg1);
-    void on_bldcToolUdpBox_toggled(bool checked);
     void on_vescToolTcpBox_toggled(bool checked);
     void on_autopilotBox_toggled(bool checked);
     void on_clearRouteButton_clicked();
@@ -104,17 +98,10 @@ private slots:
     void on_confReadButton_clicked();
     void on_confReadDefaultButton_clicked();
     void on_confWriteButton_clicked();
-    void on_radarReadButton_clicked();
-    void on_radarWriteButton_clicked();
-    void on_radarGetRadCCButton_clicked();
     void on_setClockButton_clicked();
     void on_setClockPiButton_clicked();
     void on_rebootPiButton_clicked();
     void on_shutdownPiButton_clicked();
-    void on_dwAnch0GetButton_clicked();
-    void on_dwAnch1GetButton_clicked();
-    void on_dwAnch2GetButton_clicked();
-    void on_dwClearSamplesButton_clicked();
     void on_experimentSavePngButton_clicked();
     void on_experimentSavePdfButton_clicked();
     void on_experimentSaveXmlButton_clicked();
@@ -145,7 +132,6 @@ private:
 
     int mId;
     CAR_STATE mLastCarState;
-    QList<DW_LOG_INFO> mDwData;
     QTimer *mTimer;
     QUdpSocket *mUdpSocket;
     QHostAddress mLastHostAddress;
@@ -162,7 +148,6 @@ private:
 
     void getConfGui(MAIN_CONFIG &conf);
     void setConfGui(MAIN_CONFIG &conf);
-    void plotDwData();
     void updateExperimentZoom();
 
 };
