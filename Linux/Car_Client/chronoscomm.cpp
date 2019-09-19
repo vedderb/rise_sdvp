@@ -314,6 +314,8 @@ void ChronosComm::sendStrt(chronos_strt strt)
 void ChronosComm::sendMonr(chronos_monr monr)
 {
     VByteArrayLe vb;
+    vb.vbAppendUint16(ISO_VALUE_ID_MONR_STRUCT);
+    vb.vbAppendUint16(sizeof(chronos_monr));
     vb.vbAppendUint32(monr.gps_ms_of_week * 4);
     vb.vbAppendDouble32(monr.x,1e3);
     vb.vbAppendDouble32(monr.y,1e3);
@@ -779,21 +781,32 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
     case ISO_MSG_MONR: {
         chronos_monr monr;
         VByteArrayLe vb(payload);
-        monr.gps_ms_of_week = vb.vbPopFrontUint32() / 4;
-        monr.x = vb.vbPopFrontDouble32(1e3);
-        monr.y = vb.vbPopFrontDouble32(1e3);
-        monr.z = vb.vbPopFrontDouble32(1e3);
-        monr.heading = ((double)vb.vbPopFrontUint16()) / 1e2;
-        monr.lon_speed = vb.vbPopFrontDouble16(1e2);
-        monr.lat_speed = vb.vbPopFrontDouble16(1e2);
-        monr.lon_acc = vb.vbPopFrontDouble16(1e2);
-        monr.lat_acc = vb.vbPopFrontDouble16(1e2);
-        monr.direction = vb.vbPopFrontUint8();
-        monr.status = vb.vbPopFrontUint8();
-        monr.rdyToArm = vb.vbPopFrontUint8();
-        monr.error = vb.vbPopFrontUint8();
-        monr.sender_id = sender_id;
-        emit monrRx(monr);
+        while (!vb.isEmpty()) {
+            quint16 value_id = vb.vbPopFrontUint16();
+            quint16 value_len = vb.vbPopFrontUint16();
+            switch(value_id) {
+            case ISO_VALUE_ID_MONR_STRUCT:
+                monr.gps_ms_of_week = vb.vbPopFrontUint32() / 4;
+                monr.x = vb.vbPopFrontDouble32(1e3);
+                monr.y = vb.vbPopFrontDouble32(1e3);
+                monr.z = vb.vbPopFrontDouble32(1e3);
+                monr.heading = ((double)vb.vbPopFrontUint16()) / 1e2;
+                monr.lon_speed = vb.vbPopFrontDouble16(1e2);
+                monr.lat_speed = vb.vbPopFrontDouble16(1e2);
+                monr.lon_acc = vb.vbPopFrontDouble16(1e2);
+                monr.lat_acc = vb.vbPopFrontDouble16(1e2);
+                monr.direction = vb.vbPopFrontUint8();
+                monr.status = vb.vbPopFrontUint8();
+                monr.rdyToArm = vb.vbPopFrontUint8();
+                monr.error = vb.vbPopFrontUint8();
+                monr.sender_id = sender_id;
+                emit monrRx(monr);
+            default:
+                qDebug() << "STRT: Unknown value id" << value_id;
+                vb.remove(0, value_len);
+                break;
+            }
+        }
     } break;
 
     default:
