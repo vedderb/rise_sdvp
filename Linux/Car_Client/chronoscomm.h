@@ -147,6 +147,7 @@ typedef struct {
 #define ISO_VALUE_ID_LAT_ACC            0x0051
 #define ISO_VALUE_ID_CURVATURE          0x0052
 #define ISO_VALUE_ID_MONR_STRUCT        0x0080
+#define ISO_VALUE_ID_HEAB_STRUCT        0x0090
 
 #define ISO_VALUE_ID_TRAJECTORY_ID      0x0101
 #define ISO_VALUE_ID_TRAJECTORY_NAME    0x0102

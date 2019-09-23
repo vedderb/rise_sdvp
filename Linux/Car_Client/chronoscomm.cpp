@@ -223,6 +223,8 @@ void ChronosComm::sendTraj(chronos_traj traj)
 void ChronosComm::sendHeab(chronos_heab heab)
 {
     VByteArrayLe vb;
+    vb.vbAppendUint16(ISO_VALUE_ID_HEAB_STRUCT);
+    vb.vbAppendUint16(5); // sizeof(chronos_heab)
     vb.vbAppendUint32(heab.gps_ms_of_week * 4);
     vb.vbAppendUint8(heab.status);
 
@@ -691,9 +693,21 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
 
     case ISO_MSG_HEAB: {
         chronos_heab heab;
-        heab.gps_ms_of_week = vb.vbPopFrontUint32() / 4;
-        heab.status   = vb.vbPopFrontUint8();
-        emit heabRx(heab);
+        while (!vb.isEmpty()) {
+            quint16 value_id = vb.vbPopFrontUint16();
+            quint16 value_len = vb.vbPopFrontUint16();
+            switch(value_id) {
+            case ISO_VALUE_ID_HEAB_STRUCT:
+                heab.gps_ms_of_week = vb.vbPopFrontUint32() / 4;
+                heab.status   = vb.vbPopFrontUint8();
+                emit heabRx(heab);
+                break;
+            default:
+                qDebug() << "HEAB: Unknown value id:" << value_id;
+                vb.remove(0, value_len);
+                break;
+            }
+        }
     } break;
 
     case ISO_MSG_OSEM: {
