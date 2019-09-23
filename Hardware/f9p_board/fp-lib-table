@@ -1,0 +1,4 @@
+(fp_lib_table
+  (lib (name "f9p")(type "KiCad")(uri "/home/joels/Current/RTK_BOARD_F9P/hardware/f9p_board/lib/f9p.pretty")(options "")(descr ""))
+  (lib (name "WDFN6_2x2")(type "KiCad")(uri "${KIPRJMOD}/lib/f9p.pretty/WDFN6_2x2.pretty")(options "")(descr ""))
+)
