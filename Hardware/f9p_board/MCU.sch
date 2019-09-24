@@ -713,81 +713,6 @@ Wire Wire Line
 	3420 720  3640 720 
 Connection ~ 3640 720 
 $Comp
-L Connector_Generic:Conn_02x08_Odd_Even J3
-U 1 1 5D895835
-P 1350 3550
-F 0 "J3" H 1400 4067 50  0000 C CNN
-F 1 "GPIO" H 1400 3976 50  0000 C CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_2x08_P2.54mm_Vertical" H 1350 3550 50  0001 C CNN
-F 3 "~" H 1350 3550 50  0001 C CNN
-	1    1350 3550
-	1    0    0    -1  
-$EndComp
-Text GLabel 3920 3020 0    50   BiDi ~ 0
-PC0
-Text GLabel 1150 3250 0    50   BiDi ~ 0
-PC0
-Text GLabel 3920 3120 0    50   BiDi ~ 0
-PC1
-Text GLabel 1650 3250 2    50   BiDi ~ 0
-PC1
-Text GLabel 3920 3220 0    50   BiDi ~ 0
-PC2
-Text GLabel 3920 3320 0    50   BiDi ~ 0
-PC3
-Text GLabel 3920 3420 0    50   BiDi ~ 0
-PC4
-Text GLabel 3920 3520 0    50   BiDi ~ 0
-PC5
-Text GLabel 3920 3620 0    50   BiDi ~ 0
-PC6
-Text GLabel 3920 3720 0    50   BiDi ~ 0
-PC7
-Text GLabel 3920 3820 0    50   BiDi ~ 0
-PC8
-Text GLabel 3920 3920 0    50   BiDi ~ 0
-PC9
-Text GLabel 3920 4020 0    50   BiDi ~ 0
-PC10
-Text GLabel 3920 4120 0    50   BiDi ~ 0
-PC11
-Text GLabel 3920 4220 0    50   BiDi ~ 0
-PC12
-Text GLabel 3920 4320 0    50   BiDi ~ 0
-PC13
-Text GLabel 3920 4420 0    50   BiDi ~ 0
-PC14
-Text GLabel 3920 4520 0    50   BiDi ~ 0
-PC15
-Text GLabel 1650 3950 2    50   BiDi ~ 0
-PC15
-Text GLabel 1150 3350 0    50   BiDi ~ 0
-PC2
-Text GLabel 1650 3350 2    50   BiDi ~ 0
-PC3
-Text GLabel 1150 3450 0    50   BiDi ~ 0
-PC4
-Text GLabel 1650 3450 2    50   BiDi ~ 0
-PC5
-Text GLabel 1150 3550 0    50   BiDi ~ 0
-PC6
-Text GLabel 1650 3550 2    50   BiDi ~ 0
-PC7
-Text GLabel 1150 3650 0    50   BiDi ~ 0
-PC8
-Text GLabel 1650 3650 2    50   BiDi ~ 0
-PC9
-Text GLabel 1150 3750 0    50   BiDi ~ 0
-PC10
-Text GLabel 1650 3750 2    50   BiDi ~ 0
-PC11
-Text GLabel 1150 3850 0    50   BiDi ~ 0
-PC12
-Text GLabel 1650 3850 2    50   BiDi ~ 0
-PC13
-Text GLabel 1150 3950 0    50   BiDi ~ 0
-PC14
-$Comp
 L MCU_ST_STM32F4:STM32F405RGTx U2
 U 1 1 5D83A137
 P 4620 2920
@@ -1011,4 +936,12 @@ Text GLabel 7600 6060 0    50   Input ~ 0
 CAN_5V
 Text GLabel 4425 5725 2    50   Input ~ 0
 CAN_5V
+Text GLabel 3920 3820 0    50   Input ~ 0
+TIMEPULSE
+Text GLabel 3920 3620 0    50   Input ~ 0
+MCU_TX_F9P_RX
+Text GLabel 3920 3720 0    50   Input ~ 0
+MCU_RX_F9P_TX
+Text GLabel 3920 3920 0    50   Input ~ 0
+F9P_RESET_N
 $EndSCHEMATC
