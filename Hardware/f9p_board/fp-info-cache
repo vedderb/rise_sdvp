@@ -1,4 +1,4 @@
-15347541944832967
+15349111257851967
 Battery
 BatteryHolder_Bulgin_BX0036_1xC
 Bulgin{space}Battery{space}Holder,{space}BX0036,{space}Battery{space}Type{space}C{space}(https://www.bulgin.com/products/pub/media/bulgin/data/Battery_holders.pdf)
@@ -68473,6 +68473,13 @@ varistor{space}SIOV
 0
 2
 2
+WDFN6_2x2
+WDFN6
+
+
+0
+7
+7
 f9p
 UBLOX_ZED_F9P
 

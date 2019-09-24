@@ -162,17 +162,6 @@ Wire Wire Line
 Wire Wire Line
 	1950 2220 2375 2220
 $Comp
-L power:GND #PWR0110
-U 1 1 5D8B9AEC
-P 4520 4760
-F 0 "#PWR0110" H 4520 4510 50  0001 C CNN
-F 1 "GND" H 4525 4587 50  0000 C CNN
-F 2 "" H 4520 4760 50  0001 C CNN
-F 3 "" H 4520 4760 50  0001 C CNN
-	1    4520 4760
-	1    0    0    -1  
-$EndComp
-$Comp
 L power:VCC #PWR0111
 U 1 1 5D8BC73F
 P 4225 1025
@@ -372,107 +361,6 @@ F 3 "https://ae-bst.resource.bosch.com/media/_tech/media/datasheets/BST-BMI160-D
 	1    2475 4900
 	1    0    0    -1  
 $EndComp
-$Comp
-L Interface_CAN_LIN:TJA1051TK-3 U6
-U 1 1 5D92858D
-P 4425 6125
-F 0 "U6" H 4425 6706 50  0000 C CNN
-F 1 "TJA1051TK-3" H 4425 6615 50  0000 C CNN
-F 2 "Package_DFN_QFN:DFN-8-1EP_3x3mm_P0.65mm_EP1.55x2.4mm" H 4425 5625 50  0001 C CIN
-F 3 "http://www.nxp.com/documents/data_sheet/TJA1051.pdf" H 4425 6125 50  0001 C CNN
-	1    4425 6125
-	1    0    0    -1  
-$EndComp
-Text GLabel 3925 5925 0    50   Output ~ 0
-CAN_TX
-Text GLabel 3925 6025 0    50   Input ~ 0
-CAN_RX
-Text GLabel 5525 5825 2    50   Input ~ 0
-CANH
-Text GLabel 5525 6375 2    50   Output ~ 0
-CANL
-Wire Wire Line
-	5525 5825 5250 5825
-Wire Wire Line
-	4925 5825 4925 6025
-Wire Wire Line
-	4925 6225 4925 6375
-Wire Wire Line
-	4925 6375 5250 6375
-$Comp
-L Device:R_Small R8
-U 1 1 5D931940
-P 5250 6100
-F 0 "R8" H 5309 6146 50  0000 L CNN
-F 1 "220R" H 5309 6055 50  0000 L CNN
-F 2 "Resistor_SMD:R_0603_1608Metric" H 5250 6100 50  0001 C CNN
-F 3 "~" H 5250 6100 50  0001 C CNN
-	1    5250 6100
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	5250 6000 5250 5825
-Connection ~ 5250 5825
-Wire Wire Line
-	5250 5825 4925 5825
-Wire Wire Line
-	5250 6200 5250 6375
-Connection ~ 5250 6375
-Wire Wire Line
-	5250 6375 5525 6375
-$Comp
-L power:GND #PWR0114
-U 1 1 5D938D2C
-P 4525 6625
-F 0 "#PWR0114" H 4525 6375 50  0001 C CNN
-F 1 "GND" H 4530 6452 50  0000 C CNN
-F 2 "" H 4525 6625 50  0001 C CNN
-F 3 "" H 4525 6625 50  0001 C CNN
-	1    4525 6625
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	4525 6525 4525 6625
-Wire Wire Line
-	4525 6525 4425 6525
-Connection ~ 4525 6525
-Wire Wire Line
-	3925 6325 3925 6525
-Wire Wire Line
-	3925 6525 4425 6525
-Connection ~ 4425 6525
-$Comp
-L power:VCC #PWR0115
-U 1 1 5D939D1D
-P 3450 6225
-F 0 "#PWR0115" H 3450 6075 50  0001 C CNN
-F 1 "VCC" H 3467 6398 50  0000 C CNN
-F 2 "" H 3450 6225 50  0001 C CNN
-F 3 "" H 3450 6225 50  0001 C CNN
-	1    3450 6225
-	1    0    0    -1  
-$EndComp
-$Comp
-L Device:C_Small C18
-U 1 1 5D93D9F5
-P 3650 6325
-F 0 "C18" H 3742 6371 50  0000 L CNN
-F 1 "2.2u" H 3742 6280 50  0000 L CNN
-F 2 "Capacitor_SMD:C_0603_1608Metric" H 3650 6325 50  0001 C CNN
-F 3 "~" H 3650 6325 50  0001 C CNN
-	1    3650 6325
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	3925 6525 3650 6525
-Wire Wire Line
-	3650 6525 3650 6425
-Connection ~ 3925 6525
-Wire Wire Line
-	3925 6225 3650 6225
-Wire Wire Line
-	3450 6225 3650 6225
-Connection ~ 3650 6225
 Text GLabel 5320 3920 2    50   Output ~ 0
 CAN_TX
 $Comp
@@ -713,7 +601,7 @@ Wire Wire Line
 	3420 720  3640 720 
 Connection ~ 3640 720 
 $Comp
-L MCU_ST_STM32F4:STM32F405RGTx U2
+L STM32F4:STM32F405RGTx U2
 U 1 1 5D83A137
 P 4620 2920
 F 0 "U2" H 4135 1160 50  0000 C CNN
@@ -723,18 +611,6 @@ F 3 "http://www.st.com/st-web-ui/static/active/en/resource/technical/document/da
 	1    4620 2920
 	1    0    0    -1  
 $EndComp
-Wire Wire Line
-	4520 4720 4520 4755
-Wire Wire Line
-	4620 4755 4620 4720
-Connection ~ 4520 4760
-Wire Wire Line
-	4720 4720 4720 4755
-Wire Wire Line
-	4520 4755 4615 4755
-Connection ~ 4615 4755
-Wire Wire Line
-	4615 4755 4720 4755
 Wire Wire Line
 	4920 1120 4920 1030
 Wire Wire Line
@@ -867,16 +743,6 @@ F 3 "" H 3400 1920 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	3920 1720 3860 1720
-Wire Wire Line
-	3860 1720 3860 1575
-Wire Wire Line
-	3860 1575 3250 1575
-Wire Wire Line
-	3250 1575 3250 1670
-Wire Wire Line
-	3920 1820 3780 1820
-Wire Wire Line
 	3780 1820 3780 1635
 Wire Wire Line
 	3780 1635 3575 1635
@@ -932,10 +798,6 @@ Wire Wire Line
 	7600 5760 6950 5760
 Wire Wire Line
 	6950 5760 6950 5770
-Text GLabel 7600 6060 0    50   Input ~ 0
-CAN_5V
-Text GLabel 4425 5725 2    50   Input ~ 0
-CAN_5V
 Text GLabel 3920 3820 0    50   Input ~ 0
 TIMEPULSE
 Text GLabel 3920 3620 0    50   Input ~ 0
@@ -944,4 +806,234 @@ Text GLabel 3920 3720 0    50   Input ~ 0
 MCU_RX_F9P_TX
 Text GLabel 3920 3920 0    50   Input ~ 0
 F9P_RESET_N
+Text GLabel 3920 4020 0    50   Input ~ 0
+TX_READY
+Text Notes 2800 4060 0    50   ~ 0
+F9P TX Buffer full.
+$Comp
+L Connector_Generic:Conn_02x08_Odd_Even J3
+U 1 1 5D95B7FE
+P 6550 4770
+F 0 "J3" H 6600 5287 50  0000 C CNN
+F 1 "GPIO" H 6600 5196 50  0000 C CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_2x08_P2.54mm_Vertical" H 6550 4770 50  0001 C CNN
+F 3 "~" H 6550 4770 50  0001 C CNN
+	1    6550 4770
+	1    0    0    -1  
+$EndComp
+Text GLabel 5320 1320 2    50   Input ~ 0
+GPIO1
+Text GLabel 5320 1420 2    50   Input ~ 0
+GPIO2
+Text GLabel 5320 1520 2    50   Input ~ 0
+GPIO3
+Text GLabel 5320 1620 2    50   Input ~ 0
+GPIO4
+Text GLabel 5320 1720 2    50   Input ~ 0
+GPIO5
+Text GLabel 5320 1820 2    50   Input ~ 0
+GPIO6
+Text GLabel 5320 1920 2    50   Input ~ 0
+GPIO7
+Text GLabel 5320 2020 2    50   Input ~ 0
+GPIO8
+Text GLabel 6850 4770 2    50   Input ~ 0
+GPIO8
+Text GLabel 6850 4570 2    50   Input ~ 0
+GPIO4
+Text GLabel 6350 4570 0    50   Input ~ 0
+GPIO3
+Text GLabel 6350 4470 0    50   Input ~ 0
+GPIO1
+Text GLabel 6350 4670 0    50   Input ~ 0
+GPIO5
+Text GLabel 6350 4770 0    50   Input ~ 0
+GPIO7
+Text GLabel 6850 4670 2    50   Input ~ 0
+GPIO6
+Text GLabel 6850 4470 2    50   Input ~ 0
+GPIO2
+Text GLabel 3920 4220 0    50   Input ~ 0
+GPIO9
+Text GLabel 3920 4320 0    50   Input ~ 0
+GPIO10
+Text GLabel 3920 4420 0    50   Input ~ 0
+GPIO11
+Text GLabel 3920 4520 0    50   Input ~ 0
+GPIO12
+Text GLabel 5320 4220 2    50   Input ~ 0
+GPIO13
+Text GLabel 5320 4320 2    50   Input ~ 0
+GPIO14
+Text GLabel 5320 4420 2    50   Input ~ 0
+GPIO15
+Text GLabel 5320 4520 2    50   Input ~ 0
+GPIO16
+Text GLabel 6850 5170 2    50   Input ~ 0
+GPIO16
+Text GLabel 6350 5070 0    50   Input ~ 0
+GPIO13
+Text GLabel 6350 5170 0    50   Input ~ 0
+GPIO15
+Text GLabel 6850 5070 2    50   Input ~ 0
+GPIO14
+Text GLabel 6850 4870 2    50   Input ~ 0
+GPIO10
+Text GLabel 6850 4970 2    50   Input ~ 0
+GPIO12
+Text GLabel 6350 4970 0    50   Input ~ 0
+GPIO11
+Text GLabel 6350 4870 0    50   Input ~ 0
+GPIO9
+$Comp
+L power:GND #PWR0110
+U 1 1 5DA39A14
+P 4520 4820
+F 0 "#PWR0110" H 4520 4570 50  0001 C CNN
+F 1 "GND" H 4525 4647 50  0000 C CNN
+F 2 "" H 4520 4820 50  0001 C CNN
+F 3 "" H 4520 4820 50  0001 C CNN
+	1    4520 4820
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	4520 4720 4520 4820
+Wire Wire Line
+	4520 4720 4620 4720
+Connection ~ 4520 4720
+Wire Wire Line
+	4620 4720 4720 4720
+Connection ~ 4620 4720
+Wire Wire Line
+	3920 1820 3780 1820
+Wire Wire Line
+	3860 1720 3860 1590
+Wire Wire Line
+	3860 1590 3250 1590
+Wire Wire Line
+	3250 1590 3250 1670
+Wire Wire Line
+	3920 1720 3860 1720
+NoConn ~ 5320 2120
+NoConn ~ 5320 2220
+NoConn ~ 5320 2320
+NoConn ~ 5320 2820
+NoConn ~ 5320 3220
+NoConn ~ 5320 3320
+NoConn ~ 5320 3420
+NoConn ~ 3920 4120
+NoConn ~ 3920 3520
+NoConn ~ 3920 3420
+NoConn ~ 3920 3320
+NoConn ~ 3920 3020
+NoConn ~ 3920 2820
+NoConn ~ 3920 3120
+NoConn ~ 3920 3220
+Text GLabel 7600 6060 0    50   Input ~ 0
+MCU_USB_VBUS
+Text GLabel 4430 5720 2    50   Input ~ 0
+MCU_USB_VBUS
+Connection ~ 3655 6220
+Wire Wire Line
+	3455 6220 3655 6220
+Wire Wire Line
+	3930 6220 3655 6220
+Connection ~ 3930 6520
+Wire Wire Line
+	3655 6520 3655 6420
+Wire Wire Line
+	3930 6520 3655 6520
+$Comp
+L Device:C_Small C18
+U 1 1 5D93D9F5
+P 3655 6320
+F 0 "C18" H 3747 6366 50  0000 L CNN
+F 1 "2.2u" H 3747 6275 50  0000 L CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric" H 3655 6320 50  0001 C CNN
+F 3 "~" H 3655 6320 50  0001 C CNN
+	1    3655 6320
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:VCC #PWR0115
+U 1 1 5D939D1D
+P 3455 6220
+F 0 "#PWR0115" H 3455 6070 50  0001 C CNN
+F 1 "VCC" H 3472 6393 50  0000 C CNN
+F 2 "" H 3455 6220 50  0001 C CNN
+F 3 "" H 3455 6220 50  0001 C CNN
+	1    3455 6220
+	1    0    0    -1  
+$EndComp
+Connection ~ 4430 6520
+Wire Wire Line
+	3930 6520 4430 6520
+Wire Wire Line
+	3930 6320 3930 6520
+Connection ~ 4530 6520
+Wire Wire Line
+	4530 6520 4430 6520
+Wire Wire Line
+	4530 6520 4530 6620
+$Comp
+L power:GND #PWR0114
+U 1 1 5D938D2C
+P 4530 6620
+F 0 "#PWR0114" H 4530 6370 50  0001 C CNN
+F 1 "GND" H 4535 6447 50  0000 C CNN
+F 2 "" H 4530 6620 50  0001 C CNN
+F 3 "" H 4530 6620 50  0001 C CNN
+	1    4530 6620
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5255 6370 5530 6370
+Connection ~ 5255 6370
+Wire Wire Line
+	5255 6195 5255 6370
+Wire Wire Line
+	5255 5820 4930 5820
+Connection ~ 5255 5820
+Wire Wire Line
+	5255 5995 5255 5820
+$Comp
+L Device:R_Small R8
+U 1 1 5D931940
+P 5255 6095
+F 0 "R8" H 5314 6141 50  0000 L CNN
+F 1 "220R" H 5314 6050 50  0000 L CNN
+F 2 "Resistor_SMD:R_0603_1608Metric" H 5255 6095 50  0001 C CNN
+F 3 "~" H 5255 6095 50  0001 C CNN
+	1    5255 6095
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	4930 6370 5255 6370
+Wire Wire Line
+	4930 6220 4930 6370
+Wire Wire Line
+	4930 5820 4930 6020
+Wire Wire Line
+	5530 5820 5255 5820
+Text GLabel 5530 6370 2    50   Output ~ 0
+CANL
+Text GLabel 5530 5820 2    50   Input ~ 0
+CANH
+Text GLabel 3930 6020 0    50   Input ~ 0
+CAN_RX
+Text GLabel 3930 5920 0    50   Output ~ 0
+CAN_TX
+$Comp
+L Interface_CAN_LIN:TJA1051TK-3 U6
+U 1 1 5D92858D
+P 4430 6120
+F 0 "U6" H 4430 6701 50  0000 C CNN
+F 1 "TJA1051TK-3" H 4430 6610 50  0000 C CNN
+F 2 "Package_DFN_QFN:DFN-8-1EP_3x3mm_P0.65mm_EP1.55x2.4mm" H 4430 5620 50  0001 C CIN
+F 3 "http://www.nxp.com/documents/data_sheet/TJA1051.pdf" H 4430 6120 50  0001 C CNN
+	1    4430 6120
+	1    0    0    -1  
+$EndComp
+NoConn ~ 5320 4020
+NoConn ~ 5320 4120
 $EndSCHEMATC

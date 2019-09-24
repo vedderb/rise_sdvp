@@ -2,4 +2,5 @@
   (lib (name "f9p")(type "Legacy")(uri "${KIPRJMOD}/lib/f9p.lib")(options "")(descr ""))
   (lib (name "nvc8705")(type "Legacy")(uri "${KIPRJMOD}/lib/nvc8705.lib")(options "")(descr ""))
   (lib (name "ncv8705")(type "Legacy")(uri "${KIPRJMOD}/lib/ncv8705.lib")(options "")(descr ""))
+  (lib (name "STM32F4")(type "Legacy")(uri "${KIPRJMOD}/lib/STM32F4.lib")(options "")(descr ""))
 )
