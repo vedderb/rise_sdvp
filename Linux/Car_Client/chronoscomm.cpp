@@ -804,7 +804,7 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
                 monr.x = vb.vbPopFrontDouble32(1e3);
                 monr.y = vb.vbPopFrontDouble32(1e3);
                 monr.z = vb.vbPopFrontDouble32(1e3);
-                monr.heading = ((double)vb.vbPopFrontUint16()) / 1e2;
+                monr.heading = (double(vb.vbPopFrontUint16())) / 1e2;
                 monr.lon_speed = vb.vbPopFrontDouble16(1e2);
                 monr.lat_speed = vb.vbPopFrontDouble16(1e2);
                 monr.lon_acc = vb.vbPopFrontDouble16(1e2);
@@ -815,8 +815,10 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
                 monr.error = vb.vbPopFrontUint8();
                 monr.sender_id = sender_id;
                 emit monrRx(monr);
+                break;
+
             default:
-                qDebug() << "STRT: Unknown value id" << value_id;
+                qDebug() << "MONR: Unknown value id" << value_id;
                 vb.remove(0, value_len);
                 break;
             }
