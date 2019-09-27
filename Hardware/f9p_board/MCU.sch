@@ -656,7 +656,7 @@ NoConn ~ 3925 3125
 NoConn ~ 3925 3225
 Text GLabel 7605 6065 0    50   Input ~ 0
 MCU_USB_VBUS
-Text GLabel 4450 5725 2    50   Input ~ 0
+Text GLabel 5075 5700 2    50   Input ~ 0
 MCU_USB_VBUS
 Connection ~ 3675 6225
 Wire Wire Line
@@ -1019,4 +1019,39 @@ F 3 "~" H 10650 5375 50  0001 C CNN
 	1    10650 5375
 	1    0    0    -1  
 $EndComp
+$Comp
+L Device:C_Small C26
+U 1 1 5D8DF97F
+P 4800 5600
+F 0 "C26" H 4892 5646 50  0000 L CNN
+F 1 "2.2u" H 4892 5555 50  0000 L CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric" H 4800 5600 50  0001 C CNN
+F 3 "~" H 4800 5600 50  0001 C CNN
+	1    4800 5600
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5075 5700 4800 5700
+Wire Wire Line
+	4800 5700 4450 5700
+Wire Wire Line
+	4450 5700 4450 5725
+Connection ~ 4800 5700
+$Comp
+L power:GND #PWR0128
+U 1 1 5D8E56B1
+P 5150 5425
+F 0 "#PWR0128" H 5150 5175 50  0001 C CNN
+F 1 "GND" H 5155 5252 50  0000 C CNN
+F 2 "" H 5150 5425 50  0001 C CNN
+F 3 "" H 5150 5425 50  0001 C CNN
+	1    5150 5425
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	4800 5500 4800 5350
+Wire Wire Line
+	4800 5350 5150 5350
+Wire Wire Line
+	5150 5350 5150 5425
 $EndSCHEMATC
