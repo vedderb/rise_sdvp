@@ -18,75 +18,13 @@ Comment7 ""
 Comment8 ""
 Comment9 ""
 $EndDescr
-$Comp
-L Connector:USB_B_Mini J1
-U 1 1 5D88294A
-P 8655 2255
-F 0 "J1" H 8425 2152 50  0000 R CNN
-F 1 "USB_B_Mini" H 8425 2243 50  0000 R CNN
-F 2 "Connector_USB:USB_Mini-B_Lumberg_2486_01_Horizontal" H 8805 2205 50  0001 C CNN
-F 3 "~" H 8805 2205 50  0001 C CNN
-	1    8655 2255
-	-1   0    0    1   
-$EndComp
-$Comp
-L Connector:USB_B_Mini J2
-U 1 1 5D8865AF
-P 8655 3480
-F 0 "J2" H 8425 3377 50  0000 R CNN
-F 1 "USB_B_Mini" H 8425 3468 50  0000 R CNN
-F 2 "Connector_USB:USB_Mini-B_Lumberg_2486_01_Horizontal" H 8805 3430 50  0001 C CNN
-F 3 "~" H 8805 3430 50  0001 C CNN
-	1    8655 3480
-	-1   0    0    1   
-$EndComp
-$Comp
-L power:GND #PWR0105
-U 1 1 5D88B2F0
-P 9830 2855
-F 0 "#PWR0105" H 9830 2605 50  0001 C CNN
-F 1 "GND" H 9835 2682 50  0000 C CNN
-F 2 "" H 9830 2855 50  0001 C CNN
-F 3 "" H 9830 2855 50  0001 C CNN
-	1    9830 2855
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	9830 2855 9455 2855
-Wire Wire Line
-	8655 2855 8655 3080
-Wire Wire Line
-	8755 3080 8755 2855
-Connection ~ 8755 2855
-Wire Wire Line
-	8755 2855 8655 2855
-Wire Wire Line
-	9455 1855 9455 2855
-Connection ~ 9455 2855
-Wire Wire Line
-	9455 2855 8755 2855
-Wire Wire Line
-	8655 1855 8755 1855
-Connection ~ 8755 1855
-Wire Wire Line
-	8755 1855 9455 1855
-NoConn ~ 8355 2055
-NoConn ~ 8355 3280
-Text GLabel 8355 3480 0    50   BiDi ~ 0
-MCU_USB_DP
-Text GLabel 8355 3380 0    50   BiDi ~ 0
-MCU_USB_DM
-Text GLabel 8355 2255 0    50   Input ~ 0
+Text GLabel 8350 2250 0    50   Input ~ 0
 F9P_USB_DP
-Text GLabel 8355 2155 0    50   Input ~ 0
+Text GLabel 8350 2150 0    50   Input ~ 0
 F9P_USB_DM
-Text GLabel 8355 2455 0    50   Input ~ 0
-F9P_USB_VBUS
-Text GLabel 8355 3680 0    50   Input ~ 0
-MCU_USB_VBUS
-Text GLabel 5325 2425 2    50   BiDi ~ 0
+Text GLabel 6000 2425 2    50   BiDi ~ 0
 MCU_USB_DM
-Text GLabel 5325 2525 2    50   BiDi ~ 0
+Text GLabel 6000 2525 2    50   BiDi ~ 0
 MCU_USB_DP
 $Comp
 L Device:R_Small R6
@@ -1054,4 +992,96 @@ Wire Wire Line
 	4800 5350 5150 5350
 Wire Wire Line
 	5150 5350 5150 5425
+$Comp
+L Device:R_Small R14
+U 1 1 5D93BEA9
+P 5825 2525
+F 0 "R14" V 5629 2525 50  0000 C CNN
+F 1 "27 Ohm" V 5720 2525 50  0000 C CNN
+F 2 "Resistor_SMD:R_0603_1608Metric" H 5825 2525 50  0001 C CNN
+F 3 "~" H 5825 2525 50  0001 C CNN
+	1    5825 2525
+	0    1    1    0   
+$EndComp
+$Comp
+L Device:R_Small R13
+U 1 1 5D93C493
+P 5525 2425
+F 0 "R13" V 5329 2425 50  0000 C CNN
+F 1 "27 Ohm" V 5420 2425 50  0000 C CNN
+F 2 "Resistor_SMD:R_0603_1608Metric" H 5525 2425 50  0001 C CNN
+F 3 "~" H 5525 2425 50  0001 C CNN
+	1    5525 2425
+	0    1    1    0   
+$EndComp
+Connection ~ 8750 2850
+Connection ~ 9450 2850
+Connection ~ 8750 1850
+NoConn ~ 8350 2050
+NoConn ~ 8350 3275
+$Comp
+L power:GND #PWR0105
+U 1 1 5D88B2F0
+P 9825 2850
+F 0 "#PWR0105" H 9825 2600 50  0001 C CNN
+F 1 "GND" H 9830 2677 50  0000 C CNN
+F 2 "" H 9825 2850 50  0001 C CNN
+F 3 "" H 9825 2850 50  0001 C CNN
+	1    9825 2850
+	1    0    0    -1  
+$EndComp
+$Comp
+L Connector:USB_B_Mini J2
+U 1 1 5D8865AF
+P 8650 3475
+F 0 "J2" H 8420 3372 50  0000 R CNN
+F 1 "USB_B_Mini" H 8420 3463 50  0000 R CNN
+F 2 "Connector_USB:USB_Mini-B_Lumberg_2486_01_Horizontal" H 8800 3425 50  0001 C CNN
+F 3 "~" H 8800 3425 50  0001 C CNN
+	1    8650 3475
+	-1   0    0    1   
+$EndComp
+$Comp
+L Connector:USB_B_Mini J1
+U 1 1 5D88294A
+P 8650 2250
+F 0 "J1" H 8420 2147 50  0000 R CNN
+F 1 "USB_B_Mini" H 8420 2238 50  0000 R CNN
+F 2 "Connector_USB:USB_Mini-B_Lumberg_2486_01_Horizontal" H 8800 2200 50  0001 C CNN
+F 3 "~" H 8800 2200 50  0001 C CNN
+	1    8650 2250
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	8650 1850 8750 1850
+Wire Wire Line
+	9825 2850 9450 2850
+Text GLabel 8350 3675 0    50   Input ~ 0
+MCU_USB_VBUS
+Wire Wire Line
+	9450 1850 9450 2850
+Wire Wire Line
+	8750 3075 8750 2850
+Wire Wire Line
+	8650 2850 8650 3075
+Wire Wire Line
+	8750 2850 8650 2850
+Wire Wire Line
+	8750 1850 9450 1850
+Text GLabel 8350 3375 0    50   BiDi ~ 0
+MCU_USB_DM
+Wire Wire Line
+	9450 2850 8750 2850
+Text GLabel 8350 2450 0    50   Input ~ 0
+F9P_USB_VBUS
+Text GLabel 8350 3475 0    50   BiDi ~ 0
+MCU_USB_DP
+Wire Wire Line
+	5325 2425 5425 2425
+Wire Wire Line
+	5625 2425 6000 2425
+Wire Wire Line
+	6000 2525 5925 2525
+Wire Wire Line
+	5725 2525 5325 2525
 $EndSCHEMATC

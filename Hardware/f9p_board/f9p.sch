@@ -397,28 +397,21 @@ Wire Wire Line
 	900  3335 900  3455
 NoConn ~ 6750 4525
 $Comp
-L uFL_conn:uFL_conn U?
+L uFL_conn:uFL_conn U7
 U 1 1 5D8F1967
 P 3900 2050
-F 0 "U?" V 3946 1606 50  0000 R CNN
+F 0 "U7" V 3946 1606 50  0000 R CNN
 F 1 "uFL_conn" V 3855 1606 50  0000 R CNN
 F 2 "Connector_Coaxial:U.FL_Molex_MCRF_73412-0110_Vertical" H 3900 2050 50  0001 C CNN
 F 3 "" H 3900 2050 50  0001 C CNN
 	1    3900 2050
 	0    -1   -1   0   
 $EndComp
-Wire Wire Line
-	3570 2725 3900 2725
-Wire Wire Line
-	3900 2400 3900 2725
-Connection ~ 3900 2725
-Wire Wire Line
-	3900 2725 4400 2725
 $Comp
-L power:GND #PWR?
+L power:GND #PWR0129
 U 1 1 5D8F8B6A
 P 3325 1975
-F 0 "#PWR?" H 3325 1725 50  0001 C CNN
+F 0 "#PWR0129" H 3325 1725 50  0001 C CNN
 F 1 "GND" H 3330 1802 50  0000 C CNN
 F 2 "" H 3325 1975 50  0001 C CNN
 F 3 "" H 3325 1975 50  0001 C CNN
@@ -441,4 +434,11 @@ Wire Wire Line
 Connection ~ 3500 1950
 Wire Wire Line
 	3500 1950 3500 2050
+Wire Wire Line
+	3570 2725 3900 2725
+Wire Wire Line
+	3900 2400 3900 2725
+Connection ~ 3900 2725
+Wire Wire Line
+	3900 2725 4400 2725
 $EndSCHEMATC
