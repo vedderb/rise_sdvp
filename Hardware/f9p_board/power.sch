@@ -18,20 +18,6 @@ Comment7 ""
 Comment8 ""
 Comment9 ""
 $EndDescr
-Text GLabel 1560 4380 0    50   Input ~ 0
-MCU_USB_VBUS
-$Comp
-L power:VCC #PWR0126
-U 1 1 5DA67011
-P 4310 4055
-F 0 "#PWR0126" H 4310 3905 50  0001 C CNN
-F 1 "VCC" H 4327 4228 50  0000 C CNN
-F 2 "" H 4310 4055 50  0001 C CNN
-F 3 "" H 4310 4055 50  0001 C CNN
-	1    4310 4055
-	1    0    0    -1  
-$EndComp
-Connection ~ 4310 4055
 Wire Wire Line
 	6485 3455 6485 3555
 Wire Wire Line
@@ -139,139 +125,19 @@ Text Notes 9310 4605 0    50   ~ 0
 5v USB Power\n
 Text Notes 6660 4580 0    50   ~ 0
 3.3V and max 0.5A\n
-Text Notes 985  4305 0    50   ~ 0
-5v USB Power\n
 Text Notes 4410 4255 0    50   ~ 0
 3.3V and 1A\n
-Wire Wire Line
-	2435 4055 4310 4055
-Wire Wire Line
-	2435 4355 2435 4055
-Wire Wire Line
-	3835 5705 4310 5705
-Connection ~ 3835 5705
-Wire Wire Line
-	3835 5630 3835 5705
-Connection ~ 3310 5705
-Wire Wire Line
-	4310 5705 4310 5630
-Wire Wire Line
-	3310 5705 3835 5705
-Connection ~ 4310 5330
-Wire Wire Line
-	3835 5330 4310 5330
-Wire Wire Line
-	4310 4930 4310 4055
-Connection ~ 4310 4930
-Wire Wire Line
-	4210 4930 4310 4930
-Wire Wire Line
-	4310 5330 4310 4930
-$Comp
-L Device:C C5
-U 1 1 5D86FCCD
-P 3835 5480
-F 0 "C5" H 3950 5526 50  0000 L CNN
-F 1 "2.2u" H 3950 5435 50  0000 L CNN
-F 2 "Capacitor_SMD:C_0603_1608Metric" H 3873 5330 50  0001 C CNN
-F 3 "~" H 3835 5480 50  0001 C CNN
-	1    3835 5480
-	1    0    0    -1  
-$EndComp
-Connection ~ 3585 4930
-Wire Wire Line
-	3585 4930 3910 4930
-$Comp
-L Device:L L1
-U 1 1 5D8414F8
-P 4060 4930
-F 0 "L1" V 3879 4930 50  0000 C CNN
-F 1 "22u" V 3970 4930 50  0000 C CNN
-F 2 "Inductor_SMD:L_Taiyo-Yuden_MD-5050" H 4060 4930 50  0001 C CNN
-F 3 "~" H 4060 4930 50  0001 C CNN
-	1    4060 4930
-	0    1    1    0   
-$EndComp
-Wire Wire Line
-	3060 4930 3585 4930
-Wire Wire Line
-	3410 4530 3585 4530
-Wire Wire Line
-	3585 4530 3585 4630
-Wire Wire Line
-	3410 4830 3410 4530
-Wire Wire Line
-	3060 4830 3410 4830
-Connection ~ 2760 5705
-Wire Wire Line
-	3310 5705 2760 5705
-Wire Wire Line
-	3310 4355 3310 5705
-Wire Wire Line
-	3260 4355 3310 4355
-Connection ~ 2835 4355
-Wire Wire Line
-	2835 4355 2735 4355
-Wire Wire Line
-	2835 4355 2960 4355
-Wire Wire Line
-	2835 4480 2835 4355
-Wire Wire Line
-	3235 4480 2835 4480
-Wire Wire Line
-	3235 5130 3235 4480
-Wire Wire Line
-	3060 5130 3235 5130
-$Comp
-L Device:R R1
-U 1 1 5D84BA45
-P 2585 4355
-F 0 "R1" V 2378 4355 50  0000 C CNN
-F 1 "33k" V 2469 4355 50  0000 C CNN
-F 2 "Resistor_SMD:R_0603_1608Metric" V 2515 4355 50  0001 C CNN
-F 3 "~" H 2585 4355 50  0001 C CNN
-	1    2585 4355
-	0    1    1    0   
-$EndComp
-Wire Wire Line
-	2660 5705 2760 5705
-Connection ~ 2660 5705
-Wire Wire Line
-	2535 5705 2660 5705
-Wire Wire Line
-	2760 5430 2760 5705
-Connection ~ 2535 5705
-Wire Wire Line
-	1985 5705 2535 5705
-Wire Wire Line
-	2660 5430 2660 5705
-Wire Wire Line
-	1985 5705 1560 5705
-Connection ~ 1985 5705
-Wire Wire Line
-	1985 5455 1985 5705
-Wire Wire Line
-	1985 5130 1985 5155
-Wire Wire Line
-	2260 5130 1985 5130
-Wire Wire Line
-	1560 5705 1560 5455
-Connection ~ 1560 4830
-Wire Wire Line
-	1560 4830 1560 5155
-Wire Wire Line
-	1860 4830 2260 4830
-Connection ~ 1860 4830
-Wire Wire Line
-	2260 4930 1860 4930
-Wire Wire Line
-	1860 4930 1860 4830
-Wire Wire Line
-	2285 4930 2260 4930
-Wire Wire Line
-	1560 4830 1860 4830
-Wire Wire Line
-	1560 4380 1560 4830
+Connection ~ 3825 5700
+Connection ~ 3300 5700
+Connection ~ 4300 4925
+Connection ~ 3575 4925
+Connection ~ 2750 5700
+Connection ~ 2825 4350
+Connection ~ 2650 5700
+Connection ~ 2525 5700
+Connection ~ 1975 5700
+Connection ~ 1550 4825
+Connection ~ 1850 4825
 $Comp
 L power:PWR_FLAG #FLG0101
 U 1 1 5D8510D6
@@ -294,84 +160,218 @@ F 3 "" H 935 3405 50  0001 C CNN
 	1    935  3405
 	1    0    0    -1  
 $EndComp
+Connection ~ 2250 4925
+Text GLabel 9260 4680 2    50   Input ~ 0
+MCU_USB_VBUS
 $Comp
-L power:GND #PWR0102
-U 1 1 5D84EAB6
-P 2535 5705
-F 0 "#PWR0102" H 2535 5455 50  0001 C CNN
-F 1 "GND" H 2540 5532 50  0000 C CNN
-F 2 "" H 2535 5705 50  0001 C CNN
-F 3 "" H 2535 5705 50  0001 C CNN
-	1    2535 5705
-	1    0    0    -1  
-$EndComp
-$Comp
-L Device:R R2
-U 1 1 5D84C2FC
-P 3110 4355
-F 0 "R2" V 2903 4355 50  0000 C CNN
-F 1 "10k" V 2994 4355 50  0000 C CNN
-F 2 "Resistor_SMD:R_0603_1608Metric" V 3040 4355 50  0001 C CNN
-F 3 "~" H 3110 4355 50  0001 C CNN
-	1    3110 4355
-	0    1    1    0   
-$EndComp
-$Comp
-L Device:CP1 C4
-U 1 1 5D849A7B
-P 4310 5480
-F 0 "C4" H 4425 5526 50  0000 L CNN
-F 1 "100u" H 4425 5435 50  0000 L CNN
-F 2 "Capacitor_Tantalum_SMD:CP_EIA-3528-12_Kemet-T" H 4348 5330 50  0001 C CNN
-F 3 "~" H 4310 5480 50  0001 C CNN
-	1    4310 5480
-	1    0    0    -1  
-$EndComp
-$Comp
-L Device:C C3
-U 1 1 5D846EB0
-P 3585 4780
-F 0 "C3" H 3700 4826 50  0000 L CNN
-F 1 "100n" H 3700 4735 50  0000 L CNN
-F 2 "Capacitor_SMD:C_0603_1608Metric" H 3623 4630 50  0001 C CNN
-F 3 "~" H 3585 4780 50  0001 C CNN
-	1    3585 4780
-	1    0    0    -1  
-$EndComp
-$Comp
-L Device:C C2
-U 1 1 5D844020
-P 1985 5305
-F 0 "C2" H 2100 5351 50  0000 L CNN
-F 1 "2.2u" H 2100 5260 50  0000 L CNN
-F 2 "Capacitor_SMD:C_0603_1608Metric" H 2023 5155 50  0001 C CNN
-F 3 "~" H 1985 5305 50  0001 C CNN
-	1    1985 5305
+L Regulator_Switching:MCP16311MS U3
+U 1 1 5D83EA69
+P 2650 5125
+F 0 "U3" H 2650 5692 50  0000 C CNN
+F 1 "MCP16311MS" H 2650 5601 50  0000 C CNN
+F 2 "Package_SO:MSOP-8_3x3mm_P0.65mm" H 2800 4875 50  0001 L CNN
+F 3 "http://ww1.microchip.com/downloads/en/DeviceDoc/20005255B.pdf" H 2350 5675 50  0001 C CNN
+	1    2650 5125
 	1    0    0    -1  
 $EndComp
 $Comp
 L Device:C C1
 U 1 1 5D842215
-P 1560 5305
-F 0 "C1" H 1675 5351 50  0000 L CNN
-F 1 "2.2u" H 1675 5260 50  0000 L CNN
-F 2 "Capacitor_SMD:C_0603_1608Metric" H 1598 5155 50  0001 C CNN
-F 3 "~" H 1560 5305 50  0001 C CNN
-	1    1560 5305
+P 1550 5300
+F 0 "C1" H 1665 5346 50  0000 L CNN
+F 1 "2.2u" H 1665 5255 50  0000 L CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric" H 1588 5150 50  0001 C CNN
+F 3 "~" H 1550 5300 50  0001 C CNN
+	1    1550 5300
 	1    0    0    -1  
 $EndComp
 $Comp
-L Regulator_Switching:MCP16311MS U3
-U 1 1 5D83EA69
-P 2660 5130
-F 0 "U3" H 2660 5697 50  0000 C CNN
-F 1 "MCP16311MS" H 2660 5606 50  0000 C CNN
-F 2 "Package_SO:MSOP-8_3x3mm_P0.65mm" H 2810 4880 50  0001 L CNN
-F 3 "http://ww1.microchip.com/downloads/en/DeviceDoc/20005255B.pdf" H 2360 5680 50  0001 C CNN
-	1    2660 5130
+L Device:C C2
+U 1 1 5D844020
+P 1975 5300
+F 0 "C2" H 2090 5346 50  0000 L CNN
+F 1 "2.2u" H 2090 5255 50  0000 L CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric" H 2013 5150 50  0001 C CNN
+F 3 "~" H 1975 5300 50  0001 C CNN
+	1    1975 5300
 	1    0    0    -1  
 $EndComp
-Connection ~ 2260 4930
-Text GLabel 9260 4680 2    50   Input ~ 0
+$Comp
+L Device:C C3
+U 1 1 5D846EB0
+P 3575 4775
+F 0 "C3" H 3690 4821 50  0000 L CNN
+F 1 "100n" H 3690 4730 50  0000 L CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric" H 3613 4625 50  0001 C CNN
+F 3 "~" H 3575 4775 50  0001 C CNN
+	1    3575 4775
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:CP1 C4
+U 1 1 5D849A7B
+P 4300 5475
+F 0 "C4" H 4415 5521 50  0000 L CNN
+F 1 "100u" H 4415 5430 50  0000 L CNN
+F 2 "Capacitor_Tantalum_SMD:CP_EIA-3528-12_Kemet-T" H 4338 5325 50  0001 C CNN
+F 3 "~" H 4300 5475 50  0001 C CNN
+	1    4300 5475
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:R R2
+U 1 1 5D84C2FC
+P 3100 4350
+F 0 "R2" V 2893 4350 50  0000 C CNN
+F 1 "10k" V 2984 4350 50  0000 C CNN
+F 2 "Resistor_SMD:R_0603_1608Metric" V 3030 4350 50  0001 C CNN
+F 3 "~" H 3100 4350 50  0001 C CNN
+	1    3100 4350
+	0    1    1    0   
+$EndComp
+$Comp
+L power:GND #PWR0102
+U 1 1 5D84EAB6
+P 2525 5700
+F 0 "#PWR0102" H 2525 5450 50  0001 C CNN
+F 1 "GND" H 2530 5527 50  0000 C CNN
+F 2 "" H 2525 5700 50  0001 C CNN
+F 3 "" H 2525 5700 50  0001 C CNN
+	1    2525 5700
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	1550 4375 1550 4825
+Wire Wire Line
+	1550 4825 1850 4825
+Wire Wire Line
+	2275 4925 2250 4925
+Wire Wire Line
+	1850 4925 1850 4825
+Wire Wire Line
+	2250 4925 1850 4925
+Wire Wire Line
+	1850 4825 2250 4825
+Wire Wire Line
+	1550 4825 1550 5150
+Wire Wire Line
+	1550 5700 1550 5450
+Wire Wire Line
+	2250 5125 1975 5125
+Wire Wire Line
+	1975 5125 1975 5150
+Wire Wire Line
+	1975 5450 1975 5700
+Wire Wire Line
+	1975 5700 1550 5700
+Wire Wire Line
+	2650 5425 2650 5700
+Wire Wire Line
+	1975 5700 2525 5700
+Wire Wire Line
+	2750 5425 2750 5700
+Wire Wire Line
+	2525 5700 2650 5700
+Wire Wire Line
+	2650 5700 2750 5700
+$Comp
+L Device:R R1
+U 1 1 5D84BA45
+P 2575 4350
+F 0 "R1" V 2368 4350 50  0000 C CNN
+F 1 "33k" V 2459 4350 50  0000 C CNN
+F 2 "Resistor_SMD:R_0603_1608Metric" V 2505 4350 50  0001 C CNN
+F 3 "~" H 2575 4350 50  0001 C CNN
+	1    2575 4350
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	3050 5125 3225 5125
+Wire Wire Line
+	3225 5125 3225 4475
+Wire Wire Line
+	3225 4475 2825 4475
+Wire Wire Line
+	2825 4475 2825 4350
+Wire Wire Line
+	2825 4350 2950 4350
+Wire Wire Line
+	2825 4350 2725 4350
+Wire Wire Line
+	3250 4350 3300 4350
+Wire Wire Line
+	3300 4350 3300 5700
+Wire Wire Line
+	3300 5700 2750 5700
+Wire Wire Line
+	3050 4825 3400 4825
+Wire Wire Line
+	3400 4825 3400 4525
+Wire Wire Line
+	3575 4525 3575 4625
+Wire Wire Line
+	3400 4525 3575 4525
+Wire Wire Line
+	3050 4925 3575 4925
+$Comp
+L Device:L L1
+U 1 1 5D8414F8
+P 4050 4925
+F 0 "L1" V 3869 4925 50  0000 C CNN
+F 1 "22u" V 3960 4925 50  0000 C CNN
+F 2 "Inductor_SMD:L_Taiyo-Yuden_MD-5050" H 4050 4925 50  0001 C CNN
+F 3 "~" H 4050 4925 50  0001 C CNN
+	1    4050 4925
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	3575 4925 3900 4925
+$Comp
+L Device:C C5
+U 1 1 5D86FCCD
+P 3825 5475
+F 0 "C5" H 3940 5521 50  0000 L CNN
+F 1 "2.2u" H 3940 5430 50  0000 L CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric" H 3863 5325 50  0001 C CNN
+F 3 "~" H 3825 5475 50  0001 C CNN
+	1    3825 5475
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	4300 5325 4300 4925
+Wire Wire Line
+	4200 4925 4300 4925
+Wire Wire Line
+	4300 4925 4300 4050
+Wire Wire Line
+	3300 5700 3825 5700
+Wire Wire Line
+	4300 5700 4300 5625
+Wire Wire Line
+	3825 5625 3825 5700
+Wire Wire Line
+	3825 5700 4300 5700
+Wire Wire Line
+	2425 4350 2425 4050
+Wire Wire Line
+	2425 4050 4300 4050
+Text Notes 975  4300 0    50   ~ 0
+5v USB Power\n
+Text GLabel 1550 4375 0    50   Input ~ 0
 MCU_USB_VBUS
+Connection ~ 4300 4050
+$Comp
+L power:VCC #PWR0126
+U 1 1 5DA67011
+P 4300 4050
+F 0 "#PWR0126" H 4300 3900 50  0001 C CNN
+F 1 "VCC" H 4317 4223 50  0000 C CNN
+F 2 "" H 4300 4050 50  0001 C CNN
+F 3 "" H 4300 4050 50  0001 C CNN
+	1    4300 4050
+	1    0    0    -1  
+$EndComp
+Connection ~ 4300 5325
+Wire Wire Line
+	3825 5325 4300 5325
 $EndSCHEMATC

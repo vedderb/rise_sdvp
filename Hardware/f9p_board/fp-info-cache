@@ -1,4 +1,4 @@
-16597809241699333
+16601861849869333
 Battery
 BatteryHolder_Bulgin_BX0036_1xC
 Bulgin{space}Battery{space}Holder,{space}BX0036,{space}Battery{space}Type{space}C{space}(https://www.bulgin.com/products/pub/media/bulgin/data/Battery_holders.pdf)
@@ -55275,6 +55275,20 @@ Package_DFN_QFN
 QFN-64-1EP_9x9mm_P0.5mm_EP4.7x4.7mm_ThermalVias
 QFN,{space}64{space}Pin{space}(http://ww1.microchip.com/downloads/en/DeviceDoc/60001477A.pdf{space}(page{space}1083)),{space}generated{space}with{space}kicad-footprint-generator{space}ipc_dfn_qfn_generator.py
 QFN{space}DFN_QFN
+0
+91
+65
+Package_DFN_QFN
+QFN-64-1EP_9x9mm_P0.5mm_EP4.35x4.35mm
+QFN,{space}64{space}Pin{space}(https://www.ftdichip.com/Support/Documents/DataSheets/ICs/DS_FT2232H.pdf#page=57),{space}generated{space}with{space}kicad-footprint-generator{space}ipc_noLead_generator.py
+QFN{space}NoLead
+0
+74
+65
+Package_DFN_QFN
+QFN-64-1EP_9x9mm_P0.5mm_EP4.35x4.35mm_ThermalVias
+QFN,{space}64{space}Pin{space}(https://www.ftdichip.com/Support/Documents/DataSheets/ICs/DS_FT2232H.pdf#page=57),{space}generated{space}with{space}kicad-footprint-generator{space}ipc_noLead_generator.py
+QFN{space}NoLead
 0
 91
 65
