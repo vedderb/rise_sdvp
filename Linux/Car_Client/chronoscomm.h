@@ -31,6 +31,21 @@ typedef enum {
     COMM_MODE_SERVER
 } COMM_MODE;
 
+typedef enum {
+    OPRO_MODE_STATIC = 1,
+    OPRO_MODE_PREDEFINED_TRAJ,
+    OPRO_MODE_VOP,
+    OPRO_MODE_DTM,
+    OPRO_MODE_VOP_AND_DTM,
+    OPRO_MODE_AUTONOMOUS_VUT
+} OPRO_OPERATION_MODE;
+
+typedef enum {
+    OPRO_TYPE_CAR = 1,
+    OPRO_TYPE_BICYCLE = 2,
+    OPRO_TYPE_PEDESTRIAN = 30
+} OPRO_OBJECT_TYPE;
+
 typedef struct {
     uint32_t tRel;
     double x;
@@ -106,6 +121,18 @@ typedef struct {
     uint8_t status;
 } chronos_init_sup;
 
+typedef struct {
+    uint32_t ip;
+    uint8_t  transmitter_id;
+    OPRO_OBJECT_TYPE object_type;
+    OPRO_OPERATION_MODE operation_mode;
+    double   mass; // Kilograms
+    double   dim_x;
+    double   dim_y;
+    double   dim_z;
+    uint8_t  actor_type; // virtual or real 1 - virtual, 2 - real
+} chronos_opro;
+
 #define PROTOCOL_VERSION 0
 
 // Chronos messaging
@@ -121,6 +148,9 @@ typedef struct {
 #define ISO_MSG_STRT                    0x0004
 #define ISO_MSG_HEAB                    0x0005
 #define ISO_MSG_MONR                    0x0006
+
+#define ISO_MSG_OPRO                    0x000B
+#define ISO_MSG_OPRO_TO_OBJECT          0x0016
 
 #define ISO_MSG_INIT_SUP                0xA102
 
@@ -146,6 +176,12 @@ typedef struct {
 #define ISO_VALUE_ID_LONG_ACC           0x0050
 #define ISO_VALUE_ID_LAT_ACC            0x0051
 #define ISO_VALUE_ID_CURVATURE          0x0052
+#define ISO_VALUE_ID_IP_ADDRESS         0x0053
+#define ISO_VALUE_ID_OBJECT_TYPE        0x0054
+#define ISO_VALUE_ID_OPERATION_MODE     0x0055
+#define ISO_VALUE_ID_MASS               0x0056
+#define ISO_VALUE_ID_ACTOR_TYPE         0x0057
+#define ISO_VALUE_ID_TRANSMITTER_ID     0x0058
 #define ISO_VALUE_ID_MONR_STRUCT        0x0080
 #define ISO_VALUE_ID_HEAB_STRUCT        0x0090
 
@@ -191,6 +227,7 @@ signals:
     void strtRx(chronos_strt strt);
     void monrRx(chronos_monr monr);
     void insupRx(chronos_init_sup init_sup);
+    void oproRx(chronos_opro opro);
 
 public slots:
 
