@@ -29,8 +29,8 @@ Chronos::Chronos(QObject *parent) : QObject(parent)
             this, SLOT(processOstm(chronos_ostm)));
     connect(mChronos, SIGNAL(strtRx(chronos_strt)),
             this, SLOT(processStrt(chronos_strt)));
-    connect(mChronos, SIGNAL(oproRx(chronos_opro opro)),
-            this, SLOT(processOpro(chronos_opro opro)));
+    connect(mChronos, SIGNAL(oproRx(chronos_opro)),
+            this, SLOT(processOpro(chronos_opro)));
 
 }
 
