@@ -34,6 +34,10 @@ MotorSim::MotorSim(QObject *parent) : QObject(parent)
 {
     mTimer = new QTimer(this);
     mTimer->start(10);
+    mTachoF = 0.0;
+    mTachoAbsF = 0.0;
+    mRpm = 0.0;
+    mDuty = 0.0;
 
     connect(mTimer, SIGNAL(timeout()), this, SLOT(timerSlot()));
 }
