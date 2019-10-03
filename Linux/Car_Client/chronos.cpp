@@ -29,8 +29,8 @@ Chronos::Chronos(QObject *parent) : QObject(parent)
             this, SLOT(processOstm(chronos_ostm)));
     connect(mChronos, SIGNAL(strtRx(chronos_strt)),
             this, SLOT(processStrt(chronos_strt)));
-    connect(mChronos, SIGNAL(oproRx(chronos_opro opro)),
-            this, SLOT(processOpro(chronos_opro opro)));
+    connect(mChronos, SIGNAL(oproRx(chronos_opro)),
+            this, SLOT(processOpro(chronos_opro)));
 
 }
 
@@ -299,4 +299,11 @@ void Chronos::processOpro(chronos_opro opro)
     // Override transmitterid with value from server in Opro message.
     qDebug() << "Setting transmitter id from opro message:" << opro.transmitter_id;
     mChronos->setTransmitterId(opro.transmitter_id);
+
+    qDebug() << opro.ip;
+    qDebug() << opro.dim_x;
+    qDebug() << opro.dim_y;
+    qDebug() << opro.dim_z;
+
+
 }
