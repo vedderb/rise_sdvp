@@ -291,8 +291,6 @@ void CarInterface::setPacketInterface(PacketInterface *packetInterface)
             this, SLOT(plotAddGraphReceived(quint8,QString)));
     connect(mPacketInterface, SIGNAL(plotSetGraphReceived(quint8,int)),
             this, SLOT(plotSetGraphReceived(quint8,int)));
-    connect(mPacketInterface, SIGNAL(dwSampleReceived(quint8,DW_LOG_INFO)),
-            this, SLOT(dwSampleReceived(quint8,DW_LOG_INFO)));
     connect(mPacketInterface, SIGNAL(cameraImageReceived(quint8,QImage,int)),
             this, SLOT(cameraImageReceived(quint8,QImage,int)));
 }
