@@ -5351,8 +5351,7 @@ F 3 "" H 4350 2300 50  0001 C CNN
 $EndComp
 Wire Wire Line
 	3550 2300 4350 2300
-NoConn ~ 2150 2300
-Text Notes 550  2550 0    50   ~ 0
+Text Notes 600  2750 0    50   ~ 0
 The EN pin has an internal\npull-up that enables\nthe TPS54561 if the \npin is left flaoting. 
 $Comp
 L Device:R_Small R15
@@ -5463,48 +5462,11 @@ Wire Wire Line
 	4250 1250 4250 1500
 Wire Wire Line
 	4250 2050 4250 1700
-$Comp
-L Device:R_Small R17
-U 1 1 5DA2361E
-P 5000 1500
-F 0 "R17" H 5059 1546 50  0000 L CNN
-F 1 "1k" H 5059 1455 50  0000 L CNN
-F 2 "Resistor_SMD:R_0603_1608Metric" H 5000 1500 50  0001 C CNN
-F 3 "~" H 5000 1500 50  0001 C CNN
-	1    5000 1500
-	1    0    0    -1  
-$EndComp
-Text GLabel 5400 1600 2    50   Input ~ 0
-PWR_OK
-Wire Wire Line
-	5400 1600 5000 1600
-Wire Wire Line
-	5000 1600 4700 1600
-Wire Wire Line
-	4700 1600 4700 1800
-Wire Wire Line
-	4700 1800 3550 1800
-Connection ~ 5000 1600
-$Comp
-L power:VCC #PWR0133
-U 1 1 5DA266A6
-P 5000 1150
-F 0 "#PWR0133" H 5000 1000 50  0001 C CNN
-F 1 "VCC" H 5017 1323 50  0000 C CNN
-F 2 "" H 5000 1150 50  0001 C CNN
-F 3 "" H 5000 1150 50  0001 C CNN
-	1    5000 1150
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	5000 1400 5000 1150
 Text GLabel 3750 800  2    50   Input ~ 0
 BAT_VIN
 Wire Wire Line
 	3350 800  3750 800 
 Connection ~ 3350 800 
-Text GLabel 2150 2050 0    50   Input ~ 0
-BAT_VIN
 $Comp
 L power:GND #PWR0134
 U 1 1 5DA3B3DD
@@ -5616,17 +5578,6 @@ SW
 Text GLabel 3550 3250 0    50   Input ~ 0
 SW
 $Comp
-L Device:R_Small R18
-U 1 1 5DA9D698
-P 6450 3600
-F 0 "R18" H 6391 3554 50  0000 R CNN
-F 1 "49.9 Ohm" H 6391 3645 50  0000 R CNN
-F 2 "Resistor_SMD:R_0603_1608Metric" H 6450 3600 50  0001 C CNN
-F 3 "~" H 6450 3600 50  0001 C CNN
-	1    6450 3600
-	-1   0    0    1   
-$EndComp
-$Comp
 L Device:R_Small R19
 U 1 1 5DA9E004
 P 6450 3950
@@ -5672,15 +5623,6 @@ Wire Wire Line
 Wire Wire Line
 	6450 4100 6450 4050
 Connection ~ 6450 4100
-Wire Wire Line
-	6450 3850 6450 3700
-Wire Wire Line
-	6450 3500 6450 3350
-Wire Wire Line
-	6450 3350 6700 3350
-Wire Wire Line
-	5800 3350 6450 3350
-Connection ~ 6450 3350
 NoConn ~ 1600 3750
 NoConn ~ 1600 3850
 $Comp
@@ -5771,4 +5713,104 @@ $EndComp
 Connection ~ 6700 3350
 Wire Wire Line
 	6700 3350 6850 3350
+Text GLabel 2150 2050 0    50   Input ~ 0
+BAT_VIN
+Wire Wire Line
+	5800 3350 6450 3350
+Wire Wire Line
+	6450 3850 6450 3350
+Connection ~ 6450 3350
+Wire Wire Line
+	6450 3350 6700 3350
+Text Notes 2100 700  0    50   ~ 0
+Kanske behövs sådär 1206 capar
+Text Notes 7450 3450 0    50   ~ 0
+https://katalog.we-online.de/pbs/datasheet/7447709100.pdf
+NoConn ~ 3550 1800
+$Comp
+L Device:R_Small R17
+U 1 1 5DA3D182
+P 5050 1050
+F 0 "R17" H 5109 1096 50  0000 L CNN
+F 1 "39k" H 5109 1005 50  0000 L CNN
+F 2 "Connector_JST:JST_PH_B2B-PH-K_1x02_P2.00mm_Vertical" H 5050 1050 50  0001 C CNN
+F 3 "~" H 5050 1050 50  0001 C CNN
+	1    5050 1050
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:R_Small R18
+U 1 1 5DA3D562
+P 5050 1650
+F 0 "R18" H 4991 1696 50  0000 R CNN
+F 1 "2.2k" H 4991 1605 50  0000 R CNN
+F 2 "Resistor_SMD:R_0603_1608Metric" H 5050 1650 50  0001 C CNN
+F 3 "~" H 5050 1650 50  0001 C CNN
+	1    5050 1650
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5050 1550 5050 1350
+Text GLabel 5450 1350 2    50   Input ~ 0
+VOLT_METER
+Wire Wire Line
+	5450 1350 5050 1350
+Connection ~ 5050 1350
+Wire Wire Line
+	5050 1350 5050 1150
+Text GLabel 4900 800  0    50   Input ~ 0
+BAT_VIN
+$Comp
+L power:GND #PWR0133
+U 1 1 5DA40EC4
+P 4900 1800
+F 0 "#PWR0133" H 4900 1550 50  0001 C CNN
+F 1 "GND" H 4905 1627 50  0000 C CNN
+F 2 "" H 4900 1800 50  0001 C CNN
+F 3 "" H 4900 1800 50  0001 C CNN
+	1    4900 1800
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5050 1750 4900 1750
+Wire Wire Line
+	4900 1750 4900 1800
+Wire Wire Line
+	5050 950  5050 800 
+Wire Wire Line
+	5050 800  4900 800 
+Text Notes 5350 1500 0    50   ~ 0
+3.2V at 60V BAT_VIN\n
+$Comp
+L Connector:Conn_01x02_Female J6
+U 1 1 5DA48B62
+P 900 2100
+F 0 "J6" H 792 1775 50  0000 C CNN
+F 1 "Conn_01x02_Female" H 792 1866 50  0000 C CNN
+F 2 "Connector_JST:JST_PH_B2B-PH-K_1x02_P2.00mm_Vertical" H 900 2100 50  0001 C CNN
+F 3 "~" H 900 2100 50  0001 C CNN
+	1    900  2100
+	-1   0    0    1   
+$EndComp
+$Comp
+L power:GND #PWR0137
+U 1 1 5DA4A330
+P 1150 2150
+F 0 "#PWR0137" H 1150 1900 50  0001 C CNN
+F 1 "GND" H 1155 1977 50  0000 C CNN
+F 2 "" H 1150 2150 50  0001 C CNN
+F 3 "" H 1150 2150 50  0001 C CNN
+	1    1150 2150
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2150 2300 1400 2300
+Wire Wire Line
+	1400 2300 1400 2000
+Wire Wire Line
+	1400 2000 1100 2000
+Wire Wire Line
+	1100 2100 1150 2100
+Wire Wire Line
+	1150 2100 1150 2150
 $EndSCHEMATC
