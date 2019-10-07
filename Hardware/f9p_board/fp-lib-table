@@ -1,4 +1,5 @@
 (fp_lib_table
   (lib (name "f9p")(type "KiCad")(uri "${KIPRJMOD}/lib/f9p.pretty")(options "")(descr ""))
   (lib (name "WDFN6_2x2")(type "KiCad")(uri "${KIPRJMOD}/lib/WDFN6_2x2.pretty")(options "")(descr ""))
+  (lib (name "POWERDI5")(type "KiCad")(uri "/home/joels/Current/rise_sdvp/Hardware/f9p_board/lib/POWERDI5.pretty")(options "")(descr ""))
 )

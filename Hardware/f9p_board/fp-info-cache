@@ -1,4 +1,4 @@
-16607543901270333
+16599379680553924
 Battery
 BatteryHolder_Bulgin_BX0036_1xC
 Bulgin{space}Battery{space}Holder,{space}BX0036,{space}Battery{space}Type{space}C{space}(https://www.bulgin.com/products/pub/media/bulgin/data/Battery_holders.pdf)
@@ -51988,6 +51988,13 @@ DIL{space}DIP{space}PDIP{space}2.54mm{space}7.62mm{space}300mil
 0
 4
 4
+POWERDI5
+POWERDI5
+
+
+0
+3
+3
 Package_BGA
 Analog_BGA-28_4.0x6.25mm_Layout4x7_P0.8mm_Ball0.45mm_Pad0.4
 Analog{space}BGA-28{space}4.0mm{space}x{space}6.25mm{space}package,{space}pitch{space}0.4mm{space}pad,{space}based{space}on{space}https://www.analog.com/media/en/technical-documentation/data-sheets/8063fa.pdf
@@ -55275,20 +55282,6 @@ Package_DFN_QFN
 QFN-64-1EP_9x9mm_P0.5mm_EP4.7x4.7mm_ThermalVias
 QFN,{space}64{space}Pin{space}(http://ww1.microchip.com/downloads/en/DeviceDoc/60001477A.pdf{space}(page{space}1083)),{space}generated{space}with{space}kicad-footprint-generator{space}ipc_dfn_qfn_generator.py
 QFN{space}DFN_QFN
-0
-91
-65
-Package_DFN_QFN
-QFN-64-1EP_9x9mm_P0.5mm_EP4.35x4.35mm
-QFN,{space}64{space}Pin{space}(https://www.ftdichip.com/Support/Documents/DataSheets/ICs/DS_FT2232H.pdf#page=57),{space}generated{space}with{space}kicad-footprint-generator{space}ipc_noLead_generator.py
-QFN{space}NoLead
-0
-74
-65
-Package_DFN_QFN
-QFN-64-1EP_9x9mm_P0.5mm_EP4.35x4.35mm_ThermalVias
-QFN,{space}64{space}Pin{space}(https://www.ftdichip.com/Support/Documents/DataSheets/ICs/DS_FT2232H.pdf#page=57),{space}generated{space}with{space}kicad-footprint-generator{space}ipc_noLead_generator.py
-QFN{space}NoLead
 0
 91
 65
@@ -74012,13 +74005,6 @@ varistor{space}SIOV
 2
 WDFN6_2x2
 WDFN6
-
-
-0
-7
-7
-WDFN6_2x2
-WDFN6_a
 
 
 0

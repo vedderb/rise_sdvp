@@ -4,4 +4,6 @@
   (lib (name "ncv8705")(type "Legacy")(uri "${KIPRJMOD}/lib/ncv8705.lib")(options "")(descr ""))
   (lib (name "STM32F4")(type "Legacy")(uri "${KIPRJMOD}/lib/STM32F4.lib")(options "")(descr ""))
   (lib (name "uFL_conn")(type "Legacy")(uri "${KIPRJMOD}/lib/uFL_conn.lib")(options "")(descr ""))
+  (lib (name "TPS54561DPRR")(type "Legacy")(uri "${KIPRJMOD}/lib/TPS54561DPRR.lib")(options "")(descr ""))
+  (lib (name "3PIN_DIODE")(type "Legacy")(uri "${KIPRJMOD}/lib/3PIN_DIODE.lib")(options "")(descr ""))
 )
