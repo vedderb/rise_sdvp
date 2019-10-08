@@ -381,7 +381,6 @@ NoConn ~ 3950 4150
 NoConn ~ 3950 3550
 NoConn ~ 3950 3450
 NoConn ~ 3950 3350
-NoConn ~ 3950 3050
 NoConn ~ 3950 2850
 NoConn ~ 3950 3150
 NoConn ~ 3950 3250
@@ -1098,4 +1097,8 @@ Wire Wire Line
 Wire Wire Line
 	5700 2550 5350 2550
 NoConn ~ 5350 1850
+Text GLabel 3950 3050 0    50   Input ~ 0
+VOLT_METER
+Text Notes 4250 3100 0    50   ~ 0
+PC0 - PC5 has ADC
 $EndSCHEMATC
