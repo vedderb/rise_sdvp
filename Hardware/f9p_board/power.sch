@@ -107,8 +107,6 @@ F 3 "" H 1400 5400 50  0001 C CNN
 	1    1400 5400
 	1    0    0    -1  
 $EndComp
-Text GLabel 9700 5250 2    50   Input ~ 0
-MCU_USB_VBUS
 $Comp
 L Device:C C1
 U 1 1 5D842215
@@ -5301,14 +5299,7 @@ Connection ~ 2950 800
 Wire Wire Line
 	2550 800  2150 800 
 Connection ~ 2550 800 
-Wire Wire Line
-	2150 800  1950 800 
-Wire Wire Line
-	1950 800  1950 850 
-Wire Wire Line
-	1950 850  1200 850 
 Connection ~ 2150 800 
-Connection ~ 1200 850 
 Wire Wire Line
 	3350 1000 2950 1000
 Wire Wire Line
@@ -5317,14 +5308,7 @@ Connection ~ 2950 1000
 Wire Wire Line
 	2550 1000 2150 1000
 Connection ~ 2550 1000
-Wire Wire Line
-	2150 1000 1950 1000
-Wire Wire Line
-	1950 1000 1950 950 
-Wire Wire Line
-	1950 950  1100 950 
 Connection ~ 2150 1000
-Connection ~ 1100 950 
 $Comp
 L power:GND #PWR0131
 U 1 1 5D9E9F0B
@@ -5488,7 +5472,7 @@ L Device:C_Small C35
 U 1 1 5DA48ADB
 P 5100 3800
 F 0 "C35" H 5192 3846 50  0000 L CNN
-F 1 "47u" H 5192 3755 50  0000 L CNN
+F 1 "2.2u" H 5192 3755 50  0000 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 5100 3800 50  0001 C CNN
 F 3 "~" H 5100 3800 50  0001 C CNN
 	1    5100 3800
@@ -5499,7 +5483,7 @@ L Device:C_Small C36
 U 1 1 5DA4C74E
 P 5450 3800
 F 0 "C36" H 5542 3846 50  0000 L CNN
-F 1 "47u" H 5542 3755 50  0000 L CNN
+F 1 "2.2u" H 5542 3755 50  0000 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 5450 3800 50  0001 C CNN
 F 3 "~" H 5450 3800 50  0001 C CNN
 	1    5450 3800
@@ -5510,7 +5494,7 @@ L Device:C_Small C37
 U 1 1 5DA4CE1B
 P 5800 3800
 F 0 "C37" H 5892 3846 50  0000 L CNN
-F 1 "47u" H 5892 3755 50  0000 L CNN
+F 1 "2.2u" H 5892 3755 50  0000 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 5800 3800 50  0001 C CNN
 F 3 "~" H 5800 3800 50  0001 C CNN
 	1    5800 3800
@@ -5691,7 +5675,7 @@ Wire Wire Line
 Text GLabel 2150 2050 0    50   Input ~ 0
 BAT_VIN
 Wire Wire Line
-	5800 3350 6450 3350
+	5800 3350 6100 3350
 Wire Wire Line
 	6450 3850 6450 3350
 Connection ~ 6450 3350
@@ -5705,63 +5689,54 @@ NoConn ~ 3550 1800
 $Comp
 L Device:R_Small R17
 U 1 1 5DA3D182
-P 5050 1050
-F 0 "R17" H 5109 1096 50  0000 L CNN
-F 1 "39k" H 5109 1005 50  0000 L CNN
-F 2 "Resistor_SMD:R_0603_1608Metric" H 5050 1050 50  0001 C CNN
-F 3 "~" H 5050 1050 50  0001 C CNN
-	1    5050 1050
+P 5050 900
+F 0 "R17" H 5109 946 50  0000 L CNN
+F 1 "39k" H 5109 855 50  0000 L CNN
+F 2 "Resistor_SMD:R_0603_1608Metric" H 5050 900 50  0001 C CNN
+F 3 "~" H 5050 900 50  0001 C CNN
+	1    5050 900 
 	1    0    0    -1  
 $EndComp
 $Comp
 L Device:R_Small R18
 U 1 1 5DA3D562
-P 5050 1650
-F 0 "R18" H 4991 1696 50  0000 R CNN
-F 1 "2.2k" H 4991 1605 50  0000 R CNN
-F 2 "Resistor_SMD:R_0603_1608Metric" H 5050 1650 50  0001 C CNN
-F 3 "~" H 5050 1650 50  0001 C CNN
-	1    5050 1650
+P 5050 1800
+F 0 "R18" H 4991 1846 50  0000 R CNN
+F 1 "2.2k" H 4991 1755 50  0000 R CNN
+F 2 "Resistor_SMD:R_0603_1608Metric" H 5050 1800 50  0001 C CNN
+F 3 "~" H 5050 1800 50  0001 C CNN
+	1    5050 1800
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	5050 1550 5050 1350
-Text GLabel 5450 1350 2    50   Input ~ 0
+	5050 1700 5050 1550
+Text GLabel 5450 1550 2    50   Input ~ 0
 VOLT_METER
-Wire Wire Line
-	5450 1350 5050 1350
-Connection ~ 5050 1350
-Wire Wire Line
-	5050 1350 5050 1150
 Text GLabel 4900 800  0    50   Input ~ 0
 BAT_VIN
 $Comp
 L power:GND #PWR0133
 U 1 1 5DA40EC4
-P 4900 1800
-F 0 "#PWR0133" H 4900 1550 50  0001 C CNN
-F 1 "GND" H 4905 1627 50  0000 C CNN
-F 2 "" H 4900 1800 50  0001 C CNN
-F 3 "" H 4900 1800 50  0001 C CNN
-	1    4900 1800
+P 4900 2100
+F 0 "#PWR0133" H 4900 1850 50  0001 C CNN
+F 1 "GND" H 4905 1927 50  0000 C CNN
+F 2 "" H 4900 2100 50  0001 C CNN
+F 3 "" H 4900 2100 50  0001 C CNN
+	1    4900 2100
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	5050 1750 4900 1750
-Wire Wire Line
-	4900 1750 4900 1800
-Wire Wire Line
-	5050 950  5050 800 
+	4900 2050 4900 2100
 Wire Wire Line
 	5050 800  4900 800 
-Text Notes 5350 1500 0    50   ~ 0
+Text Notes 5550 1700 0    50   ~ 0
 3.2V at 60V BAT_VIN\n
 $Comp
 L Connector:Conn_01x02_Female J6
 U 1 1 5DA48B62
 P 900 2100
 F 0 "J6" H 792 1775 50  0000 C CNN
-F 1 "Conn_01x02_Female" H 792 1866 50  0000 C CNN
+F 1 "EN_BAT_VIN" H 792 1866 50  0000 C CNN
 F 2 "Connector_JST:JST_PH_B2B-PH-K_1x02_P2.00mm_Vertical" H 900 2100 50  0001 C CNN
 F 3 "~" H 900 2100 50  0001 C CNN
 	1    900  2100
@@ -5817,4 +5792,109 @@ F 3 "" H 4050 3650 50  0001 C CNN
 $EndComp
 Wire Wire Line
 	3950 4000 3950 3850
+$Comp
+L Device:CP_Small C38
+U 1 1 5D9EE9D3
+P 1500 900
+F 0 "C38" H 1588 946 50  0000 L CNN
+F 1 "100u" H 1588 855 50  0000 L CNN
+F 2 "Capacitor_THT:CP_Radial_D10.0mm_P5.00mm" H 1500 900 50  0001 C CNN
+F 3 "~" H 1500 900 50  0001 C CNN
+F 4 "https://www.digikey.se/product-detail/en/nichicon/URS1J101MPD1TD/493-11829-1-ND/4320229" H 1500 900 50  0001 C CNN "digikey"
+	1    1500 900 
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	1100 950  1250 950 
+Wire Wire Line
+	1250 950  1250 1000
+Wire Wire Line
+	1250 1000 1500 1000
+Connection ~ 1100 950 
+Wire Wire Line
+	1500 1000 2150 1000
+Connection ~ 1500 1000
+Wire Wire Line
+	1500 800  2150 800 
+Wire Wire Line
+	1500 800  1250 800 
+Wire Wire Line
+	1250 800  1250 850 
+Wire Wire Line
+	1250 850  1200 850 
+Connection ~ 1500 800 
+Connection ~ 1200 850 
+$Comp
+L Device:CP_Small C39
+U 1 1 5DA0537E
+P 6100 3700
+F 0 "C39" H 6188 3746 50  0000 L CNN
+F 1 "470u" H 6188 3655 50  0000 L CNN
+F 2 "Capacitor_THT:CP_Radial_D10.0mm_P5.00mm" H 6100 3700 50  0001 C CNN
+F 3 "~" H 6100 3700 50  0001 C CNN
+F 4 "https://www.digikey.se/product-detail/en/nichicon/URS1C471MPD1TD/493-11709-1-ND/4320195" H 6100 3700 50  0001 C CNN "digikey"
+	1    6100 3700
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	6100 3800 6100 4000
+Wire Wire Line
+	6100 4000 5800 4000
+Connection ~ 5800 4000
+Wire Wire Line
+	6100 3600 6100 3350
+Connection ~ 6100 3350
+Wire Wire Line
+	6100 3350 6450 3350
+Text GLabel 9700 5250 2    50   Input ~ 0
+F9P_USB_VBUS
+$Comp
+L Device:Q_NMOS_GSD Q1
+U 1 1 5DAAEA65
+P 4950 1250
+F 0 "Q1" H 5155 1296 50  0000 L CNN
+F 1 "DMN62D0UW-7" H 5155 1205 50  0000 L CNN
+F 2 "Package_TO_SOT_SMD:SOT-323_SC-70" H 5150 1350 50  0001 C CNN
+F 3 "~" H 4950 1250 50  0001 C CNN
+	1    4950 1250
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5050 1550 5050 1450
+Connection ~ 5050 1550
+Wire Wire Line
+	5050 1050 5050 1000
+Text GLabel 4650 1250 0    50   Input ~ 0
+PWR_5V
+Wire Wire Line
+	4750 1250 4650 1250
+$Comp
+L Device:C_Small C40
+U 1 1 5DAB3CA0
+P 5250 1800
+F 0 "C40" H 5342 1846 50  0000 L CNN
+F 1 "0.1u" H 5342 1755 50  0000 L CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric" H 5250 1800 50  0001 C CNN
+F 3 "~" H 5250 1800 50  0001 C CNN
+	1    5250 1800
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	4900 2050 5050 2050
+Wire Wire Line
+	5050 1900 5050 2050
+Connection ~ 5050 2050
+Wire Wire Line
+	5050 2050 5250 2050
+Wire Wire Line
+	5050 1550 5250 1550
+Wire Wire Line
+	5250 2050 5250 1900
+Wire Wire Line
+	5250 1700 5250 1550
+Connection ~ 5250 1550
+Wire Wire Line
+	5250 1550 5450 1550
+Text Notes 6650 4600 0    50   ~ 0
+RHS = RLS * ((VOUT  - 0.8) / 0.8)\nRHS = RLS * ((5 - 0.8) / 0.8)\nRHS = RLS * (4.2 / 0.8) \nRHS = RLS * 5.25\n53.55 = 10.2 * 5.25
 $EndSCHEMATC

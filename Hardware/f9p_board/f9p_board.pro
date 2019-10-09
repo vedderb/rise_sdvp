@@ -1,4 +1,4 @@
-update=tis  8 okt 2019 11:54:31
+update=ons  9 okt 2019 12:25:26
 version=1
 last_client=kicad
 [general]
@@ -21,7 +21,7 @@ LastIDFExportPath=
 LastVRMLExportPath=
 LastSpecctraDSNExportPath=
 LastGenCADExportPath=
-CopperLayerCount=2
+CopperLayerCount=4
 BoardThickness=1.6
 AllowMicroVias=0
 AllowBlindVias=0
@@ -82,11 +82,11 @@ Enabled=1
 [pcbnew/Layer.In1.Cu]
 Name=In1.Cu
 Type=0
-Enabled=0
+Enabled=1
 [pcbnew/Layer.In2.Cu]
 Name=In2.Cu
 Type=0
-Enabled=0
+Enabled=1
 [pcbnew/Layer.In3.Cu]
 Name=In3.Cu
 Type=0
