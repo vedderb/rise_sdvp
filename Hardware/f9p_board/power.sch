@@ -5784,7 +5784,7 @@ L 3PIN_DIODE:3PIN_DIODE U9
 U 1 1 5D9C4693
 P 4050 3650
 F 0 "U9" H 4228 3721 50  0000 L CNN
-F 1 "3PIN_DIODE" H 4228 3630 50  0000 L CNN
+F 1 "PDS760-13" H 4228 3630 50  0000 L CNN
 F 2 "POWERDI5:POWERDI5" H 4050 3650 50  0001 C CNN
 F 3 "" H 4050 3650 50  0001 C CNN
 	1    4050 3650
@@ -5897,4 +5897,10 @@ Wire Wire Line
 	5250 1550 5450 1550
 Text Notes 6650 4600 0    50   ~ 0
 RHS = RLS * ((VOUT  - 0.8) / 0.8)\nRHS = RLS * ((5 - 0.8) / 0.8)\nRHS = RLS * (4.2 / 0.8) \nRHS = RLS * 5.25\n53.55 = 10.2 * 5.25
+Text Notes 6500 4000 0    50   ~ 0
+RHS
+Text Notes 6250 4450 0    50   ~ 0
+RLS
+Text Notes 3850 4100 0    50   ~ 0
+Compensating for the smaller caps with a larger electrolyte
 $EndSCHEMATC
