@@ -382,8 +382,6 @@ NoConn ~ 3950 3350
 NoConn ~ 3950 2850
 NoConn ~ 3950 3150
 NoConn ~ 3950 3250
-Text GLabel 8400 6150 0    50   Input ~ 0
-MCU_USB_VBUS
 $Comp
 L power:GND #PWR0114
 U 1 1 5D938D2C
@@ -780,8 +778,6 @@ Wire Wire Line
 	5700 5450 5300 5450
 Wire Wire Line
 	5300 5450 5300 5500
-Text GLabel 5800 5700 2    50   Input ~ 0
-MCU_USB_VBUS
 Wire Wire Line
 	5800 5700 5300 5700
 Wire Wire Line
@@ -1216,4 +1212,8 @@ Wire Notes Line
 	5900 3700 5900 2700
 Text Notes 6450 3650 0    50   ~ 0
 Servo connectors\n
+Text GLabel 5800 5700 2    50   Input ~ 0
+PWR_5V
+Text GLabel 8400 6150 0    50   Input ~ 0
+PWR_5V
 $EndSCHEMATC
