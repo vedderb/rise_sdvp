@@ -175,15 +175,14 @@ typedef struct {
 #define ISO_MSG_HEAB                    0x0005
 #define ISO_MSG_MONR                    0x0006
 
-#define ISO_MSG_OPRO                    0x000B
-#define ISO_MSG_OPRO_TO_OBJECT          0x0016
-
 #define ISO_MSG_TRCM                    0x0011
 #define ISO_MSG_ACCM                    0x0012
 #define ISO_MSG_TREO                    0x0013
 #define ISO_MSG_EXAC                    0x0014
 #define ISO_MSG_CATA                    0x0015
 
+#define ISO_MSG_OPRO                    0x000B
+#define ISO_MSG_OPRO_TO_OBJECT          0x0016
 #define ISO_MSG_INIT_SUP                0xA102
 
 // ISO Value Types
@@ -216,6 +215,27 @@ typedef struct {
 #define ISO_VALUE_ID_TRANSMITTER_ID     0x0058
 #define ISO_VALUE_ID_MONR_STRUCT        0x0080
 #define ISO_VALUE_ID_HEAB_STRUCT        0x0090
+
+//ACCM
+#define ISO_VALUE_ID_ACTION_ID          0x0002
+#define ISO_VALUE_ID_ACTION_TYPE        0x0003
+#define ISO_VALUE_ID_ACTION_TYPE_PARAM1    0x00A1
+#define ISO_VALUE_ID_ACTION_TYPE_PARAM2    0x00A2
+#define ISO_VALUE_ID_ACTION_TYPE_PARAM3    0x00A3
+#define ISO_ACTION_TYPE_MISC_DIGITAL_OUT 0x00E0
+#define ISO_ACTION_TYPE_PARAM_SET_FALSE 0x0000
+#define ISO_ACTION_TYPE_PARAM_SET_TRUE 0x0001
+
+//TRCM
+#define ISO_VALUE_ID_TRIGGER_ID          0x0001
+#define ISO_VALUE_ID_TRIGGER_TYPE        0x0002
+#define ISO_VALUE_ID_TRIGGER_TYPE_PARAM1    0x00A1
+#define ISO_VALUE_ID_TRIGGER_TYPE_PARAM2    0x00A2
+#define ISO_VALUE_ID_TRIGGER_TYPE_PARAM3    0x00A3
+
+//EXAC
+#define ISO_VALUE_ID_ACTION_ID          0x0002
+#define ISO_VALUE_ID_EXECUTE_TIME       0x0003
 
 //ACCM
 #define ISO_VALUE_ID_ACTION_ID          0x0002

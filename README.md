@@ -25,6 +25,41 @@ You must create a new car tab and then change its ID (on the right hand side) to
 ### RC car software
 If you wish to perform compilation of the Car_Client binary on your own system, follow the README in Linux/PI/Qt. If not, build the Car_Client file on the RC car:
 
+```
+cd ${SDVP_ROOT}
+cd Linux/Car_Client
+/opt/Qt/5.9-pi/bin/qmake "DEFINES += HAS_GUI"
+make -j4
+```
+
+Then run the built file with
+``` 
+./Car_Client -p /dev/car --useudp --usetcp --usegui
+```
+
+## Introduction
+This is a fork of the source code and hardware design for a model vehicle platform developed and maintained at RISE Research Institutes of Sweden. The platform currently has full support for cars with Ackermann steering, robots with differential steering and partial support for quadcopters.  
+
+```
+cd ${SDVP_ROOT}
+cd Linux/RControlStation
+qmake -config release "CONFIG+=release_lin" RControlStation.pro
+make clean
+make -j8
+rm -rf build/lin/obj
+```
+
+and then run the built file with
+
+```
+./RControlStation
+```
+
+You must create a new car tab and then change its ID (on the right hand side) to something else than zero before connecting.
+
+### RC car software
+If you wish to perform compilation of the Car_Client binary on your own system, follow the README in Linux/PI/Qt. If not, build the Car_Client file on the RC car:
+
 cd ${SDVP_ROOT}
 cd Linux/Car_Client
 /opt/Qt/5.9-pi/bin/qmake "DEFINES += HAS_GUI"

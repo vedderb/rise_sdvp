@@ -1017,6 +1017,45 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
         executeAction(exac);
         qDebug() << "EXAC Rx";
     } break;
+                break;
+            case ISO_VALUE_ID_ACTION_TYPE_PARAM3:
+                accm.actionTypeParam3 = vb.vbPopFrontUint32();
+                break;
+            default:
+                qDebug() << "ACCM: Unknown value id: " << valueID;
+                vb.remove(0, contentLength);
+                break;
+            }
+        }
+
+        configureAction(accm);
+        qDebug() << "ACCM Rx";
+    } break;
+    case ISO_MSG_EXAC: {
+        chronos_EXAC exac;
+        VByteArrayLe vb(payload);
+
+        while (!vb.isEmpty()) {
+            uint16_t valueID = vb.vbPopFrontUint16();
+            uint16_t contentLength = vb.vbPopFrontUint16();
+
+            switch(valueID) {
+            case ISO_VALUE_ID_ACTION_ID:
+                exac.actionID = vb.vbPopFrontUint16();
+                break;
+            case ISO_VALUE_ID_ACTION_TYPE:
+                exac.executeTime = vb.vbPopFrontUint32();
+                break;
+            default:
+                qDebug() << "EXAC: Unknown value id: " << valueID;
+                vb.remove(0, contentLength);
+                break;
+            }
+        }
+
+        executeAction(exac);
+        qDebug() << "EXAC Rx";
+    } break;
     default:
             break;
     }
