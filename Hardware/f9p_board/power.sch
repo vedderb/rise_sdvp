@@ -239,7 +239,8 @@ P 2950 6800
 F 0 "U3" H 2950 7367 50  0000 C CNN
 F 1 "MCP16311MS" H 2950 7276 50  0000 C CNN
 F 2 "Package_SO:MSOP-8_3x3mm_P0.65mm" H 3100 6550 50  0001 L CNN
-F 3 "http://ww1.microchip.com/downloads/en/DeviceDoc/20005255B.pdf" H 2650 7350 50  0001 C CNN
+F 3 "http://www.microchip.com/mymicrochip/filehandler.aspx?ddocname=en567269" H 2650 7350 50  0001 C CNN
+F 4 "MCP16311T-E/MSCT-ND " H 2950 6800 50  0001 C CNN "OrderN"
 	1    2950 6800
 	1    0    0    -1  
 $EndComp
@@ -5257,6 +5258,7 @@ F 0 "C28" H 2242 946 50  0000 L CNN
 F 1 "2.2u" H 2242 855 50  0000 L CNN
 F 2 "Capacitor_SMD:C_1206_3216Metric" H 2150 900 50  0001 C CNN
 F 3 "~" H 2150 900 50  0001 C CNN
+F 4 " 445-5207-1-ND " H 2150 900 50  0001 C CNN "OrderN"
 	1    2150 900 
 	1    0    0    -1  
 $EndComp
@@ -5805,6 +5807,7 @@ F 1 "100u" H 1588 855 50  0000 L CNN
 F 2 "Capacitor_THT:CP_Radial_D10.0mm_P5.00mm" H 1500 900 50  0001 C CNN
 F 3 "~" H 1500 900 50  0001 C CNN
 F 4 "https://www.digikey.se/product-detail/en/nichicon/URS1J101MPD1TD/493-11829-1-ND/4320229" H 1500 900 50  0001 C CNN "digikey"
+F 5 " 493-11829-1-ND " H 1500 900 50  0001 C CNN "OrderN"
 	1    1500 900 
 	1    0    0    -1  
 $EndComp
@@ -5859,7 +5862,8 @@ P 4950 1250
 F 0 "Q1" H 5155 1296 50  0000 L CNN
 F 1 "DMN62D0UW-7" H 5155 1205 50  0000 L CNN
 F 2 "Package_TO_SOT_SMD:SOT-323_SC-70" H 5150 1350 50  0001 C CNN
-F 3 "~" H 4950 1250 50  0001 C CNN
+F 3 "https://www.diodes.com/assets/Datasheets/DMN62D0UW.pdf" H 4950 1250 50  0001 C CNN
+F 4 " DMN62D0UW-7 " H 4950 1250 50  0001 C CNN "OrderN"
 	1    4950 1250
 	1    0    0    -1  
 $EndComp

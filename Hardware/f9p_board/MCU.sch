@@ -414,6 +414,7 @@ F 0 "U6" H 4950 6731 50  0000 C CNN
 F 1 "TJA1051TK-3" H 4950 6640 50  0000 C CNN
 F 2 "Package_DFN_QFN:DFN-8-1EP_3x3mm_P0.65mm_EP1.55x2.4mm" H 4950 5650 50  0001 C CIN
 F 3 "http://www.nxp.com/documents/data_sheet/TJA1051.pdf" H 4950 6150 50  0001 C CNN
+F 4 " 568-8686-1-ND " H 4950 6150 50  0001 C CNN "OrderN"
 	1    4950 6150
 	1    0    0    -1  
 $EndComp
@@ -468,6 +469,7 @@ F 0 "U5" H 3250 5400 50  0000 C CNN
 F 1 "BMI160" H 3300 5300 50  0000 C CNN
 F 2 "Package_LGA:Bosch_LGA-14_3x2.5mm_P0.5mm" H 3050 4950 50  0001 C CNN
 F 3 "https://ae-bst.resource.bosch.com/media/_tech/media/datasheets/BST-BMI160-DS000.pdf" H 2350 5800 50  0001 C CNN
+F 4 " 828-1057-1-ND " H 3050 4950 50  0001 C CNN "OrderN"
 	1    3050 4950
 	1    0    0    -1  
 $EndComp
@@ -1213,6 +1215,7 @@ F 0 "J7" H 6808 2989 50  0000 C CNN
 F 1 "SERV_0" H 6808 3080 50  0000 C CNN
 F 2 "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical" H 6950 3050 50  0001 C CNN
 F 3 "~" H 6950 3050 50  0001 C CNN
+F 4 " 732-5316-ND " H 6950 3050 50  0001 C CNN "OrderN"
 	1    6950 3050
 	-1   0    0    1   
 $EndComp
