@@ -129,6 +129,23 @@ static THD_FUNCTION(cancom_process_thread, arg) {
 					deca_range_measure(rxmsg.data8[1], rxmsg.data8[2]);
 				} break;
 
+				case CMD_DW_PING: {
+					uint8_t buffer[8];
+					int32_t ind = 0;
+					buffer[ind++] = CMD_DW_PING;
+					comm_can_transmit_sid(main_id | CAN_MASK_DW, buffer, ind);
+				} break;
+
+				case CMD_DW_REBOOT: {
+					IWDG->KR = 0x5555;
+					IWDG->PR = 0;
+					IWDG->RLR = 140;
+					IWDG->KR = 0xAAAA;
+					IWDG->KR = 0xCCCC;
+					__disable_irq();
+					for(;;){};
+				} break;
+
 				default:
 					break;
 				}

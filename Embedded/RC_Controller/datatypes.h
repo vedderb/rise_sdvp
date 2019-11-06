@@ -969,7 +969,9 @@ typedef enum {
 // ============== Decawave Datatypes ================== //
 
 typedef enum {
-	CMD_DW_RANGE = 0
+	CMD_DW_RANGE = 0,
+	CMD_DW_PING,
+	CMD_DW_REBOOT
 } CMD_DW;
 
 #endif /* DATATYPES_H_ */

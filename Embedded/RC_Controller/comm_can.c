@@ -69,6 +69,7 @@ static void printf_wrapper(char *str);
 
 // Function pointers
 static void(*m_range_func)(uint8_t id, uint8_t dest, float range) = 0;
+static void(*m_dw_ping_func)(void) = 0;
 
 void comm_can_init(void) {
 	for (int i = 0;i < CAN_STATUS_MSGS_TO_STORE;i++) {
@@ -248,6 +249,13 @@ static THD_FUNCTION(cancom_process_thread, arg) {
 							m_range_func(id, dest, range);
 						}
 					} break;
+
+					case CMD_DW_PING: {
+						if (m_dw_ping_func) {
+							m_dw_ping_func();
+						}
+					} break;
+
 					default:
 						break;
 					}
@@ -389,6 +397,20 @@ void comm_can_dw_range(uint8_t id, uint8_t dest, int samples) {
 	comm_can_transmit_sid(((uint32_t)id | CAN_MASK_DW), buffer, ind);
 }
 
+void comm_can_dw_ping(uint8_t id) {
+	uint8_t buffer[8];
+	int32_t ind = 0;
+	buffer[ind++] = CMD_DW_PING;
+	comm_can_transmit_sid(((uint32_t)id | CAN_MASK_DW), buffer, ind);
+}
+
+void comm_can_dw_reboot(uint8_t id) {
+	uint8_t buffer[8];
+	int32_t ind = 0;
+	buffer[ind++] = CMD_DW_REBOOT;
+	comm_can_transmit_sid(((uint32_t)id | CAN_MASK_DW), buffer, ind);
+}
+
 /**
  * Set the function to be called when ranging is done.
  *
@@ -397,6 +419,16 @@ void comm_can_dw_range(uint8_t id, uint8_t dest, int samples) {
  */
 void comm_can_set_range_func(void(*func)(uint8_t id, uint8_t dest, float range)) {
 	m_range_func = func;
+}
+
+/**
+ * Set the function to be called when a ping is received from the UWB board.
+ *
+ * @param func
+ * A pointer to the function.
+ */
+void comm_can_set_dw_ping_func(void(*func)(void)) {
+	m_dw_ping_func = func;
 }
 
 /**

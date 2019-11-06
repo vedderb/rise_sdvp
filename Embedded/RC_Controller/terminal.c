@@ -48,6 +48,7 @@ static int callback_write = 0;
 
 // Private functions
 static void range_callback(uint8_t id, uint8_t dest, float range);
+static void ping_callback(void);
 
 void terminal_process_string(char *str) {
 	enum { kMaxArgs = 64 };
@@ -139,6 +140,11 @@ void terminal_process_string(char *str) {
 				comm_can_dw_range(CAN_DW_ID_ANY, dest, 5);
 			}
 		}
+	} else if (strcmp(argv[0], "dw_ping") == 0) {
+		comm_can_set_dw_ping_func(ping_callback);
+		comm_can_dw_ping(CAN_DW_ID_ANY);
+	} else if (strcmp(argv[0], "dw_reboot") == 0) {
+		comm_can_dw_reboot(CAN_DW_ID_ANY);
 	} else if (strcmp(argv[0], "zero_gyro") == 0) {
 		led_write(LED_RED, 1);
 		mpu9150_sample_gyro_offsets(100);
@@ -191,6 +197,12 @@ void terminal_process_string(char *str) {
 
 		commands_printf("dw_range [dest]");
 		commands_printf("  Measure the distance to DW module [dest] with ultra wideband.");
+
+		commands_printf("dw_ping");
+		commands_printf("  Ping the UWB module to see if is present in the CAN bus.");
+
+		commands_printf("dw_reboot");
+		commands_printf("  Reboot the UWB module.");
 
 		commands_printf("zero_gyro");
 		commands_printf("  Zero the gyro bias. Note: The PCB must be completely still when running this command.");
@@ -281,4 +293,8 @@ void terminal_register_command_callback(
 
 static void range_callback(uint8_t id, uint8_t dest, float range) {
 	commands_printf("Distance between %d (connected over CAN) and %d: %.1f cm\n", id, dest, (double)range * D(100.0));
+}
+
+static void ping_callback(void) {
+	commands_printf("Ping RX\n");
 }
