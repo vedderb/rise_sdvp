@@ -142,6 +142,14 @@ void pos_uwb_update_dr(float imu_yaw, float rtk_yaw, float travel_dist,
 }
 
 void pos_uwb_add_anchor(UWB_ANCHOR a) {
+	// If an anchor with the same ID already exists update it.
+	for (int i = 0;i < m_anchor_last;i++) {
+		if (m_anchors[i].id == a.id) {
+			m_anchors[i] = a;
+			return;
+		}
+	}
+
 	if (m_anchor_last < MAX_ANCHORS) {
 		m_anchors[m_anchor_last++] = a;
 	}
