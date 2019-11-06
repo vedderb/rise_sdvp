@@ -192,7 +192,7 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 	// Custom parameters based on ID
 	switch (main_id) {
 	case 1:
-		conf->car.steering_center = 0.53;
+		conf->car.steering_center = 0.5;
 		conf->gps_ant_x = 0.42;
 		break;
 

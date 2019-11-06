@@ -1276,7 +1276,7 @@ void MainWindow::on_mapGetRouteButton_clicked()
     ui->mapGetRouteButton->setEnabled(false);
 
     QList<LocPoint> route;
-    int routeLen;
+    int routeLen = 0;
     bool ok = mPacketInterface->getRoutePart(ui->mapCarBox->value(), route.size(), 10, route, routeLen);
 
     QElapsedTimer timer;
@@ -2103,4 +2103,9 @@ void MainWindow::on_mapRoutePosAttrBox_currentIndexChanged(int index)
     attr &= ~0b111;
     attr |= index;
     ui->mapWidget->setRoutePointAttributes(attr);
+}
+
+void MainWindow::on_clearAnchorButton_clicked()
+{
+    mPacketInterface->clearUwbAnchors(ui->mapCarBox->value());
 }

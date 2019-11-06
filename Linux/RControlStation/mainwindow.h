@@ -174,6 +174,7 @@ private slots:
     void on_routeZeroButton_clicked();
     void on_routeZeroAllButton_clicked();
     void on_mapRoutePosAttrBox_currentIndexChanged(int index);
+    void on_clearAnchorButton_clicked();
 
 private:
     Ui::MainWindow *ui;

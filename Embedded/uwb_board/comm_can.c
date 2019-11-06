@@ -69,6 +69,12 @@ void comm_can_init(void) {
 
 	canStart(&CANDx, &cancfg);
 
+	IWDG->KR = 0x5555;
+	IWDG->PR = 0;
+	IWDG->RLR = 140;
+	IWDG->KR = 0xAAAA;
+	IWDG->KR = 0xCCCC;
+
 	chThdCreateStatic(cancom_read_thread_wa, sizeof(cancom_read_thread_wa), NORMALPRIO + 1,
 			cancom_read_thread, NULL);
 	chThdCreateStatic(cancom_process_thread_wa, sizeof(cancom_process_thread_wa), NORMALPRIO,
@@ -86,6 +92,7 @@ static THD_FUNCTION(cancom_read_thread, arg) {
 
 	while(!chThdShouldTerminateX()) {
 		if (chEvtWaitAnyTimeout(ALL_EVENTS, MS2ST(10)) == 0) {
+			IWDG->KR = 0xAAAA;
 			continue;
 		}
 
@@ -137,11 +144,7 @@ static THD_FUNCTION(cancom_process_thread, arg) {
 				} break;
 
 				case CMD_DW_REBOOT: {
-					IWDG->KR = 0x5555;
-					IWDG->PR = 0;
-					IWDG->RLR = 140;
-					IWDG->KR = 0xAAAA;
-					IWDG->KR = 0xCCCC;
+					// Wait for watchdog to reboot
 					__disable_irq();
 					for(;;){};
 				} break;

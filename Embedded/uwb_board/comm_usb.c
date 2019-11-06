@@ -101,6 +101,11 @@ static THD_FUNCTION(serial_read_thread, arg) {
 					} else {
 						comm_usb_printf("Invalid command arguments\r\n");
 					}
+				} else if (strcmp(argv[0], "reboot") == 0) {
+					// Wait for watchdog to reboot, which is started from
+					// comm_can.c
+					__disable_irq();
+					for(;;){};
 				} else {
 					comm_usb_printf("Invalid command: %s\r\n", buffer_acc);
 				}
