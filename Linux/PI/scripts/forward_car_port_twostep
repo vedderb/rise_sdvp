@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# Note: The PI has established a reverse tunnel to port 1227 on HOST.
+
+ssh -f -L 65098:localhost:1227 USER@HOST -p PORT "sleep 5" && ssh -L 8300:localhost:8300 pi@localhost -p 65098 -Y -o ServerAliveInterval=5 -o ServerAliveCountMax=2
+

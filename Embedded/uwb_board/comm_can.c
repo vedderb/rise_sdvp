@@ -91,8 +91,9 @@ static THD_FUNCTION(cancom_read_thread, arg) {
 	chEvtRegister(&CANDx.rxfull_event, &el, 0);
 
 	while(!chThdShouldTerminateX()) {
+		IWDG->KR = 0xAAAA;
+
 		if (chEvtWaitAnyTimeout(ALL_EVENTS, MS2ST(10)) == 0) {
-			IWDG->KR = 0xAAAA;
 			continue;
 		}
 
