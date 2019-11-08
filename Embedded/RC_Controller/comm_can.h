@@ -31,7 +31,9 @@ void comm_can_send_buffer(uint8_t controller_id, uint8_t *data, unsigned int len
 void comm_can_dw_range(uint8_t id, uint8_t dest, int samples);
 void comm_can_dw_ping(uint8_t id);
 void comm_can_dw_reboot(uint8_t id);
+void comm_can_dw_get_uptime(uint8_t id);
 void comm_can_set_range_func(void(*func)(uint8_t id, uint8_t dest, float range));
-void comm_can_set_dw_ping_func(void(*func)(void));
+void comm_can_set_dw_ping_func(void(*func)(uint8_t id));
+void comm_can_set_dw_uptime_func(void(*func)(uint8_t id, uint32_t uptime));
 
 #endif /* COMM_CAN_H_ */

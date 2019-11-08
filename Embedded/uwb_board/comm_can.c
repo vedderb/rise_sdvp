@@ -149,6 +149,14 @@ static THD_FUNCTION(cancom_process_thread, arg) {
 					for(;;){};
 				} break;
 
+				case CMD_DW_UPTIME: {
+					uint8_t buffer[8];
+					int32_t ind = 0;
+					buffer[ind++] = CMD_DW_UPTIME;
+					buffer_append_uint32(buffer, ST2MS(chVTGetSystemTimeX()), &ind);
+					comm_can_transmit_sid(main_id | CAN_MASK_DW, buffer, ind);
+				} break;
+
 				default:
 					break;
 				}

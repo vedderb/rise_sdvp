@@ -47,8 +47,9 @@ static terminal_callback_struct callbacks[CALLBACK_LEN];
 static int callback_write = 0;
 
 // Private functions
-static void range_callback(uint8_t id, uint8_t dest, float range);
-static void ping_callback(void);
+static void dw_range_callback(uint8_t id, uint8_t dest, float range);
+static void dw_ping_callback(uint8_t id);
+static void dw_uptime_callback(uint8_t id, uint32_t uptime);
 
 void terminal_process_string(char *str) {
 	enum { kMaxArgs = 64 };
@@ -136,15 +137,18 @@ void terminal_process_string(char *str) {
 			if (dest < 0 || dest > 254) {
 				commands_printf("Invalid argument\n");
 			} else {
-				comm_can_set_range_func(range_callback);
+				comm_can_set_range_func(dw_range_callback);
 				comm_can_dw_range(CAN_DW_ID_ANY, dest, 5);
 			}
 		}
 	} else if (strcmp(argv[0], "dw_ping") == 0) {
-		comm_can_set_dw_ping_func(ping_callback);
+		comm_can_set_dw_ping_func(dw_ping_callback);
 		comm_can_dw_ping(CAN_DW_ID_ANY);
 	} else if (strcmp(argv[0], "dw_reboot") == 0) {
 		comm_can_dw_reboot(CAN_DW_ID_ANY);
+	} else if (strcmp(argv[0], "dw_uptime") == 0) {
+		comm_can_set_dw_uptime_func(dw_uptime_callback);
+		comm_can_dw_get_uptime(CAN_DW_ID_ANY);
 	} else if (strcmp(argv[0], "zero_gyro") == 0) {
 		led_write(LED_RED, 1);
 		mpu9150_sample_gyro_offsets(100);
@@ -203,6 +207,9 @@ void terminal_process_string(char *str) {
 
 		commands_printf("dw_reboot");
 		commands_printf("  Reboot the UWB module.");
+
+		commands_printf("dw_uptime");
+		commands_printf("  Ask the UWB module how long it has been running.");
 
 		commands_printf("zero_gyro");
 		commands_printf("  Zero the gyro bias. Note: The PCB must be completely still when running this command.");
@@ -291,10 +298,15 @@ void terminal_register_command_callback(
 	}
 }
 
-static void range_callback(uint8_t id, uint8_t dest, float range) {
-	commands_printf("Distance between %d (connected over CAN) and %d: %.1f cm\n", id, dest, (double)range * D(100.0));
+static void dw_range_callback(uint8_t id, uint8_t dest, float range) {
+	commands_printf("Distance between %d (connected over CAN) and %d: %.1f cm\n",
+			id, dest, (double)range * D(100.0));
 }
 
-static void ping_callback(void) {
-	commands_printf("Ping RX\n");
+static void dw_ping_callback(uint8_t id) {
+	commands_printf("Ping RX from %d\n", id);
+}
+
+static void dw_uptime_callback(uint8_t id, uint32_t uptime) {
+	commands_printf("UWB module %d has been up for %d ms.\n", id, uptime);
 }

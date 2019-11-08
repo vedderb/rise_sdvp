@@ -69,7 +69,8 @@ static void printf_wrapper(char *str);
 
 // Function pointers
 static void(*m_range_func)(uint8_t id, uint8_t dest, float range) = 0;
-static void(*m_dw_ping_func)(void) = 0;
+static void(*m_dw_ping_func)(uint8_t id) = 0;
+static void(*m_dw_uptime_func)(uint8_t id, uint32_t uptime) = 0;
 
 void comm_can_init(void) {
 	for (int i = 0;i < CAN_STATUS_MSGS_TO_STORE;i++) {
@@ -252,7 +253,18 @@ static THD_FUNCTION(cancom_process_thread, arg) {
 
 					case CMD_DW_PING: {
 						if (m_dw_ping_func) {
-							m_dw_ping_func();
+							uint8_t id = rxmsg.SID & 0xFF;
+							m_dw_ping_func(id);
+						}
+					} break;
+
+					case CMD_DW_UPTIME: {
+						int32_t ind = 1;
+						uint8_t id = rxmsg.SID & 0xFF;
+						uint32_t uptime = buffer_get_uint32(rxmsg.data8, &ind);
+
+						if (m_dw_uptime_func) {
+							m_dw_uptime_func(id, uptime);
 						}
 					} break;
 
@@ -411,6 +423,13 @@ void comm_can_dw_reboot(uint8_t id) {
 	comm_can_transmit_sid(((uint32_t)id | CAN_MASK_DW), buffer, ind);
 }
 
+void comm_can_dw_get_uptime(uint8_t id) {
+	uint8_t buffer[8];
+	int32_t ind = 0;
+	buffer[ind++] = CMD_DW_UPTIME;
+	comm_can_transmit_sid(((uint32_t)id | CAN_MASK_DW), buffer, ind);
+}
+
 /**
  * Set the function to be called when ranging is done.
  *
@@ -427,8 +446,18 @@ void comm_can_set_range_func(void(*func)(uint8_t id, uint8_t dest, float range))
  * @param func
  * A pointer to the function.
  */
-void comm_can_set_dw_ping_func(void(*func)(void)) {
+void comm_can_set_dw_ping_func(void(*func)(uint8_t uptime)) {
 	m_dw_ping_func = func;
+}
+
+/**
+ * Set the function to be called when a uptime result is received from the UWB board.
+ *
+ * @param func
+ * A pointer to the function.
+ */
+void comm_can_set_dw_uptime_func(void(*func)(uint8_t id, uint32_t uptime)) {
+	m_dw_uptime_func = func;
 }
 
 /**
