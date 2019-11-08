@@ -1017,6 +1017,8 @@ void CarInterface::on_camStartButton_clicked()
     mImageTimer.restart();
 
     if (mPacketInterface) {
+        ui->pollBox->setChecked(false);
+        ui->keyboardControlBox->setChecked(false);
         mPacketInterface->startCameraStream(mId, ui->camCamBox->value(),
                                             ui->camQualityBox->value(),
                                             ui->camWidthBox->value(),

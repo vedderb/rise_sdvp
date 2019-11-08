@@ -141,7 +141,7 @@ int main(void) {
 
 	fi_init();
 
-	timeout_configure(2000, 20.0);
+	timeout_configure(2000, 40.0);
 	log_set_rate(main_config.log_rate_hz);
 	log_set_enabled(main_config.log_en);
 	log_set_name(main_config.log_name);

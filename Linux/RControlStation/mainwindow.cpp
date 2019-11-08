@@ -1189,10 +1189,10 @@ void MainWindow::on_stopButton_clicked()
         mCars[i]->emergencyStop();
     }
 
-    mPacketInterface->setRcControlCurrentBrake(255, 15.0, 0.0);
-    mPacketInterface->setRcControlCurrentBrake(255, 15.0, 0.0);
-    mPacketInterface->setRcControlCurrentBrake(255, 15.0, 0.0);
-    mPacketInterface->setRcControlCurrentBrake(255, 15.0, 0.0);
+    mPacketInterface->setRcControlCurrentBrake(255, 40.0, 0.0);
+    mPacketInterface->setRcControlCurrentBrake(255, 40.0, 0.0);
+    mPacketInterface->setRcControlCurrentBrake(255, 40.0, 0.0);
+    mPacketInterface->setRcControlCurrentBrake(255, 40.0, 0.0);
 }
 
 void MainWindow::on_mapUploadRouteButton_clicked()
