@@ -107,7 +107,7 @@ static THD_FUNCTION(serial_read_thread, arg) {
 					__disable_irq();
 					for(;;){};
 				} else if (strcmp(argv[0], "uptime") == 0) {
-					comm_usb_printf("%d ms.\n", ST2MS(chVTGetSystemTimeX()));
+					comm_usb_printf("%d ms\r\n", ST2MS(chVTGetSystemTimeX()));
 				} else {
 					comm_usb_printf("Invalid command: %s\r\n", buffer_acc);
 				}
