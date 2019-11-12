@@ -1,4 +1,4 @@
-16498882116685251
+16498887386095159
 Battery
 BatteryHolder_Bulgin_BX0036_1xC
 Bulgin{space}Battery{space}Holder,{space}BX0036,{space}Battery{space}Type{space}C{space}(https://www.bulgin.com/products/pub/media/bulgin/data/Battery_holders.pdf)
@@ -51771,6 +51771,13 @@ DIL{space}DIP{space}PDIP{space}2.54mm{space}7.62mm{space}300mil
 0
 4
 4
+POWERDI5
+POWERDI5
+
+
+0
+3
+3
 Package_BGA
 Analog_BGA-28_4.0x6.25mm_Layout4x7_P0.8mm_Ball0.45mm_Pad0.4
 Analog{space}BGA-28{space}4.0mm{space}x{space}6.25mm{space}package,{space}pitch{space}0.4mm{space}pad,{space}based{space}on{space}https://www.analog.com/media/en/technical-documentation/data-sheets/8063fa.pdf
@@ -73576,24 +73583,17 @@ varistor{space}SIOV
 0
 2
 2
-WDFN6_2x2
-WDFN6
+rise_elp
+OMNI-220-18-50-2C
 
 
 0
-7
-7
-f9p
+2
+1
+rise_elp
 TI-DPR
 
 
 0
 11
 11
-f9p
-UBLOX_ZED_F9P
-
-
-0
-102
-55
