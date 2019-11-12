@@ -21,7 +21,7 @@
 
 namespace {
 void rtcm_rx(uint8_t *data, int len, int type) {
-    if (RtcmClient::currentMsgHandler && type != 1002 && type != 1004 && type != 1010 && type != 1012) {
+    if (RtcmClient::currentMsgHandler) {
         QByteArray rtcm_data((const char*)data, len);
         RtcmClient::currentMsgHandler->emitRtcmReceived(rtcm_data, type);
     }
@@ -31,44 +31,6 @@ void rtcm_rx_1006(rtcm_ref_sta_pos_t *pos) {
     if (RtcmClient::currentMsgHandler) {
         RtcmClient::currentMsgHandler->emitRefPosReceived(
                     pos->lat, pos->lon, pos->height, pos->ant_height);
-    }
-}
-
-void rtcm_rx_obs(rtcm_obs_header_t *header, rtcm_obs_t *obs, int obs_num) {
-    // Don't send empty observations.
-    if (RtcmClient::currentMsgHandler && obs_num > 0) {
-        if (header->type == 1002 || header->type == 1004) {
-            // Re-encode to 1002 since we don't care about L2 for now.
-            static uint8_t data[2048];
-            int len;
-            int type = 1002;
-
-            // Set sync to 0 since no more observations are coming. Otherwise
-            // RTKLIB or the ublox will wait for other observations that are
-            // thrown away and RTK won't work.
-            if (RtcmClient::gpsOnly) {
-                header->sync = 0;
-            }
-
-            rtcm3_encode_1002(header, obs, obs_num, data, &len);
-
-            QByteArray rtcm_data((const char*)data, len);
-            RtcmClient::currentMsgHandler->emitRtcmReceived(rtcm_data, type, header->sync);
-        } if ((header->type == 1010 || header->type == 1012) && !RtcmClient::gpsOnly) {
-            // Re-encode to 1010 since we don't care about L2 for now.
-            static uint8_t data[2048];
-            int len;
-            int type = 1010;
-
-            rtcm3_encode_1010(header, obs, obs_num, data, &len);
-
-            QByteArray rtcm_data((const char*)data, len);
-            RtcmClient::currentMsgHandler->emitRtcmReceived(rtcm_data, type, header->sync);
-        }
-    }
-
-    if (obs_num == 0) {
-        qDebug() << "Empty observation received";
     }
 }
 }
@@ -90,7 +52,6 @@ RtcmClient::RtcmClient(QObject *parent) : QObject(parent)
     rtcm3_init_state(&rtcmState);
     rtcm3_set_rx_callback(rtcm_rx, &rtcmState);
     rtcm3_set_rx_callback_1005_1006(rtcm_rx_1006, &rtcmState);
-    rtcm3_set_rx_callback_obs(rtcm_rx_obs, &rtcmState);
 
     connect(mTcpSocket, SIGNAL(readyRead()), this, SLOT(tcpInputDataAvailable()));
     connect(mTcpSocket, SIGNAL(connected()), this, SLOT(tcpInputConnected()));
