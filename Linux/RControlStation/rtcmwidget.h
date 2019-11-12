@@ -61,7 +61,6 @@ private:
     RtcmClient *mRtcm;
     QTimer *mTimer;
     TcpBroadcast *mTcpServer;
-    QByteArray mRtcmBuffer;
 };
 
 #endif // RTCMWIDGET_H
