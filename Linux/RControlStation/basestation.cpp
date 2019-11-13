@@ -194,13 +194,17 @@ void BaseStation::rxRawx(ubx_rxm_rawx rawx)
             message.append((char*)data_gps, gps_len);
             message.append((char*)data_glo, glo_len);
             emit rtcmOut(message);
+            mRtcmUbx[1002]++;
+            mRtcmUbx[1010]++;
         } else {
             if (has_gps) {
                 emit rtcmOut(QByteArray((char*)data_gps, gps_len));
+                mRtcmUbx[1002]++;
             }
 
             if (has_glo) {
                 emit rtcmOut(QByteArray((char*)data_glo, glo_len));
+                mRtcmUbx[1010]++;
             }
         }
 
@@ -211,6 +215,7 @@ void BaseStation::rxRawx(ubx_rxm_rawx rawx)
 
             if (has_ref) {
                 emit rtcmOut(QByteArray((char*)data_ref, ref_len));
+                mRtcmUbx[1006]++;
             }
         }
     }
