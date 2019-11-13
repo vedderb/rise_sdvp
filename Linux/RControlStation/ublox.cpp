@@ -604,6 +604,73 @@ bool Ublox::ubloxCfgTp5(ubx_cfg_tp5 *cfg)
     return ubx_encode_send(UBX_CLASS_CFG, UBX_CFG_TP5, buffer, ind, 10);
 }
 
+bool Ublox::ubloxCfgValset(unsigned char *values, int len,
+                           bool ram, bool bbr, bool flash)
+{
+    uint8_t buffer[len + 4];
+    int ind = 0;
+
+    ubx_put_U1(buffer, &ind, 0);
+
+    uint8_t mask = 0;
+    mask |= (ram ? 1 : 0) << 0;
+    mask |= (bbr ? 1 : 0) << 1;
+    mask |= (flash ? 1 : 0) << 2;
+    ubx_put_X1(buffer, &ind, mask);
+
+    ubx_put_U1(buffer, &ind, 0);
+    ubx_put_U1(buffer, &ind, 0);
+
+    memcpy(buffer + ind, values, len);
+    ind += len;
+
+    return ubx_encode_send(UBX_CLASS_CFG, UBX_CFG_VALSET, buffer, ind, 100);
+}
+
+void Ublox::ubloxCfgAppendEnableGps(unsigned char *buffer, int *ind,
+                                    bool en, bool en_l1c, bool en_l2c)
+{
+    ubx_put_X4(buffer, ind, CFG_SIGNAL_GPS_ENA);
+    ubx_put_U1(buffer, ind, en);
+    ubx_put_X4(buffer, ind, CFG_SIGNAL_GPS_L1C_ENA);
+    ubx_put_U1(buffer, ind, en_l1c);
+    ubx_put_X4(buffer, ind, CFG_SIGNAL_GPS_L2C_ENA);
+    ubx_put_U1(buffer, ind, en_l2c);
+}
+
+void Ublox::ubloxCfgAppendEnableGal(unsigned char *buffer, int *ind,
+                                    bool en, bool en_e1, bool en_e5b)
+{
+    ubx_put_X4(buffer, ind, CFG_SIGNAL_GAL_ENA);
+    ubx_put_U1(buffer, ind, en);
+    ubx_put_X4(buffer, ind, CFG_SIGNAL_GAL_E1_ENA);
+    ubx_put_U1(buffer, ind, en_e1);
+    ubx_put_X4(buffer, ind, CFG_SIGNAL_GAL_E5B_ENA);
+    ubx_put_U1(buffer, ind, en_e5b);
+}
+
+void Ublox::ubloxCfgAppendEnableBds(unsigned char *buffer, int *ind,
+                                    bool en, bool en_b1, bool en_b2)
+{
+    ubx_put_X4(buffer, ind, CFG_SIGNAL_BDS_ENA);
+    ubx_put_U1(buffer, ind, en);
+    ubx_put_X4(buffer, ind, CFG_SIGNAL_BDS_B1_ENA);
+    ubx_put_U1(buffer, ind, en_b1);
+    ubx_put_X4(buffer, ind, CFG_SIGNAL_BDS_B2_ENA);
+    ubx_put_U1(buffer, ind, en_b2);
+}
+
+void Ublox::ubloxCfgAppendEnableGlo(unsigned char *buffer, int *ind,
+                                    bool en, bool en_l1, bool en_l2)
+{
+    ubx_put_X4(buffer, ind, CFG_SIGNAL_GLO_ENA);
+    ubx_put_U1(buffer, ind, en);
+    ubx_put_X4(buffer, ind, CFG_SIGNAL_GLO_L1_ENA);
+    ubx_put_U1(buffer, ind, en_l1);
+    ubx_put_X4(buffer, ind, CFG_SIGNAL_GLO_L2_ENA);
+    ubx_put_U1(buffer, ind, en_l2);
+}
+
 void Ublox::serialDataAvailable()
 {
     while (mSerialPort->bytesAvailable() > 0) {
@@ -615,7 +682,13 @@ void Ublox::serialDataAvailable()
 
             // RTCM
             if (!ch_used && mDecoderState.line_pos == 0 && mDecoderState.ubx_pos == 0) {
-                ch_used = rtcm3_input_data(ch, &mRtcmState) >= 0;
+                int res = rtcm3_input_data(ch, &mRtcmState);
+                ch_used = res >= 0;
+
+                if (res >= 1000) {
+                    QByteArray rtcmData((const char*)mRtcmState.buffer, mRtcmState.len + 3);
+                    emit rtcmRx(rtcmData, res);
+                }
             }
 
             // Ubx
@@ -816,6 +889,9 @@ void Ublox::ubx_decode(uint8_t msg_class, uint8_t id, uint8_t *msg, int len)
         case UBX_NAV_SOL:
             ubx_decode_nav_sol(msg, len);
             break;
+        case UBX_NAV_SAT:
+            ubx_decode_nav_sat(msg, len);
+            break;
         default:
             break;
         }
@@ -1000,4 +1076,38 @@ void Ublox::ubx_decode_rawx(uint8_t *msg, int len)
     }
 
     emit rxRawx(raw);
+}
+
+void Ublox::ubx_decode_nav_sat(uint8_t *msg, int len)
+{
+    (void)len;
+
+    ubx_nav_sat sat;
+    int ind = 0;
+
+    sat.i_tow_ms = ubx_get_U4(msg, &ind);
+    ubx_get_U1(msg, &ind);
+    sat.num_sv = ubx_get_U1(msg, &ind);
+    ubx_get_U1(msg, &ind);
+    ubx_get_U1(msg, &ind);
+
+    if (sat.num_sv > 128) {
+        sat.num_sv = 128;
+    }
+
+    for (int i = 0;i < sat.num_sv;i++) {
+        sat.sats[i].gnss_id = ubx_get_U1(msg, &ind);
+        sat.sats[i].sv_id = ubx_get_U1(msg, &ind);
+        sat.sats[i].cno = ubx_get_U1(msg, &ind);
+        sat.sats[i].elev = ubx_get_I1(msg, &ind);
+        sat.sats[i].azim = ubx_get_I2(msg, &ind);
+        sat.sats[i].pr_res = (float)ubx_get_I2(msg, &ind) * 0.1;
+        uint32_t flags = ubx_get_X4(msg, &ind);
+        sat.sats[i].quality = (flags >> 0) & 0x07;
+        sat.sats[i].used = (flags >> 3) & 0x01;
+        sat.sats[i].health = (flags >> 4) & 0x03;
+        sat.sats[i].diffcorr = (flags >> 6) & 0x01;
+    }
+
+    emit rxNavSat(sat);
 }

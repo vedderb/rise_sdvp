@@ -21,6 +21,7 @@
 #include <QWidget>
 #include <QTcpSocket>
 #include <QTimer>
+#include <QMap>
 #include "ublox.h"
 #include "tcpbroadcast.h"
 #include "mapwidget.h"
@@ -45,6 +46,9 @@ private slots:
     void timerSlot();
     void rxRawx(ubx_rxm_rawx rawx);
     void rxNavSol(ubx_nav_sol sol);
+    void rxNavSat(ubx_nav_sat sat);
+    void rxSvin(ubx_nav_svin svin);
+    void rtcmRx(QByteArray data, int type);
 
     void on_ubxSerialRefreshButton_clicked();
     void on_ubxSerialDisconnectButton_clicked();
@@ -59,6 +63,7 @@ private:
     MapWidget *mMap;
     int mBasePosCnt;
     bool mBasePosSet;
+    QMap<int, int> mRtcmUbx;
 
 };
 

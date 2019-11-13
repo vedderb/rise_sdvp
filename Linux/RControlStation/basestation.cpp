@@ -47,8 +47,18 @@ BaseStation::BaseStation(QWidget *parent) :
             this, SLOT(rxRawx(ubx_rxm_rawx)));
     connect(mUblox, SIGNAL(rxNavSol(ubx_nav_sol)),
             this, SLOT(rxNavSol(ubx_nav_sol)));
+    connect(mUblox, SIGNAL(rxNavSat(ubx_nav_sat)),
+            this, SLOT(rxNavSat(ubx_nav_sat)));
+    connect(mUblox, SIGNAL(rxSvin(ubx_nav_svin)),
+            this, SLOT(rxSvin(ubx_nav_svin)));
+    connect(mUblox, SIGNAL(rtcmRx(QByteArray,int)),
+            this, SLOT(rtcmRx(QByteArray,int)));
 
     on_ubxSerialRefreshButton_clicked();
+
+    // Notice that the RAW encoding and manual survey in
+    // is used to allow using M8T-receivers that do not
+    // support RTK, but are much more affordable.
 }
 
 BaseStation::~BaseStation()
@@ -298,6 +308,132 @@ void BaseStation::rxNavSol(ubx_nav_sol sol)
     }
 }
 
+void BaseStation::rxNavSat(ubx_nav_sat sat)
+{
+    int satsGps = 0;
+    int satsGlo = 0;
+    int satsGal = 0;
+    int satsBds = 0;
+
+    int visibleGps = 0;
+    int visibleGlo = 0;
+    int visibleGal = 0;
+    int visibleBds = 0;
+
+    for (int i = 0;i < sat.num_sv;i++) {
+        ubx_nav_sat_info s = sat.sats[i];
+
+        if (s.gnss_id == 0) {
+            visibleGps++;
+        } else if (s.gnss_id == 2) {
+            visibleGal++;
+        } else if (s.gnss_id == 3) {
+            visibleBds++;
+        } else if (s.gnss_id == 6) {
+            visibleGlo++;
+        }
+
+        if (s.used && s.quality >= 4) {
+            if (s.gnss_id == 0) {
+                satsGps++;
+            } else if (s.gnss_id == 2) {
+                satsGal++;
+            } else if (s.gnss_id == 3) {
+                satsBds++;
+            } else if (s.gnss_id == 6) {
+                satsGlo++;
+            }
+        }
+    }
+
+    QString rtcmMsgs;
+    QMapIterator<int, int> i(mRtcmUbx);
+    while (i.hasNext()) {
+        i.next();
+        if (!rtcmMsgs.isEmpty()) {
+            rtcmMsgs += ", ";
+        }
+
+        rtcmMsgs += QString("%1:%2").
+                arg(i.key()).arg(i.value());
+    }
+
+    QString txt = QString("         Visible   Used\n"
+                          "GPS:     %1        %5\n"
+                          "GLONASS: %2        %6\n"
+                          "Galileo: %3        %7\n"
+                          "BeiDou:  %4        %8\n"
+                          "Total:   %9        %10\n\n"
+                          "RTCM Sent:\n"
+                          + rtcmMsgs).
+            arg(visibleGps, -2).arg(visibleGlo, -2).
+            arg(visibleGal, -2).arg(visibleBds, -2).
+            arg(satsGps, -2).arg(satsGlo, -2).
+            arg(satsGal, -2).arg(satsBds, -2).
+            arg(visibleGps + visibleGlo + visibleGal + visibleBds, -2).
+            arg(satsGps + satsGlo + satsGal + satsBds, -2);
+
+    ui->ubxText2->clear();
+    ui->ubxText2->appendPlainText(txt);
+}
+
+void BaseStation::rxSvin(ubx_nav_svin svin)
+{
+    double llh[3];
+    utility::xyzToLlh(svin.meanX, svin.meanY, svin.meanZ,
+                      &llh[0], &llh[1], &llh[2]);
+
+    if (ui->surveyInBox->isChecked()) {
+        ui->refSendLatBox->setValue(llh[0]);
+        ui->refSendLonBox->setValue(llh[1]);
+        ui->refSendHBox->setValue(llh[2]);
+    }
+
+    QString txt = QString(
+                "Lat:          %1\n"
+                "Lon:          %2\n"
+                "Height:       %3\n"
+                "Observarions: %4\n"
+                "P ACC:        %5 m\n"
+                "Duration:     %6 s\n"
+                "Valid:        %7\n"
+                "Active:       %8").
+            arg(llh[0], 0, 'f', 8).
+            arg(llh[1], 0, 'f', 8).
+            arg(llh[2]).
+            arg(svin.obs).
+            arg(svin.meanAcc).
+            arg(svin.dur).
+            arg(svin.valid).
+            arg(svin.active);
+
+    ui->ubxText->clear();
+    ui->ubxText->appendPlainText(txt);
+
+    if (mMap && ui->ubxPlotMapBox->isChecked()) {
+        double i_llh[3];
+
+        mMap->getEnuRef(i_llh);
+
+        double xyz[3];
+        utility::llhToEnu(i_llh, llh, xyz);
+
+        LocPoint p;
+        p.setXY(xyz[0], xyz[1]);
+        mMap->addInfoPoint(p);
+
+        if (ui->ubxFollowMapBox->isChecked()) {
+            mMap->moveView(p.getX(), p.getY());
+        }
+    }
+}
+
+void BaseStation::rtcmRx(QByteArray data, int type)
+{
+    mRtcmUbx[type]++;
+    emit rtcmOut(data);
+}
+
 void BaseStation::on_ubxSerialRefreshButton_clicked()
 {
     ui->ubxSerialPortBox->clear();
@@ -305,7 +441,8 @@ void BaseStation::on_ubxSerialRefreshButton_clicked()
     QList<QSerialPortInfo> ports = QSerialPortInfo::availablePorts();
     foreach(const QSerialPortInfo &port, ports) {
         if (port.manufacturer().toLower().replace("-", "").contains("ublox")) {
-            ui->ubxSerialPortBox->insertItem(0, "Ublox - " + port.portName(), port.systemLocation());
+            ui->ubxSerialPortBox->insertItem(0, "Ublox - " + port.portName(),
+                                             port.systemLocation());
         } else {
             ui->ubxSerialPortBox->addItem(port.portName(), port.systemLocation());
         }
@@ -325,6 +462,10 @@ void BaseStation::on_ubxSerialConnectButton_clicked()
                                      ui->ubxSerialBaudBox->value());
 
     if (res) {
+        mRtcmUbx.clear();
+        ui->ubxText->clear();
+        ui->ubxText2->clear();
+
         // Serial port baud rate
         // if it is too low the buffer will overfill and it won't work properly.
         ubx_cfg_prt_uart uart;
@@ -338,12 +479,70 @@ void BaseStation::on_ubxSerialConnectButton_clicked()
         uart.out_rtcm3 = true;
         mUblox->ubxCfgPrtUart(&uart);
 
-        // Set configuration
-        // Switch on RAWX and NMEA messages, set rate to 1 Hz and time reference to UTC
-        mUblox->ubxCfgRate(1000, 1, 0);
-        mUblox->ubxCfgMsg(UBX_CLASS_RXM, UBX_RXM_RAWX, 1); // Every second
-        mUblox->ubxCfgMsg(UBX_CLASS_RXM, UBX_RXM_SFRBX, 1); // Every second
-        mUblox->ubxCfgMsg(UBX_CLASS_NAV, UBX_NAV_SOL, 1); // Every second
+        bool isF9p = ui->f9Button->isChecked();
+        if (ui->rateBox->currentIndex() == 2 && !isF9p) {
+            ui->rateBox->setCurrentIndex(1);
+        }
+
+        int rate = 1000;
+        switch (ui->rateBox->currentIndex()) {
+        case 0: rate = 1000; break;
+        case 1: rate = 200; break;
+        case 2: rate = 100; break;
+        default: break;
+        }
+
+        mUblox->ubxCfgRate(rate, 1, 0);
+
+        bool encodeRaw = !isF9p;
+
+        mUblox->ubxCfgMsg(UBX_CLASS_RXM, UBX_RXM_RAWX, encodeRaw ? 1 : 0);
+        mUblox->ubxCfgMsg(UBX_CLASS_RXM, UBX_RXM_SFRBX, encodeRaw ? 1 : 0);
+        mUblox->ubxCfgMsg(UBX_CLASS_NAV, UBX_NAV_SOL, encodeRaw ? 1 : 0);
+        mUblox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1005, encodeRaw ? 0 : 1);
+        mUblox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1074, encodeRaw ? 0 : 1);
+        mUblox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1077, encodeRaw ? 0 : 1);
+        mUblox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1084, encodeRaw ? 0 : 1);
+        mUblox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1087, encodeRaw ? 0 : 1);
+        mUblox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1094, encodeRaw ? 0 : 1);
+        mUblox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1097, encodeRaw ? 0 : 1);
+        mUblox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1124, encodeRaw ? 0 : 1);
+        mUblox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1127, encodeRaw ? 0 : 1);
+        mUblox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1230, encodeRaw ? 0 : 1);
+        mUblox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_4072_0, encodeRaw ? 0 : 1);
+        mUblox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_4072_1, encodeRaw ? 0 : 1);
+
+        mUblox->ubxCfgMsg(UBX_CLASS_NAV, UBX_NAV_SAT, 1);
+        mUblox->ubxCfgMsg(UBX_CLASS_NAV, UBX_NAV_SVIN, isF9p ? 1 : 0);
+
+        if (isF9p) {
+            unsigned char buffer[512];
+            int ind = 0;
+            mUblox->ubloxCfgAppendEnableGps(buffer, &ind, true, true, true);
+            mUblox->ubloxCfgAppendEnableGal(buffer, &ind, true, true, true);
+            mUblox->ubloxCfgAppendEnableBds(buffer, &ind, true, true, true);
+            mUblox->ubloxCfgAppendEnableGlo(buffer, &ind, true, true, true);
+            mUblox->ubloxCfgValset(buffer, ind, true, true, true);
+        }
+
+        ubx_cfg_tmode3 cfg_mode;
+        memset(&cfg_mode, 0, sizeof(cfg_mode));
+        cfg_mode.mode = isF9p ? 1 : 0;
+        cfg_mode.fixed_pos_acc = 5.0;
+        cfg_mode.svin_min_dur = 20;
+        cfg_mode.svin_acc_limit = ui->surveyInMinAccBox->value();
+
+        if (!ui->surveyInBox->isChecked() && isF9p) {
+            mBasePosSet = true;
+
+            cfg_mode.mode = 2;
+            cfg_mode.lla = true;
+            cfg_mode.ecefx_lat = ui->refSendLatBox->value();
+            cfg_mode.ecefy_lon = ui->refSendLonBox->value();
+            cfg_mode.ecefz_alt = ui->refSendHBox->value();
+        }
+
+        mUblox->ubxCfgTmode3(&cfg_mode);
 
         // Stationary dynamic model
         ubx_cfg_nav5 nav5;

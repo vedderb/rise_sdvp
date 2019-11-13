@@ -44,6 +44,17 @@ public:
     bool ubloxCfgCfg(ubx_cfg_cfg *cfg);
     bool ubxCfgNav5(ubx_cfg_nav5 *cfg);
     bool ubloxCfgTp5(ubx_cfg_tp5 *cfg);
+    bool ubloxCfgValset(unsigned char *values, int len,
+                        bool ram, bool bbr, bool flash);
+
+    void ubloxCfgAppendEnableGps(unsigned char *buffer, int *ind,
+                                 bool en, bool en_l1c, bool en_l2c);
+    void ubloxCfgAppendEnableGal(unsigned char *buffer, int *ind,
+                                 bool en, bool en_e1, bool en_e5b);
+    void ubloxCfgAppendEnableBds(unsigned char *buffer, int *ind,
+                                 bool en, bool en_b1, bool en_b2);
+    void ubloxCfgAppendEnableGlo(unsigned char *buffer, int *ind,
+                                 bool en, bool en_l1, bool en_l2);
 
 signals:
     void rxGga(int fields, NmeaServer::nmea_gga_info_t gga);
@@ -53,7 +64,9 @@ signals:
     void rxAck(uint8_t cls_id, uint8_t msg_id);
     void rxNak(uint8_t cls_id, uint8_t msg_id);
     void rxRawx(ubx_rxm_rawx rawx);
+    void rxNavSat(ubx_nav_sat sat);
     void ubxRx(const QByteArray &data);
+    void rtcmRx(QByteArray data, int type);
 
 public slots:
 
@@ -90,6 +103,7 @@ private:
     void ubx_decode_ack(uint8_t *msg, int len);
     void ubx_decode_nak(uint8_t *msg, int len);
     void ubx_decode_rawx(uint8_t *msg, int len);
+    void ubx_decode_nav_sat(uint8_t *msg, int len);
 };
 
 // Message classes
@@ -114,6 +128,7 @@ private:
 #define UBX_NAV_SOL						0x06
 #define UBX_NAV_RELPOSNED				0x3C
 #define UBX_NAV_SVIN					0x3B
+#define UBX_NAV_SAT 					0x35
 
 // Receiver Manager (RXM) messages
 #define UBX_RXM_RAWX					0x15
@@ -131,12 +146,38 @@ private:
 #define UBX_CFG_NAV5					0x24
 #define UBX_CFG_TP5						0x31
 #define UBX_CFG_TMODE3					0x71
+#define UBX_CFG_VALSET                  0x8A
+#define UBX_CFG_VALGET                  0x8B
+#define UBX_CFG_VALDEL                  0x8C
+
+// Configuration Keys
+#define CFG_SIGNAL_GPS_ENA              0x1031001F // GPS enable
+#define CFG_SIGNAL_GPS_L1C_ENA          0x10310001 // GPS L1C/A
+#define CFG_SIGNAL_GPS_L2C_ENA          0x10310003 // GPS L2C (only on u-blox F9)
+#define CFG_SIGNAL_GAL_ENA              0x10310021 // Galileo enable
+#define CFG_SIGNAL_GAL_E1_ENA           0x10310007 // Galileo E1
+#define CFG_SIGNAL_GAL_E5B_ENA          0x1031000A // Galileo E5b (only on u-blox F9)
+#define CFG_SIGNAL_BDS_ENA              0x10310022 // BeiDou Enable
+#define CFG_SIGNAL_BDS_B1_ENA           0x1031000D // BeiDou B1I
+#define CFG_SIGNAL_BDS_B2_ENA           0x1031000E // BeiDou B2I (only on u-blox F9)
+#define CFG_SIGNAL_GLO_ENA              0x10310025 // GLONASS Enable
+#define CFG_SIGNAL_GLO_L1_ENA           0x10310018 // GLONASS L1
+#define CFG_SIGNAL_GLO_L2_ENA           0x1031001A // GLONASS L2 (only on u-blox F9)
 
 // RTCM3 messages
-#define UBX_RTCM3_1005					0x05
-#define UBX_RTCM3_1077					0x4D
-#define UBX_RTCM3_1087					0x57
-#define UBX_RTCM3_1127					0x7F
+#define UBX_RTCM3_1005					0x05 // Stationary RTK reference station ARP
+#define UBX_RTCM3_1074					0x4A // GPS MSM4
+#define UBX_RTCM3_1077					0x4D // GPS MSM7
+#define UBX_RTCM3_1084					0x54 // GLONASS MSM4
+#define UBX_RTCM3_1087					0x57 // GLONASS MSM7
+#define UBX_RTCM3_1094					0x5E // Galileo MSM4
+#define UBX_RTCM3_1097					0x61 // Galileo MSM7
+#define UBX_RTCM3_1124					0x7C // BeiDou MSM4
+#define UBX_RTCM3_1127					0x7F // BeiDou MSM7
+#define UBX_RTCM3_1230					0xE6 // GLONASS code-phase biases
+#define UBX_RTCM3_4072_0				0xFE // Reference station PVT (u-blox proprietary RTCM Message)
+#define UBX_RTCM3_4072_1				0xFD // Additional reference station information (u-blox proprietary RTCM Message)
+
 
 // NMEA messages
 #define UBX_NMEA_GGA                    0x00

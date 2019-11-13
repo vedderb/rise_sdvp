@@ -542,6 +542,25 @@ typedef struct {
 } ubx_nav_sol;
 
 typedef struct {
+    uint8_t gnss_id; // 0: GPS, 1: SBAS, 2: GAL, 3: BDS, 5: QZSS, 6: GLO
+    uint8_t sv_id;
+    uint8_t cno; // Carrier to noise ratio (signal strength)
+    int8_t elev; // Elevation (range: +/-90), unknown if out of range
+    int16_t azim; // Azimuth (range 0-360), unknown if elevation is out of range
+    float pr_res; // Pseudorange residual
+    uint8_t quality; // 0: no signal, 1: searching, 2: aquired, 3: unusable, 4: locked, 5-7: carrier, code and time locked
+    bool used;
+    uint8_t health; // 0: unknown, 1: healthy, 2: unhealthy
+    bool diffcorr; // Differential correction available
+} ubx_nav_sat_info;
+
+typedef struct {
+    uint32_t i_tow_ms; // GPS time of week of the navigation epoch.
+    uint8_t num_sv; // Number of satellites.
+    ubx_nav_sat_info sats[128];
+} ubx_nav_sat;
+
+typedef struct {
     double pr_mes;
     double cp_mes;
     float do_mes;
