@@ -287,7 +287,7 @@ debug-start:
 	
 upload_remote: build/$(PROJECT).bin
 #	./upload_remote build/$(PROJECT).bin pi 10.42.0.96 22 pi_gpio
-	./upload_remote build/$(PROJECT).bin pi 127.0.0.1 2232 pi_gpio
+	./upload_remote build/$(PROJECT).bin pi 127.0.0.1 65098 pi_gpio
 
 RULESPATH = $(CHIBIOS)/os/common/ports/ARMCMx/compilers/GCC
 include $(RULESPATH)/rules.mk

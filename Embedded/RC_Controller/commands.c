@@ -1102,15 +1102,15 @@ void commands_printf(const char* format, ...) {
 	va_list arg;
 	va_start (arg, format);
 	int len;
-	static char print_buffer[255];
+	static char print_buffer[512];
 
 	print_buffer[0] = main_id;
 	print_buffer[1] = CMD_PRINTF;
-	len = vsnprintf(print_buffer + 2, 253, format, arg);
+	len = vsnprintf(print_buffer + 2, 509, format, arg);
 	va_end (arg);
 
 	if(len > 0) {
-		commands_send_packet((unsigned char*)print_buffer, (len<253) ? len + 2: 255);
+		commands_send_packet((unsigned char*)print_buffer, (len<509) ? len + 2: 512);
 	}
 	chMtxUnlock(&m_print_gps);
 }

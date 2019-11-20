@@ -1044,3 +1044,28 @@ void CarInterface::on_camShowMapBox_toggled(bool checked)
         mMap->setLastCameraImage(QImage());
     }
 }
+
+void CarInterface::on_ubxVersionButton_clicked()
+{
+    emit terminalCmd(mId, "ubx_poll UBX_MON_VER");
+}
+
+void CarInterface::on_ubxNavSatButton_clicked()
+{
+    emit terminalCmd(mId, "ubx_poll UBX_NAV_SAT");
+}
+
+void CarInterface::on_ubxSolButton_clicked()
+{
+    emit terminalCmd(mId, "ubx_poll UBX_NAV_SOL");
+}
+
+void CarInterface::on_ubxRelPosNedButton_clicked()
+{
+    emit terminalCmd(mId, "ubx_poll UBX_NAV_RELPOSNED");
+}
+
+void CarInterface::on_ubxCfgGnssButton_clicked()
+{
+    emit terminalCmd(mId, "ubx_poll UBX_CFG_GNSS");
+}

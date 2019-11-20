@@ -111,6 +111,11 @@ private slots:
     void on_camStartButton_clicked();
     void on_camStopButton_clicked();
     void on_camShowMapBox_toggled(bool checked);
+    void on_ubxVersionButton_clicked();
+    void on_ubxNavSatButton_clicked();
+    void on_ubxSolButton_clicked();
+    void on_ubxRelPosNedButton_clicked();
+    void on_ubxCfgGnssButton_clicked();
 
 private:
     typedef struct {

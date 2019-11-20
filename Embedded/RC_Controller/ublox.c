@@ -69,6 +69,9 @@ static bool m_print_next_nav_sol = false;
 static bool m_print_next_relposned = false;
 static bool m_print_next_rawx = false;
 static bool m_print_next_svin = false;
+static bool m_print_next_nav_sat = false;
+static bool m_print_next_mon_ver = false;
+static bool m_print_next_cfg_gnss = false;
 static decoder_state m_decoder_state;
 
 // Private functions
@@ -87,6 +90,9 @@ static void ubx_decode_svin(uint8_t *msg, int len);
 static void ubx_decode_ack(uint8_t *msg, int len);
 static void ubx_decode_nak(uint8_t *msg, int len);
 static void ubx_decode_rawx(uint8_t *msg, int len);
+static void ubx_decode_nav_sat(uint8_t *msg, int len);
+static void ubx_decode_cfg_gnss(uint8_t *msg, int len);
+static void ubx_decode_mon_ver(uint8_t *msg, int len);
 
 // Ublox type getters
 static uint8_t ubx_get_U1(uint8_t *msg, int *ind);
@@ -119,6 +125,8 @@ static void(*rx_nav_sol)(ubx_nav_sol *sol) = 0;
 static void(*rx_relposned)(ubx_nav_relposned *pos) = 0;
 static void(*rx_rawx)(ubx_rxm_rawx *pos) = 0;
 static void(*rx_svin)(ubx_nav_svin *svin) = 0;
+static void(*rx_nav_sat)(ubx_nav_sat *sat) = 0;
+static void(*rx_gnss)(ubx_cfg_gnss *gnss) = 0;
 
 /*
  * This callback is invoked when a transmission buffer has been completely
@@ -191,7 +199,7 @@ void ublox_init(void) {
 	palClearPad(HW_UBX_RESET_PORT, HW_UBX_RESET_PIN);
 	chThdSleepMilliseconds(10);
 	palSetPad(HW_UBX_RESET_PORT, HW_UBX_RESET_PIN);
-	chThdSleepMilliseconds(1000);
+	chThdSleepMilliseconds(2000);
 
 	uartStart(&HW_UART_DEV, &uart_cfg);
 
@@ -203,7 +211,10 @@ void ublox_init(void) {
 			"  UBX_NAV_SOL - Position solution\n"
 			"  UBX_NAV_RELPOSNED - Relative position to base in NED frame\n"
 			"  UBX_NAV_SVIN - survey-in data\n"
-			"  UBX_RXM_RAWX - raw data",
+			"  UBX_RXM_RAWX - raw data\n"
+			"  UBX_NAV_SAT - satellite information\n"
+			"  UBX_MON_VER - Ublox version information\n"
+			"  UBX_CFG_GNSS - Print supported GNSS configuration",
 			"[msg]",
 			ubx_terminal_cmd_poll);
 
@@ -298,6 +309,47 @@ void ublox_init(void) {
 	// Switch on RELPOSNED and RAWX messages
 	ublox_cfg_msg(UBX_CLASS_NAV, UBX_NAV_RELPOSNED, 1);
 	ublox_cfg_msg(UBX_CLASS_RXM, UBX_RXM_RAWX, 1);
+
+	ubx_cfg_nmea nmea;
+	memset(&nmea, 0, sizeof(ubx_cfg_nmea));
+	nmea.nmeaVersion = 0x41;
+	nmea.numSv = 0;
+	nmea.highPrec = true;
+
+	ublox_cfg_nmea(&nmea);
+
+	ubx_cfg_gnss gnss;
+	memset(&gnss, 0, sizeof(ubx_cfg_gnss));
+	gnss.num_ch_hw = 30;
+	gnss.num_ch_use = 30;
+	gnss.num_blocks = 3;
+
+	gnss.blocks[0].gnss_id = UBX_GNSS_ID_GPS;
+	gnss.blocks[0].en = true;
+	gnss.blocks[0].minTrkCh = 8;
+	gnss.blocks[0].maxTrkCh = 16;
+	gnss.blocks[0].flags = UBX_CFG_GNSS_GPS_L1C;
+
+	gnss.blocks[1].gnss_id = UBX_GNSS_ID_GLONASS;
+	gnss.blocks[1].en = true;
+	gnss.blocks[1].minTrkCh = 8;
+	gnss.blocks[1].maxTrkCh = 16;
+	gnss.blocks[1].flags = UBX_CFG_GNSS_GLO_L1;
+
+	gnss.blocks[2].gnss_id = UBX_GNSS_ID_BEIDOU;
+	gnss.blocks[2].en = false;
+	gnss.blocks[2].minTrkCh = 8;
+	gnss.blocks[2].maxTrkCh = 16;
+	gnss.blocks[2].flags = UBX_CFG_GNSS_BDS_B1L;
+
+	// M8P does not support galileo
+	gnss.blocks[3].gnss_id = UBX_GNSS_ID_GALILEO;
+	gnss.blocks[3].en = false;
+	gnss.blocks[3].minTrkCh = 8;
+	gnss.blocks[3].maxTrkCh = 10;
+	gnss.blocks[3].flags = UBX_CFG_GNSS_GAL_E1;
+
+	ublox_cfg_gnss(&gnss);
 }
 
 void ublox_send(unsigned char *data, unsigned int len) {
@@ -332,6 +384,14 @@ void ublox_set_rx_callback_rawx(void(*func)(ubx_rxm_rawx *rawx)) {
 
 void ublox_set_rx_callback_svin(void(*func)(ubx_nav_svin *svin)) {
 	rx_svin = func;
+}
+
+void ublox_set_rx_callback_nav_sat(void(*func)(ubx_nav_sat *sat)) {
+	rx_nav_sat = func;
+}
+
+void ublox_set_rx_callback_cfg_gnss(void(*func)(ubx_cfg_gnss *gnss)) {
+	rx_gnss = func;
 }
 
 void ublox_poll(uint8_t msg_class, uint8_t id) {
@@ -679,6 +739,145 @@ int ublox_cfg_tp5(ubx_cfg_tp5 *cfg) {
 	return wait_ack_nak(CFG_ACK_WAIT_MS);
 }
 
+int ublox_cfg_gnss(ubx_cfg_gnss *gnss) {
+	if (gnss->num_blocks > 10) {
+		return -2;
+	}
+
+	uint8_t buffer[4 + 8 * gnss->num_blocks];
+	int ind = 0;
+
+	ubx_put_U1(buffer, &ind, 0);
+	ubx_put_U1(buffer, &ind, gnss->num_ch_hw);
+	ubx_put_U1(buffer, &ind, gnss->num_ch_use);
+	ubx_put_U1(buffer, &ind, gnss->num_blocks);
+
+	for (int i = 0;i < gnss->num_blocks;i++) {
+		ubx_put_U1(buffer, &ind, gnss->blocks[i].gnss_id);
+		ubx_put_U1(buffer, &ind, gnss->blocks[i].minTrkCh);
+		ubx_put_U1(buffer, &ind, gnss->blocks[i].maxTrkCh);
+		ubx_put_U1(buffer, &ind, 0);
+		uint32_t flags = gnss->blocks[i].en ? 1 : 0;
+		flags |= gnss->blocks[i].flags << 16;
+		ubx_put_X4(buffer, &ind, flags);
+	}
+
+	ubx_encode_send(UBX_CLASS_CFG, UBX_CFG_GNSS, buffer, ind);
+	return wait_ack_nak(CFG_ACK_WAIT_MS);
+}
+
+int ublox_cfg_nmea(ubx_cfg_nmea *nmea) {
+	uint8_t buffer[20];
+	int ind = 0;
+
+	uint8_t filter = 0;
+	filter |= (nmea->posFilt ? 1 : 0) << 0;
+	filter |= (nmea->mskPosFilt ? 1 : 0) << 1;
+	filter |= (nmea->timeFilt ? 1 : 0) << 2;
+	filter |= (nmea->dateFilt ? 1 : 0) << 3;
+	filter |= (nmea->gpsOnlyFilt ? 1 : 0) << 4;
+	filter |= (nmea->trackFilt ? 1 : 0) << 5;
+	ubx_put_X1(buffer, &ind, filter);
+
+	ubx_put_U1(buffer, &ind, nmea->nmeaVersion);
+	ubx_put_U1(buffer, &ind, nmea->numSv);
+
+	uint8_t flags = 0;
+	flags |= (nmea->compat ? 1 : 0) << 0;
+	flags |= (nmea->consider ? 1 : 0) << 1;
+	flags |= (nmea->limit82 ? 1 : 0) << 2;
+	flags |= (nmea->highPrec ? 1 : 0) << 3;
+	ubx_put_X1(buffer, &ind, flags);
+
+	uint32_t gnss_filter = 0;
+	gnss_filter |= (nmea->disableGps ? 1 : 0) << 0;
+	gnss_filter |= (nmea->disableSbas ? 1 : 0) << 1;
+	gnss_filter |= (nmea->disableQzss ? 1 : 0) << 4;
+	gnss_filter |= (nmea->disableGlonass ? 1 : 0) << 5;
+	gnss_filter |= (nmea->disableBeidou ? 1 : 0) << 6;
+	ubx_put_X4(buffer, &ind, gnss_filter);
+
+	ubx_put_U1(buffer, &ind, nmea->svNumbering);
+	ubx_put_U1(buffer, &ind, nmea->mainTalkerId);
+	ubx_put_U1(buffer, &ind, nmea->gsvTalkerId);
+	ubx_put_U1(buffer, &ind, 1);
+	ubx_put_I1(buffer, &ind, nmea->bdsTalkerId[0]);
+	ubx_put_I1(buffer, &ind, nmea->bdsTalkerId[1]);
+
+	ubx_put_U1(buffer, &ind, 0);
+	ubx_put_U1(buffer, &ind, 0);
+	ubx_put_U1(buffer, &ind, 0);
+	ubx_put_U1(buffer, &ind, 0);
+	ubx_put_U1(buffer, &ind, 0);
+	ubx_put_U1(buffer, &ind, 0);
+
+	ubx_encode_send(UBX_CLASS_CFG, UBX_CFG_NMEA, buffer, ind);
+	return wait_ack_nak(CFG_ACK_WAIT_MS);
+}
+
+int ublox_cfg_valset(unsigned char *values, int len,
+		bool ram, bool bbr, bool flash) {
+	uint8_t buffer[len + 4];
+	int ind = 0;
+
+	ubx_put_U1(buffer, &ind, 0);
+
+	uint8_t mask = 0;
+	mask |= (ram ? 1 : 0) << 0;
+	mask |= (bbr ? 1 : 0) << 1;
+	mask |= (flash ? 1 : 0) << 2;
+	ubx_put_X1(buffer, &ind, mask);
+
+	ubx_put_U1(buffer, &ind, 0);
+	ubx_put_U1(buffer, &ind, 0);
+
+	memcpy(buffer + ind, values, len);
+	ind += len;
+
+	ubx_encode_send(UBX_CLASS_CFG, UBX_CFG_VALSET, buffer, ind);
+	return wait_ack_nak(CFG_ACK_WAIT_MS);
+}
+
+void ublox_cfg_append_enable_gps(unsigned char *buffer, int *ind,
+		bool en, bool en_l1c, bool en_l2c) {
+	ubx_put_X4(buffer, ind, CFG_SIGNAL_GPS_ENA);
+	ubx_put_U1(buffer, ind, en);
+	ubx_put_X4(buffer, ind, CFG_SIGNAL_GPS_L1C_ENA);
+	ubx_put_U1(buffer, ind, en_l1c);
+	ubx_put_X4(buffer, ind, CFG_SIGNAL_GPS_L2C_ENA);
+	ubx_put_U1(buffer, ind, en_l2c);
+}
+
+void ublox_cfg_append_enable_gal(unsigned char *buffer, int *ind,
+		bool en, bool en_e1, bool en_e5b) {
+	ubx_put_X4(buffer, ind, CFG_SIGNAL_GAL_ENA);
+	ubx_put_U1(buffer, ind, en);
+	ubx_put_X4(buffer, ind, CFG_SIGNAL_GAL_E1_ENA);
+	ubx_put_U1(buffer, ind, en_e1);
+	ubx_put_X4(buffer, ind, CFG_SIGNAL_GAL_E5B_ENA);
+	ubx_put_U1(buffer, ind, en_e5b);
+}
+
+void ublox_cfg_append_enable_bds(unsigned char *buffer, int *ind,
+		bool en, bool en_b1, bool en_b2) {
+	ubx_put_X4(buffer, ind, CFG_SIGNAL_BDS_ENA);
+	ubx_put_U1(buffer, ind, en);
+	ubx_put_X4(buffer, ind, CFG_SIGNAL_BDS_B1_ENA);
+	ubx_put_U1(buffer, ind, en_b1);
+	ubx_put_X4(buffer, ind, CFG_SIGNAL_BDS_B2_ENA);
+	ubx_put_U1(buffer, ind, en_b2);
+}
+
+void ublox_cfg_append_enable_glo(unsigned char *buffer, int *ind,
+		bool en, bool en_l1, bool en_l2) {
+	ubx_put_X4(buffer, ind, CFG_SIGNAL_GLO_ENA);
+	ubx_put_U1(buffer, ind, en);
+	ubx_put_X4(buffer, ind, CFG_SIGNAL_GLO_L1_ENA);
+	ubx_put_U1(buffer, ind, en_l1);
+	ubx_put_X4(buffer, ind, CFG_SIGNAL_GLO_L2_ENA);
+	ubx_put_U1(buffer, ind, en_l2);
+}
+
 static THD_FUNCTION(process_thread, arg) {
 	(void)arg;
 
@@ -813,6 +1012,18 @@ static void ubx_terminal_cmd_poll(int argc, const char **argv) {
 			m_print_next_rawx = true;
 			ublox_poll(UBX_CLASS_RXM, UBX_RXM_RAWX);
 			commands_printf("OK\n");
+		} else if (strcmp(argv[1], "UBX_NAV_SAT") == 0) {
+			m_print_next_nav_sat = true;
+			ublox_poll(UBX_CLASS_NAV, UBX_NAV_SAT);
+			commands_printf("OK\n");
+		} else if (strcmp(argv[1], "UBX_MON_VER") == 0) {
+			m_print_next_mon_ver = true;
+			ublox_poll(UBX_CLASS_MON, UBX_MON_VER);
+			commands_printf("OK\n");
+		} else if (strcmp(argv[1], "UBX_CFG_GNSS") == 0) {
+			m_print_next_cfg_gnss = true;
+			ublox_poll(UBX_CLASS_CFG, UBX_CFG_GNSS);
+			commands_printf("OK\n");
 		} else {
 			commands_printf("Wrong argument %s\n", argv[1]);
 		}
@@ -928,6 +1139,9 @@ static void ubx_decode(uint8_t class, uint8_t id, uint8_t *msg, int len) {
 		case UBX_NAV_SVIN:
 			ubx_decode_svin(msg, len);
 			break;
+		case UBX_NAV_SAT:
+			ubx_decode_nav_sat(msg, len);
+			break;
 		default:
 			break;
 		}
@@ -952,6 +1166,26 @@ static void ubx_decode(uint8_t class, uint8_t id, uint8_t *msg, int len) {
 		switch (id) {
 		case UBX_RXM_RAWX:
 			ubx_decode_rawx(msg, len);
+			break;
+		default:
+			break;
+		}
+	} break;
+
+	case UBX_CLASS_CFG: {
+		switch (id) {
+		case UBX_CFG_GNSS:
+			ubx_decode_cfg_gnss(msg, len);
+			break;
+		default:
+			break;
+		}
+	} break;
+
+	case UBX_CLASS_MON: {
+		switch (id) {
+		case UBX_MON_VER:
+			ubx_decode_mon_ver(msg, len);
 			break;
 		default:
 			break;
@@ -1221,6 +1455,170 @@ static void ubx_decode_rawx(uint8_t *msg, int len) {
 				"pr_1: %.3f\n",
 				raw.rcv_tow, raw.week, raw.leap_sec, raw.num_meas,
 				raw.obs[0].pr_mes, raw.obs[1].pr_mes);
+	}
+}
+
+static void ubx_decode_nav_sat(uint8_t *msg, int len) {
+	(void)len;
+
+	static ubx_nav_sat sat; // NOTE: Store on heap.
+	int ind = 0;
+
+	sat.i_tow_ms = ubx_get_U4(msg, &ind);
+	ubx_get_U1(msg, &ind);
+	sat.num_sv = ubx_get_U1(msg, &ind);
+	ubx_get_U1(msg, &ind);
+	ubx_get_U1(msg, &ind);
+
+	if (sat.num_sv > 128) {
+		sat.num_sv = 128;
+	}
+
+	for (int i = 0;i < sat.num_sv;i++) {
+		sat.sats[i].gnss_id = ubx_get_U1(msg, &ind);
+		sat.sats[i].sv_id = ubx_get_U1(msg, &ind);
+		sat.sats[i].cno = ubx_get_U1(msg, &ind);
+		sat.sats[i].elev = ubx_get_I1(msg, &ind);
+		sat.sats[i].azim = ubx_get_I2(msg, &ind);
+		sat.sats[i].pr_res = (float)ubx_get_I2(msg, &ind) * 0.1;
+		uint32_t flags = ubx_get_X4(msg, &ind);
+		sat.sats[i].quality = (flags >> 0) & 0x07;
+		sat.sats[i].used = (flags >> 3) & 0x01;
+		sat.sats[i].health = (flags >> 4) & 0x03;
+		sat.sats[i].diffcorr = (flags >> 6) & 0x01;
+	}
+
+	if (rx_nav_sat) {
+		rx_nav_sat(&sat);
+	}
+
+	if (m_print_next_nav_sat) {
+		m_print_next_nav_sat = false;
+		int satsGps = 0;
+		int satsGlo = 0;
+		int satsGal = 0;
+		int satsBds = 0;
+
+		int visibleGps = 0;
+		int visibleGlo = 0;
+		int visibleGal = 0;
+		int visibleBds = 0;
+
+		for (int i = 0;i < sat.num_sv;i++) {
+			ubx_nav_sat_info s = sat.sats[i];
+
+			if (s.gnss_id == 0) {
+				visibleGps++;
+			} else if (s.gnss_id == 2) {
+				visibleGal++;
+			} else if (s.gnss_id == 3) {
+				visibleBds++;
+			} else if (s.gnss_id == 6) {
+				visibleGlo++;
+			}
+
+			if (s.used && s.quality >= 4) {
+				if (s.gnss_id == 0) {
+					satsGps++;
+				} else if (s.gnss_id == 2) {
+					satsGal++;
+				} else if (s.gnss_id == 3) {
+					satsBds++;
+				} else if (s.gnss_id == 6) {
+					satsGlo++;
+				}
+			}
+		}
+
+		commands_printf(
+				"         Visible   Used\n"
+				"GPS:     %02d        %02d\n"
+				"GLONASS: %02d        %02d\n"
+				"Galileo: %02d        %02d\n"
+				"BeiDou:  %02d        %02d\n"
+				"Total:   %02d        %02d\n\n",
+				visibleGps, satsGps,
+				visibleGlo, satsGlo,
+				visibleGal, satsGal,
+				visibleBds, satsBds,
+				visibleGps + visibleGlo + visibleGal + visibleBds,
+				satsGps + satsGlo + satsGal + satsBds);
+	}
+}
+
+static void ubx_decode_cfg_gnss(uint8_t *msg, int len) {
+	(void)len;
+
+	ubx_cfg_gnss cfg;
+	int ind = 0;
+
+	ubx_get_U1(msg, &ind);
+	cfg.num_ch_hw = ubx_get_U1(msg, &ind);
+	cfg.num_ch_use = ubx_get_U1(msg, &ind);
+	cfg.num_blocks = ubx_get_U1(msg, &ind);
+
+	if (cfg.num_blocks > 10) {
+		cfg.num_blocks = 10;
+	}
+
+	for (int i = 0;i < cfg.num_blocks;i++) {
+		cfg.blocks[i].gnss_id = ubx_get_U1(msg, &ind);
+		cfg.blocks[i].minTrkCh = ubx_get_U1(msg, &ind);
+		cfg.blocks[i].maxTrkCh = ubx_get_U1(msg, &ind);
+		ubx_get_U1(msg, &ind);
+		uint32_t flags = ubx_get_X4(msg, &ind);
+		cfg.blocks[i].en = flags & 1;
+		cfg.blocks[i].flags = flags >> 16 & 0xFF;
+	}
+
+	if (rx_gnss) {
+		rx_gnss(&cfg);
+	}
+
+	if (m_print_next_cfg_gnss) {
+		m_print_next_cfg_gnss = false;
+
+		commands_printf(
+				"CFG_GNSS RX\n"
+				"TrkChHw   : %d\n"
+				"TrkChUse  : %d\n"
+				"Blocks    : %d\n",
+				cfg.num_ch_hw, cfg.num_ch_use, cfg.num_blocks);
+
+		for (int i = 0;i < cfg.num_blocks;i++) {
+			commands_printf(
+					"GNSS ID: %d, Enabled: %d\n"
+					"MinTrkCh  : %d\n"
+					"MaxTrkCh  : %d\n"
+					"Flags     : %d\n",
+					cfg.blocks[i].gnss_id,
+					cfg.blocks[i].en,
+					cfg.blocks[i].minTrkCh,
+					cfg.blocks[i].maxTrkCh,
+					cfg.blocks[i].flags);
+		}
+	}
+}
+
+static void ubx_decode_mon_ver(uint8_t *msg, int len) {
+	if (m_print_next_mon_ver) {
+		m_print_next_mon_ver = false;
+
+		commands_printf(
+				"MON_VER RX:"
+				"SW: %s\n"
+				"HW: %s\n"
+				"Extensions:",
+				msg, msg + 30);
+
+		int ind = 40;
+
+		while(ind < len) {
+			commands_printf((const char*)msg + ind);
+			ind += 30;
+		}
+
+		commands_printf(" ");
 	}
 }
 
