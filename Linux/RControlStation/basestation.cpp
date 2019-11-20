@@ -54,11 +54,45 @@ BaseStation::BaseStation(QWidget *parent) :
     connect(mUblox, SIGNAL(rtcmRx(QByteArray,int)),
             this, SLOT(rtcmRx(QByteArray,int)));
 
-    on_ubxSerialRefreshButton_clicked();
+    connect(mUblox, &Ublox::rxMonVer, [this]
+            (QString sw, QString hw, QStringList extensions) {
+        QString txt = "SW: " + sw + "\nHW: " +
+                hw + "\nExtensions:\n";
 
-    // Notice that the RAW encoding and manual survey in
-    // is used to allow using M8T-receivers that do not
-    // support RTK, but are much more affordable.
+        for (QString s: extensions) {
+            txt += s + "\n";
+        }
+
+        QMessageBox::information(this, "Ublox Version",
+                                 txt.mid(0, txt.size() - 1));
+    });
+
+    connect(mUblox, &Ublox::rxCfgGnss, [this](ubx_cfg_gnss cfg) {
+        QString str = QString("TrkChHw   : %1\n"
+                              "TrkChUse  : %2\n"
+                              "Blocks    : %3\n\n").
+                arg(cfg.num_ch_hw).arg(cfg.num_ch_use).arg(cfg.num_blocks);
+
+        for (int i = 0;i < cfg.num_blocks;i++) {
+            str += QString("GNSS ID: %1, Enabled: %2\n"
+                           "MinTrkCh  : %3\n"
+                           "MaxTrkCh  : %4\n"
+                           "Flags     : %5").
+                    arg(cfg.blocks[i].gnss_id).
+                    arg(cfg.blocks[i].en).
+                    arg(cfg.blocks[i].minTrkCh).
+                    arg(cfg.blocks[i].maxTrkCh).
+                    arg(cfg.blocks[i].flags);
+
+            if (i != cfg.num_blocks - 1) {
+                str += "\n\n";
+            }
+        }
+
+        QMessageBox::information(this, "Cfg GNSS", str);
+    });
+
+    on_ubxSerialRefreshButton_clicked();
 }
 
 BaseStation::~BaseStation()
@@ -499,7 +533,7 @@ void BaseStation::on_ubxSerialConnectButton_clicked()
 
         mUblox->ubxCfgRate(rate, 1, 0);
 
-        bool encodeRaw = !isF9p;
+        bool encodeRaw = !isF9p && !ui->m8PButton->isChecked();
 
         mUblox->ubxCfgMsg(UBX_CLASS_RXM, UBX_RXM_RAWX, encodeRaw ? 1 : 0);
         mUblox->ubxCfgMsg(UBX_CLASS_RXM, UBX_RXM_SFRBX, encodeRaw ? 1 : 0);
@@ -518,7 +552,7 @@ void BaseStation::on_ubxSerialConnectButton_clicked()
         mUblox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_4072_1, encodeRaw ? 0 : 1);
 
         mUblox->ubxCfgMsg(UBX_CLASS_NAV, UBX_NAV_SAT, 1);
-        mUblox->ubxCfgMsg(UBX_CLASS_NAV, UBX_NAV_SVIN, isF9p ? 1 : 0);
+        mUblox->ubxCfgMsg(UBX_CLASS_NAV, UBX_NAV_SVIN, encodeRaw ? 0 : 1);
 
         if (isF9p) {
             unsigned char buffer[512];
@@ -528,6 +562,45 @@ void BaseStation::on_ubxSerialConnectButton_clicked()
             mUblox->ubloxCfgAppendEnableBds(buffer, &ind, true, true, true);
             mUblox->ubloxCfgAppendEnableGlo(buffer, &ind, true, true, true);
             mUblox->ubloxCfgValset(buffer, ind, true, true, true);
+        } else {
+            ubx_cfg_nmea nmea;
+            memset(&nmea, 0, sizeof(ubx_cfg_nmea));
+            nmea.nmeaVersion = 0x41;
+            nmea.numSv = 0;
+            nmea.highPrec = true;
+
+            qDebug() << "CFG NMEA:" << mUblox->ubloxCfgNmea(&nmea);
+
+            ubx_cfg_gnss gnss;
+            gnss.num_ch_hw = 32;
+            gnss.num_ch_use = 32;
+            gnss.num_blocks = 4;
+
+            gnss.blocks[0].gnss_id = UBX_GNSS_ID_GPS;
+            gnss.blocks[0].en = true;
+            gnss.blocks[0].minTrkCh = 8;
+            gnss.blocks[0].maxTrkCh = 32;
+            gnss.blocks[0].flags = UBX_CFG_GNSS_GPS_L1C;
+
+            gnss.blocks[1].gnss_id = UBX_GNSS_ID_GLONASS;
+            gnss.blocks[1].en = true;
+            gnss.blocks[1].minTrkCh = 8;
+            gnss.blocks[1].maxTrkCh = 32;
+            gnss.blocks[1].flags = UBX_CFG_GNSS_GLO_L1;
+
+            gnss.blocks[2].gnss_id = UBX_GNSS_ID_BEIDOU;
+            gnss.blocks[2].en = false;
+            gnss.blocks[2].minTrkCh = 8;
+            gnss.blocks[2].maxTrkCh = 16;
+            gnss.blocks[2].flags = UBX_CFG_GNSS_BDS_B1L;
+
+            gnss.blocks[3].gnss_id = UBX_GNSS_ID_GALILEO;
+            gnss.blocks[3].en = true;
+            gnss.blocks[3].minTrkCh = 8;
+            gnss.blocks[3].maxTrkCh = 10;
+            gnss.blocks[3].flags = UBX_CFG_GNSS_GAL_E1;
+
+            qDebug() << "CFG GNSS:" << mUblox->ubloxCfgGnss(&gnss);
         }
 
         ubx_cfg_tmode3 cfg_mode;
@@ -608,4 +681,14 @@ void BaseStation::on_tcpServerBox_toggled(bool checked)
     } else {
         mTcpServer->stopServer();
     }
+}
+
+void BaseStation::on_readVersionButton_clicked()
+{
+    mUblox->ubxPoll(UBX_CLASS_MON, UBX_MON_VER);
+}
+
+void BaseStation::on_gnssInfoButton_clicked()
+{
+    mUblox->ubxPoll(UBX_CLASS_CFG, UBX_CFG_GNSS);
 }

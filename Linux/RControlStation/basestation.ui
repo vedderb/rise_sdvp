@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>738</width>
-    <height>532</height>
+    <height>536</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -81,10 +81,17 @@
             <item>
              <widget class="QRadioButton" name="m8Button">
               <property name="text">
-               <string>M8T/P</string>
+               <string>M8T</string>
               </property>
               <property name="checked">
                <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QRadioButton" name="m8PButton">
+              <property name="text">
+               <string>M8P</string>
               </property>
              </widget>
             </item>
@@ -173,6 +180,20 @@
                </size>
               </property>
              </spacer>
+            </item>
+            <item>
+             <widget class="QPushButton" name="gnssInfoButton">
+              <property name="text">
+               <string>GNSS Info</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="readVersionButton">
+              <property name="text">
+               <string>Read Version</string>
+              </property>
+             </widget>
             </item>
             <item>
              <widget class="QComboBox" name="rateBox">

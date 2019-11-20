@@ -800,6 +800,85 @@ typedef struct {
     uint8_t syncMode;
 } ubx_cfg_tp5;
 
+typedef struct {
+    uint8_t gnss_id;
+    uint8_t minTrkCh;
+    uint8_t maxTrkCh;
+    bool en;
+    uint32_t flags;
+} ubx_cfg_gnss_block;
+
+typedef struct {
+    uint8_t num_ch_hw;
+    uint8_t num_ch_use;
+    ubx_cfg_gnss_block blocks[10];
+    int num_blocks;
+} ubx_cfg_gnss;
+
+typedef struct {
+    // Filter
+    bool posFilt; // Enable position output for failed or invalid fixes
+    bool mskPosFilt; // Enable position output for invalid fixes
+    bool timeFilt; // Enable time output for invalid times
+    bool dateFilt; // Enable date output for invalid dates
+    bool gpsOnlyFilt; // Restrict output to GPS satellites only
+    bool trackFilt; // Enable COG output even if COG is frozen
+
+    // Flags
+    // enable compatibility mode. This might be needed for certain
+    // applications when customer's NMEA parser expects a fixed number of digits in position coordinates
+    bool compat;
+    bool consider; // enable considering mode.
+    bool limit82; // enable strict limit to 82 characters maximum.
+    bool highPrec; // enable high precision mode.
+
+    // Disable GNSS
+    bool disableGps; // Disable reporting of GPS satellites
+    bool disableSbas; // Disable reporting of SBAS satellites
+    bool disableQzss; // Disable reporting of QZSS satellites
+    bool disableGlonass; // Disable reporting of GLONASS satellites
+    bool disableBeidou; // Disable reporting of BeiDou satellites
+
+    uint8_t nmeaVersion; // 0x41: 4.10, 0x40: 4.0, 0x23: 2.3, 0x21: 2.1
+
+    // Maximum Number of SVs to report per
+    // TalkerId.
+    // 0: unlimited
+    // 8: 8 SVs
+    // 12: 12 SVs
+    // 16: 16 SVs
+    uint8_t numSv;
+
+    // Configures the display of satellites that do
+    // not have an NMEA-defined value.
+    // 0: Strict - Satellites are not output
+    // 1: Extended - Use proprietary numbering
+    uint8_t svNumbering;
+
+    // This field enables the main Talker ID to be overridden.
+    // 0: Main Talker ID is not overridden
+    // 1: Set main Talker ID to 'GP'
+    // 2: Set main Talker ID to 'GL'
+    // 3: Set main Talker ID to 'GN'
+    // 4: Set main Talker ID to 'GA'
+    // 5: Set main Talker ID to 'GB'
+    uint8_t mainTalkerId;
+
+    // By default the Talker ID for GSV messages
+    // is GNSS specific (as defined by NMEA).
+    // This field enables the GSV Talker ID to be
+    // overridden.
+    // 0: Use GNSS specific Talker ID (as defined by NMEA)
+    // 1: Use the main Talker ID
+    uint8_t gsvTalkerId;
+
+    // Sets the two characters that should be
+    // used for the BeiDou Talker ID
+    // If these are set to zero, the default BeiDou
+    // TalkerId will be used
+    char bdsTalkerId[2];
+} ubx_cfg_nmea;
+
 // RtRange
 
 typedef struct {

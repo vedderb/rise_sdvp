@@ -55,6 +55,10 @@ private slots:
     void on_ubxSerialConnectButton_clicked();
     void on_tcpServerBox_toggled(bool checked);
 
+    void on_readVersionButton_clicked();
+
+    void on_gnssInfoButton_clicked();
+
 private:
     Ui::BaseStation *ui;
     QTimer *mTimer;

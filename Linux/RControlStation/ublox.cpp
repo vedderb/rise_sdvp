@@ -604,6 +604,82 @@ bool Ublox::ubloxCfgTp5(ubx_cfg_tp5 *cfg)
     return ubx_encode_send(UBX_CLASS_CFG, UBX_CFG_TP5, buffer, ind, 10);
 }
 
+bool Ublox::ubloxCfgGnss(ubx_cfg_gnss *gnss)
+{
+    if (gnss->num_blocks > 10) {
+        return false;
+    }
+
+    uint8_t buffer[4 + 8 * gnss->num_blocks];
+    int ind = 0;
+
+    ubx_put_U1(buffer, &ind, 0);
+    ubx_put_U1(buffer, &ind, gnss->num_ch_hw);
+    ubx_put_U1(buffer, &ind, gnss->num_ch_use);
+    ubx_put_U1(buffer, &ind, gnss->num_blocks);
+
+    for (int i = 0;i < gnss->num_blocks;i++) {
+        ubx_put_U1(buffer, &ind, gnss->blocks[i].gnss_id);
+        ubx_put_U1(buffer, &ind, gnss->blocks[i].minTrkCh);
+        ubx_put_U1(buffer, &ind, gnss->blocks[i].maxTrkCh);
+        ubx_put_U1(buffer, &ind, 0);
+        uint32_t flags = gnss->blocks[i].en ? 1 : 0;
+        flags |= gnss->blocks[i].flags << 16;
+        ubx_put_X4(buffer, &ind, flags);
+    }
+
+    return ubx_encode_send(UBX_CLASS_CFG, UBX_CFG_GNSS, buffer, ind, 100);
+}
+
+bool Ublox::ubloxCfgNmea(ubx_cfg_nmea *nmea)
+{
+    uint8_t buffer[20];
+    int ind = 0;
+
+    uint8_t filter = 0;
+    filter |= (nmea->posFilt ? 1 : 0) << 0;
+    filter |= (nmea->mskPosFilt ? 1 : 0) << 1;
+    filter |= (nmea->timeFilt ? 1 : 0) << 2;
+    filter |= (nmea->dateFilt ? 1 : 0) << 3;
+    filter |= (nmea->gpsOnlyFilt ? 1 : 0) << 4;
+    filter |= (nmea->trackFilt ? 1 : 0) << 5;
+    ubx_put_X1(buffer, &ind, filter);
+
+    ubx_put_U1(buffer, &ind, nmea->nmeaVersion);
+    ubx_put_U1(buffer, &ind, nmea->numSv);
+
+    uint8_t flags = 0;
+    flags |= (nmea->compat ? 1 : 0) << 0;
+    flags |= (nmea->consider ? 1 : 0) << 1;
+    flags |= (nmea->limit82 ? 1 : 0) << 2;
+    flags |= (nmea->highPrec ? 1 : 0) << 3;
+    ubx_put_X1(buffer, &ind, flags);
+
+    uint32_t gnss_filter = 0;
+    gnss_filter |= (nmea->disableGps ? 1 : 0) << 0;
+    gnss_filter |= (nmea->disableSbas ? 1 : 0) << 1;
+    gnss_filter |= (nmea->disableQzss ? 1 : 0) << 4;
+    gnss_filter |= (nmea->disableGlonass ? 1 : 0) << 5;
+    gnss_filter |= (nmea->disableBeidou ? 1 : 0) << 6;
+    ubx_put_X4(buffer, &ind, gnss_filter);
+
+    ubx_put_U1(buffer, &ind, nmea->svNumbering);
+    ubx_put_U1(buffer, &ind, nmea->mainTalkerId);
+    ubx_put_U1(buffer, &ind, nmea->gsvTalkerId);
+    ubx_put_U1(buffer, &ind, 1);
+    ubx_put_I1(buffer, &ind, nmea->bdsTalkerId[0]);
+    ubx_put_I1(buffer, &ind, nmea->bdsTalkerId[1]);
+
+    ubx_put_U1(buffer, &ind, 0);
+    ubx_put_U1(buffer, &ind, 0);
+    ubx_put_U1(buffer, &ind, 0);
+    ubx_put_U1(buffer, &ind, 0);
+    ubx_put_U1(buffer, &ind, 0);
+    ubx_put_U1(buffer, &ind, 0);
+
+    return ubx_encode_send(UBX_CLASS_CFG, UBX_CFG_NMEA, buffer, ind, 100);
+}
+
 bool Ublox::ubloxCfgValset(unsigned char *values, int len,
                            bool ram, bool bbr, bool flash)
 {
@@ -922,6 +998,26 @@ void Ublox::ubx_decode(uint8_t msg_class, uint8_t id, uint8_t *msg, int len)
         }
     } break;
 
+    case UBX_CLASS_CFG: {
+        switch (id) {
+        case UBX_CFG_GNSS:
+            ubx_decode_cfg_gnss(msg, len);
+            break;
+        default:
+            break;
+        }
+    } break;
+
+    case UBX_CLASS_MON: {
+        switch (id) {
+        case UBX_MON_VER:
+            ubx_decode_mon_ver(msg, len);
+            break;
+        default:
+            break;
+        }
+    } break;
+
     default:
         break;
     }
@@ -1110,4 +1206,52 @@ void Ublox::ubx_decode_nav_sat(uint8_t *msg, int len)
     }
 
     emit rxNavSat(sat);
+}
+
+void Ublox::ubx_decode_cfg_gnss(uint8_t *msg, int len)
+{
+    (void)len;
+
+    ubx_cfg_gnss cfg;
+    int ind = 0;
+
+    ubx_get_U1(msg, &ind);
+    cfg.num_ch_hw = ubx_get_U1(msg, &ind);
+    cfg.num_ch_use = ubx_get_U1(msg, &ind);
+    cfg.num_blocks = ubx_get_U1(msg, &ind);
+
+    if (cfg.num_blocks > 10) {
+        cfg.num_blocks = 10;
+    }
+
+    for (int i = 0;i < cfg.num_blocks;i++) {
+        cfg.blocks[i].gnss_id = ubx_get_U1(msg, &ind);
+        cfg.blocks[i].minTrkCh = ubx_get_U1(msg, &ind);
+        cfg.blocks[i].maxTrkCh = ubx_get_U1(msg, &ind);
+        ubx_get_U1(msg, &ind);
+        uint32_t flags = ubx_get_X4(msg, &ind);
+        cfg.blocks[i].en = flags & 1;
+        cfg.blocks[i].flags = flags >> 16 & 0xFF;
+    }
+
+    emit rxCfgGnss(cfg);
+}
+
+void Ublox::ubx_decode_mon_ver(uint8_t *msg, int len)
+{
+    QString sw, hw;
+    QStringList extensions;
+
+    int ind = 0;
+    sw = QString::fromLocal8Bit((const char*)msg + ind);
+    ind += 30;
+    hw = QString::fromLocal8Bit((const char*)msg + ind);
+    ind += 10;
+
+    while (ind < len) {
+        extensions.append(QString::fromLocal8Bit((const char*)msg + ind));
+        ind += 30;
+    }
+
+    emit rxMonVer(sw, hw, extensions);
 }

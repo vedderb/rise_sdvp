@@ -44,6 +44,8 @@ public:
     bool ubloxCfgCfg(ubx_cfg_cfg *cfg);
     bool ubxCfgNav5(ubx_cfg_nav5 *cfg);
     bool ubloxCfgTp5(ubx_cfg_tp5 *cfg);
+    bool ubloxCfgGnss(ubx_cfg_gnss *gnss);
+    bool ubloxCfgNmea(ubx_cfg_nmea *nmea);
     bool ubloxCfgValset(unsigned char *values, int len,
                         bool ram, bool bbr, bool flash);
 
@@ -65,6 +67,8 @@ signals:
     void rxNak(uint8_t cls_id, uint8_t msg_id);
     void rxRawx(ubx_rxm_rawx rawx);
     void rxNavSat(ubx_nav_sat sat);
+    void rxCfgGnss(ubx_cfg_gnss gnss);
+    void rxMonVer(QString sw, QString hw, QStringList extensions);
     void ubxRx(const QByteArray &data);
     void rtcmRx(QByteArray data, int type);
 
@@ -104,6 +108,8 @@ private:
     void ubx_decode_nak(uint8_t *msg, int len);
     void ubx_decode_rawx(uint8_t *msg, int len);
     void ubx_decode_nav_sat(uint8_t *msg, int len);
+    void ubx_decode_cfg_gnss(uint8_t *msg, int len);
+    void ubx_decode_mon_ver(uint8_t *msg, int len);
 };
 
 // Message classes
@@ -112,8 +118,8 @@ private:
 #define UBX_CLASS_INF					0x04
 #define UBX_CLASS_ACK					0x05
 #define UBX_CLASS_CFG					0x06
-#define UBX_CLASS_UPD					0x06
-#define UBX_CLASS_MON					0x09
+#define UBX_CLASS_UPD					0x09
+#define UBX_CLASS_MON					0x0A
 #define UBX_CLASS_AID					0x0B
 #define UBX_CLASS_TIM					0x0D
 #define UBX_CLASS_ESF					0x10
@@ -146,9 +152,14 @@ private:
 #define UBX_CFG_NAV5					0x24
 #define UBX_CFG_TP5						0x31
 #define UBX_CFG_TMODE3					0x71
+#define UBX_CFG_GNSS                    0x3E
+#define UBX_CFG_NMEA                    0x17
 #define UBX_CFG_VALSET                  0x8A
 #define UBX_CFG_VALGET                  0x8B
 #define UBX_CFG_VALDEL                  0x8C
+
+// Monitoring messages
+#define UBX_MON_VER                     0x04
 
 // Configuration Keys
 #define CFG_SIGNAL_GPS_ENA              0x1031001F // GPS enable
@@ -178,6 +189,31 @@ private:
 #define UBX_RTCM3_4072_0				0xFE // Reference station PVT (u-blox proprietary RTCM Message)
 #define UBX_RTCM3_4072_1				0xFD // Additional reference station information (u-blox proprietary RTCM Message)
 
+// GNSS IDs
+#define UBX_GNSS_ID_GPS                 0
+#define UBX_GNSS_ID_SBAS                1
+#define UBX_GNSS_ID_GALILEO             2
+#define UBX_GNSS_ID_BEIDOU              3
+#define UBX_GNSS_ID_IMES                4
+#define UBX_GNSS_ID_QZSS                5
+#define UBX_GNSS_ID_GLONASS             6
+#define UBX_GNSS_ID_IRNSS               7
+
+// CFG_GNSS flags
+#define UBX_CFG_GNSS_GPS_L1C            0x01
+#define UBX_CFG_GNSS_GPS_L2C            0x10
+#define UBX_CFG_GNSS_SBAS_L1C           0x01
+#define UBX_CFG_GNSS_GAL_E1             0x01
+#define UBX_CFG_GNSS_GAL_E5B            0x20
+#define UBX_CFG_GNSS_BDS_B1L            0x01
+#define UBX_CFG_GNSS_BDS_B2L            0x10
+#define UBX_CFG_GNSS_IMES_L1            0x01
+#define UBX_CFG_GNSS_QZSS_L1C           0x01
+#define UBX_CFG_GNSS_QZSS_L1S           0x04
+#define UBX_CFG_GNSS_QZSS_L2C           0x10
+#define UBX_CFG_GNSS_GLO_L1             0x01
+#define UBX_CFG_GNSS_GLO_L2             0x10
+#define UBX_CFG_GNSS_IRNSS_L5A          0x01
 
 // NMEA messages
 #define UBX_NMEA_GGA                    0x00
