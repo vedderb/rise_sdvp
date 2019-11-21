@@ -70,7 +70,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     mVersion = "0.8";
-    mSupportedFirmwares.append(qMakePair(12, 1));
+    mSupportedFirmwares.append(qMakePair(12, 2));
 
     qRegisterMetaType<LocPoint>("LocPoint");
 

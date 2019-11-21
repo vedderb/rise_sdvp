@@ -102,6 +102,8 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 	conf->gps_use_ubx_info = true;
 	conf->gps_ubx_max_acc = 0.12;
 
+	conf->uwb_max_corr = 0.1;
+
 	conf->ap_repeat_routes = true;
 	conf->ap_base_rad = 0.8;
 	conf->ap_rad_time_ahead = 0.8;

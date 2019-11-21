@@ -278,6 +278,8 @@ void PacketInterface::processPacket(const unsigned char *data, int len)
         conf.gps_use_ubx_info = data[ind++];
         conf.gps_ubx_max_acc = utility::buffer_get_double32_auto(data, &ind);
 
+        conf.uwb_max_corr = utility::buffer_get_double32_auto(data, &ind);
+
         conf.ap_repeat_routes = data[ind++];
         conf.ap_base_rad = utility::buffer_get_double32_auto(data, &ind);
         conf.ap_rad_time_ahead = utility::buffer_get_double32_auto(data, &ind);
@@ -860,6 +862,8 @@ bool PacketInterface::setConfiguration(quint8 id, MAIN_CONFIG &conf, int retries
     mSendBuffer[send_index++] = conf.gps_send_nmea;
     mSendBuffer[send_index++] = conf.gps_use_ubx_info;
     utility::buffer_append_double32_auto(mSendBuffer, conf.gps_ubx_max_acc, &send_index);
+
+    utility::buffer_append_double32_auto(mSendBuffer, conf.uwb_max_corr, &send_index);
 
     mSendBuffer[send_index++] = conf.ap_repeat_routes;
     utility::buffer_append_double32_auto(mSendBuffer, conf.ap_base_rad, &send_index);

@@ -63,6 +63,8 @@ void ConfCommonWidget::getConfGui(MAIN_CONFIG &conf)
     conf.gps_use_ubx_info = ui->confGpsUbxUseInfoBox->isChecked();
     conf.gps_ubx_max_acc = ui->confGpsUbxMaxAccBox->value();
 
+    conf.uwb_max_corr = ui->confUwbMaxCorrBox->value();
+
     conf.ap_repeat_routes = ui->confApRepeatBox->isChecked();
     conf.ap_base_rad = ui->confApBaseRadBox->value();
     conf.ap_rad_time_ahead = ui->confApRadTimeBox->value();
@@ -124,6 +126,8 @@ void ConfCommonWidget::setConfGui(const MAIN_CONFIG &conf)
     ui->confGpsSendNmeaBox->setChecked(conf.gps_send_nmea);
     ui->confGpsUbxUseInfoBox->setChecked(conf.gps_use_ubx_info);
     ui->confGpsUbxMaxAccBox->setValue(conf.gps_ubx_max_acc);
+
+    ui->confUwbMaxCorrBox->setValue(conf.uwb_max_corr);
 
     ui->confApRepeatBox->setChecked(conf.ap_repeat_routes);
     ui->confApBaseRadBox->setValue(conf.ap_base_rad);

@@ -1,3 +1,7 @@
+=== FW 12.2 ===
+* Added uwb_max_corr to config.
+* Added mode ublox debug code and prepared for F9P.
+
 === FW 12.1 ===
 * Removed obsolete code.
 

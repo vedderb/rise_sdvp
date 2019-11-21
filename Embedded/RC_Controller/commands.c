@@ -497,6 +497,8 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			main_config.gps_use_ubx_info = data[ind++];
 			main_config.gps_ubx_max_acc = buffer_get_float32_auto(data, &ind);
 
+			main_config.uwb_max_corr = buffer_get_float32_auto(data, &ind);
+
 			main_config.ap_repeat_routes = data[ind++];
 			main_config.ap_base_rad = buffer_get_float32_auto(data, &ind);
 			main_config.ap_rad_time_ahead = buffer_get_float32_auto(data, &ind);
@@ -650,6 +652,8 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			m_send_buffer[send_index++] = main_cfg_tmp.gps_send_nmea;
 			m_send_buffer[send_index++] = main_cfg_tmp.gps_use_ubx_info;
 			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.gps_ubx_max_acc, &send_index);
+
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.uwb_max_corr, &send_index);
 
 			m_send_buffer[send_index++] = main_cfg_tmp.ap_repeat_routes;
 			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.ap_base_rad, &send_index);

@@ -226,7 +226,7 @@ static void dw_range(uint8_t id, uint8_t dest, float range) {
 		float vuwb_y = (a->py - py) / d_estimated;
 		float diff = d_estimated - a->dist_last;
 
-		if (fabsf(diff) < 0.2){
+		if (fabsf(diff) < main_config.uwb_max_corr){
 			c = diff;
 		} else{
 			c = 0.2 * diff / fabsf(diff);

@@ -293,6 +293,9 @@ typedef struct {
     bool gps_use_ubx_info; // Use info about the ublox solution
     float gps_ubx_max_acc; // Maximum ublox accuracy to use solution (m, higher = worse)
 
+    // UWB
+    float uwb_max_corr; // Maximum distance to move UWB position in one sample
+
     // Autopilot parameters
     bool ap_repeat_routes; // Repeat the same route when the end is reached
     float ap_base_rad; // Smallest allowed radius around car
@@ -542,6 +545,25 @@ typedef struct {
 } ubx_nav_sol;
 
 typedef struct {
+    uint8_t gnss_id; // 0: GPS, 1: SBAS, 2: GAL, 3: BDS, 5: QZSS, 6: GLO
+    uint8_t sv_id;
+    uint8_t cno; // Carrier to noise ratio (signal strength)
+    int8_t elev; // Elevation (range: +/-90), unknown if out of range
+    int16_t azim; // Azimuth (range 0-360), unknown if elevation is out of range
+    float pr_res; // Pseudorange residual
+    uint8_t quality; // 0: no signal, 1: searching, 2: aquired, 3: unusable, 4: locked, 5-7: carrier, code and time locked
+    bool used;
+    uint8_t health; // 0: unknown, 1: healthy, 2: unhealthy
+    bool diffcorr; // Differential correction available
+} ubx_nav_sat_info;
+
+typedef struct {
+    uint32_t i_tow_ms; // GPS time of week of the navigation epoch.
+    uint8_t num_sv; // Number of satellites.
+    ubx_nav_sat_info sats[128];
+} ubx_nav_sat;
+
+typedef struct {
     double pr_mes;
     double cp_mes;
     float do_mes;
@@ -780,6 +802,85 @@ typedef struct {
      */
     uint8_t syncMode;
 } ubx_cfg_tp5;
+
+typedef struct {
+    uint8_t gnss_id;
+    uint8_t minTrkCh;
+    uint8_t maxTrkCh;
+    bool en;
+    uint32_t flags;
+} ubx_cfg_gnss_block;
+
+typedef struct {
+    uint8_t num_ch_hw;
+    uint8_t num_ch_use;
+    ubx_cfg_gnss_block blocks[10];
+    int num_blocks;
+} ubx_cfg_gnss;
+
+typedef struct {
+    // Filter
+    bool posFilt; // Enable position output for failed or invalid fixes
+    bool mskPosFilt; // Enable position output for invalid fixes
+    bool timeFilt; // Enable time output for invalid times
+    bool dateFilt; // Enable date output for invalid dates
+    bool gpsOnlyFilt; // Restrict output to GPS satellites only
+    bool trackFilt; // Enable COG output even if COG is frozen
+
+    // Flags
+    // enable compatibility mode. This might be needed for certain
+    // applications when customer's NMEA parser expects a fixed number of digits in position coordinates
+    bool compat;
+    bool consider; // enable considering mode.
+    bool limit82; // enable strict limit to 82 characters maximum.
+    bool highPrec; // enable high precision mode.
+
+    // Disable GNSS
+    bool disableGps; // Disable reporting of GPS satellites
+    bool disableSbas; // Disable reporting of SBAS satellites
+    bool disableQzss; // Disable reporting of QZSS satellites
+    bool disableGlonass; // Disable reporting of GLONASS satellites
+    bool disableBeidou; // Disable reporting of BeiDou satellites
+
+    uint8_t nmeaVersion; // 0x41: 4.10, 0x40: 4.0, 0x23: 2.3, 0x21: 2.1
+
+    // Maximum Number of SVs to report per
+    // TalkerId.
+    // 0: unlimited
+    // 8: 8 SVs
+    // 12: 12 SVs
+    // 16: 16 SVs
+    uint8_t numSv;
+
+    // Configures the display of satellites that do
+    // not have an NMEA-defined value.
+    // 0: Strict - Satellites are not output
+    // 1: Extended - Use proprietary numbering
+    uint8_t svNumbering;
+
+    // This field enables the main Talker ID to be overridden.
+    // 0: Main Talker ID is not overridden
+    // 1: Set main Talker ID to 'GP'
+    // 2: Set main Talker ID to 'GL'
+    // 3: Set main Talker ID to 'GN'
+    // 4: Set main Talker ID to 'GA'
+    // 5: Set main Talker ID to 'GB'
+    uint8_t mainTalkerId;
+
+    // By default the Talker ID for GSV messages
+    // is GNSS specific (as defined by NMEA).
+    // This field enables the GSV Talker ID to be
+    // overridden.
+    // 0: Use GNSS specific Talker ID (as defined by NMEA)
+    // 1: Use the main Talker ID
+    uint8_t gsvTalkerId;
+
+    // Sets the two characters that should be
+    // used for the BeiDou Talker ID
+    // If these are set to zero, the default BeiDou
+    // TalkerId will be used
+    char bdsTalkerId[2];
+} ubx_cfg_nmea;
 
 // RtRange
 

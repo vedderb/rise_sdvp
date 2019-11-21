@@ -335,6 +335,9 @@ typedef struct {
 	bool gps_use_ubx_info; // Use info about the ublox solution
 	float gps_ubx_max_acc; // Maximum ublox accuracy to use solution (m, higher = worse)
 
+	// UWB Parameters
+	float uwb_max_corr; // Maximum distance to move UWB position in one sample
+
 	// Autopilot parameters
 	bool ap_repeat_routes; // Repeat the same route when the end is reached
 	float ap_base_rad; // Smallest allowed radius around car
