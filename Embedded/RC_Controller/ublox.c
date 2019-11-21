@@ -1605,7 +1605,7 @@ static void ubx_decode_mon_ver(uint8_t *msg, int len) {
 		m_print_next_mon_ver = false;
 
 		commands_printf(
-				"MON_VER RX:"
+				"MON_VER RX:\n"
 				"SW: %s\n"
 				"HW: %s\n"
 				"Extensions:",

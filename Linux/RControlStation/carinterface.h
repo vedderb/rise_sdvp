@@ -116,6 +116,11 @@ private slots:
     void on_ubxSolButton_clicked();
     void on_ubxRelPosNedButton_clicked();
     void on_ubxCfgGnssButton_clicked();
+    void on_uwbResetPosButton_clicked();
+    void on_uwbUptimeButton_clicked();
+    void on_zeroGyroButton_clicked();
+    void on_uwbRebootButton_clicked();
+    void on_uwbListAnchorsButton_clicked();
 
 private:
     typedef struct {

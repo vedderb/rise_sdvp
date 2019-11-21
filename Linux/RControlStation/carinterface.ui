@@ -150,15 +150,172 @@
         <attribute name="toolTip">
          <string>Terminal</string>
         </attribute>
-        <layout class="QVBoxLayout" name="verticalLayout_3">
+        <layout class="QVBoxLayout" name="verticalLayout_10">
          <item>
-          <widget class="QTextBrowser" name="terminalBrowser">
-           <property name="font">
-            <font>
-             <family>Monospace</family>
-            </font>
-           </property>
-          </widget>
+          <layout class="QHBoxLayout" name="horizontalLayout_3">
+           <item>
+            <widget class="QTextBrowser" name="terminalBrowser">
+             <property name="font">
+              <font>
+               <family>Monospace</family>
+              </font>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <layout class="QVBoxLayout" name="verticalLayout_3">
+             <property name="spacing">
+              <number>2</number>
+             </property>
+             <item>
+              <widget class="QLabel" name="label_8">
+               <property name="font">
+                <font>
+                 <weight>75</weight>
+                 <bold>true</bold>
+                </font>
+               </property>
+               <property name="text">
+                <string>Car</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="zeroGyroButton">
+               <property name="toolTip">
+                <string>Zero gyro on car. Before doing this, make sure that the car is standing still.</string>
+               </property>
+               <property name="text">
+                <string>Zero Gyro</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label">
+               <property name="font">
+                <font>
+                 <weight>75</weight>
+                 <bold>true</bold>
+                </font>
+               </property>
+               <property name="text">
+                <string>Ublox</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="ubxVersionButton">
+               <property name="text">
+                <string>Version</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="ubxNavSatButton">
+               <property name="text">
+                <string>NAV_SAT</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="ubxSolButton">
+               <property name="text">
+                <string>SOL</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="ubxRelPosNedButton">
+               <property name="text">
+                <string>RELPOSNED</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="ubxCfgGnssButton">
+               <property name="text">
+                <string>CFG_GNSS</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_5">
+               <property name="font">
+                <font>
+                 <weight>75</weight>
+                 <bold>true</bold>
+                </font>
+               </property>
+               <property name="text">
+                <string>UWB</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="uwbListAnchorsButton">
+               <property name="toolTip">
+                <string>List UWB anchors.</string>
+               </property>
+               <property name="text">
+                <string>List Anchors</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="uwbResetPosButton">
+               <property name="toolTip">
+                <string>Set UWB position to RTK position.</string>
+               </property>
+               <property name="text">
+                <string>Reset Pos</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="uwbUptimeButton">
+               <property name="toolTip">
+                <string>Print how long the UWB module has been running.</string>
+               </property>
+               <property name="text">
+                <string>Uptime</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="uwbRebootButton">
+               <property name="toolTip">
+                <string>Reboot the UWB module.</string>
+               </property>
+               <property name="text">
+                <string>Reboot</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="verticalSpacer_2">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>40</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+          </layout>
          </item>
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_12">
@@ -217,68 +374,6 @@
                <normaloff>:/models/Icons/Send File-96.png</normaloff>:/models/Icons/Send File-96.png</iconset>
              </property>
             </widget>
-           </item>
-          </layout>
-         </item>
-         <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_3">
-           <property name="spacing">
-            <number>2</number>
-           </property>
-           <item>
-            <widget class="QLabel" name="label">
-             <property name="text">
-              <string>Ublox</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="ubxVersionButton">
-             <property name="text">
-              <string>Version</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="ubxNavSatButton">
-             <property name="text">
-              <string>NAV_SAT</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="ubxSolButton">
-             <property name="text">
-              <string>SOL</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="ubxRelPosNedButton">
-             <property name="text">
-              <string>RELPOSNED</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="ubxCfgGnssButton">
-             <property name="text">
-              <string>CFG_GNSS</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <spacer name="horizontalSpacer_4">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>40</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
            </item>
           </layout>
          </item>
