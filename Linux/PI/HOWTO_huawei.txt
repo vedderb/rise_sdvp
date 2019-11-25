@@ -1,0 +1,8 @@
+To put the huawei E3372 in hilink mode (web gui on 192.168.8.1), open
+
+/etc/usb_modeswitch.conf
+
+and set
+
+DisableMBIMGlobal=1
+

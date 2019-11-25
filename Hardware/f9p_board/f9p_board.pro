@@ -1,4 +1,4 @@
-update=ons 23 okt 2019 14:07:36
+update=sön 24 nov 2019 18:39:12
 version=1
 last_client=kicad
 [general]
@@ -16,7 +16,7 @@ LibDir=
 version=1
 PageLayoutDescrFile=
 LastNetListRead=
-LastSTEPExportPath=
+LastSTEPExportPath=f9p_board.step
 LastIDFExportPath=
 LastVRMLExportPath=
 LastSpecctraDSNExportPath=
@@ -74,7 +74,7 @@ OthersTextUpright=1
 SolderMaskClearance=0.01
 SolderMaskMinWidth=0.025
 SolderPasteClearance=0
-SolderPasteRatio=-0
+SolderPasteRatio=0
 [pcbnew/Layer.F.Cu]
 Name=F.Cu
 Type=0

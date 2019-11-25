@@ -17,7 +17,7 @@ FWPATH="Embedded/RC_Controller/precompiled"
 
 cd $DIR
 
-git pull
+#git pull
 
 cd $FWPATH
 

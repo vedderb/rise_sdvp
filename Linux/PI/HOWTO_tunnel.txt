@@ -1,6 +1,6 @@
 == On the pi ==
 
-ssh-kegen
+ssh-keygen
 cat ~/.ssh/id_rsa.pub
 
 ** this is the key to put on the server

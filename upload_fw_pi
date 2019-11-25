@@ -33,7 +33,7 @@ fi
 
 cd $DIR
 
-git pull
+#git pull
 
 cd $FWPATH
 
