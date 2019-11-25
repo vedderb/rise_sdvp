@@ -15,11 +15,27 @@ fi
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 FWPATH="Embedded/RC_Controller/precompiled"
 
+CFG=$DIR/oo_rpi3.cfg
+
+PI_VERSION=""
+while IFS= read -r -d '' substring || [[ $substring ]]; do
+    PI_VERSION+="$substring"
+done </proc/device-tree/model
+
+
+if [[ $PI_VERSION == 'Raspberry Pi 4'* ]]; then
+    CFG=$DIR/oo_rpi4.cfg
+fi
+
+#echo $CFG
+#echo $PI_VERSION
+#exit
+
 cd $DIR
 
 git pull
 
 cd $FWPATH
 
-sudo openocd -f interface/raspberrypi2-native.cfg -c "transport select swd" -c "set CHIPNAME stm32f4x" -f "target/stm32f4x.cfg" -c "reset_config  srst_nogate" -c "adapter_nsrst_delay 100" -c "adapter_nsrst_assert_width 100" -c "bcm2835gpio_swd_nums 25 24" -c "program $FW verify reset exit 0x08000000"
+sudo openocd -f $CFG -c "transport select swd" -c "set CHIPNAME stm32f4x" -f "target/stm32f4x.cfg" -c "reset_config  srst_nogate" -c "adapter_nsrst_delay 100" -c "adapter_nsrst_assert_width 100" -c "program $FW verify reset exit 0x08000000"
 
