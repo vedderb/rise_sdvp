@@ -8,7 +8,7 @@ if [[ $1 == @(vcc|tero|rise_ubx|drangen|rise_f9) ]]; then
 else
     echo No valid firmware specified. Please use
     echo ./upload_fw [fw]
-    echo where [fw] can be vcc, tero, rise_ubx or drangen
+    echo where [fw] can be vcc, tero, rise_ubx, rise_f9 or drangen
     exit 1
 fi
 
