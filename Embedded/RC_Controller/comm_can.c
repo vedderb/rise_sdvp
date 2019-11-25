@@ -84,8 +84,8 @@ void comm_can_init(void) {
 	chMtxObjectInit(&can_mtx);
 	chMtxObjectInit(&vesc_mtx_ext);
 
-	palSetPadMode(GPIOD, 0, PAL_MODE_ALTERNATE(GPIO_AF_CAN1));
-	palSetPadMode(GPIOD, 1, PAL_MODE_ALTERNATE(GPIO_AF_CAN1));
+	palSetPadMode(CAN1_RX_GPIO, CAN1_RX_PIN, PAL_MODE_ALTERNATE(GPIO_AF_CAN1));
+	palSetPadMode(CAN1_TX_GPIO, CAN1_TX_PIN, PAL_MODE_ALTERNATE(GPIO_AF_CAN1));
 
 	canStart(&CANDx, &cancfg);
 

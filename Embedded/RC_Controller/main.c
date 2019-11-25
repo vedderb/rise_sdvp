@@ -51,12 +51,14 @@
 #include "pos_uwb.h"
 #include "fi.h"
 #include "hydraulic.h"
+#include "timer.h"
 
 /*
  * Timers used:
  * TIM6: Pos
  * TIM3: servo_simple and pwm_esc
  * TIM9: pwm_esc
+ * TIM5: timer.c
  *
  * DMA/Stream	Device		Usage
  * 2, 4			ADC1		adconv
@@ -81,6 +83,7 @@ int main(void) {
 	halInit();
 	chSysInit();
 
+	timer_init();
 	led_init();
 	ext_cb_init();
 
@@ -111,11 +114,17 @@ int main(void) {
 #endif
 
 	comm_usb_init();
+
+#if HAS_CC2520
 	comm_cc2520_init();
+#endif
+#if HAS_CC1120
 	comm_cc1120_init();
+#endif
+
 	commands_init();
 
-#if MAIN_MODE_IS_VEHICLE
+#if MAIN_MODE_IS_VEHICLE && HAS_CC2520
 	commands_set_send_func(comm_cc2520_send_buffer);
 #endif
 

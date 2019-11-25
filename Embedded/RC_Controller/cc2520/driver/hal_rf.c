@@ -101,7 +101,7 @@ static const menuItem_t pPowerSettings[] = {
 #endif
 
 static THD_WORKING_AREA(waIsrTx, 1024);
-static thread_t *isr_tp;
+static thread_t *isr_tp = 0;
 
 // Function pointer to interrupt handler
 static void (*gpio0_func)(void) = NULL;
@@ -660,6 +660,10 @@ void halRfEnableRxInterrupt(void) {
 void halRfExtCb(EXTDriver *extp, expchannel_t channel) {
 	(void)extp;
 	(void)channel;
+
+	if (!isr_tp) {
+		return;
+	}
 
 	chSysLockFromISR();
 	chEvtSignalI(isr_tp, (eventmask_t) 1);

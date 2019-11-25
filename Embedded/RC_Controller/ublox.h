@@ -157,5 +157,15 @@ void ublox_cfg_append_enable_glo(unsigned char *buffer, int *ind,
 
 // NMEA messages
 #define UBX_NMEA_GGA                    0x00
+#define UBX_NMEA_GLL                    0x01
+#define UBX_NMEA_GSA                    0x02
+#define UBX_NMEA_GSV                    0x03
+#define UBX_NMEA_RMC                    0x04
+#define UBX_NMEA_VTG                    0x05
+#define UBX_NMEA_GRS                    0x06
+#define UBX_NMEA_GST                    0x07
+#define UBX_NMEA_ZDA                    0x08
+#define UBX_NMEA_GBS                    0x09
+#define UBX_NMEA_DTM                    0x0A
 
 #endif /* UBLOX_H_ */

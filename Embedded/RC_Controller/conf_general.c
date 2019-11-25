@@ -37,6 +37,7 @@ int main_id = 0;
 uint16_t VirtAddVarTab[NB_OF_VAR];
 
 void conf_general_init(void) {
+#if HAS_ID_SW
 	palSetPadMode(GPIOE, 8, PAL_MODE_INPUT_PULLUP);
 	palSetPadMode(GPIOE, 9, PAL_MODE_INPUT_PULLUP);
 	palSetPadMode(GPIOE, 10, PAL_MODE_INPUT_PULLUP);
@@ -50,6 +51,9 @@ void conf_general_init(void) {
 
 	// Read address from switches
 	main_id = (~(palReadPort(GPIOE) >> 8)) & 0x0F;
+#else
+	main_id = 0;
+#endif
 
 	memset(VirtAddVarTab, 0, sizeof(VirtAddVarTab));
 

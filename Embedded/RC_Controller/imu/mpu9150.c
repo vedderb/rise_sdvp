@@ -26,6 +26,8 @@
 #include <string.h>
 #include <math.h>
 
+#if !HAS_BMI160
+
 // Settings
 #define USE_MAGNETOMETER		1
 #define MPU_I2C_TIMEOUT			10
@@ -79,7 +81,7 @@ static void delay_short(void);
 static THD_FUNCTION(mpu_thread, arg);
 
 // Function pointers
-static void(*read_callback)(void) = 0;
+static void(*read_callback)(float *accel, float *gyro, float *mag) = 0;
 
 void mpu9150_init(void) {
 	failed_reads = 0;
@@ -126,7 +128,7 @@ bool mpu9150_is_mpu9250(void) {
 	return is_mpu9250;
 }
 
-void mpu9150_set_read_callback(void(*func)(void)) {
+void mpu9150_set_read_callback(void(*func)(float *accel, float *gyro, float *mag)) {
 	read_callback = func;
 }
 
@@ -301,7 +303,9 @@ static THD_FUNCTION(mpu_thread, arg) {
 				last_update_time = chVTGetSystemTime();
 
 				if (read_callback) {
-					read_callback();
+					float accel[3], gyro[3], mag[3];
+					mpu9150_get_accel_gyro_mag(accel, gyro, mag);
+					read_callback(accel, gyro, mag);
 				}
 
 #if USE_MAGNETOMETER
@@ -526,3 +530,6 @@ static void delay_short(void) {
 		__NOP();
 	}
 }
+
+#endif
+

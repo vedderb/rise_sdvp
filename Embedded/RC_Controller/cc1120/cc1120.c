@@ -70,7 +70,7 @@ static const SPIConfig spicfg = {
 // Threads
 static THD_WORKING_AREA(isr_thread_wa, 2048);
 static THD_FUNCTION(isr_thread, arg);
-static thread_t *isr_tp;
+static thread_t *isr_tp = 0;
 static THD_WORKING_AREA(check_thread_wa, 256);
 static THD_FUNCTION(check_thread, arg);
 
@@ -909,6 +909,10 @@ float cc1120_get_last_freqoff_est(void) {
 void cc1120_ext_cb(EXTDriver *extp, expchannel_t channel) {
 	(void)extp;
 	(void)channel;
+
+	if (!isr_tp) {
+		return;
+	}
 
 	chSysLockFromISR();
 	chEvtSignalI(isr_tp, (eventmask_t) 1);

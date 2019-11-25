@@ -36,6 +36,7 @@
 #include "pos_uwb.h"
 #include "comm_can.h"
 #include "hydraulic.h"
+#include "bmi160_wrapper.h"
 
 // Defines
 #define ITERATION_TIMER_FREQ			50000
@@ -79,7 +80,7 @@ static void cmd_terminal_gps_corr_info(int argc, const char **argv);
 static void cmd_terminal_delay_comp(int argc, const char **argv);
 static void cmd_terminal_print_sat_info(int argc, const char **argv);
 static void cmd_terminal_sat_info(int argc, const char **argv);
-static void mpu9150_read(void);
+static void mpu9150_read(float *accel, float *gyro, float *mag);
 static void update_orientation_angles(float *accel, float *gyro, float *mag, float dt);
 static void init_gps_local(GPS_STATE *gps);
 static void ublox_relposned_rx(ubx_nav_relposned *pos);
@@ -130,11 +131,17 @@ void pos_init(void) {
 	chMtxObjectInit(&m_mutex_pos);
 	chMtxObjectInit(&m_mutex_gps);
 
+#if HAS_BMI160
+	bmi160_wrapper_init(500);
+	bmi160_wrapper_set_read_callback(mpu9150_read);
+#else
 	mpu9150_init();
 	chThdSleepMilliseconds(1000);
 	led_write(LED_RED, 1);
 	mpu9150_sample_gyro_offsets(100);
 	led_write(LED_RED, 0);
+	mpu9150_set_read_callback(mpu9150_read);
+#endif
 
 	// Iteration timer (ITERATION_TIMER_FREQ Hz)
 	TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
@@ -147,7 +154,6 @@ void pos_init(void) {
 	TIM_TimeBaseInit(TIM6, &TIM_TimeBaseStructure);
 	TIM_Cmd(TIM6, ENABLE);
 
-	mpu9150_set_read_callback(mpu9150_read);
 	ublox_set_rx_callback_relposned(ublox_relposned_rx);
 	ublox_set_rx_callback_rawx(ubx_rx_rawx);
 
@@ -731,10 +737,7 @@ static void cmd_terminal_sat_info(int argc, const char **argv) {
 	}
 }
 
-static void mpu9150_read(void) {
-	float accel[3], gyro[3], mag[3];
-	mpu9150_get_accel_gyro_mag(accel, gyro, mag);
-
+static void mpu9150_read(float *accel, float *gyro, float *mag) {
 	static unsigned int cnt_last = 0;
 	volatile unsigned int cnt = TIM6->CNT;
 	unsigned int time_elapsed = (cnt - cnt_last) % 65536;
@@ -876,12 +879,14 @@ static void update_orientation_angles(float *accel, float *gyro, float *mag, flo
 	// Rotate board yaw orientation
 	float rotf = 0.0;
 
+#if !HAS_BMI160
 	// The MPU9250 footprint is rotated 180 degrees compared to the one
 	// for the MPU9150 on our PCB. Make sure that the code behaves the
 	// same regardless which one is used.
 	if (mpu9150_is_mpu9250()) {
 		rotf += 180.0;
 	}
+#endif
 
 #ifdef BOARD_YAW_ROT
 	rotf += BOARD_YAW_ROT;

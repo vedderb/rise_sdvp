@@ -3,7 +3,7 @@
 # Exit on error
 set -e
 
-if [[ $1 == @(vcc|tero|rise_ubx|drangen) ]]; then
+if [[ $1 == @(vcc|tero|rise_ubx|drangen|rise_f9) ]]; then
     FW=fw_$1.bin
 else
     echo No valid firmware specified. Please use

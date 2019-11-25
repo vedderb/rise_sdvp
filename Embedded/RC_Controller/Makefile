@@ -107,6 +107,7 @@ include $(CHIBIOS)/os/rt/ports/ARMCMx/compilers/GCC/mk/port_v7m.mk
 # Other files (optional).
 include cc2520/cc2520.mk
 include cc1120/cc1120.mk
+include imu/imu.mk
 
 # Define linker script file here
 LDSCRIPT= ld_eeprom_emu.ld
@@ -124,14 +125,13 @@ CSRC = $(STARTUPSRC) \
        $(CHIBIOS)/os/various/syscalls.c \
        $(CC2520SRC) \
        $(CC1120SRC) \
+       $(IMUSRC) \
        main.c \
        comm_usb_serial.c \
        utils.c \
        comm_cc2520.c \
-       mpu9150.c \
        led.c \
        buffer.c \
-       ahrs.c \
        ext_cb.c \
        crc.c \
        adconv.c \
@@ -161,7 +161,9 @@ CSRC = $(STARTUPSRC) \
        pos_uwb.c \
        fi.c \
        servo_vesc.c \
-       hydraulic.c
+       hydraulic.c \
+       i2c_bb.c \
+       timer.c
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
@@ -194,7 +196,7 @@ INCDIR = $(STARTUPINC) $(KERNINC) $(PORTINC) $(OSALINC) \
          $(HALINC) $(PLATFORMINC) $(BOARDINC) $(TESTINC) \
          $(CHIBIOS)/os/various \
          $(CHIBIOS)/os/hal/lib/streams \
-         $(CC2520INC) $(CC1120INC)
+         $(CC2520INC) $(CC1120INC) $(IMUINC)
 
 #
 # Project, sources and paths
@@ -286,8 +288,8 @@ debug-start:
 	openocd -f stm32-bv_openocd.cfg
 	
 upload_remote: build/$(PROJECT).bin
-#	./upload_remote build/$(PROJECT).bin pi 10.42.0.96 22 pi_gpio
-	./upload_remote build/$(PROJECT).bin pi 127.0.0.1 65098 pi_gpio
+	./upload_remote build/$(PROJECT).bin pi 10.1.151.19 22 pi_gpio
+#	./upload_remote build/$(PROJECT).bin pi 127.0.0.1 65098 pi_gpio
 
 RULESPATH = $(CHIBIOS)/os/common/ports/ARMCMx/compilers/GCC
 include $(RULESPATH)/rules.mk

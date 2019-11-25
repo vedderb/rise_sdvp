@@ -20,6 +20,41 @@
 
 #include "datatypes.h"
 
+// Board
+#ifndef IS_F9_BOARD
+#define IS_F9_BOARD					0
+#endif
+
+#if IS_F9_BOARD
+#define HAS_CC2520					0
+#define HAS_CC1120					0
+#define UBLOX_IS_F9P				1
+#define LED_RED_GPIO				GPIOC
+#define LED_RED_PIN					10
+#define LED_GREEN_GPIO				GPIOC
+#define LED_GREEN_PIN				11
+#define CAN1_RX_GPIO				GPIOB
+#define CAN1_RX_PIN					8
+#define CAN1_TX_GPIO				GPIOB
+#define CAN1_TX_PIN					9
+#define HAS_BMI160					1
+#define HAS_ID_SW					0
+#else
+#define HAS_CC2520					1
+#define HAS_CC1120					1
+#define UBLOX_IS_F9P				0
+#define LED_RED_GPIO				GPIOE
+#define LED_RED_PIN					0
+#define LED_GREEN_GPIO				GPIOE
+#define LED_GREEN_PIN				1
+#define CAN1_RX_GPIO				GPIOD
+#define CAN1_RX_PIN					0
+#define CAN1_TX_GPIO				GPIOD
+#define CAN1_TX_PIN					1
+#define HAS_BMI160					0
+#define HAS_ID_SW					1
+#endif
+
 #define MAIN_MODE_CAR 				0
 #define MAIN_MODE_MOTE_2400			1
 #define MAIN_MODE_MOTE_400			2

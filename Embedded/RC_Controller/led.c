@@ -18,12 +18,13 @@
 #include "led.h"
 #include "ch.h"
 #include "hal.h"
+#include "conf_general.h"
 
 void led_init(void) {
-	palSetPadMode(GPIOE, 0,
+	palSetPadMode(LED_RED_GPIO, LED_RED_PIN,
 			PAL_MODE_OUTPUT_PUSHPULL |
 			PAL_STM32_OSPEED_HIGHEST);
-	palSetPadMode(GPIOE, 1,
+	palSetPadMode(LED_GREEN_GPIO, LED_GREEN_PIN,
 			PAL_MODE_OUTPUT_PUSHPULL |
 			PAL_STM32_OSPEED_HIGHEST);
 
@@ -34,11 +35,11 @@ void led_init(void) {
 void led_write(int num, int state) {
 	switch (num) {
 	case LED_RED:
-		palWritePad(GPIOE, 0, state);
+		palWritePad(LED_RED_GPIO, LED_RED_PIN, state);
 		break;
 
 	case LED_GREEN:
-		palWritePad(GPIOE, 1, state);
+		palWritePad(LED_GREEN_GPIO, LED_GREEN_PIN, state);
 		break;
 
 	default:
@@ -49,11 +50,11 @@ void led_write(int num, int state) {
 void led_toggle(int num) {
 	switch (num) {
 	case LED_RED:
-		palTogglePad(GPIOE, 0);
+		palTogglePad(LED_RED_GPIO, LED_RED_PIN);
 		break;
 
 	case LED_GREEN:
-		palTogglePad(GPIOE, 1);
+		palTogglePad(LED_GREEN_GPIO, LED_GREEN_PIN);
 		break;
 
 	default:

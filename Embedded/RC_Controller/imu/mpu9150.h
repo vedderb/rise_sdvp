@@ -29,7 +29,7 @@ void mpu9150_cmd_sample_offsets(BaseSequentialStream *chp, int argc, char *argv[
 void mpu9150_get_raw_accel_gyro_mag(int16_t *gyro_accel);
 void mpu9150_get_accel_gyro_mag(float *accel, float *gyro, float *mag);
 void mpu9150_sample_gyro_offsets(uint32_t iteratons);
-void mpu9150_set_read_callback(void(*func)(void));
+void mpu9150_set_read_callback(void(*func)(float *accel, float *gyro, float *mag));
 uint32_t mpu9150_get_time_since_update(void);
 float mpu9150_get_last_sample_duration(void);
 int mpu9150_get_failed_reads(void);

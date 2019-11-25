@@ -272,11 +272,23 @@ void ublox_init(void) {
 
 	// Switch off RTCM message output
 	ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_1005, 0);
+	ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_1074, 0);
 	ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_1077, 0);
+	ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_1084, 0);
 	ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_1087, 0);
+	ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_1094, 0);
+	ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_1097, 0);
+	ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_1124, 0);
+	ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_1127, 0);
+	ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_1230, 0);
+	ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_4072_0, 0);
+	ublox_cfg_msg(UBX_CLASS_RTCM3, UBX_RTCM3_4072_1, 0);
 
-	// Set rate to 5 Hz and time reference to UTC
+#if UBLOX_IS_F9P
 	ublox_cfg_rate(200, 1, 0);
+#else
+	ublox_cfg_rate(200, 1, 0);
+#endif
 
 	// Dynamic model
 	ubx_cfg_nav5 nav5;
@@ -306,9 +318,21 @@ void ublox_init(void) {
 	tp5.ant_cable_delay = 50;
 	ublox_cfg_tp5(&tp5);
 
-	// Switch on RELPOSNED and RAWX messages
 	ublox_cfg_msg(UBX_CLASS_NAV, UBX_NAV_RELPOSNED, 1);
-	ublox_cfg_msg(UBX_CLASS_RXM, UBX_RXM_RAWX, 1);
+	ublox_cfg_msg(UBX_CLASS_RXM, UBX_RXM_RAWX, UBLOX_IS_F9P ? 0 : 1);
+
+	ublox_cfg_msg(UBX_CLASS_NMEA, UBX_NMEA_GGA, 1);
+	ublox_cfg_msg(UBX_CLASS_NMEA, UBX_NMEA_GSV, 1);
+
+	ublox_cfg_msg(UBX_CLASS_NMEA, UBX_NMEA_GLL, 0);
+	ublox_cfg_msg(UBX_CLASS_NMEA, UBX_NMEA_GSA, 0);
+	ublox_cfg_msg(UBX_CLASS_NMEA, UBX_NMEA_RMC, 0);
+	ublox_cfg_msg(UBX_CLASS_NMEA, UBX_NMEA_VTG, 0);
+	ublox_cfg_msg(UBX_CLASS_NMEA, UBX_NMEA_GRS, 0);
+	ublox_cfg_msg(UBX_CLASS_NMEA, UBX_NMEA_GST, 0);
+	ublox_cfg_msg(UBX_CLASS_NMEA, UBX_NMEA_ZDA, 0);
+	ublox_cfg_msg(UBX_CLASS_NMEA, UBX_NMEA_GBS, 0);
+	ublox_cfg_msg(UBX_CLASS_NMEA, UBX_NMEA_DTM, 0);
 
 	ubx_cfg_nmea nmea;
 	memset(&nmea, 0, sizeof(ubx_cfg_nmea));
@@ -318,6 +342,15 @@ void ublox_init(void) {
 
 	ublox_cfg_nmea(&nmea);
 
+#if UBLOX_IS_F9P
+	unsigned char buffer[80];
+	int ind = 0;
+	ublox_cfg_append_enable_gps(buffer, &ind, true, true, true);
+	ublox_cfg_append_enable_gal(buffer, &ind, true, true, true);
+	ublox_cfg_append_enable_bds(buffer, &ind, true, true, true);
+	ublox_cfg_append_enable_glo(buffer, &ind, true, true, true);
+	ublox_cfg_valset(buffer, ind, true, true, true);
+#else
 	ubx_cfg_gnss gnss;
 	memset(&gnss, 0, sizeof(ubx_cfg_gnss));
 	gnss.num_ch_hw = 30;
@@ -350,6 +383,7 @@ void ublox_init(void) {
 	gnss.blocks[3].flags = UBX_CFG_GNSS_GAL_E1;
 
 	ublox_cfg_gnss(&gnss);
+#endif
 }
 
 void ublox_send(unsigned char *data, unsigned int len) {
