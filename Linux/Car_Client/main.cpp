@@ -78,13 +78,12 @@ static void m_cleanup(int sig)
 
 int main(int argc, char *argv[])
 {
-#ifdef HAS_GUI
-    QApplication a(argc, argv);
-#else
-    QCoreApplication a(argc, argv);
-#endif
+    QStringList args;
 
-    QStringList args = QCoreApplication::arguments();
+    for (int i = 0;i < argc;i++) {
+        args.append(argv[i]);
+    }
+
     QString ttyPort = "";
     QString logFile = "";
     int baudrate = 115200;
@@ -423,6 +422,18 @@ int main(int argc, char *argv[])
         }
     }
 
+    QCoreApplication *a;
+
+#ifdef HAS_GUI
+    if (useGui) {
+        a = new QApplication(argc, argv);
+    } else {
+        a = new QCoreApplication(argc, argv);
+    }
+#else
+    a = new QCoreApplication(argc, argv);
+#endif
+
     CarClient car;
     Chronos chronos;
 #ifdef HAS_GUI
@@ -554,5 +565,5 @@ int main(int argc, char *argv[])
     }
 #endif
 
-    return a.exec();
+    return a->exec();
 }
