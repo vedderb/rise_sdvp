@@ -65,6 +65,7 @@ CarClient::CarClient(QObject *parent) : QObject(parent)
     mLogFlushTimer->start(2000);
     mRtklibRunning = false;
     mBatteryCells = 10;
+    mCarIdToSet = -1;
     mOverrideUwbPos = false;
     mOverrideUwbX = 0.0;
     mOverrideUwbY = 0.0;
@@ -671,6 +672,11 @@ void CarClient::reconnectTimerSlot()
                                                                       mRtcmBaseHeight,
                                                                       0.0));
     }
+
+    // Set ID of board on regular basis. In case reprogramming is done.
+    if (mSerialPort->isOpen() && mCarIdToSet >= 0 && mCarIdToSet < 255) {
+        mPacketInterface->sendTerminalCmd(255, QString("set_id_quiet %1").arg(mCarIdToSet));
+    }
 }
 
 void CarClient::logFlushTimerSlot()
@@ -945,6 +951,23 @@ void CarClient::logBroadcasterDataReceived(QByteArray &data)
 
         newLineIndex = mLogBroadcasterDataBuffer.indexOf("\n");
     }
+}
+
+int CarClient::getCarIdToSet() const
+{
+    return mCarIdToSet;
+}
+
+/**
+ * @brief CarClient::setCarIdToSet
+ * Set ID that the connected board will be updated with every 2 seconds.
+ *
+ * @param carIdToSet
+ * The ID.
+ */
+void CarClient::setCarIdToSet(int carIdToSet)
+{
+    mCarIdToSet = carIdToSet;
 }
 
 bool CarClient::setUnixTime(qint64 t)

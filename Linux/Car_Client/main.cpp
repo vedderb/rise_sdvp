@@ -64,6 +64,7 @@ void showHelp()
     qDebug() << "--simaprepeatroutes [1 or 0] : Repeat routes setting for the simulation (default: 1)";
     qDebug() << "--simlogen [rateHz] : Enable simulator logging output at rateHz Hz";
     qDebug() << "--simuwben [port]:[rateHz] : Enable simulator UWB emulation output on TCP port port at rateHz Hz";
+    qDebug() << "--setid [id] : Override ID of board";
 #ifdef HAS_GUI
     qDebug() << "--usegui : Use QML GUI";
 #endif
@@ -122,6 +123,7 @@ int main(int argc, char *argv[])
     int simLogHz = -1;
     int simUwbHz = -1;
     int simUwbTcpPort = -1;
+    int carId = -1;
 
 #ifdef HAS_GUI
     bool useGui = false;
@@ -403,6 +405,15 @@ int main(int argc, char *argv[])
             }
         }
 
+        if (str == "--setid") {
+            if ((i + 1) < args.size()) {
+                i++;
+                bool ok;
+                carId = args.at(i).toInt(&ok);
+                found = ok;
+            }
+        }
+
 #ifdef HAS_GUI
         if (str == "--usegui") {
             useGui = true;
@@ -439,6 +450,8 @@ int main(int argc, char *argv[])
 #ifdef HAS_GUI
     QQmlApplicationEngine qmlEngine;
 #endif
+
+    car.setCarIdToSet(carId);
 
     if (!ttyPort.isEmpty()) {
         car.connectSerial(ttyPort, baudrate);

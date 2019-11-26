@@ -84,6 +84,9 @@ public:
     void addSimulatedCar(int id);
     CarSim *getSimulatedCar(int id);
 
+    int getCarIdToSet() const;
+    void setCarIdToSet(int carIdToSet);
+
 signals:
 
 public slots:
@@ -139,6 +142,7 @@ private:
     int mBatteryCells;
     QList<CarSim*> mSimulatedCars;
     QVector<UWB_ANCHOR> mUwbAnchorsNow;
+    int mCarIdToSet;
 
 #if HAS_CAMERA
     Camera *mCamera;
