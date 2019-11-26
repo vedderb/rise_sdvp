@@ -17,10 +17,11 @@
 
 #include "adconv.h"
 #include "utils.h"
+#include "conf_general.h"
+#include "terminal.h"
+#include "commands.h"
 
 // Settings
-#define VIN_R1					10000.0
-#define VIN_R2					1500.0
 #define VREFINT					1.21
 
 #define ADC_GRP_NUM_CHANNELS	8
@@ -28,6 +29,8 @@
 
 static adcsample_t samples[ADC_GRP_NUM_CHANNELS * ADC_GRP_BUF_DEPTH];
 static float vin_filter = 0.0;
+
+static void terminal_cmd_get_vin(int argc, const char **argv);
 
 static void adccallback(ADCDriver *adcp, adcsample_t *buffer, size_t n) {
 	(void)adcp;
@@ -79,6 +82,12 @@ void adconv_init(void) {
 	adcSTM32EnableTSVREFE();
 
 	adcStartConversion(&ADCD1, &adcgrpcfg, samples, ADC_GRP_BUF_DEPTH);
+
+	terminal_register_command_callback(
+			"adconv_get_vin",
+			"Read the input voltage.",
+			0,
+			terminal_cmd_get_vin);
 }
 
 /**
@@ -114,4 +123,10 @@ float adconv_get_volts(int pin) {
  */
 float adconv_get_vin(void) {
 	return vin_filter;
+}
+
+static void terminal_cmd_get_vin(int argc, const char **argv) {
+	(void)argc;
+	(void)argv;
+	commands_printf("Input Voltage: %.2f V\n", (double)adconv_get_vin());
 }

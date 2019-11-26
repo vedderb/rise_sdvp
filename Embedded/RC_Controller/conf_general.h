@@ -39,6 +39,8 @@
 #define CAN1_TX_PIN					9
 #define HAS_BMI160					1
 #define HAS_ID_SW					0
+#define VIN_R1						39000.0
+#define VIN_R2						2200.0
 #else
 #define HAS_CC2520					1
 #define HAS_CC1120					1
@@ -53,6 +55,8 @@
 #define CAN1_TX_PIN					1
 #define HAS_BMI160					0
 #define HAS_ID_SW					1
+#define VIN_R1						10000.0
+#define VIN_R2						1500.0
 #endif
 
 #define MAIN_MODE_CAR 				0
