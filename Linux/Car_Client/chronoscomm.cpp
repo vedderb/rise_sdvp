@@ -581,7 +581,10 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
     VByteArrayLe vb(payload);
 
     switch (type) {
+    case ISO_MSG_OPRO_TO_OBJECT:
+        // FALL THROUGH
     case ISO_MSG_OPRO: {
+        qDebug() << "OPRO RX";
         chronos_opro opro;
         while (!vb.isEmpty()) {
             quint16 value_id  = vb.vbPopFrontUint16();
