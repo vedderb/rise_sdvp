@@ -30,6 +30,7 @@
 #include <QElapsedTimer>
 
 #include "utility.h"
+#include "routemagic.h"
 
 namespace {
 void stepTowards(double &value, double goal, double step) {
@@ -2108,4 +2109,62 @@ void MainWindow::on_mapRoutePosAttrBox_currentIndexChanged(int index)
 void MainWindow::on_clearAnchorButton_clicked()
 {
     mPacketInterface->clearUwbAnchors(ui->mapCarBox->value());
+}
+
+void MainWindow::on_setBoundsRoutePushButton_clicked()
+{
+    int r = ui->mapWidget->getRouteNow();
+    ui->boundsRouteSpinBox->setValue(r);
+}
+
+void MainWindow::on_setEntryRoutePushButton_clicked()
+{
+    int r = ui->mapWidget->getRouteNow();
+    ui->entryRouteSpinBox->setValue(r);
+}
+
+void MainWindow::on_setExitRoutePushButton_clicked()
+{
+    int r = ui->mapWidget->getRouteNow();
+    ui->exitRouteSpinBox->setValue(r);
+}
+
+void MainWindow::on_boundsFillAngleSlider_sliderMoved(int position)
+{
+    if (!ui->rotateActiveTrajectoryCheckBox->isChecked()) {
+        on_boundsFillPushButton_clicked();
+        return;
+    }
+    int rNow = ui->mapWidget->getRouteNow();
+    if (rNow == ui->entryRouteSpinBox->value() ||
+        rNow == ui->exitRouteSpinBox->value() ||
+        rNow == ui->boundsRouteSpinBox->value()) return;
+
+    ui->mapWidget->clearRoute();
+    QList<LocPoint> bounds = ui->mapWidget->getRoute(ui->boundsRouteSpinBox->value());
+    QList<LocPoint> entry  = ui->mapWidget->getRoute(ui->entryRouteSpinBox->value());
+    QList<LocPoint> exit   = ui->mapWidget->getRoute(ui->exitRouteSpinBox->value());
+    double spacing = ui->boundsFillSpacingSpinBox->value();
+    int    angle   = ui->boundsFillAngleSlider->value();
+    double ang_rad = static_cast<double>(angle) * M_PI / 180.0;
+    QList<LocPoint> test = RouteMagic::fillBoundsWithTrajectory(bounds, entry, exit, spacing, ang_rad);
+    ui->mapWidget->setRoute(test);
+
+}
+
+void MainWindow::on_boundsFillPushButton_clicked()
+{
+    QList<LocPoint> bounds = ui->mapWidget->getRoute(ui->boundsRouteSpinBox->value());
+    QList<LocPoint> entry  = ui->mapWidget->getRoute(ui->entryRouteSpinBox->value());
+    QList<LocPoint> exit   = ui->mapWidget->getRoute(ui->exitRouteSpinBox->value());
+    double spacing = ui->boundsFillSpacingSpinBox->value();
+    int    angle   = ui->boundsFillAngleSlider->value();
+    double ang_rad = static_cast<double>(angle) * M_PI / 180.0;
+    QList<LocPoint> test = RouteMagic::fillBoundsWithTrajectory(bounds, entry, exit, spacing, ang_rad);
+
+    int r = ui->mapWidget->getRoutes().size();
+    ui->mapWidget->addRoute(test);
+    ui->mapWidget->setRouteNow(r);
+    ui->mapWidget->repaint();
+
 }

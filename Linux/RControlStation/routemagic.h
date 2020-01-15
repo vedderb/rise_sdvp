@@ -54,9 +54,11 @@ public:
     static bool getLineIntersection(double p0_x, double p0_y, double p1_x, double p1_y, double p2_x, double p2_y, double p3_x, double p3_y, LocPoint *coll);
     static bool getLineIntersection(LocPoint p0, LocPoint p1, LocPoint p2, LocPoint p3, LocPoint *coll);
     static bool closestLineIntersection(double p0_x, double p0_y, double p1_x, double p1_y, QList<QList<LocPoint> > routes, LocPoint *coll);
+    static double distanceToLine(LocPoint p, LocPoint l0, LocPoint l1);
     static bool isRouteDrivable(QList<LocPoint> r, QList<LocPoint> outerFence, QList<QList<LocPoint> > cutouts, double maxAng);
     static QList<LocPoint> generateRecoveryRoute(QList<LocPoint> endSegment, QList<LocPoint> recoverTo, int aheadMargin, int genAttempts, bool tryShorten, QList<LocPoint> outerFence, QList<QList<LocPoint> > cutouts);
     static bool tryConnect(QList<LocPoint> *r1, QList<LocPoint> *r2, QList<LocPoint> outerFence, QList<QList<LocPoint> > cutouts);
+    static QList<LocPoint> reverseRoute(QList<LocPoint> t);
     static double routeLen(QList<LocPoint> r);
     static QList<QList<LocPoint> > generateArcs(LocPoint p1, LocPoint p2, QList<LocPoint> outerFence, QList<QList<LocPoint> > cutouts);
     static QList<LocPoint> shortenRouteMore(QList<LocPoint> route, QList<LocPoint> outerFence, QList<QList<LocPoint> > cutouts);
@@ -65,6 +67,7 @@ public:
     static QList<LocPoint> generateRouteWithin(int length, QList<LocPoint> prev_traj, double speed, int aheadmargin, QList<LocPoint> outerFence, QList<QList<LocPoint> > cutouts);
     static QList<LocPoint> generateRouteWithin(int length, QList<LocPoint> prev_traj, double speed, QList<LocPoint> outerFence, QList<QList<LocPoint> > cutouts);
 
+    static QList<LocPoint> fillBoundsWithTrajectory(QList<LocPoint> bounds, QList<LocPoint> entry, QList<LocPoint> exit, double spacing, double angle);
 
     static void saveRoutes(bool, QList<QList<LocPoint> > routes);
     static int  loadRoutes(QString filename, MapWidget *map);

@@ -27,6 +27,7 @@ using namespace std::chrono;
 #include <QXmlStreamReader>
 #include <QMessageBox>
 #include <mapwidget.h>
+#include <QtMath>
 RouteMagic::RouteMagic(QObject *parent) : QObject(parent)
 {
 
@@ -330,7 +331,50 @@ bool RouteMagic::closestLineIntersection(double p0_x, double p0_y, double p1_x, 
     }
 
     return res;
-        //return false;
+    //return false;
+}
+
+double RouteMagic::distanceToLine(LocPoint p, LocPoint l0, LocPoint l1)
+{
+    double l = l0.getDistanceTo(l1);
+    if (l < 0.01) {
+        return p.getDistanceTo(l0);
+    } // one cm
+
+    double x = p.getX();
+    double y = p.getY();
+    double x1 = l0.getX();
+    double y1 = l0.getY();
+    double x2 = l1.getX();
+    double y2 = l1.getY();
+    double a = x - x1;
+    double b = y - y1;
+    double c = x2 - x1;
+    double d = y2 - y1;
+
+    double dot = a * c + b * d;
+    double len_sq = c * c + d * d;
+
+    double param = dot / len_sq;
+
+    double xx, yy;
+
+    if (param < 0) {
+        xx = x1;
+        yy = y1;
+    }
+    else if (param > 1) {
+        xx = x2;
+        yy = y2;
+    }
+    else {
+        xx = x1 + param * c;
+        yy = y1 + param * d;
+    }
+
+    double dx = x - xx;
+    double dy = y - yy;
+    return sqrt(dx * dx + dy * dy);
 }
 
 
@@ -685,6 +729,9 @@ QList<LocPoint> RouteMagic::shortenRouteMore(QList<LocPoint> route,QList<LocPoin
 // DONE: Maybe should be passed as pointers to QList as the function updates r1 in-place??
 //  * So this was the problem.
 bool RouteMagic::tryConnect(QList<LocPoint> *r1, QList<LocPoint> *r2, QList<LocPoint>outerFence, QList<QList<LocPoint>> cutouts) {
+
+    if (r1->size() <= 2 || r2->size() <= 2) return false;
+
     QList<QList<LocPoint>> added1 = generateArcs(r1->at(r1->size() - 2), r1->at(r1->size() - 1),outerFence,cutouts);
     QList<QList<LocPoint>> added2 = generateArcs(r2->at(1), r2->at(0),outerFence,cutouts);
     QList<LocPoint> p2Now;
@@ -708,7 +755,7 @@ bool RouteMagic::tryConnect(QList<LocPoint> *r1, QList<LocPoint> *r2, QList<LocP
                     int ind1 = tmp.size() - 2;
                     tmp.append(pList1.mid(0, subList1));
                     tmp.append(p2Now);
-                    tmp.append(r2->mid(0, 2));
+                    tmp.append(*r2);
 
                     if (isRouteDrivable(tmp.mid(ind1, tmp.size()), outerFence, cutouts, M_PI/6)) {
                         r1->clear();
@@ -721,6 +768,14 @@ bool RouteMagic::tryConnect(QList<LocPoint> *r1, QList<LocPoint> *r2, QList<LocP
     }
 
     return false;
+}
+
+QList<LocPoint> RouteMagic::reverseRoute(QList<LocPoint> t)
+{
+    QList<LocPoint> rev;
+    for (auto p : t)
+        rev.prepend(p);
+    return rev;
 }
 
 QList<QList<LocPoint>> RouteMagic::generateArcs(LocPoint p1, LocPoint p2,QList<LocPoint>outerFence, QList<QList<LocPoint>> cutouts) {
@@ -1021,6 +1076,116 @@ QList<LocPoint> RouteMagic::generateRouteWithin(int length,
     //prev_traj.traj_pts.append(QVector<chronos_traj_pt>::fromList(rLargest));
             //.append(rLargest);
     return rLargest; //res; //prev_traj;
+}
+
+QList<LocPoint> RouteMagic::fillBoundsWithTrajectory(QList<LocPoint> bounds, QList<LocPoint> entry, QList<LocPoint> exit, double spacing, double angle)
+{
+
+    double xMin = 200000;
+    double xMax = -200000;
+    double yMin = 200000;
+    double yMax = -200000;
+
+    for (auto p : bounds) {
+        if (p.getX() > xMax) xMax = p.getX();
+        if (p.getX() < xMin) xMin = p.getX();
+        if (p.getY() > yMax) yMax = p.getY();
+        if (p.getY() < yMin) yMin = p.getY();
+    }
+
+    double distMax = 0;
+    for (auto p1 : bounds) {
+        for (auto p2 : bounds) {
+            double d = p1.getDistanceTo(p2);
+            if (d > distMax) distMax = d;
+        }
+    }
+
+    double xCenter = xMin + (xMax - xMin) / 2;
+    double yCenter = yMin + (yMax - yMin) / 2;
+
+    double xNOrigoTranslate = xCenter;
+    double yNOrigoTranslate = yCenter;
+
+    double xCurr = spacing;
+    double yCurr = 0;
+
+    QList<QList<LocPoint>> grid;
+
+    double dHalf = distMax / 2;
+
+    for (xCurr = -dHalf; xCurr < dHalf; xCurr += spacing) {
+        QList<LocPoint> row;
+        for (yCurr = -dHalf; yCurr < dHalf; yCurr += spacing) {
+            row.append(LocPoint(xCurr,yCurr));
+        }
+        grid.append(row);
+    }
+
+    // Rotate and translate points into the boundary
+    for (auto &row : grid) {
+        for (auto &p : row) {
+            double x = p.getX();
+            double y = p.getY();
+
+            double x2 = (x)*cos(angle)-(y)*sin(angle);
+            double y2 = (x)*sin(angle)+(y)*cos(angle);
+
+            p.setX(x2 += xNOrigoTranslate);
+            p.setY(y2 += yNOrigoTranslate);
+        }
+    }
+
+    // clip away unwanted points
+    for (auto &row : grid ) {
+        QMutableListIterator<LocPoint> it(row);
+        while(it.hasNext()) {
+            LocPoint p = it.next();
+            if (!isPointWithin(p,bounds)) {
+                it.remove();
+                continue;
+            }
+            LocPoint b = bounds.last();
+            for (auto b0 : bounds) {
+                double d = distanceToLine(p,b,b0);
+                if ( d < spacing) {
+                    it.remove();
+                    break;
+                }
+                b = b0;
+            }
+        }
+    }
+    QMutableListIterator<QList<LocPoint>> gridIt(grid);
+    while (gridIt.hasNext()) {
+        QList<LocPoint> row = gridIt.next();
+        if (row.size() <= 1)
+            gridIt.remove();
+    }
+
+
+
+    QList<LocPoint> route;
+
+    route = grid.first();
+    if (grid.size() <= 1) return route;
+
+    bool rev = true;
+    for (int i = 1; i < grid.size(); i ++) {
+        QList<LocPoint> row = rev ? reverseRoute(grid.at(i)) : grid.at(i);
+
+        if (!tryConnect(&route, &row,bounds,QList<QList<LocPoint>>())) {
+            qDebug() << "route->size: " << route.size();
+            qDebug() << "row->size:   " << row.size();
+            qDebug() << "Failed to connect trajectory";
+            route.append(row);
+            return route;
+        }
+        //route.append(row);
+        rev = !rev;
+    }
+
+    return route;
 }
 
 void RouteMagic::saveRoutes(bool withId, QList<QList<LocPoint> > routes)
