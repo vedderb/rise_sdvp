@@ -403,7 +403,7 @@ QList<LocPoint> RouteMagic::generateRecoveryRoute(QList<LocPoint> endSegment, //
                                                  int genAttempts, bool tryShorten,
                                                   QList<LocPoint> outerFence,
                                                   QList<QList<LocPoint>> cutouts) {
-    int64_t timestart= duration_cast<microseconds>(time_point_cast<microseconds>(high_resolution_clock::now()).time_since_epoch()).count();
+    //int64_t timestart= duration_cast<microseconds>(time_point_cast<microseconds>(high_resolution_clock::now()).time_since_epoch()).count();
     // Settings
     bool debugPrint = false;
     int maxParts = 120;
@@ -510,16 +510,16 @@ QList<LocPoint> RouteMagic::generateRecoveryRoute(QList<LocPoint> endSegment, //
             recStartBest.append(rec.at(0));
             rec.removeFirst();
 
-            int64_t timestop= duration_cast<microseconds>(time_point_cast<microseconds>(high_resolution_clock::now()).time_since_epoch()).count();
-            int64_t t_diff = timestop - timestart;
+            //int64_t timestop= duration_cast<microseconds>(time_point_cast<microseconds>(high_resolution_clock::now()).time_since_epoch()).count();
+            //int64_t t_diff = timestop - timestart;
             //qDebug() << "recovery generation time: " << t_diff / 1000000 << " sec";
 
             if (tryShorten) {
                 //qDebug() << "trying to shorten route!";
-                int64_t shortentimestart= duration_cast<microseconds>(time_point_cast<microseconds>(high_resolution_clock::now()).time_since_epoch()).count();
+                //int64_t shortentimestart= duration_cast<microseconds>(time_point_cast<microseconds>(high_resolution_clock::now()).time_since_epoch()).count();
                 recStartBest = shortenRouteMore(recStartBest, outerFence, cutouts);
-                int64_t shortentimestop = duration_cast<microseconds>(time_point_cast<microseconds>(high_resolution_clock::now()).time_since_epoch()).count();
-                int64_t shortent_diff = shortentimestop - shortentimestart;
+                //int64_t shortentimestop = duration_cast<microseconds>(time_point_cast<microseconds>(high_resolution_clock::now()).time_since_epoch()).count();
+                //int64_t shortent_diff = shortentimestop - shortentimestart;
 
                 //qDebug() << "shortenroute time: " << shortent_diff/ 1000000 << " sec";
 
@@ -612,17 +612,17 @@ QList<LocPoint> RouteMagic::shortenRouteMore(QList<LocPoint> route,QList<LocPoin
     int okChecks = 0;
     int pointsStart = route.size();
     double lenStart = routeLen(route);
-    int64_t time0 = 0;
-    int64_t time1 = 0;
+    //int64_t time0 = 0;
+    //int64_t time1 = 0;
 
     QList<LocPoint> r = shortenRoute(route, outerFence, cutouts);
 
     double interpol = 1.5;
     double endDiff = 0.02;
 
-    time0 = duration_cast<microseconds>(time_point_cast<microseconds>(high_resolution_clock::now()).time_since_epoch()).count();
+    //time0 = duration_cast<microseconds>(time_point_cast<microseconds>(high_resolution_clock::now()).time_since_epoch()).count();
     r = interpolateRoute(r, interpol);
-    time1 = duration_cast<microseconds>(time_point_cast<microseconds>(high_resolution_clock::now()).time_since_epoch()).count();
+    //time1 = duration_cast<microseconds>(time_point_cast<microseconds>(high_resolution_clock::now()).time_since_epoch()).count();
 
     //qDebug() << "interpolation 0 time: " << (time1-time0) / 1000000 << " sec";
 
@@ -635,7 +635,7 @@ QList<LocPoint> RouteMagic::shortenRouteMore(QList<LocPoint> route,QList<LocPoin
 
             for (QList<LocPoint> pList: added) {
                 double rLenOld = routeLen(r);
-                time0 = duration_cast<microseconds>(time_point_cast<microseconds>(high_resolution_clock::now()).time_since_epoch()).count();
+                //time0 = duration_cast<microseconds>(time_point_cast<microseconds>(high_resolution_clock::now()).time_since_epoch()).count();
                 for (int subList = 1;subList <= pList.size();subList++) {
 
                     for (int j = r.size() - 2;j > i - 1;j--) {
@@ -661,7 +661,7 @@ QList<LocPoint> RouteMagic::shortenRouteMore(QList<LocPoint> route,QList<LocPoin
                         break;
                     }
                 }
-                time1 = duration_cast<microseconds>(time_point_cast<microseconds>(high_resolution_clock::now()).time_since_epoch()).count();
+                //time1 = duration_cast<microseconds>(time_point_cast<microseconds>(high_resolution_clock::now()).time_since_epoch()).count();
                 //qDebug() << "middle loop time: " << (time1-time0) / 1000000 << " sec";
 
             }
@@ -1062,7 +1062,7 @@ void RouteMagic::saveRoutes(bool withId, QList<QList<LocPoint> > routes)
                 stream.writeTextElement("id", QString::number(i));
             }
 
-            for (const LocPoint p: routes.at(i)) {
+            for (const LocPoint &p: routes.at(i)) {
                 stream.writeStartElement("point");
                 stream.writeTextElement("x", QString::number(p.getX()));
                 stream.writeTextElement("y", QString::number(p.getY()));
