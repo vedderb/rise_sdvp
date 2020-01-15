@@ -28,7 +28,7 @@ unix:!macx {
 !android: DEFINES += HAS_OPENGL
 
 # Lime SDR support
-DEFINES += HAS_LIME_SDR
+#DEFINES += HAS_LIME_SDR
 
 # Simulation Scennarios
 #DEFINES += HAS_SIM_SCEN
@@ -107,7 +107,8 @@ SOURCES += main.cpp\
     correctionanalysis.cpp \
     historylineedit.cpp \
     imagewidget.cpp \
-    tcpclientmulti.cpp
+    tcpclientmulti.cpp \
+    routemagic.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
@@ -145,7 +146,8 @@ HEADERS  += mainwindow.h \
     correctionanalysis.h \
     historylineedit.h \
     imagewidget.h \
-    tcpclientmulti.h
+    tcpclientmulti.h \
+    routemagic.h
 
 FORMS    += mainwindow.ui \
     carinterface.ui \
