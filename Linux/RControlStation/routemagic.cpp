@@ -730,8 +730,12 @@ QList<LocPoint> RouteMagic::shortenRouteMore(QList<LocPoint> route,QList<LocPoin
 //  * So this was the problem.
 bool RouteMagic::tryConnect(QList<LocPoint> *r1, QList<LocPoint> *r2, QList<LocPoint>outerFence, QList<QList<LocPoint>> cutouts) {
 
-    if (r1->size() <= 2 || r2->size() <= 2) return false;
-
+    if (r1->size() < 2 || r2->size() < 2) {
+        qDebug() << "tryConnect: route too short";
+        qDebug() << "r1->size: " << r1->size();
+        qDebug() << "r2->size: " << r2->size();
+        return false;
+    }
     QList<QList<LocPoint>> added1 = generateArcs(r1->at(r1->size() - 2), r1->at(r1->size() - 1),outerFence,cutouts);
     QList<QList<LocPoint>> added2 = generateArcs(r2->at(1), r2->at(0),outerFence,cutouts);
     QList<LocPoint> p2Now;
@@ -1078,7 +1082,7 @@ QList<LocPoint> RouteMagic::generateRouteWithin(int length,
     return rLargest; //res; //prev_traj;
 }
 
-QList<LocPoint> RouteMagic::fillBoundsWithTrajectory(QList<LocPoint> bounds, QList<LocPoint> entry, QList<LocPoint> exit, double spacing, double angle)
+QList<LocPoint> RouteMagic::fillBoundsWithTrajectory(QList<LocPoint> bounds, QList<LocPoint> entry, QList<LocPoint> exit, double spacing, double angle, bool reduce)
 {
 
     double xMin = 200000;
@@ -1156,6 +1160,8 @@ QList<LocPoint> RouteMagic::fillBoundsWithTrajectory(QList<LocPoint> bounds, QLi
             }
         }
     }
+
+    // Remove entirely empty row-trajectories
     QMutableListIterator<QList<LocPoint>> gridIt(grid);
     while (gridIt.hasNext()) {
         QList<LocPoint> row = gridIt.next();
@@ -1163,7 +1169,18 @@ QList<LocPoint> RouteMagic::fillBoundsWithTrajectory(QList<LocPoint> bounds, QLi
             gridIt.remove();
     }
 
+    // Reduce trajectory density
+    if (reduce) {
 
+        for (auto &row : grid ) {
+            if (row.size() >= 2) {
+                QList<LocPoint> tmp = row;
+                row.clear();
+                row.append(tmp.first());
+                row.append(tmp.last());
+            }
+        }
+    }
 
     QList<LocPoint> route;
 

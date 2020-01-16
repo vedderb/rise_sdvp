@@ -67,7 +67,7 @@ public:
     static QList<LocPoint> generateRouteWithin(int length, QList<LocPoint> prev_traj, double speed, int aheadmargin, QList<LocPoint> outerFence, QList<QList<LocPoint> > cutouts);
     static QList<LocPoint> generateRouteWithin(int length, QList<LocPoint> prev_traj, double speed, QList<LocPoint> outerFence, QList<QList<LocPoint> > cutouts);
 
-    static QList<LocPoint> fillBoundsWithTrajectory(QList<LocPoint> bounds, QList<LocPoint> entry, QList<LocPoint> exit, double spacing, double angle);
+    static QList<LocPoint> fillBoundsWithTrajectory(QList<LocPoint> bounds, QList<LocPoint> entry, QList<LocPoint> exit, double spacing, double angle, bool reduce);
 
     static void saveRoutes(bool, QList<QList<LocPoint> > routes);
     static int  loadRoutes(QString filename, MapWidget *map);

@@ -773,7 +773,7 @@
             </sizepolicy>
            </property>
           </widget>
-          <widget class="QWidget" name="">
+          <widget class="QWidget" name="layoutWidget">
            <layout class="QVBoxLayout" name="verticalLayout_10">
             <property name="spacing">
              <number>2</number>
@@ -1893,7 +1893,7 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>199</width>
+                     <width>196</width>
                      <height>436</height>
                     </rect>
                    </property>
@@ -2868,6 +2868,16 @@
                  <widget class="QCheckBox" name="rotateActiveTrajectoryCheckBox">
                   <property name="text">
                    <string>Rotate Active Trajectory</string>
+                  </property>
+                  <property name="checked">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="reduceTrajectoryCheckBox">
+                  <property name="text">
+                   <string>Reduce Trajectory</string>
                   </property>
                   <property name="checked">
                    <bool>true</bool>

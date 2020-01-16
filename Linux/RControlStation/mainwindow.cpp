@@ -2147,7 +2147,8 @@ void MainWindow::on_boundsFillAngleSlider_sliderMoved(int position)
     double spacing = ui->boundsFillSpacingSpinBox->value();
     int    angle   = ui->boundsFillAngleSlider->value();
     double ang_rad = static_cast<double>(angle) * M_PI / 180.0;
-    QList<LocPoint> test = RouteMagic::fillBoundsWithTrajectory(bounds, entry, exit, spacing, ang_rad);
+    bool reduce = ui->reduceTrajectoryCheckBox->isChecked();
+    QList<LocPoint> test = RouteMagic::fillBoundsWithTrajectory(bounds, entry, exit, spacing, ang_rad, reduce);
     ui->mapWidget->setRoute(test);
 
 }
@@ -2160,7 +2161,8 @@ void MainWindow::on_boundsFillPushButton_clicked()
     double spacing = ui->boundsFillSpacingSpinBox->value();
     int    angle   = ui->boundsFillAngleSlider->value();
     double ang_rad = static_cast<double>(angle) * M_PI / 180.0;
-    QList<LocPoint> test = RouteMagic::fillBoundsWithTrajectory(bounds, entry, exit, spacing, ang_rad);
+    bool reduce = ui->reduceTrajectoryCheckBox->isChecked();
+    QList<LocPoint> test = RouteMagic::fillBoundsWithTrajectory(bounds, entry, exit, spacing, ang_rad, reduce);
 
     int r = ui->mapWidget->getRoutes().size();
     ui->mapWidget->addRoute(test);
