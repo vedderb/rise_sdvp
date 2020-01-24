@@ -21,8 +21,6 @@
 #include "utility.h"
 #include "mapwidget.h"
 
-#define AAP 0
-
 void showHelp()
 {
     qDebug() << "Arguments";
