@@ -736,10 +736,85 @@ bool RouteMagic::tryConnect(QList<LocPoint> *r1, QList<LocPoint> *r2, QList<LocP
         qDebug() << "r2->size: " << r2->size();
         return false;
     }
+
     QList<QList<LocPoint>> added1 = generateArcs(r1->at(r1->size() - 2), r1->at(r1->size() - 1),outerFence,cutouts);
     QList<QList<LocPoint>> added2 = generateArcs(r2->at(1), r2->at(0),outerFence,cutouts);
     QList<LocPoint> p2Now;
 
+    int max_added1 = qMax(added1.at(0).size(),
+                         added1.at(1).size());
+    int max_added2 = qMax(added2.at(0).size(),
+                         added2.at(1).size());
+
+    QList<LocPoint> end_left = *r2;
+    QList<LocPoint> end_right = *r2;
+
+    for (int i_2 = -1; i_2 < max_added2; i_2 ++) {
+
+        if (i_2 >= 0 && added2.at(0).size() > i_2) {
+            end_left.prepend(added2.at(0).at(i_2));
+        }
+        if (i_2 >= 0 && added2.at(1).size() > i_2) {
+            end_right.prepend(added2.at(1).at(i_2));
+        }
+
+        QList<LocPoint> start_left = *r1;
+        QList<LocPoint> start_right = *r1;
+        int size_left = start_left.size() - 2;
+        int size_right = start_left.size() - 2;
+
+        for (int i_1 = -1; i_1 < max_added1; i_1 ++) {
+
+            if (i_1 >= 0 && added1.at(0).size() > i_1) {
+                start_left.append(added1.at(0).at(i_1));
+            }
+            if (i_1 >= 0 && added1.at(1).size() > i_1) {
+                start_right.append(added1.at(1).at(i_1));
+            }
+
+            QList<LocPoint> tmp_left;
+            tmp_left.append(start_left);
+            tmp_left.append(end_left);
+
+            if (isRouteDrivable(tmp_left.mid(size_left, -1), outerFence, cutouts, M_PI/6)) {
+                r1->clear();
+                r1->append(tmp_left);
+                return true;
+            }
+
+            QList<LocPoint> tmp_right;
+            tmp_right.append(start_right);
+            tmp_right.append(end_right);
+
+            if (isRouteDrivable(tmp_right.mid(size_right, -1), outerFence, cutouts, M_PI/6)) {
+                r1->clear();
+                r1->append(tmp_right);
+                return true;
+            }
+            QList<LocPoint> tmp_left1;
+            tmp_left1.append(start_left);
+            tmp_left1.append(end_right);
+
+            if (isRouteDrivable(tmp_left1.mid(size_left,-1), outerFence, cutouts, M_PI/6)) {
+                r1->clear();
+                r1->append(tmp_left1);
+                return true;
+            }
+
+            QList<LocPoint> tmp_right1;
+            tmp_right1.append(start_right);
+            tmp_right1.append(end_left);
+
+            if (isRouteDrivable(tmp_right1.mid(size_right,-1), outerFence, cutouts, M_PI/6)) {
+                r1->clear();
+                r1->append(tmp_right1);
+                return true;
+            }
+        }
+    }
+
+    return false;
+    /*
     for (QList<LocPoint> pList2: added2) {
         for (int subList2 = 0;subList2 <= pList2.size();subList2++) {
             p2Now.clear();
@@ -772,6 +847,7 @@ bool RouteMagic::tryConnect(QList<LocPoint> *r1, QList<LocPoint> *r2, QList<LocP
     }
 
     return false;
+    */
 }
 
 QList<LocPoint> RouteMagic::reverseRoute(QList<LocPoint> t)

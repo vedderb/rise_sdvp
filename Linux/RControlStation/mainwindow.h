@@ -182,6 +182,8 @@ private slots:
 
     void on_boundsFillPushButton_clicked();
 
+    void on_boundsFillAngleSlider_sliderReleased();
+
 private:
     Ui::MainWindow *ui;
     QTimer *mTimer;

@@ -2131,6 +2131,32 @@ void MainWindow::on_setExitRoutePushButton_clicked()
 
 void MainWindow::on_boundsFillAngleSlider_sliderMoved(int position)
 {
+
+    return;
+
+}
+
+void MainWindow::on_boundsFillPushButton_clicked()
+{
+    QList<LocPoint> bounds = ui->mapWidget->getRoute(ui->boundsRouteSpinBox->value());
+    QList<LocPoint> entry  = ui->mapWidget->getRoute(ui->entryRouteSpinBox->value());
+    QList<LocPoint> exit   = ui->mapWidget->getRoute(ui->exitRouteSpinBox->value());
+    double spacing = ui->boundsFillSpacingSpinBox->value();
+    if (spacing < 0.5) return;
+    int    angle   = ui->boundsFillAngleSlider->value();
+    double ang_rad = static_cast<double>(angle) * M_PI / 180.0;
+    bool reduce = ui->reduceTrajectoryCheckBox->isChecked();
+    QList<LocPoint> test = RouteMagic::fillBoundsWithTrajectory(bounds, entry, exit, spacing, ang_rad, reduce);
+
+    int r = ui->mapWidget->getRoutes().size();
+    ui->mapWidget->addRoute(test);
+    ui->mapWidget->setRouteNow(r);
+    ui->mapWidget->repaint();
+
+}
+
+void MainWindow::on_boundsFillAngleSlider_sliderReleased()
+{
     if (!ui->rotateActiveTrajectoryCheckBox->isChecked()) {
         on_boundsFillPushButton_clicked();
         return;
@@ -2150,23 +2176,4 @@ void MainWindow::on_boundsFillAngleSlider_sliderMoved(int position)
     bool reduce = ui->reduceTrajectoryCheckBox->isChecked();
     QList<LocPoint> test = RouteMagic::fillBoundsWithTrajectory(bounds, entry, exit, spacing, ang_rad, reduce);
     ui->mapWidget->setRoute(test);
-
-}
-
-void MainWindow::on_boundsFillPushButton_clicked()
-{
-    QList<LocPoint> bounds = ui->mapWidget->getRoute(ui->boundsRouteSpinBox->value());
-    QList<LocPoint> entry  = ui->mapWidget->getRoute(ui->entryRouteSpinBox->value());
-    QList<LocPoint> exit   = ui->mapWidget->getRoute(ui->exitRouteSpinBox->value());
-    double spacing = ui->boundsFillSpacingSpinBox->value();
-    int    angle   = ui->boundsFillAngleSlider->value();
-    double ang_rad = static_cast<double>(angle) * M_PI / 180.0;
-    bool reduce = ui->reduceTrajectoryCheckBox->isChecked();
-    QList<LocPoint> test = RouteMagic::fillBoundsWithTrajectory(bounds, entry, exit, spacing, ang_rad, reduce);
-
-    int r = ui->mapWidget->getRoutes().size();
-    ui->mapWidget->addRoute(test);
-    ui->mapWidget->setRouteNow(r);
-    ui->mapWidget->repaint();
-
 }
