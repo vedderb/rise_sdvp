@@ -29,6 +29,8 @@ class RouteMagic : public QObject
 public:
     explicit RouteMagic(QObject *parent = nullptr);
 
+    static constexpr double PI = 3.14159265;
+
     static double maxFrom4(double a, double b, double c, double d);
     static double minFrom4(double a, double b, double c, double d);
     static double randInRange(double min, double max);
@@ -55,6 +57,7 @@ public:
     static bool getLineIntersection(LocPoint p0, LocPoint p1, LocPoint p2, LocPoint p3, LocPoint *coll);
     static bool closestLineIntersection(double p0_x, double p0_y, double p1_x, double p1_y, QList<QList<LocPoint> > routes, LocPoint *coll);
     static double distanceToLine(LocPoint p, LocPoint l0, LocPoint l1);
+    static QPair<LocPoint, LocPoint> getBaselineDeterminingMinHeightOfConvexPolygon(QList<LocPoint> convexPolygon);
     static bool isRouteDrivable(QList<LocPoint> r, QList<LocPoint> outerFence, QList<QList<LocPoint> > cutouts, double maxAng);
     static QList<LocPoint> generateRecoveryRoute(QList<LocPoint> endSegment, QList<LocPoint> recoverTo, int aheadMargin, int genAttempts, bool tryShorten, QList<LocPoint> outerFence, QList<QList<LocPoint> > cutouts);
     static bool tryConnect(QList<LocPoint> *r1, QList<LocPoint> *r2, QList<LocPoint> outerFence, QList<QList<LocPoint> > cutouts);

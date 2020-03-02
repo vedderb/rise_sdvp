@@ -2145,6 +2145,10 @@ void MainWindow::on_boundsFillPushButton_clicked()
     if (spacing < 0.5) return;
     int    angle   = ui->boundsFillAngleSlider->value();
     double ang_rad = static_cast<double>(angle) * M_PI / 180.0;
+    if (ui->findOptimalAngleCheckBox->checkState()) {
+        const auto lineForOptimalAngle = RouteMagic::getBaselineDeterminingMinHeightOfConvexPolygon(bounds);
+        ang_rad = atan2(lineForOptimalAngle.second.getY() - lineForOptimalAngle.first.getY(), lineForOptimalAngle.second.getX() - lineForOptimalAngle.first.getX()) + RouteMagic::PI/2;
+    }
     bool reduce = ui->reduceTrajectoryCheckBox->isChecked();
     QList<LocPoint> test = RouteMagic::fillBoundsWithTrajectory(bounds, entry, exit, spacing, ang_rad, reduce);
 
@@ -2176,4 +2180,11 @@ void MainWindow::on_boundsFillAngleSlider_sliderReleased()
     bool reduce = ui->reduceTrajectoryCheckBox->isChecked();
     QList<LocPoint> test = RouteMagic::fillBoundsWithTrajectory(bounds, entry, exit, spacing, ang_rad, reduce);
     ui->mapWidget->setRoute(test);
+}
+
+void MainWindow::on_findOptimalAngleCheckBox_stateChanged(int checkState)
+{
+    ui->boundsFillAngleSlider->setEnabled(!checkState);
+    ui->boundsFillAngleLabel->setEnabled(!checkState);
+    ui->rotateActiveTrajectoryCheckBox->setEnabled(!checkState);
 }

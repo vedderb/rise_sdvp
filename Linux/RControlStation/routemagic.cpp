@@ -28,6 +28,8 @@ using namespace std::chrono;
 #include <QMessageBox>
 #include <mapwidget.h>
 #include <QtMath>
+#include <cassert>
+
 RouteMagic::RouteMagic(QObject *parent) : QObject(parent)
 {
 
@@ -375,6 +377,32 @@ double RouteMagic::distanceToLine(LocPoint p, LocPoint l0, LocPoint l1)
     double dx = x - xx;
     double dy = y - yy;
     return sqrt(dx * dx + dy * dy);
+}
+
+QPair<LocPoint,LocPoint> RouteMagic::getBaselineDeterminingMinHeightOfConvexPolygon(QList<LocPoint> convexPolygon)
+{
+    // 1. Determine point with max distance for each line
+    QList<QPair<QPair<LocPoint,LocPoint>, double>> maxDistances;
+    for (int i = 0; i < convexPolygon.size() - 1 /* skip last */; i++) {
+        LocPoint l0 = convexPolygon.at(i);
+        LocPoint l1 = convexPolygon.at(i+1);
+
+        double maxDistance = -1;
+        for (int j = 0; j < convexPolygon.size(); j++) {
+            if (j == i || j == i+1)
+                continue;
+
+            double currDistance = distanceToLine(convexPolygon.at(j), l0, l1);
+            maxDistance = (currDistance > maxDistance)? currDistance : maxDistance;
+        }
+        maxDistances.append(QPair<QPair<LocPoint,LocPoint>, double>(QPair<LocPoint,LocPoint>(l0, l1), maxDistance));
+    }
+    assert(maxDistances.size() == convexPolygon.size() - 1);
+
+    // 2. Determine line with minimum distance determined in 1.
+    return std::min_element(maxDistances.begin(), maxDistances.end(),
+                            [](QPair<QPair<LocPoint,LocPoint>, double> const& a, QPair<QPair<LocPoint,LocPoint>, double> const& b) -> bool
+                                {return a.second < b.second;})->first;
 }
 
 
@@ -1160,7 +1188,6 @@ QList<LocPoint> RouteMagic::generateRouteWithin(int length,
 
 QList<LocPoint> RouteMagic::fillBoundsWithTrajectory(QList<LocPoint> bounds, QList<LocPoint> entry, QList<LocPoint> exit, double spacing, double angle, bool reduce)
 {
-
     double xMin = 200000;
     double xMax = -200000;
     double yMin = 200000;
