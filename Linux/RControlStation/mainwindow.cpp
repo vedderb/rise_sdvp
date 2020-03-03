@@ -2150,7 +2150,8 @@ void MainWindow::on_boundsFillPushButton_clicked()
         ang_rad = atan2(lineForOptimalAngle.second.getY() - lineForOptimalAngle.first.getY(), lineForOptimalAngle.second.getX() - lineForOptimalAngle.first.getX()) + RouteMagic::PI/2;
     }
     bool reduce = ui->reduceTrajectoryCheckBox->isChecked();
-    QList<LocPoint> test = RouteMagic::fillBoundsWithTrajectory(bounds, entry, exit, spacing, ang_rad, reduce);
+    //QList<LocPoint> test = RouteMagic::fillBoundsWithTrajectory(bounds, entry, exit, spacing, ang_rad, reduce);
+    QList<LocPoint> test = RouteMagic::fillConvexPolygonWithZigZag(bounds, spacing);
 
     int r = ui->mapWidget->getRoutes().size();
     ui->mapWidget->addRoute(test);
@@ -2159,6 +2160,7 @@ void MainWindow::on_boundsFillPushButton_clicked()
 
 }
 
+// TODO Code duplication (on_boundsFillPushButton_clicked())
 void MainWindow::on_boundsFillAngleSlider_sliderReleased()
 {
     if (!ui->rotateActiveTrajectoryCheckBox->isChecked()) {

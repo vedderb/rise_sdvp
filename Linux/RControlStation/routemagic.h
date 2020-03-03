@@ -48,6 +48,8 @@ public:
     static bool ccw(LocPoint a, LocPoint b, LocPoint c);
     static bool lineIntersect(LocPoint a, LocPoint b, LocPoint c, LocPoint d);
     static bool boxesIntersect(QList<LocPoint> b0, QList<LocPoint> b1);
+    static bool intersectionExists(QList<LocPoint> points0, QList<LocPoint> points1);
+    static QList<LocPoint> getAllIntersections(QList<LocPoint> points0, QList<LocPoint> points1);
     static bool circlesOverlap(LocPoint p0, double r0, LocPoint p1, double r1);
     static bool lineIntersectsRouteTime(LocPoint p0, LocPoint p1, QList<LocPoint> route);
     static bool routeIntersectsRouteInTime(QList<LocPoint> t0, QList<LocPoint> t1);
@@ -71,6 +73,7 @@ public:
     static QList<LocPoint> generateRouteWithin(int length, QList<LocPoint> prev_traj, double speed, QList<LocPoint> outerFence, QList<QList<LocPoint> > cutouts);
 
     static QList<LocPoint> fillBoundsWithTrajectory(QList<LocPoint> bounds, QList<LocPoint> entry, QList<LocPoint> exit, double spacing, double angle, bool reduce);
+    static QList<LocPoint> fillConvexPolygonWithZigZag(QList<LocPoint> bounds, double spacing);
 
     static void saveRoutes(bool, QList<QList<LocPoint> > routes);
     static int  loadRoutes(QString filename, MapWidget *map);

@@ -200,6 +200,40 @@ bool RouteMagic::boxesIntersect(QList<LocPoint> b0, QList<LocPoint> b1)
     return false;
 }
 
+bool RouteMagic::intersectionExists(QList<LocPoint> points0, QList<LocPoint> points1)
+{
+    if (points0.size() < 2 || points1.size() < 2)
+        return false;
+
+    for (int i = 1; i < points0.size(); i++)
+        for (int j = 1; j < points1.size(); j++)
+            if (lineIntersect(points0.at(i-1), points0.at(i), points1.at(j-1), points1.at(j)))
+                return true;
+
+    return false;
+}
+
+QList<LocPoint> RouteMagic::getAllIntersections(QList<LocPoint> points0, QList<LocPoint> points1)
+{
+    QList<LocPoint> intersections;
+    if (points0.size() < 2 || points1.size() < 2)
+        return intersections;
+
+    for (int i = 1; i < points0.size(); i++)
+        for (int j = 1; j < points1.size(); j++)
+            if (lineIntersect(points0.at(i-1), points0.at(i), points1.at(j-1), points1.at(j))) {
+                // https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection#Given_two_points_on_each_line
+                LocPoint intersection;
+                double x1=points0.at(i-1).getX(), y1=points0.at(i-1).getY(), x2=points0.at(i).getX(), y2=points0.at(i).getY(),
+                        x3=points1.at(j-1).getX(), y3=points1.at(j-1).getY(), x4=points1.at(j).getX(), y4=points1.at(j).getY();
+                intersection.setX( ((x1*y2-y1*x2)*(x3-x4)-(x1-x2)*(x3*y4-y3*x4)) / ((x1-x2)*(y3-y4)-(y1-y2)*(x3-x4)) );
+                intersection.setY( ((x1*y2-y1*x2)*(y3-y4)-(y1-y2)*(x3*y4-y3*x4)) / ((x1-x2)*(y3-y4)-(y1-y2)*(x3-x4)) );
+                intersections.append(intersection);
+            }
+
+    return intersections;
+}
+
 bool RouteMagic::circlesOverlap(LocPoint p0, double r0, LocPoint p1, double r1)
 {
     double dist = p0.getDistanceTo(p1);
@@ -1304,6 +1338,77 @@ QList<LocPoint> RouteMagic::fillBoundsWithTrajectory(QList<LocPoint> bounds, QLi
         //route.append(row);
         rev = !rev;
     }
+
+    return route;
+}
+
+// TODO: https://en.wikipedia.org/wiki/Curve_orientation for simplifications
+// TODO: smoothen turns
+// TODO: to actually keep distance to boundary at all points, we need to shrink boundary first and then draw zig zag
+QList<LocPoint> RouteMagic::fillConvexPolygonWithZigZag(QList<LocPoint> bounds, double spacing)
+{
+    QList<LocPoint> route;
+
+    // 1. get bound that determines optimal zigzag direction
+    QPair<LocPoint, LocPoint> baseline = getBaselineDeterminingMinHeightOfConvexPolygon(bounds);
+    double angle = atan2(baseline.second.getY() - baseline.first.getY(), baseline.second.getX() - baseline.first.getX());
+
+    // 2. draw parallels to baseline that cover whole polygon
+    LocPoint newLineBegin = LocPoint(baseline.first.getX() - 10000*cos(angle), baseline.first.getY() - 10000*sin(angle));
+    LocPoint newLineEnd = LocPoint(baseline.second.getX() + 10000*cos(angle), baseline.second.getY() + 10000*sin(angle));
+
+    LocPoint nearBaselineCenter = LocPoint((baseline.first.getX() + baseline.second.getX())/2 + cos(angle + PI/2), (baseline.first.getY() + baseline.second.getY())/2 + sin(angle + PI/2));
+    LocPoint orthogonalDirectionTestPoint = LocPoint(nearBaselineCenter.getX() + 10000*cos(angle + PI/2), nearBaselineCenter.getY() + 10000*sin(angle + PI/2));
+
+    int directionSign = 1;
+    if (!intersectionExists(QList<LocPoint>({nearBaselineCenter, orthogonalDirectionTestPoint}), bounds))
+        directionSign = -1;
+
+    while (true) {
+        newLineBegin = LocPoint(newLineBegin.getX() + directionSign*spacing*cos(angle + PI/2), newLineBegin.getY() + directionSign*spacing*sin(angle + PI/2));
+        newLineEnd =   LocPoint(newLineEnd.getX() + directionSign*spacing*cos(angle + PI/2), newLineEnd.getY() + directionSign*spacing*sin(angle + PI/2));
+
+        if (intersectionExists(QList<LocPoint>({newLineBegin, newLineEnd}), bounds)) {
+            route.append(newLineBegin);
+            route.append(newLineEnd);
+        } else
+            break;
+    }
+
+    // 3. cut parallels down to polygon (ensure "short" connections not in bounds, sort bounds to get reproducible results)
+    for (int i=1; i<route.size(); i+=4)
+        std::swap(route[i-1], route[i]);
+
+    int baselineStartInBounds = -1;
+    for (int i = 0; i < bounds.size() && baselineStartInBounds == -1; i++)
+        if (bounds.at(i).getX() == baseline.first.getX() && bounds.at(i).getY() == baseline.first.getY())
+            baselineStartInBounds = i;
+    assert(baselineStartInBounds > -1);
+
+    QList<LocPoint> boundsStartingWithBaseline;
+    for (int i = baselineStartInBounds; i < bounds.size(); i++)
+        boundsStartingWithBaseline.append(bounds.at(i));
+    for (int i = 0; i < baselineStartInBounds; i++)
+        boundsStartingWithBaseline.append(bounds.at(i));
+    bounds = boundsStartingWithBaseline;
+    bounds.append(bounds.first());
+
+    route = getAllIntersections(route, bounds);
+
+    // 4. ensure spacing to boundary (see TODO at function begin)
+    LocPoint testShorteningStart = LocPoint(route.at(0).getX() + directionSign*spacing*cos(angle), route.at(0).getY() + directionSign*spacing*sin(angle));
+    LocPoint testShorteningEnd = LocPoint(route.at(1).getX() - directionSign*spacing*cos(angle), route.at(1).getY() - directionSign*spacing*sin(angle));
+    if (intersectionExists(QList<LocPoint>({testShorteningStart, testShorteningEnd}), bounds))
+        directionSign *= -1;
+    for (int i=1; i<route.size(); i+=2) {
+        route[i-1].setX(route[i-1].getX() + directionSign*spacing*cos(angle));
+        route[i-1].setY(route[i-1].getY() + directionSign*spacing*sin(angle));
+        route[i].setX(route[i].getX() - directionSign*spacing*cos(angle));
+        route[i].setY(route[i].getY() - directionSign*spacing*sin(angle));
+    }
+
+    for (int i=1; i<route.size(); i+=4)
+        std::swap(route[i-1], route[i]);
 
     return route;
 }
