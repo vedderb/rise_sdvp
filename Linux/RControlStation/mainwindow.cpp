@@ -2151,6 +2151,7 @@ void MainWindow::on_boundsFillPushButton_clicked()
     }
     bool reduce = ui->reduceTrajectoryCheckBox->isChecked();
     //QList<LocPoint> test = RouteMagic::fillBoundsWithTrajectory(bounds, entry, exit, spacing, ang_rad, reduce);
+    //QList<LocPoint> test = RouteMagic::getShrinkedConvexPolygon(bounds, spacing);
     QList<LocPoint> test = RouteMagic::fillConvexPolygonWithZigZag(bounds, spacing);
 
     int r = ui->mapWidget->getRoutes().size();
