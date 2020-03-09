@@ -159,7 +159,7 @@ typedef struct {
     uint8_t  actor_type; // virtual or real 1 - virtual, 2 - real
 } chronos_opro;
 
-#define PROTOCOL_VERSION 0
+#define PROTOCOL_VERSION 2
 
 // Chronos messaging
 
