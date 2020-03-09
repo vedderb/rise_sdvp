@@ -319,7 +319,11 @@ void ChronosComm::sendStrt(chronos_strt strt)
 
 void ChronosComm::sendMonr(chronos_monr monr)
 {
+	constexpr quint16 monrContentLength = 0x001E;
+	constexpr quint16 monrStructValueID = 0x0080;
     VByteArrayLe vb;
+	vb.vbAppendUint16(monrStructValueID);
+	vb.vbAppendUint16(monrContentLength);
     vb.vbAppendUint32(monr.gps_ms_of_week * 4);
     vb.vbAppendDouble32(monr.x,1e3);
     vb.vbAppendDouble32(monr.y,1e3);
@@ -557,9 +561,9 @@ void ChronosComm::mkChronosHeader(VByteArrayLe &vb, quint8 transmitter_id, quint
                                   bool ack_req, quint8 protocol_ver, quint16 message_id)
 {   
     // a bit unsure of is the ack req should go to leftmost or rightmost bit.
-    quint8 augmented_protocol_ver = protocol_ver << 1;
+	quint8 augmented_protocol_ver = protocol_ver;
     if (ack_req) {
-        augmented_protocol_ver |= 1;
+		augmented_protocol_ver |= 0x80;
     }
 
     VByteArrayLe vb2;
