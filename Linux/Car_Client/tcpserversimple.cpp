@@ -30,9 +30,9 @@ TcpServerSimple::TcpServerSimple(QObject *parent) : QObject(parent)
             this, SLOT(dataToSend(QByteArray&)));
 }
 
-bool TcpServerSimple::startServer(int port)
+bool TcpServerSimple::startServer(int port, QHostAddress addr)
 {
-    if (!mTcpServer->listen(QHostAddress::Any,  port)) {
+    if (!mTcpServer->listen(addr,  port)) {
         return false;
     }
 

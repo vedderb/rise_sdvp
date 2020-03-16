@@ -28,7 +28,7 @@ class TcpServerSimple : public QObject
     Q_OBJECT
 public:
     explicit TcpServerSimple(QObject *parent = 0);
-    bool startServer(int port);
+    bool startServer(int port, QHostAddress addr = QHostAddress::Any);
     void stopServer();
     bool sendData(const QByteArray &data);
     QString errorString();

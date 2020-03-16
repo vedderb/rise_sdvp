@@ -183,7 +183,8 @@ Autopilot::Autopilot(QObject *parent) : QObject(parent)
     mAxisDistance = 0.475;
     mRepeatRoutes = true;
     mSpeedMax = 100.0;
-    mBaseRad = 1.8;
+    mBaseRad = 0.8;
+    mRadTime = 0.8;
     mTimeAddMs = 1000 * 60;
     mModeTime = 0;
 
@@ -455,6 +456,16 @@ void Autopilot::setBaseRad(double baseRad)
     mBaseRad = baseRad;
 }
 
+double Autopilot::radTime() const
+{
+    return mRadTime;
+}
+
+void Autopilot::setRadTime(double radTime)
+{
+    mRadTime = radTime;
+}
+
 int Autopilot::timeAddMs() const
 {
     return mTimeAddMs;
@@ -519,8 +530,14 @@ void Autopilot::timerSlot()
         int end = m_point_now + add;
 
         // Speed-dependent radius
-        m_rad_now = mBaseRad /
-                (m_en_dynamic_rad ? autopilot_get_steering_scale() : 1.0);
+        if (m_en_dynamic_rad) {
+            m_rad_now = fabsf(mRadTime * mSpeed);
+            if (m_rad_now < mBaseRad) {
+                m_rad_now = mBaseRad;
+            }
+        } else {
+            m_rad_now = mBaseRad;
+        }
 
         ROUTE_POINT rp_now; // The point we should follow now.
         int circle_intersections = 0;

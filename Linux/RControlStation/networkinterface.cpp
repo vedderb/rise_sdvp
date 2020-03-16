@@ -232,6 +232,53 @@ void NetworkInterface::sendAck(const QString &cmd)
     sendData(data);
 }
 
+void NetworkInterface::setTcpEnabled(bool enabled, int port)
+{
+    ui->tcpActivateBox->setChecked(enabled);
+    ui->tcpPortBox->setEnabled(false);
+
+    if (port >= 0) {
+        ui->tcpPortBox->setValue(port);
+    }
+
+    if (enabled) {
+        if (!mTcpServer->startServer(ui->tcpPortBox->value())) {
+            qWarning() << "Starting TCP server failed:" << mTcpServer->errorString();
+            QMessageBox::warning(this, "TCP Server Error",
+                                 tr("Starting TCP server failed. Make sure that the port is not "
+                                    "already in use. Error: %1").arg(mTcpServer->errorString()));
+            ui->tcpActivateBox->setChecked(false);
+        }
+    } else {
+        mTcpServer->stopServer();
+    }
+
+    ui->tcpPortBox->setEnabled(!ui->tcpActivateBox->isChecked());
+}
+
+void NetworkInterface::setUdpEnabled(bool enabled, int port)
+{
+    ui->udpActivateBox->setChecked(enabled);
+
+    if (port >= 0) {
+        ui->udpPortBox->setValue(port);
+    }
+
+    if (enabled) {
+        if (!mUdpSocket->bind(QHostAddress::Any, ui->udpPortBox->value())) {
+            qWarning() << "Binding UDP socket failed.";
+            QMessageBox::warning(this, "UDP Server Error",
+                                 "Creating UDP server failed. Make sure that the port is not "
+                                 "already in use.");
+            ui->udpActivateBox->setChecked(false);
+        }
+    } else {
+        mUdpSocket->close();
+    }
+
+    ui->udpPortBox->setEnabled(!ui->udpActivateBox->isChecked());
+}
+
 void NetworkInterface::tcpDataRx(const QByteArray &data)
 {
     processData(data);
@@ -293,40 +340,14 @@ void NetworkInterface::printReceived(quint8 id, QString str)
     sendPrint(id, str);
 }
 
-void NetworkInterface::on_tcpActivateBox_toggled(bool checked)
+void NetworkInterface::on_tcpActivateBox_clicked(bool checked)
 {
-    ui->tcpPortBox->setEnabled(false);
-
-    if (checked) {
-        if (!mTcpServer->startServer(ui->tcpPortBox->value())) {
-            qWarning() << "Starting TCP server failed:" << mTcpServer->errorString();
-            QMessageBox::warning(this, "TCP Server Error",
-                                 tr("Starting TCP server failed. Make sure that the port is not "
-                                    "already in use. Error: %1").arg(mTcpServer->errorString()));
-            ui->tcpActivateBox->setChecked(false);
-        }
-    } else {
-        mTcpServer->stopServer();
-    }
-
-    ui->tcpPortBox->setEnabled(!ui->tcpActivateBox->isChecked());
+    setTcpEnabled(checked);
 }
 
-void NetworkInterface::on_udpActivateBox_toggled(bool checked)
+void NetworkInterface::on_udpActivateBox_clicked(bool checked)
 {
-    if (checked) {
-        if (!mUdpSocket->bind(QHostAddress::Any, ui->udpPortBox->value())) {
-            qWarning() << "Binding UDP socket failed.";
-            QMessageBox::warning(this, "UDP Server Error",
-                                 "Creating UDP server failed. Make sure that the port is not "
-                                 "already in use.");
-            ui->udpActivateBox->setChecked(false);
-        }
-    } else {
-        mUdpSocket->close();
-    }
-
-    ui->udpPortBox->setEnabled(!ui->udpActivateBox->isChecked());
+    setUdpEnabled(checked);
 }
 
 void NetworkInterface::processData(const QByteArray &data)

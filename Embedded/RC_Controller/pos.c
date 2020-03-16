@@ -51,7 +51,6 @@ static float m_gyro[3];
 static float m_mag[3];
 static float m_mag_raw[3];
 static mc_values m_mc_val;
-static float m_imu_yaw;
 static float m_imu_yaw_offset;
 static mutex_t m_mutex_pos;
 static mutex_t m_mutex_gps;
@@ -106,7 +105,6 @@ void pos_init(void) {
 	memset(&m_pos, 0, sizeof(m_pos));
 	memset(&m_gps, 0, sizeof(m_gps));
 	memset(&m_mc_val, 0, sizeof(m_mc_val));
-	m_imu_yaw = 0.0;
 	m_ubx_pos_valid = true;
 	m_nma_last_time = 0;
 	memset(&m_pos_history, 0, sizeof(m_pos_history));
@@ -298,7 +296,7 @@ void pos_set_xya(float x, float y, float angle) {
 	m_pos.px = x;
 	m_pos.py = y;
 	m_pos.yaw = angle;
-	m_imu_yaw_offset = m_imu_yaw - angle;
+	m_imu_yaw_offset = m_pos.yaw_imu - angle;
 	m_yaw_imu_clamp = angle;
 
 	chMtxUnlock(&m_mutex_gps);
@@ -310,7 +308,7 @@ void pos_set_yaw_offset(float angle) {
 
 	m_imu_yaw_offset = angle;
 	utils_norm_angle(&m_imu_yaw_offset);
-	m_pos.yaw = m_imu_yaw - m_imu_yaw_offset;
+	m_pos.yaw = m_pos.yaw_imu - m_imu_yaw_offset;
 	utils_norm_angle(&m_pos.yaw);
 	m_yaw_imu_clamp = m_pos.yaw;
 
@@ -954,32 +952,32 @@ static void update_orientation_angles(float *accel, float *gyro, float *mag, flo
 		yaw_now += SIGN(diff) * main_config.yaw_mag_gain * M_PI / 180.0 * dt;
 		utils_norm_angle_rad(&yaw_now);
 
-		m_imu_yaw = yaw_now * 180.0 / M_PI;
+		m_pos.yaw_imu = yaw_now * 180.0 / M_PI;
 	} else {
-		m_imu_yaw = yaw * 180.0 / M_PI;
+		m_pos.yaw_imu = yaw * 180.0 / M_PI;
 	}
 
-	utils_norm_angle(&m_imu_yaw);
+	utils_norm_angle(&m_pos.yaw_imu);
 	m_pos.yaw_rate = -m_gyro[2] * 180.0 / M_PI;
 
 	// Correct yaw
 #if MAIN_MODE == MAIN_MODE_CAR
 	{
 		if (!m_yaw_imu_clamp_set) {
-			m_yaw_imu_clamp = m_imu_yaw - m_imu_yaw_offset;
+			m_yaw_imu_clamp = m_pos.yaw_imu - m_imu_yaw_offset;
 			m_yaw_imu_clamp_set = true;
 		}
 
 		if (main_config.car.clamp_imu_yaw_stationary && fabsf(m_pos.speed) < 0.05) {
-			m_imu_yaw_offset = m_imu_yaw - m_yaw_imu_clamp;
+			m_imu_yaw_offset = m_pos.yaw_imu - m_yaw_imu_clamp;
 		} else {
-			m_yaw_imu_clamp = m_imu_yaw - m_imu_yaw_offset;
+			m_yaw_imu_clamp = m_pos.yaw_imu - m_imu_yaw_offset;
 		}
 	}
 
 	if (main_config.car.yaw_use_odometry) {
 		if (main_config.car.yaw_imu_gain > 1e-10) {
-			float ang_diff = utils_angle_difference(m_pos.yaw, m_imu_yaw - m_imu_yaw_offset);
+			float ang_diff = utils_angle_difference(m_pos.yaw, m_pos.yaw_imu - m_imu_yaw_offset);
 
 			if (ang_diff > 1.2 * main_config.car.yaw_imu_gain) {
 				m_pos.yaw -= main_config.car.yaw_imu_gain;
@@ -993,11 +991,11 @@ static void update_orientation_angles(float *accel, float *gyro, float *mag, flo
 			}
 		}
 	} else {
-		m_pos.yaw = m_imu_yaw - m_imu_yaw_offset;
+		m_pos.yaw = m_pos.yaw_imu - m_imu_yaw_offset;
 		utils_norm_angle(&m_pos.yaw);
 	}
 #else
-	m_pos.yaw = m_imu_yaw - m_yaw_offset_gps;
+	m_pos.yaw = m_pos.yaw_imu - m_imu_yaw_offset;
 	utils_norm_angle(&m_pos.yaw);
 #endif
 
@@ -1379,10 +1377,7 @@ static void car_update_pos(float distance, float turn_rad_rear, float angle_diff
 
 	m_pos.speed = speed;
 
-	// TODO: eventually use yaw from IMU and implement yaw correction
-	pos_uwb_update_dr(m_pos.yaw, distance, turn_rad_rear, m_pos.speed);
-	//	pos_uwb_update_dr(m_imu_yaw, distance, steering_angle, m_pos.speed);
-
+	pos_uwb_update_dr(m_pos.yaw_imu, m_pos.yaw, distance, turn_rad_rear, m_pos.speed);
 	save_pos_history();
 
 	chMtxUnlock(&m_mutex_pos);

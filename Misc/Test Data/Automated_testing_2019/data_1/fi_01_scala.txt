@@ -1,0 +1,99 @@
+[info] Loading settings from plugins.sbt ...
+[info] Loading project definition from /home/benjamin/Dokument/rise_sdvp/Linux/scala_test/project
+[info] Loading settings from build.sbt ...
+[info] Set current project to RcCar Test (in build file:/home/benjamin/Dokument/rise_sdvp/Linux/scala_test/)
+[info] Compiling 1 Scala source to /home/benjamin/Dokument/rise_sdvp/Linux/scala_test/target/scala-2.12/classes ...
+[info] Done compiling.
+[info] Packaging /home/benjamin/Dokument/rise_sdvp/Linux/scala_test/target/scala-2.12/rccar-test_2.12-0.1.jar ...
+[info] Done packaging.
+[info] Running (fork) rcontrolstationcomm.CarTester 
+[error] Java HotSpot(TM) 64-Bit Server VM warning: You have loaded library /tmp/BridJExtractedLibraries3050180271518506836/libbridj.so which might have disabled stack guard. The VM will try to fix the stack guard now.
+[error] It's highly recommended that you fix the library with 'execstack -c <libfile>', or link it with '-z noexecstack'.
+[error] libRControlStation: TCP connected
+[info] New initial state created
+[info] Generated points: 17283, Outer loops: 547
+[info] Segment size: 9
+[info] Generated points: 12336, Outer loops: 299
+[info] Segment size: 13
+[info] Generated points: 21719, Outer loops: 552
+[info] Segment size: 19
+[info] Generated points: 34800, Outer loops: 1219
+[info] Segment size: 25
+[info] New SUT created
+[info] [CarCmd] Clearing faults
+[info] [CarCmd] Clearing route
+[info] [CarCmd] Following recovery route
+[info] Max UWB diff: 0.7050795416121484 m
+[info] [CarCmd] Resetting UWB position
+[info] [CarCmd] Activating autopilot
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.568808342062598 m
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.41457965459004115 m
+[info] [CarCmd] Adding fault; Probe: uwb_range_50 Type: OFFSET Param: 2.0 Start: 15 Duration: 8
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 1.1731429921369358 m
+[info] [Error] Too large difference between the UWB-based and RTKGNSS-based positions.
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 1.2941041148222987 m
+[info] [Error] Too large difference between the UWB-based and RTKGNSS-based positions.
+[info] [CarCmd] Deactivating autopilot
+[info] Tests passed: 0
+[info] Time: 48919 ms
+[info] Tests failed. Failing command sequence:
+[info] RunSegment(rcontrolstationcomm.RpList@5d47c63f)
+[info] RunSegment(rcontrolstationcomm.RpList@5ea434c8)
+[info] AddFault(uwb_range_50,OFFSET,2.0,15,8)
+[info] RunSegment(rcontrolstationcomm.RpList@3bbc39f8)
+[info] RunSegment(rcontrolstationcomm.RpList@4ae3c1cd)
+[error] libRControlStation: TCP disconnected
+[success] Total time: 63 s, completed 2018-jul-24 15:24:02
+
+
+RERUN
+
+Welcome to Scala 2.12.1 (Java HotSpot(TM) 64-Bit Server VM, Java 1.8.0_171).
+Type in expressions for evaluation. Or try :help.
+
+scala> import rcontrolstationcomm._
+import rcontrolstationcomm._
+
+scala> CarTester.connect("localhost", 65191)
+Java HotSpot(TM) 64-Bit Server VM warning: You have loaded library /tmp/BridJExtractedLibraries3462889325828104219/libbridj.so which might have disabled stack guard. The VM will try to fix the stack guard now.
+It's highly recommended that you fix the library with 'execstack -c <libfile>', or link it with '-z noexecstack'.
+libRControlStation: TCP connected
+res0: Boolean = true
+
+scala> CarTester.runLastTestHdd
+Re-running test...
+Commands to re-run
+RunSegment(rcontrolstationcomm.RpList@30c0d731)
+RunSegment(rcontrolstationcomm.RpList@6d5037a9)
+AddFault(uwb_range_50,OFFSET,2.0,15,8)
+RunSegment(rcontrolstationcomm.RpList@422b8438)
+RunSegment(rcontrolstationcomm.RpList@30669dac)
+
+New initial state created
+New SUT created
+[CarCmd] Clearing faults
+[CarCmd] Clearing route
+[CarCmd] Following recovery route
+Max UWB diff: 0.49261365186117323 m
+[CarCmd] Resetting UWB position
+[CarCmd] Activating autopilot
+[CarCmd] Running generated segments
+Max UWB diff: 0.1589997798740606 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.269118356861812 m
+[CarCmd] Adding fault; Probe: uwb_range_50 Type: OFFSET Param: 2.0 Start: 15 Duration: 8
+[CarCmd] Running generated segments
+Max UWB diff: 1.0749326350985913 m
+[Error] Too large difference between the UWB-based and RTKGNSS-based positions.
+Postcondition failed
+[CarCmd] Running generated segments
+Max UWB diff: 1.2793624427815542 m
+[Error] Too large difference between the UWB-based and RTKGNSS-based positions.
+Postcondition failed
+Test sequence failed
+
+

@@ -20,13 +20,15 @@
 
 #include <QPointF>
 #include <QString>
+#include <QColor>
 
 class LocPoint
 {
 public:
-    LocPoint(double x = 0, double y = 0, double height = 0, double roll = 0, double pitch = 0, double yaw = 0,
-             double speed = 0.5, double radius = 5.0, double sigma = 0.0,
-             qint32 time = 0, int id = 0, bool drawLine = true);
+    LocPoint(double x = 0, double y = 0, double height = 0, double roll = 0,
+             double pitch = 0, double yaw = 0, double speed = 0.5, double radius = 5.0,
+             double sigma = 0.0, QColor color = Qt::darkGreen, qint32 time = 0,
+             int id = 0, bool drawLine = true, quint32 attributes = 0);
     LocPoint(const LocPoint &point);
 
     double getX() const;
@@ -41,9 +43,11 @@ public:
     double getRadius() const;
     double getSigma() const;
     QString getInfo() const;
+    QColor getColor() const;
     qint32 getTime() const;
     int getId() const;
     bool getDrawLine() const;
+    quint32 getAttributes() const;
     double getDistanceTo(const LocPoint &point) const;
     double getDistanceTo3d(const LocPoint &point) const;
 
@@ -59,9 +63,11 @@ public:
     void setRadius(double radius);
     void setSigma(double sigma);
     void setInfo(const QString &info);
+    void setColor(const QColor &color);
     void setTime(const qint32 &time);
     void setId(int id);
     void setDrawLine(bool drawLine);
+    void setAttributes(quint32 attributes);
 
     // Operators
     LocPoint& operator=(const LocPoint& point);
@@ -79,9 +85,11 @@ private:
     double mRadius;
     double mSigma;
     QString mInfo;
+    QColor mColor;
     qint32 mTime;
     int mId;
     bool mDrawLine;
+    quint32 mAttributes;
 
 };
 

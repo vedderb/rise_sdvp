@@ -30,7 +30,6 @@
 #include "comm_usb.h"
 #include "timeout.h"
 #include "log.h"
-#include "radar.h"
 #include "ublox.h"
 #include "comm_cc1120.h"
 #include "mr_control.h"
@@ -228,8 +227,10 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 				ROUTE_POINT p;
 				p.px = buffer_get_float32(data, 1e4, &ind);
 				p.py = buffer_get_float32(data, 1e4, &ind);
+				p.pz = buffer_get_float32(data, 1e4, &ind);
 				p.speed = buffer_get_float32(data, 1e6, &ind);
 				p.time = buffer_get_int32(data, &ind);
+				p.attributes = buffer_get_uint32(data, &ind);
 				bool res = autopilot_add_point(&p, first);
 				first = false;
 
@@ -291,8 +292,10 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 				ROUTE_POINT rp = autopilot_get_route_point(i);
 				buffer_append_float32_auto(m_send_buffer, rp.px, &send_index);
 				buffer_append_float32_auto(m_send_buffer, rp.py, &send_index);
+				buffer_append_float32_auto(m_send_buffer, rp.pz, &send_index);
 				buffer_append_float32_auto(m_send_buffer, rp.speed, &send_index);
 				buffer_append_int32(m_send_buffer, rp.time, &send_index);
+				buffer_append_uint32(m_send_buffer, rp.attributes, &send_index);
 			}
 
 			commands_send_packet(m_send_buffer, send_index);
@@ -322,8 +325,10 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 				ROUTE_POINT p;
 				p.px = buffer_get_float32(data, 1e4, &ind);
 				p.py = buffer_get_float32(data, 1e4, &ind);
+				p.pz = buffer_get_float32(data, 1e4, &ind);
 				p.speed = buffer_get_float32(data, 1e6, &ind);
 				p.time = buffer_get_int32(data, &ind);
+				p.attributes = buffer_get_uint32(data, &ind);
 
 				if (first) {
 					first = !autopilot_replace_route(&p);
@@ -415,70 +420,6 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			}
 		} break;
 
-		case CMD_RADAR_SETUP_SET: {
-#if RADAR_EN
-			timeout_reset();
-			commands_set_send_func(func);
-
-			radar_settings_t s;
-			int32_t ind = 0;
-
-			s.f_center = buffer_get_float32_auto(data, &ind);
-			s.f_span = buffer_get_float32_auto(data, &ind);
-			s.points = buffer_get_int16(data, &ind);
-			s.t_sweep = buffer_get_float32_auto(data, &ind);
-			s.cc_x = buffer_get_float32_auto(data, &ind);
-			s.cc_y = buffer_get_float32_auto(data, &ind);
-			s.cc_rad = buffer_get_float32_auto(data, &ind);
-			s.log_rate_ms = buffer_get_int32(data, &ind);
-			s.log_en = data[ind++];
-			s.map_plot_avg_factor = buffer_get_float32_auto(data, &ind);
-			s.map_plot_max_div = buffer_get_float32_auto(data, &ind);
-			s.plot_mode = data[ind++];
-			s.map_plot_start = buffer_get_uint16(data, &ind);
-			s.map_plot_end = buffer_get_uint16(data, &ind);
-
-			// Send ack
-			int32_t send_index = 0;
-			m_send_buffer[send_index++] = id_ret;
-			m_send_buffer[send_index++] = packet_id;
-			commands_send_packet(m_send_buffer, send_index);
-
-			timeout_reset();
-
-			radar_setup_measurement(&s);
-#endif
-		} break;
-
-		case CMD_RADAR_SETUP_GET: {
-#if RADAR_EN
-			timeout_reset();
-			commands_set_send_func(func);
-
-			const radar_settings_t *s = radar_get_settings();
-			int32_t send_index = 0;
-
-			m_send_buffer[send_index++] = id_ret;
-			m_send_buffer[send_index++] = packet_id;
-			buffer_append_float32_auto(m_send_buffer, s->f_center, &send_index);
-			buffer_append_float32_auto(m_send_buffer, s->f_span, &send_index);
-			buffer_append_int16(m_send_buffer, s->points, &send_index);
-			buffer_append_float32_auto(m_send_buffer, s->t_sweep, &send_index);
-			buffer_append_float32_auto(m_send_buffer, s->cc_x, &send_index);
-			buffer_append_float32_auto(m_send_buffer, s->cc_y, &send_index);
-			buffer_append_float32_auto(m_send_buffer, s->cc_rad, &send_index);
-			buffer_append_int32(m_send_buffer, s->log_rate_ms, &send_index);
-			m_send_buffer[send_index++] = s->log_en;
-			buffer_append_float32_auto(m_send_buffer, s->map_plot_avg_factor, &send_index);
-			buffer_append_float32_auto(m_send_buffer, s->map_plot_max_div, &send_index);
-			m_send_buffer[send_index++] = s->plot_mode;
-			buffer_append_uint16(m_send_buffer, s->map_plot_start, &send_index);
-			buffer_append_uint16(m_send_buffer, s->map_plot_end, &send_index);
-
-			commands_send_packet(m_send_buffer, send_index);
-#endif
-		} break;
-
 		case CMD_SET_MS_TODAY: {
 			timeout_reset();
 
@@ -558,6 +499,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 			main_config.ap_repeat_routes = data[ind++];
 			main_config.ap_base_rad = buffer_get_float32_auto(data, &ind);
+			main_config.ap_rad_time_ahead = buffer_get_float32_auto(data, &ind);
 			main_config.ap_mode_time = data[ind++];
 			main_config.ap_max_speed = buffer_get_float32_auto(data, &ind);
 			main_config.ap_time_add_repeat_ms = buffer_get_int32(data, &ind);
@@ -580,6 +522,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			main_config.car.disable_motor = data[ind++];
 			main_config.car.simulate_motor = data[ind++];
 			main_config.car.clamp_imu_yaw_stationary = data[ind++];
+			main_config.car.use_uwb_pos = data[ind++];
 
 			main_config.car.gear_ratio = buffer_get_float32_auto(data, &ind);
 			main_config.car.wheel_diam = buffer_get_float32_auto(data, &ind);
@@ -710,6 +653,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 
 			m_send_buffer[send_index++] = main_cfg_tmp.ap_repeat_routes;
 			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.ap_base_rad, &send_index);
+			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.ap_rad_time_ahead, &send_index);
 			m_send_buffer[send_index++] = main_cfg_tmp.ap_mode_time;
 			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.ap_max_speed, &send_index);
 			buffer_append_int32(m_send_buffer, main_cfg_tmp.ap_time_add_repeat_ms, &send_index);
@@ -727,6 +671,7 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			m_send_buffer[send_index++] = main_cfg_tmp.car.disable_motor;
 			m_send_buffer[send_index++] = main_cfg_tmp.car.simulate_motor;
 			m_send_buffer[send_index++] = main_cfg_tmp.car.clamp_imu_yaw_stationary;
+			m_send_buffer[send_index++] = main_cfg_tmp.car.use_uwb_pos;
 
 			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.car.gear_ratio, &send_index);
 			buffer_append_float32_auto(m_send_buffer, main_cfg_tmp.car.wheel_diam, &send_index);
@@ -853,7 +798,11 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			m_send_buffer[send_index++] = FW_VERSION_MINOR; // 4
 			buffer_append_float32(m_send_buffer, pos.roll, 1e6, &send_index); // 8
 			buffer_append_float32(m_send_buffer, pos.pitch, 1e6, &send_index); // 12
-			buffer_append_float32(m_send_buffer, pos.yaw, 1e6, &send_index); // 16
+			if (main_config.car.use_uwb_pos) {
+				buffer_append_float32(m_send_buffer, pos_uwb.yaw, 1e6, &send_index); // 16
+			} else {
+				buffer_append_float32(m_send_buffer, pos.yaw, 1e6, &send_index); // 16
+			}
 			buffer_append_float32(m_send_buffer, accel[0], 1e6, &send_index); // 20
 			buffer_append_float32(m_send_buffer, accel[1], 1e6, &send_index); // 24
 			buffer_append_float32(m_send_buffer, accel[2], 1e6, &send_index); // 28
@@ -863,8 +812,13 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			buffer_append_float32(m_send_buffer, mag[0], 1e6, &send_index); // 44
 			buffer_append_float32(m_send_buffer, mag[1], 1e6, &send_index); // 48
 			buffer_append_float32(m_send_buffer, mag[2], 1e6, &send_index); // 52
-			buffer_append_float32(m_send_buffer, pos.px, 1e4, &send_index); // 56
-			buffer_append_float32(m_send_buffer, pos.py, 1e4, &send_index); // 60
+			if (main_config.car.use_uwb_pos) {
+				buffer_append_float32(m_send_buffer, pos_uwb.px, 1e4, &send_index); // 56
+				buffer_append_float32(m_send_buffer, pos_uwb.py, 1e4, &send_index); // 60
+			} else {
+				buffer_append_float32(m_send_buffer, pos.px, 1e4, &send_index); // 56
+				buffer_append_float32(m_send_buffer, pos.py, 1e4, &send_index); // 60
+			}
 			buffer_append_float32(m_send_buffer, pos.speed, 1e6, &send_index); // 64
 			buffer_append_float32(m_send_buffer, mcval.v_in, 1e6, &send_index); // 68
 			buffer_append_float32(m_send_buffer, mcval.temp_mos, 1e6, &send_index); // 72
@@ -876,8 +830,13 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			buffer_append_float32(m_send_buffer, autopilot_get_rad_now(), 1e6, &send_index); // 93
 			buffer_append_int32(m_send_buffer, pos_get_ms_today(), &send_index); // 97
 			buffer_append_int16(m_send_buffer, autopilot_get_route_left(), &send_index); // 99
-			buffer_append_float32(m_send_buffer, pos_uwb.px, 1e4, &send_index); // 103
-			buffer_append_float32(m_send_buffer, pos_uwb.py, 1e4, &send_index); // 107
+			if (main_config.car.use_uwb_pos) {
+				buffer_append_float32(m_send_buffer, pos.px, 1e4, &send_index); // 103
+				buffer_append_float32(m_send_buffer, pos.py, 1e4, &send_index); // 107
+			} else {
+				buffer_append_float32(m_send_buffer, pos_uwb.px, 1e4, &send_index); // 103
+				buffer_append_float32(m_send_buffer, pos_uwb.py, 1e4, &send_index); // 107
+			}
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
 
@@ -1228,45 +1187,6 @@ void commands_send_plot_points(float x, float y) {
 	buffer_append_float32_auto(m_send_buffer, x, &ind);
 	buffer_append_float32_auto(m_send_buffer, y, &ind);
 	commands_send_packet((unsigned char*)m_send_buffer, ind);
-}
-
-void commands_send_radar_samples(float *dists, int num) {
-	if (num > 24) {
-		num = 24;
-	}
-
-	int32_t ind = 0;
-	m_send_buffer[ind++] = main_id;
-	m_send_buffer[ind++] = CMD_RADAR_SAMPLES;
-	for (int i = 0;i < num;i++) {
-		buffer_append_float32_auto(m_send_buffer, dists[i], &ind);
-	}
-	commands_send_packet((unsigned char*)m_send_buffer, ind);
-}
-
-void commands_send_dw_sample(DW_LOG_INFO *dw) {
-	int32_t ind = 0;
-	m_send_buffer[ind++] = main_id;
-	m_send_buffer[ind++] = CMD_DW_SAMPLE;
-	m_send_buffer[ind++] = dw->valid;
-	m_send_buffer[ind++] = dw->dw_anchor;
-	buffer_append_int32(m_send_buffer, dw->time_today_ms, &ind);
-	buffer_append_float32_auto(m_send_buffer, dw->dw_dist, &ind);
-	buffer_append_float32_auto(m_send_buffer, dw->px, &ind);
-	buffer_append_float32_auto(m_send_buffer, dw->py, &ind);
-	buffer_append_float32_auto(m_send_buffer, dw->px_gps, &ind);
-	buffer_append_float32_auto(m_send_buffer, dw->py_gps, &ind);
-	buffer_append_float32_auto(m_send_buffer, dw->pz_gps, &ind);
-
-#if LOG_DW_FORCE_CC1120
-	if (comm_cc1120_init_done()) {
-		comm_cc1120_send_buffer(m_send_buffer, ind);
-	} else {
-		commands_send_packet(m_send_buffer, ind);
-	}
-#else
-	commands_send_packet(m_send_buffer, ind);
-#endif
 }
 
 void commands_send_log_ethernet(unsigned char *data, int len) {

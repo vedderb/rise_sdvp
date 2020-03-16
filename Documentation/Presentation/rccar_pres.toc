@@ -1,2 +1,0 @@
-\beamer@endinputifotherversion {3.24pt}
-\beamer@sectionintoc {1}{Overview}{3}{0}{1}

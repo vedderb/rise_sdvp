@@ -38,6 +38,7 @@ public:
     bool sendPacketAck(const unsigned char *data, unsigned int len_packet,
                        int retries, int timeoutMs = 200);
     void processData(QByteArray &data);
+    void processPacket(const unsigned char *data, int len);
     void startUdpConnection(QHostAddress ip, int port);
     void startUdpConnection2(QHostAddress ip);
     void startUdpConnectionServer(int port);
@@ -52,7 +53,6 @@ public:
     bool setPosAck(quint8 id, double x, double y, double angle, int retries = 10);
     bool setYawOffsetAck(quint8 id, double angle, int retries = 10);
     bool setEnuRef(quint8 id, double *llh, int retries = 10);
-    bool radarSetupSet(quint8 id, radar_settings_t *s, int retries = 10);
     bool setSystemTime(quint8 id, qint32 sec, qint32 usec, int retries = 10);
     bool sendReboot(quint8 id, bool powerOff, int retries = 10);
     bool getRoutePart(quint8 id,
@@ -95,11 +95,8 @@ signals:
     void plotDataReceived(quint8 id, double x, double y);
     void plotAddGraphReceived(quint8 id, QString name);
     void plotSetGraphReceived(quint8 id, int graph);
-    void radarSetupReceived(quint8 id, radar_settings_t s);
-    void radarSamplesReceived(quint8 id, QVector<QPair<double, double> > samples);
     void systemTimeReceived(quint8 id, qint32 sec, qint32 usec);
     void rebootSystemReceived(quint8 id, bool powerOff);
-    void dwSampleReceived(quint8 id, DW_LOG_INFO dw);
     void routePartReceived(quint8 id, int len, const QList<LocPoint> &route);
     void logEthernetReceived(quint8 id, QByteArray data);
     void cameraImageReceived(quint8 id, QImage image, int rxBytes);
@@ -124,7 +121,6 @@ public slots:
     void setYawOffset(quint8 id, double angle);
     void getEnuRef(quint8 id);
     void setMsToday(quint8 id, qint32 time);
-    void radarSetupGet(quint8 id);
     void mrRcControl(quint8 id, double throttle, double roll, double pitch, double yaw);
     void mrOverridePower(quint8 id, double fl_f, double bl_l, double fr_r, double br_b);
     void startCameraStream(quint8 id, int camera, int quality,
@@ -133,7 +129,6 @@ public slots:
 
 private:
     unsigned short crc16(const unsigned char *buf, unsigned int len);
-    void processPacket(const unsigned char *data, int len);
     bool waitSignal(QObject *sender, const char *signal, int timeoutMs);
 
     QTimer *mTimer;

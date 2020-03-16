@@ -1,0 +1,132 @@
+[info] Loading settings from plugins.sbt ...
+[info] Loading project definition from /home/benjamin/Dokument/rise_sdvp/Linux/scala_test/project
+[info] Loading settings from build.sbt ...
+[info] Set current project to RcCar Test (in build file:/home/benjamin/Dokument/rise_sdvp/Linux/scala_test/)
+[info] Compiling 1 Scala source to /home/benjamin/Dokument/rise_sdvp/Linux/scala_test/target/scala-2.12/classes ...
+[info] Done compiling.
+[info] Packaging /home/benjamin/Dokument/rise_sdvp/Linux/scala_test/target/scala-2.12/rccar-test_2.12-0.1.jar ...
+[info] Done packaging.
+[info] Running (fork) rcontrolstationcomm.CarTester 
+[error] Java HotSpot(TM) 64-Bit Server VM warning: You have loaded library /tmp/BridJExtractedLibraries8670582974321359201/libbridj.so which might have disabled stack guard. The VM will try to fix the stack guard now.
+[error] It's highly recommended that you fix the library with 'execstack -c <libfile>', or link it with '-z noexecstack'.
+[error] libRControlStation: TCP connected
+[info] New initial state created
+[info] Generated points: 12781, Outer loops: 419
+[info] Segment size: 9
+[info] Generated points: 42815, Outer loops: 846
+[info] Segment size: 13
+[info] Generated points: 13953, Outer loops: 480
+[info] Segment size: 20
+[info] New SUT created
+[info] [CarCmd] Clearing faults
+[info] [CarCmd] Clearing route
+[info] [CarCmd] Following recovery route
+[info] Max UWB diff: 0.49981793685301235 m
+[info] [CarCmd] Resetting UWB position
+[info] [CarCmd] Activating autopilot
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.33486131457664814 m
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.272682856080105 m
+[info] [CarCmd] Adding fault; Probe: uwb_range_234 Type: OFFSET Param: 4.0 Start: 70 Duration: 1
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.4113064307788022 m
+[info] [CarCmd] Adding fault; Probe: uwb_range_50 Type: OFFSET Param: 5.0 Start: 8 Duration: 1
+[info] [CarCmd] Deactivating autopilot
+[info] Generated points: 14153, Outer loops: 450
+[info] Segment size: 7
+[info] Generated points: 20673, Outer loops: 734
+[info] Segment size: 14
+[info] Generated points: 11554, Outer loops: 258
+[info] Segment size: 18
+[info] Generated points: 153109, Outer loops: 3823
+[info] Segment size: 24
+[info] Generated points: 63171, Outer loops: 1397
+[info] Segment size: 29
+[info] Generated points: 22998, Outer loops: 897
+[info] Segment size: 35
+[info] New SUT created
+[info] [CarCmd] Clearing faults
+[info] [CarCmd] Clearing route
+[info] [CarCmd] Following recovery route
+[info] Max UWB diff: 0.4821776125039422 m
+[info] [CarCmd] Resetting UWB position
+[info] [CarCmd] Activating autopilot
+[info] [CarCmd] Adding fault; Probe: uwb_range_50 Type: AMPLIFICATION Param: 4.0 Start: 78 Duration: 2
+[info] [CarCmd] Adding fault; Probe: uwb_range_234 Type: AMPLIFICATION Param: 5.0 Start: 64 Duration: 1
+[info] [CarCmd] Adding fault; Probe: uwb_range_50 Type: OFFSET Param: 5.0 Start: 72 Duration: 1
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.34104089197631987 m
+[info] [CarCmd] Adding fault; Probe: uwb_range_50 Type: OFFSET Param: 4.0 Start: 10 Duration: 1
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.3507134015118358 m
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.37868258475931665 m
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.3651367962832565 m
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.2929259633422745 m
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.46700489290798175 m
+[info] [CarCmd] Deactivating autopilot
+[info] Generated points: 37442, Outer loops: 1146
+[info] Segment size: 8
+[info] Generated points: 47897, Outer loops: 1631
+[info] Segment size: 14
+[info] Generated points: 2485, Outer loops: 116
+[info] Segment size: 20
+[info] Generated points: 94236, Outer loops: 5000
+[info] Segment size: 27
+[info] Generated points: 59843, Outer loops: 1773
+[info] Segment size: 34
+[info] Generated points: 112070, Outer loops: 3401
+[info] Segment size: 41
+[info] Generated points: 16762, Outer loops: 372
+[info] Segment size: 48
+[info] Generated points: 108471, Outer loops: 5000
+[info] Segment size: 54
+[info] Generated points: 78121, Outer loops: 2047
+[info] Segment size: 59
+[info] Generated points: 1793, Outer loops: 56
+[info] Segment size: 64
+[info] Generated points: 40457, Outer loops: 1470
+[info] Segment size: 70
+[info] New SUT created
+[info] [CarCmd] Clearing faults
+[info] [CarCmd] Clearing route
+[info] [CarCmd] Following recovery route
+[info] Max UWB diff: 0.49204232541520565 m
+[info] [CarCmd] Resetting UWB position
+[info] [CarCmd] Activating autopilot
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.2673229133463861 m
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.3465217020620778 m
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.40183495368122907 m
+[info] [CarCmd] Adding fault; Probe: uwb_range_50 Type: OFFSET Param: 2.0 Start: 2 Duration: 1
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.48777240594359045 m
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.34375835989834547 m
+[info] [CarCmd] Adding fault; Probe: uwb_range_234 Type: AMPLIFICATION Param: 2.0 Start: 99 Duration: 2
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.31895951153712415 m
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.39042444851725705 m
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.5173136089452873 m
+[info] [CarCmd] Adding fault; Probe: uwb_range_50 Type: OFFSET Param: 2.0 Start: 12 Duration: 1
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.5211491245315553 m
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.3765745875653317 m
+[info] [CarCmd] Adding fault; Probe: uwb_range_50 Type: AMPLIFICATION Param: 0.0 Start: 26 Duration: 1
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.4455796786210064 m
+[info] [CarCmd] Deactivating autopilot
+[info] Tests passed: 3
+[info] Time: 201241 ms
+[info] All tests passed
+[error] libRControlStation: TCP disconnected
+[success] Total time: 215 s, completed 2018-jul-24 15:31:35
