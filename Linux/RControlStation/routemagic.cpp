@@ -1379,20 +1379,19 @@ QList<LocPoint> RouteMagic::fillConvexPolygonWithZigZag(QList<LocPoint> bounds, 
     double angle = atan2(baseline.second.getY() - baseline.first.getY(), baseline.second.getX() - baseline.first.getX());
 
     // 3. draw parallels to baseline that cover whole polygon
-    LocPoint newLineBegin = LocPoint(baseline.first.getX() - 10000*cos(angle), baseline.first.getY() - 10000*sin(angle));
-    LocPoint newLineEnd = LocPoint(baseline.second.getX() + 10000*cos(angle), baseline.second.getY() + 10000*sin(angle));
-
     int directionSign = getConvexPolygonOrientation(bounds);
 
-    while (true) {
+    LocPoint newLineBegin = LocPoint(baseline.first.getX() - 100000*cos(angle) + 0.01*directionSign*cos(angle + PI/2),
+                                     baseline.first.getY() - 100000*sin(angle) + 0.01*directionSign*sin(angle + PI/2));
+    LocPoint newLineEnd = LocPoint(baseline.second.getX() + 100000*cos(angle) + 0.01*directionSign*cos(angle + PI/2),
+                                   baseline.second.getY() + 100000*sin(angle) + 0.01*directionSign*sin(angle + PI/2));
+
+    while (intersectionExists(QList<LocPoint>({newLineBegin, newLineEnd}), bounds)) {
+        route.append(newLineBegin);
+        route.append(newLineEnd);
+
         newLineBegin = LocPoint(newLineBegin.getX() + directionSign*spacing*cos(angle + PI/2), newLineBegin.getY() + directionSign*spacing*sin(angle + PI/2));
         newLineEnd =   LocPoint(newLineEnd.getX() + directionSign*spacing*cos(angle + PI/2), newLineEnd.getY() + directionSign*spacing*sin(angle + PI/2));
-
-        if (intersectionExists(QList<LocPoint>({newLineBegin, newLineEnd}), bounds)) {
-            route.append(newLineBegin);
-            route.append(newLineEnd);
-        } else
-            break;
     }
 
     // 4. cut parallels down to polygon ((i) ensure "short" connections not in bounds, (ii) sort bounds to get reproducible results, (iii) get intersections with bounds)
