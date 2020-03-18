@@ -2141,21 +2141,27 @@ void MainWindow::on_boundsFillPushButton_clicked()
     QList<LocPoint> bounds = ui->mapWidget->getRoute(ui->boundsRouteSpinBox->value());
     QList<LocPoint> entry  = ui->mapWidget->getRoute(ui->entryRouteSpinBox->value());
     QList<LocPoint> exit   = ui->mapWidget->getRoute(ui->exitRouteSpinBox->value());
+
     double spacing = ui->boundsFillSpacingSpinBox->value();
     if (spacing < 0.5) return;
+
     int    angle   = ui->boundsFillAngleSlider->value();
     double ang_rad = static_cast<double>(angle) * M_PI / 180.0;
     if (ui->findOptimalAngleCheckBox->checkState()) {
         const auto lineForOptimalAngle = RouteMagic::getBaselineDeterminingMinHeightOfConvexPolygon(bounds);
         ang_rad = atan2(lineForOptimalAngle.second.getY() - lineForOptimalAngle.first.getY(), lineForOptimalAngle.second.getX() - lineForOptimalAngle.first.getX()) + RouteMagic::PI/2;
     }
-    bool reduce = ui->reduceTrajectoryCheckBox->isChecked();
-    //QList<LocPoint> test = RouteMagic::fillBoundsWithTrajectory(bounds, entry, exit, spacing, ang_rad, reduce);
-    //QList<LocPoint> test = RouteMagic::getShrinkedConvexPolygon(bounds, spacing);
-    QList<LocPoint> test = RouteMagic::fillConvexPolygonWithZigZag(bounds, spacing);
+
+    //QList<LocPoint> test = RouteMagic::fillBoundsWithTrajectory(bounds, entry, exit, spacing, ang_rad, true);
+    // TODO: smoothen turns
+    QList<LocPoint> route;
+    if (ui->generateFrameCheckBox->isChecked())
+        route = RouteMagic::fillConvexPolygonWithFramedZigZag(bounds, spacing);
+    else
+        route = RouteMagic::fillConvexPolygonWithZigZag(bounds, spacing);
 
     int r = ui->mapWidget->getRoutes().size();
-    ui->mapWidget->addRoute(test);
+    ui->mapWidget->addRoute(route);
     ui->mapWidget->setRouteNow(r);
     ui->mapWidget->repaint();
 
@@ -2180,8 +2186,7 @@ void MainWindow::on_boundsFillAngleSlider_sliderReleased()
     double spacing = ui->boundsFillSpacingSpinBox->value();
     int    angle   = ui->boundsFillAngleSlider->value();
     double ang_rad = static_cast<double>(angle) * M_PI / 180.0;
-    bool reduce = ui->reduceTrajectoryCheckBox->isChecked();
-    QList<LocPoint> test = RouteMagic::fillBoundsWithTrajectory(bounds, entry, exit, spacing, ang_rad, reduce);
+    QList<LocPoint> test = RouteMagic::fillBoundsWithTrajectory(bounds, entry, exit, spacing, ang_rad, true);
     ui->mapWidget->setRoute(test);
 }
 

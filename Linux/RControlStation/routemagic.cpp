@@ -460,7 +460,23 @@ QPair<LocPoint,LocPoint> RouteMagic::getBaselineDeterminingMinHeightOfConvexPoly
     // 2. Determine line with minimum distance determined in 1.
     return std::min_element(maxDistances.begin(), maxDistances.end(),
                             [](QPair<QPair<LocPoint,LocPoint>, double> const& a, QPair<QPair<LocPoint,LocPoint>, double> const& b) -> bool
-                                {return a.second < b.second;})->first;
+    {return a.second < b.second;})->first;
+}
+
+int RouteMagic::getClosestPointInRoute(LocPoint referencePoint, QList<LocPoint> route)
+{
+    double minDistance = std::numeric_limits<double>::max();
+    int minIdx = -1;
+    for (int i = 0; i < route.size(); i++) {
+        double distance = sqrt(pow((route.at(i).getX()-referencePoint.getX()), 2) + pow((route.at(i).getY()-referencePoint.getY()), 2));
+        if (distance < minDistance) {
+            minDistance = distance;
+            minIdx = i;
+        }
+    }
+    assert(minIdx != -1);
+
+    return minIdx;
 }
 
 
@@ -1366,7 +1382,6 @@ QList<LocPoint> RouteMagic::fillBoundsWithTrajectory(QList<LocPoint> bounds, QLi
     return route;
 }
 
-// TODO: smoothen turns
 QList<LocPoint> RouteMagic::fillConvexPolygonWithZigZag(QList<LocPoint> bounds, double spacing)
 {
     QList<LocPoint> route;
@@ -1416,6 +1431,26 @@ QList<LocPoint> RouteMagic::fillConvexPolygonWithZigZag(QList<LocPoint> bounds, 
 
     for (int i=1; i<route.size(); i+=4)
         std::swap(route[i-1], route[i]);
+
+    return route;
+}
+
+QList<LocPoint> RouteMagic::fillConvexPolygonWithFramedZigZag(QList<LocPoint> bounds, double spacing)
+{
+    QList<LocPoint> frame = getShrinkedConvexPolygon(bounds, spacing);
+
+    QList<LocPoint> zigzag = fillConvexPolygonWithZigZag(frame, spacing);
+
+    int pointIdx = getClosestPointInRoute(zigzag.first(), frame);
+
+    QList<LocPoint> route;
+    for (int i = pointIdx; i < frame.size(); i++)
+        route.append(frame.at(i));
+    for (int i = 0; i < pointIdx; i++)
+        route.append(frame.at(i));
+    route.append(frame.at(pointIdx));
+
+    route.append(zigzag);
 
     return route;
 }

@@ -62,6 +62,7 @@ public:
     static bool closestLineIntersection(double p0_x, double p0_y, double p1_x, double p1_y, QList<QList<LocPoint> > routes, LocPoint *coll);
     static double distanceToLine(LocPoint p, LocPoint l0, LocPoint l1);
     static QPair<LocPoint, LocPoint> getBaselineDeterminingMinHeightOfConvexPolygon(QList<LocPoint> convexPolygon);
+    static int getClosestPointInRoute(LocPoint referencePoint, QList<LocPoint> route);
     static bool isRouteDrivable(QList<LocPoint> r, QList<LocPoint> outerFence, QList<QList<LocPoint> > cutouts, double maxAng);
     static QList<LocPoint> generateRecoveryRoute(QList<LocPoint> endSegment, QList<LocPoint> recoverTo, int aheadMargin, int genAttempts, bool tryShorten, QList<LocPoint> outerFence, QList<QList<LocPoint> > cutouts);
     static bool tryConnect(QList<LocPoint> *r1, QList<LocPoint> *r2, QList<LocPoint> outerFence, QList<QList<LocPoint> > cutouts);
@@ -76,6 +77,7 @@ public:
 
     static QList<LocPoint> fillBoundsWithTrajectory(QList<LocPoint> bounds, QList<LocPoint> entry, QList<LocPoint> exit, double spacing, double angle, bool reduce);
     static QList<LocPoint> fillConvexPolygonWithZigZag(QList<LocPoint> bounds, double spacing);
+    static QList<LocPoint> fillConvexPolygonWithFramedZigZag(QList<LocPoint> bounds, double spacing);
     static QList<LocPoint> getShrinkedConvexPolygon(QList<LocPoint> bounds, double spacing);
     static int getConvexPolygonOrientation(QList<LocPoint> bounds);
 

@@ -1281,7 +1281,7 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>223</width>
+                     <width>191</width>
                      <height>872</height>
                     </rect>
                    </property>
@@ -1896,7 +1896,7 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>223</width>
+                     <width>168</width>
                      <height>483</height>
                     </rect>
                    </property>
@@ -2191,7 +2191,7 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>223</width>
+                     <width>206</width>
                      <height>880</height>
                     </rect>
                    </property>
@@ -2794,7 +2794,7 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>243</width>
+                     <width>211</width>
                      <height>468</height>
                     </rect>
                    </property>
@@ -2933,13 +2933,26 @@
                         </widget>
                        </item>
                        <item>
+                        <widget class="QCheckBox" name="generateFrameCheckBox">
+                         <property name="text">
+                          <string>Generate Frame</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
                         <widget class="QGroupBox" name="groupBox_21">
+                         <property name="enabled">
+                          <bool>false</bool>
+                         </property>
                          <property name="title">
                           <string>Angle</string>
                          </property>
                          <layout class="QVBoxLayout" name="verticalLayout_29">
                           <item>
                            <widget class="QCheckBox" name="findOptimalAngleCheckBox">
+                            <property name="enabled">
+                             <bool>false</bool>
+                            </property>
                             <property name="text">
                              <string>Find Optimal Angle</string>
                             </property>
@@ -3017,16 +3030,6 @@
                           </size>
                          </property>
                         </spacer>
-                       </item>
-                       <item>
-                        <widget class="QCheckBox" name="reduceTrajectoryCheckBox">
-                         <property name="text">
-                          <string>Reduce Trajectory</string>
-                         </property>
-                         <property name="checked">
-                          <bool>true</bool>
-                         </property>
-                        </widget>
                        </item>
                        <item>
                         <widget class="QPushButton" name="boundsFillPushButton">
