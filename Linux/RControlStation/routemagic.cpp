@@ -1366,7 +1366,6 @@ QList<LocPoint> RouteMagic::fillBoundsWithTrajectory(QList<LocPoint> bounds, QLi
     return route;
 }
 
-// TODO: https://en.wikipedia.org/wiki/Curve_orientation for simplifications (implemented as getConvexPolygonOrientation)
 // TODO: smoothen turns
 QList<LocPoint> RouteMagic::fillConvexPolygonWithZigZag(QList<LocPoint> bounds, double spacing)
 {
@@ -1383,12 +1382,7 @@ QList<LocPoint> RouteMagic::fillConvexPolygonWithZigZag(QList<LocPoint> bounds, 
     LocPoint newLineBegin = LocPoint(baseline.first.getX() - 10000*cos(angle), baseline.first.getY() - 10000*sin(angle));
     LocPoint newLineEnd = LocPoint(baseline.second.getX() + 10000*cos(angle), baseline.second.getY() + 10000*sin(angle));
 
-    LocPoint nearBaselineCenter = LocPoint((baseline.first.getX() + baseline.second.getX())/2 + cos(angle + PI/2), (baseline.first.getY() + baseline.second.getY())/2 + sin(angle + PI/2));
-    LocPoint orthogonalDirectionTestPoint = LocPoint(nearBaselineCenter.getX() + 10000*cos(angle + PI/2), nearBaselineCenter.getY() + 10000*sin(angle + PI/2));
-
-    int directionSign = 1;
-    if (!intersectionExists(QList<LocPoint>({nearBaselineCenter, orthogonalDirectionTestPoint}), bounds))
-        directionSign = -1;
+    int directionSign = getConvexPolygonOrientation(bounds);
 
     while (true) {
         newLineBegin = LocPoint(newLineBegin.getX() + directionSign*spacing*cos(angle + PI/2), newLineBegin.getY() + directionSign*spacing*sin(angle + PI/2));
@@ -1427,7 +1421,7 @@ QList<LocPoint> RouteMagic::fillConvexPolygonWithZigZag(QList<LocPoint> bounds, 
     return route;
 }
 
-QList<LocPoint> RouteMagic::getShrinkedConvexPolygon(QList<LocPoint> bounds, double spacing) // BUG does not work on clockwise polygons
+QList<LocPoint> RouteMagic::getShrinkedConvexPolygon(QList<LocPoint> bounds, double spacing)
 {
     int directionSign = getConvexPolygonOrientation(bounds);
     QList<LocPoint> shrinkedBounds;
