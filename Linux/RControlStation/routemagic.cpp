@@ -1457,6 +1457,7 @@ QList<LocPoint> RouteMagic::fillConvexPolygonWithFramedZigZag(QList<LocPoint> bo
 
 QList<LocPoint> RouteMagic::getShrinkedConvexPolygon(QList<LocPoint> bounds, double spacing)
 {
+    bounds.append(bounds.at(0)); // make sure bounds are closed
     int directionSign = getConvexPolygonOrientation(bounds);
     QList<LocPoint> shrinkedBounds;
     for (int i=1; i<bounds.size(); i++) {
