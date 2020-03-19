@@ -1382,7 +1382,7 @@ QList<LocPoint> RouteMagic::fillBoundsWithTrajectory(QList<LocPoint> bounds, QLi
     return route;
 }
 
-QList<LocPoint> RouteMagic::fillConvexPolygonWithZigZag(QList<LocPoint> bounds, double spacing)
+QList<LocPoint> RouteMagic::fillConvexPolygonWithZigZag(QList<LocPoint> bounds, double spacing, int turnIntermediateSteps = 0)
 {
     QList<LocPoint> route;
 
@@ -1394,19 +1394,19 @@ QList<LocPoint> RouteMagic::fillConvexPolygonWithZigZag(QList<LocPoint> bounds, 
     double angle = atan2(baseline.second.getY() - baseline.first.getY(), baseline.second.getX() - baseline.first.getX());
 
     // 3. draw parallels to baseline that cover whole polygon
-    int directionSign = getConvexPolygonOrientation(bounds);
+    int polygonDirectionSign = getConvexPolygonOrientation(bounds);
 
-    LocPoint newLineBegin = LocPoint(baseline.first.getX() - 100000*cos(angle) + 0.01*directionSign*cos(angle + PI/2),
-                                     baseline.first.getY() - 100000*sin(angle) + 0.01*directionSign*sin(angle + PI/2));
-    LocPoint newLineEnd = LocPoint(baseline.second.getX() + 100000*cos(angle) + 0.01*directionSign*cos(angle + PI/2),
-                                   baseline.second.getY() + 100000*sin(angle) + 0.01*directionSign*sin(angle + PI/2));
+    LocPoint newLineBegin(baseline.first.getX() - 100000*cos(angle) + 0.01*polygonDirectionSign*cos(angle + PI/2),
+                          baseline.first.getY() - 100000*sin(angle) + 0.01*polygonDirectionSign*sin(angle + PI/2));
+    LocPoint newLineEnd(baseline.second.getX() + 100000*cos(angle) + 0.01*polygonDirectionSign*cos(angle + PI/2),
+                        baseline.second.getY() + 100000*sin(angle) + 0.01*polygonDirectionSign*sin(angle + PI/2));
 
     while (intersectionExists(QList<LocPoint>({newLineBegin, newLineEnd}), bounds)) {
         route.append(newLineBegin);
         route.append(newLineEnd);
 
-        newLineBegin = LocPoint(newLineBegin.getX() + directionSign*spacing*cos(angle + PI/2), newLineBegin.getY() + directionSign*spacing*sin(angle + PI/2));
-        newLineEnd =   LocPoint(newLineEnd.getX() + directionSign*spacing*cos(angle + PI/2), newLineEnd.getY() + directionSign*spacing*sin(angle + PI/2));
+        newLineBegin = LocPoint(newLineBegin.getX() + polygonDirectionSign*spacing*cos(angle + PI/2), newLineBegin.getY() + polygonDirectionSign*spacing*sin(angle + PI/2));
+        newLineEnd =   LocPoint(newLineEnd.getX() + polygonDirectionSign*spacing*cos(angle + PI/2), newLineEnd.getY() + polygonDirectionSign*spacing*sin(angle + PI/2));
     }
 
     // 4. cut parallels down to polygon ((i) ensure "short" connections not in bounds, (ii) sort bounds to get reproducible results, (iii) get intersections with bounds)
@@ -1429,17 +1429,40 @@ QList<LocPoint> RouteMagic::fillConvexPolygonWithZigZag(QList<LocPoint> bounds, 
 
     route = getAllIntersections(route, bounds);
 
-    for (int i=1; i<route.size(); i+=4)
+    // 5. adjust orientations and smoothen turns
+    for (int i = 1; i < route.size(); i+=4)
         std::swap(route[i-1], route[i]);
+
+    if (turnIntermediateSteps > 0) {
+        for (int i = 1; i < route.size()-1; i+=(2+turnIntermediateSteps)) {
+            int turnDirectionSign = (i/(2+turnIntermediateSteps))%2 == 0 ? 1 : -1;
+
+            // TODO: this turnCenter can violate the bounds
+            LocPoint turnCenter((route.at(i).getX()+route.at(i+1).getX())/2, (route.at(i).getY()+route.at(i+1).getY())/2);
+            turnCenter.setX(turnCenter.getX() - (spacing/2)*turnDirectionSign*cos(angle));
+            turnCenter.setY(turnCenter.getY() - (spacing/2)*turnDirectionSign*sin(angle));
+
+            const double piStep = PI/(turnIntermediateSteps+1) * turnDirectionSign * polygonDirectionSign;
+            for (int j = 0; j <= turnIntermediateSteps+1; j++) {
+                LocPoint turnStep(turnCenter.getX() + (spacing/2)*cos(j*piStep + angle - PI/2 * polygonDirectionSign),
+                                  turnCenter.getY() + (spacing/2)*sin(j*piStep + angle - PI/2 * polygonDirectionSign));
+
+                if (j == 0 || j == turnIntermediateSteps+1)
+                    route.replace(i+j,turnStep);
+                else
+                    route.insert(i+j,turnStep);
+            }
+        }
+    }
 
     return route;
 }
 
-QList<LocPoint> RouteMagic::fillConvexPolygonWithFramedZigZag(QList<LocPoint> bounds, double spacing)
+QList<LocPoint> RouteMagic::fillConvexPolygonWithFramedZigZag(QList<LocPoint> bounds, double spacing, int turnIntermediateSteps)
 {
     QList<LocPoint> frame = getShrinkedConvexPolygon(bounds, spacing);
 
-    QList<LocPoint> zigzag = fillConvexPolygonWithZigZag(frame, spacing);
+    QList<LocPoint> zigzag = fillConvexPolygonWithZigZag(frame, spacing, turnIntermediateSteps);
 
     int pointIdx = getClosestPointInRoute(zigzag.first(), frame);
 

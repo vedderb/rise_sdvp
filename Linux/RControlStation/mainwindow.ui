@@ -2795,7 +2795,7 @@
                      <x>0</x>
                      <y>0</y>
                      <width>211</width>
-                     <height>468</height>
+                     <height>475</height>
                     </rect>
                    </property>
                    <layout class="QVBoxLayout" name="verticalLayout_27">
@@ -2929,6 +2929,16 @@
                          </property>
                          <property name="value">
                           <double>3.000000000000000</double>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="QSpinBox" name="stepsForTurningSpinBox">
+                         <property name="prefix">
+                          <string>Steps For Turning: </string>
+                         </property>
+                         <property name="value">
+                          <number>5</number>
                          </property>
                         </widget>
                        </item>
