@@ -1437,11 +1437,23 @@ QList<LocPoint> RouteMagic::fillConvexPolygonWithZigZag(QList<LocPoint> bounds, 
         for (int i = 1; i < route.size()-1; i+=(2+turnIntermediateSteps)) {
             int turnDirectionSign = (i/(2+turnIntermediateSteps))%2 == 0 ? 1 : -1;
 
-            // TODO: this turnCenter can violate the bounds
-            LocPoint turnCenter((route.at(i).getX()+route.at(i+1).getX())/2, (route.at(i).getY()+route.at(i+1).getY())/2);
-            turnCenter.setX(turnCenter.getX() - (spacing/2)*turnDirectionSign*cos(angle));
-            turnCenter.setY(turnCenter.getY() - (spacing/2)*turnDirectionSign*sin(angle));
+            // Find turnCenter that guarantees to stay within bounds
+            QPair<LocPoint, LocPoint> turnBound(LocPoint(route.at(i).getX(), route.at(i).getY()), LocPoint(route.at(i+1).getX(), route.at(i+1).getY()));
+            double turnBoundAngle = atan2(turnBound.second.getY() - turnBound.first.getY(), turnBound.second.getX() - turnBound.first.getX());
 
+            QPair<LocPoint, LocPoint> turnBoundShifted(LocPoint(route.at(i).getX() - (spacing/2)*turnDirectionSign*cos(turnBoundAngle + PI/2),
+                                                                route.at(i).getY() - (spacing/2)*turnDirectionSign*sin(turnBoundAngle + PI/2)),
+                                                       LocPoint(route.at(i+1).getX() - (spacing/2)*turnDirectionSign*cos(turnBoundAngle + PI/2),
+                                                                route.at(i+1).getY() - (spacing/2)*turnDirectionSign*sin(turnBoundAngle + PI/2)));
+
+            QPair<LocPoint, LocPoint> turnCenterLine(LocPoint(route.at(i).getX() + (spacing/2)*polygonDirectionSign*cos(angle + PI/2),
+                                                              route.at(i).getY() + (spacing/2)*polygonDirectionSign*sin(angle + PI/2)),
+                                                     LocPoint(route.at(i-1).getX() + (spacing/2)*polygonDirectionSign*cos(angle + PI/2),
+                                                              route.at(i-1).getY() + (spacing/2)*polygonDirectionSign*sin(angle + PI/2)));
+
+            LocPoint turnCenter = getLineIntersection(turnBoundShifted, turnCenterLine);
+
+            // Draw half circle
             const double piStep = PI/(turnIntermediateSteps+1) * turnDirectionSign * polygonDirectionSign;
             for (int j = 0; j <= turnIntermediateSteps+1; j++) {
                 LocPoint turnStep(turnCenter.getX() + (spacing/2)*cos(j*piStep + angle - PI/2 * polygonDirectionSign),
