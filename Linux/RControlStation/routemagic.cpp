@@ -28,6 +28,8 @@ using namespace std::chrono;
 #include <QMessageBox>
 #include <mapwidget.h>
 #include <QtMath>
+#include <cassert>
+
 RouteMagic::RouteMagic(QObject *parent) : QObject(parent)
 {
 
@@ -196,6 +198,64 @@ bool RouteMagic::boxesIntersect(QList<LocPoint> b0, QList<LocPoint> b1)
         }
     }
     return false;
+}
+
+bool RouteMagic::intersectionExists(QList<LocPoint> points0, QList<LocPoint> points1)
+{
+    if (points0.size() < 2 || points1.size() < 2)
+        return false;
+
+    for (int i = 1; i < points0.size(); i++)
+        for (int j = 1; j < points1.size(); j++)
+            if (lineIntersect(points0.at(i-1), points0.at(i), points1.at(j-1), points1.at(j)))
+                return true;
+
+    return false;
+}
+
+QList<LocPoint> RouteMagic::getAllIntersections(QList<LocPoint> points0, QList<LocPoint> points1)
+{
+    QList<LocPoint> intersections;
+    if (points0.size() < 2 || points1.size() < 2)
+        return intersections;
+
+    for (int i = 1; i < points0.size(); i++)
+        for (int j = 1; j < points1.size(); j++)
+            if (lineIntersect(points0.at(i-1), points0.at(i), points1.at(j-1), points1.at(j))) {
+                intersections.append(getLineIntersection(QPair<LocPoint, LocPoint>(points0.at(i-1), points0.at(i)),
+                                                         QPair<LocPoint, LocPoint>(points1.at(j-1), points1.at(j))));
+            }
+
+    return intersections;
+}
+
+LocPoint RouteMagic::getLineIntersection(QPair<LocPoint, LocPoint> line0, QPair<LocPoint, LocPoint> line1) // intersection can lie outside of segments!
+{
+    double x1=line0.first.getX(), y1=line0.first.getY(), x2=line0.second.getX(), y2=line0.second.getY(),
+            x3=line1.first.getX(), y3=line1.first.getY(), x4=line1.second.getX(), y4=line1.second.getY();
+
+    // https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection#Given_two_points_on_each_line
+    double xIntersect = ( ((x1*y2-y1*x2)*(x3-x4)-(x1-x2)*(x3*y4-y3*x4)) / ((x1-x2)*(y3-y4)-(y1-y2)*(x3-x4)) );
+    double yIntersect = ( ((x1*y2-y1*x2)*(y3-y4)-(y1-y2)*(x3*y4-y3*x4)) / ((x1-x2)*(y3-y4)-(y1-y2)*(x3-x4)) );
+
+    // qDebug() << "(" << x1 << "," << y1 << ")---(" << x2 << "," << y2 << ")  /  (" << x3 << "," << y3 << ")---(" << x4 << "," << y4 << ") => (" << intersection.getX() << "," << intersection.getY() << ")\n";
+
+    return LocPoint(xIntersect, yIntersect);
+}
+
+QList<LocPoint> RouteMagic::getAllIntersections(QList<LocPoint> route)
+{
+    QList<LocPoint> intersections;
+    if (route.size() < 2)
+        return intersections;
+
+    for (int i = 1; i < route.size(); i++)
+        for (int j = i+2; j < route.size(); j++)
+            if (lineIntersect(route.at(i-1), route.at(i), route.at(j-1), route.at(j)))
+                intersections.append(getLineIntersection(QPair<LocPoint, LocPoint>(route.at(i-1), route.at(i)),
+                                                         QPair<LocPoint, LocPoint>(route.at(j-1), route.at(j))));
+
+    return intersections;
 }
 
 bool RouteMagic::circlesOverlap(LocPoint p0, double r0, LocPoint p1, double r1)
@@ -375,6 +435,48 @@ double RouteMagic::distanceToLine(LocPoint p, LocPoint l0, LocPoint l1)
     double dx = x - xx;
     double dy = y - yy;
     return sqrt(dx * dx + dy * dy);
+}
+
+QPair<LocPoint,LocPoint> RouteMagic::getBaselineDeterminingMinHeightOfConvexPolygon(QList<LocPoint> convexPolygon)
+{
+    // 1. Determine point with max distance for each line
+    QList<QPair<QPair<LocPoint,LocPoint>, double>> maxDistances;
+    for (int i = 0; i < convexPolygon.size() - 1 /* skip last */; i++) {
+        LocPoint l0 = convexPolygon.at(i);
+        LocPoint l1 = convexPolygon.at(i+1);
+
+        double maxDistance = -1;
+        for (int j = 0; j < convexPolygon.size(); j++) {
+            if (j == i || j == i+1)
+                continue;
+
+            double currDistance = distanceToLine(convexPolygon.at(j), l0, l1);
+            maxDistance = (currDistance > maxDistance)? currDistance : maxDistance;
+        }
+        maxDistances.append(QPair<QPair<LocPoint,LocPoint>, double>(QPair<LocPoint,LocPoint>(l0, l1), maxDistance));
+    }
+    assert(maxDistances.size() == convexPolygon.size() - 1);
+
+    // 2. Determine line with minimum distance determined in 1.
+    return std::min_element(maxDistances.begin(), maxDistances.end(),
+                            [](QPair<QPair<LocPoint,LocPoint>, double> const& a, QPair<QPair<LocPoint,LocPoint>, double> const& b) -> bool
+    {return a.second < b.second;})->first;
+}
+
+int RouteMagic::getClosestPointInRoute(LocPoint referencePoint, QList<LocPoint> route)
+{
+    double minDistance = std::numeric_limits<double>::max();
+    int minIdx = -1;
+    for (int i = 0; i < route.size(); i++) {
+        double distance = sqrt(pow((route.at(i).getX()-referencePoint.getX()), 2) + pow((route.at(i).getY()-referencePoint.getY()), 2));
+        if (distance < minDistance) {
+            minDistance = distance;
+            minIdx = i;
+        }
+    }
+    assert(minIdx != -1);
+
+    return minIdx;
 }
 
 
@@ -736,10 +838,85 @@ bool RouteMagic::tryConnect(QList<LocPoint> *r1, QList<LocPoint> *r2, QList<LocP
         qDebug() << "r2->size: " << r2->size();
         return false;
     }
+
     QList<QList<LocPoint>> added1 = generateArcs(r1->at(r1->size() - 2), r1->at(r1->size() - 1),outerFence,cutouts);
     QList<QList<LocPoint>> added2 = generateArcs(r2->at(1), r2->at(0),outerFence,cutouts);
     QList<LocPoint> p2Now;
 
+    int max_added1 = qMax(added1.at(0).size(),
+                         added1.at(1).size());
+    int max_added2 = qMax(added2.at(0).size(),
+                         added2.at(1).size());
+
+    QList<LocPoint> end_left = *r2;
+    QList<LocPoint> end_right = *r2;
+
+    for (int i_2 = -1; i_2 < max_added2; i_2 ++) {
+
+        if (i_2 >= 0 && added2.at(0).size() > i_2) {
+            end_left.prepend(added2.at(0).at(i_2));
+        }
+        if (i_2 >= 0 && added2.at(1).size() > i_2) {
+            end_right.prepend(added2.at(1).at(i_2));
+        }
+
+        QList<LocPoint> start_left = *r1;
+        QList<LocPoint> start_right = *r1;
+        int size_left = start_left.size() - 2;
+        int size_right = start_left.size() - 2;
+
+        for (int i_1 = -1; i_1 < max_added1; i_1 ++) {
+
+            if (i_1 >= 0 && added1.at(0).size() > i_1) {
+                start_left.append(added1.at(0).at(i_1));
+            }
+            if (i_1 >= 0 && added1.at(1).size() > i_1) {
+                start_right.append(added1.at(1).at(i_1));
+            }
+
+            QList<LocPoint> tmp_left;
+            tmp_left.append(start_left);
+            tmp_left.append(end_left);
+
+            if (isRouteDrivable(tmp_left.mid(size_left, -1), outerFence, cutouts, M_PI/6)) {
+                r1->clear();
+                r1->append(tmp_left);
+                return true;
+            }
+
+            QList<LocPoint> tmp_right;
+            tmp_right.append(start_right);
+            tmp_right.append(end_right);
+
+            if (isRouteDrivable(tmp_right.mid(size_right, -1), outerFence, cutouts, M_PI/6)) {
+                r1->clear();
+                r1->append(tmp_right);
+                return true;
+            }
+            QList<LocPoint> tmp_left1;
+            tmp_left1.append(start_left);
+            tmp_left1.append(end_right);
+
+            if (isRouteDrivable(tmp_left1.mid(size_left,-1), outerFence, cutouts, M_PI/6)) {
+                r1->clear();
+                r1->append(tmp_left1);
+                return true;
+            }
+
+            QList<LocPoint> tmp_right1;
+            tmp_right1.append(start_right);
+            tmp_right1.append(end_left);
+
+            if (isRouteDrivable(tmp_right1.mid(size_right,-1), outerFence, cutouts, M_PI/6)) {
+                r1->clear();
+                r1->append(tmp_right1);
+                return true;
+            }
+        }
+    }
+
+    return false;
+    /*
     for (QList<LocPoint> pList2: added2) {
         for (int subList2 = 0;subList2 <= pList2.size();subList2++) {
             p2Now.clear();
@@ -772,6 +949,7 @@ bool RouteMagic::tryConnect(QList<LocPoint> *r1, QList<LocPoint> *r2, QList<LocP
     }
 
     return false;
+    */
 }
 
 QList<LocPoint> RouteMagic::reverseRoute(QList<LocPoint> t)
@@ -1084,7 +1262,6 @@ QList<LocPoint> RouteMagic::generateRouteWithin(int length,
 
 QList<LocPoint> RouteMagic::fillBoundsWithTrajectory(QList<LocPoint> bounds, QList<LocPoint> entry, QList<LocPoint> exit, double spacing, double angle, bool reduce)
 {
-
     double xMin = 200000;
     double xMax = -200000;
     double yMin = 200000;
@@ -1203,6 +1380,145 @@ QList<LocPoint> RouteMagic::fillBoundsWithTrajectory(QList<LocPoint> bounds, QLi
     }
 
     return route;
+}
+
+QList<LocPoint> RouteMagic::fillConvexPolygonWithZigZag(QList<LocPoint> bounds, double spacing, int turnIntermediateSteps = 0)
+{
+    QList<LocPoint> route;
+
+    // 1. resize bounds to ensure spacing
+    bounds = getShrinkedConvexPolygon(bounds, spacing);
+
+    // 2. get bound that determines optimal zigzag direction
+    QPair<LocPoint, LocPoint> baseline = getBaselineDeterminingMinHeightOfConvexPolygon(bounds);
+    double angle = atan2(baseline.second.getY() - baseline.first.getY(), baseline.second.getX() - baseline.first.getX());
+
+    // 3. draw parallels to baseline that cover whole polygon
+    int polygonDirectionSign = getConvexPolygonOrientation(bounds);
+
+    LocPoint newLineBegin(baseline.first.getX() - 100000*cos(angle) + 0.01*polygonDirectionSign*cos(angle + PI/2),
+                          baseline.first.getY() - 100000*sin(angle) + 0.01*polygonDirectionSign*sin(angle + PI/2));
+    LocPoint newLineEnd(baseline.second.getX() + 100000*cos(angle) + 0.01*polygonDirectionSign*cos(angle + PI/2),
+                        baseline.second.getY() + 100000*sin(angle) + 0.01*polygonDirectionSign*sin(angle + PI/2));
+
+    while (intersectionExists(QList<LocPoint>({newLineBegin, newLineEnd}), bounds)) {
+        route.append(newLineBegin);
+        route.append(newLineEnd);
+
+        newLineBegin = LocPoint(newLineBegin.getX() + polygonDirectionSign*spacing*cos(angle + PI/2), newLineBegin.getY() + polygonDirectionSign*spacing*sin(angle + PI/2));
+        newLineEnd =   LocPoint(newLineEnd.getX() + polygonDirectionSign*spacing*cos(angle + PI/2), newLineEnd.getY() + polygonDirectionSign*spacing*sin(angle + PI/2));
+    }
+
+    // 4. cut parallels down to polygon ((i) ensure "short" connections not in bounds, (ii) sort bounds to get reproducible results, (iii) get intersections with bounds)
+    for (int i=1; i<route.size(); i+=4)
+        std::swap(route[i-1], route[i]);
+
+    int baselineStartInBounds = -1;
+    for (int i = 0; i < bounds.size() && baselineStartInBounds == -1; i++)
+        if (bounds.at(i).getX() == baseline.first.getX() && bounds.at(i).getY() == baseline.first.getY())
+            baselineStartInBounds = i;
+    assert(baselineStartInBounds > -1);
+
+    QList<LocPoint> boundsStartingWithBaseline;
+    for (int i = baselineStartInBounds; i < bounds.size(); i++)
+        boundsStartingWithBaseline.append(bounds.at(i));
+    for (int i = 0; i < baselineStartInBounds; i++)
+        boundsStartingWithBaseline.append(bounds.at(i));
+    bounds = boundsStartingWithBaseline;
+    bounds.append(bounds.first());
+
+    route = getAllIntersections(route, bounds);
+
+    // 5. adjust orientations and smoothen turns
+    for (int i = 1; i < route.size(); i+=4)
+        std::swap(route[i-1], route[i]);
+
+    if (turnIntermediateSteps > 0) {
+        for (int i = 1; i < route.size()-1; i+=(2+turnIntermediateSteps)) {
+            int turnDirectionSign = (i/(2+turnIntermediateSteps))%2 == 0 ? 1 : -1;
+
+            // Find turnCenter that guarantees to stay within bounds
+            QPair<LocPoint, LocPoint> turnBound(LocPoint(route.at(i).getX(), route.at(i).getY()), LocPoint(route.at(i+1).getX(), route.at(i+1).getY()));
+            double turnBoundAngle = atan2(turnBound.second.getY() - turnBound.first.getY(), turnBound.second.getX() - turnBound.first.getX());
+
+            QPair<LocPoint, LocPoint> turnBoundShifted(LocPoint(route.at(i).getX() - (spacing/2)*turnDirectionSign*cos(turnBoundAngle + PI/2),
+                                                                route.at(i).getY() - (spacing/2)*turnDirectionSign*sin(turnBoundAngle + PI/2)),
+                                                       LocPoint(route.at(i+1).getX() - (spacing/2)*turnDirectionSign*cos(turnBoundAngle + PI/2),
+                                                                route.at(i+1).getY() - (spacing/2)*turnDirectionSign*sin(turnBoundAngle + PI/2)));
+
+            QPair<LocPoint, LocPoint> turnCenterLine(LocPoint(route.at(i).getX() + (spacing/2)*polygonDirectionSign*cos(angle + PI/2),
+                                                              route.at(i).getY() + (spacing/2)*polygonDirectionSign*sin(angle + PI/2)),
+                                                     LocPoint(route.at(i-1).getX() + (spacing/2)*polygonDirectionSign*cos(angle + PI/2),
+                                                              route.at(i-1).getY() + (spacing/2)*polygonDirectionSign*sin(angle + PI/2)));
+
+            LocPoint turnCenter = getLineIntersection(turnBoundShifted, turnCenterLine);
+
+            // Draw half circle
+            const double piStep = PI/(turnIntermediateSteps+1) * turnDirectionSign * polygonDirectionSign;
+            for (int j = 0; j <= turnIntermediateSteps+1; j++) {
+                LocPoint turnStep(turnCenter.getX() + (spacing/2)*cos(j*piStep + angle - PI/2 * polygonDirectionSign),
+                                  turnCenter.getY() + (spacing/2)*sin(j*piStep + angle - PI/2 * polygonDirectionSign));
+
+                if (j == 0 || j == turnIntermediateSteps+1)
+                    route.replace(i+j,turnStep);
+                else
+                    route.insert(i+j,turnStep);
+            }
+        }
+    }
+
+    return route;
+}
+
+QList<LocPoint> RouteMagic::fillConvexPolygonWithFramedZigZag(QList<LocPoint> bounds, double spacing, int turnIntermediateSteps)
+{
+    QList<LocPoint> frame = getShrinkedConvexPolygon(bounds, spacing);
+
+    QList<LocPoint> zigzag = fillConvexPolygonWithZigZag(frame, spacing, turnIntermediateSteps);
+
+    int pointIdx = getClosestPointInRoute(zigzag.first(), frame);
+
+    QList<LocPoint> route;
+    for (int i = pointIdx; i < frame.size(); i++)
+        route.append(frame.at(i));
+    for (int i = 0; i < pointIdx; i++)
+        route.append(frame.at(i));
+    route.append(frame.at(pointIdx));
+
+    route.append(zigzag);
+
+    return route;
+}
+
+QList<LocPoint> RouteMagic::getShrinkedConvexPolygon(QList<LocPoint> bounds, double spacing)
+{
+    bounds.append(bounds.at(0)); // make sure bounds are closed
+    int directionSign = getConvexPolygonOrientation(bounds);
+    QList<LocPoint> shrinkedBounds;
+    for (int i=1; i<bounds.size(); i++) {
+        double angle = atan2(bounds.at(i).getY() - bounds.at(i-1).getY(), bounds.at(i).getX() - bounds.at(i-1).getX());
+        LocPoint lineStart = LocPoint(bounds.at(i-1).getX() + directionSign*spacing*cos(angle + PI/2), bounds.at(i-1).getY() + directionSign*spacing*sin(angle + PI/2));
+        LocPoint lineEnd = LocPoint(bounds.at(i).getX() + directionSign*spacing*cos(angle + PI/2), bounds.at(i).getY() + directionSign*spacing*sin(angle + PI/2));
+        shrinkedBounds.append(lineStart);
+        shrinkedBounds.append(lineEnd);
+    }
+
+    shrinkedBounds = getAllIntersections(shrinkedBounds);
+    if (shrinkedBounds.size() > 1)
+       std::swap(shrinkedBounds[0], shrinkedBounds[1]);
+    shrinkedBounds.append(shrinkedBounds[0]);
+
+    return shrinkedBounds;
+}
+
+int RouteMagic::getConvexPolygonOrientation(QList<LocPoint> bounds)
+{
+    if (bounds.size() < 3)
+        return 0;
+
+    return ((bounds[1].getX()*bounds[2].getY() + bounds[0].getX()*bounds[1].getY() + bounds[0].getY()*bounds[2].getX())
+            -(bounds[0].getY()*bounds[1].getX() + bounds[1].getY()*bounds[2].getX() + bounds[0].getX()*bounds[2].getY())) > 0? 1 : -1;
+
 }
 
 void RouteMagic::saveRoutes(bool withId, QList<QList<LocPoint> > routes)

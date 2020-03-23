@@ -29,6 +29,8 @@ class RouteMagic : public QObject
 public:
     explicit RouteMagic(QObject *parent = nullptr);
 
+    static constexpr double PI = 3.14159265;
+
     static double maxFrom4(double a, double b, double c, double d);
     static double minFrom4(double a, double b, double c, double d);
     static double randInRange(double min, double max);
@@ -46,6 +48,9 @@ public:
     static bool ccw(LocPoint a, LocPoint b, LocPoint c);
     static bool lineIntersect(LocPoint a, LocPoint b, LocPoint c, LocPoint d);
     static bool boxesIntersect(QList<LocPoint> b0, QList<LocPoint> b1);
+    static bool intersectionExists(QList<LocPoint> points0, QList<LocPoint> points1);
+    static QList<LocPoint> getAllIntersections(QList<LocPoint> points0, QList<LocPoint> points1);    
+    static QList<LocPoint> getAllIntersections(QList<LocPoint> route);
     static bool circlesOverlap(LocPoint p0, double r0, LocPoint p1, double r1);
     static bool lineIntersectsRouteTime(LocPoint p0, LocPoint p1, QList<LocPoint> route);
     static bool routeIntersectsRouteInTime(QList<LocPoint> t0, QList<LocPoint> t1);
@@ -53,8 +58,11 @@ public:
     static double angleBetweenLines(LocPoint p0a, LocPoint p0b, LocPoint p1a, LocPoint p1b);
     static bool getLineIntersection(double p0_x, double p0_y, double p1_x, double p1_y, double p2_x, double p2_y, double p3_x, double p3_y, LocPoint *coll);
     static bool getLineIntersection(LocPoint p0, LocPoint p1, LocPoint p2, LocPoint p3, LocPoint *coll);
+    static LocPoint getLineIntersection(QPair<LocPoint, LocPoint> line0, QPair<LocPoint, LocPoint> line1); // needs cleanup (all LineIntersection functions), partially dublicates
     static bool closestLineIntersection(double p0_x, double p0_y, double p1_x, double p1_y, QList<QList<LocPoint> > routes, LocPoint *coll);
     static double distanceToLine(LocPoint p, LocPoint l0, LocPoint l1);
+    static QPair<LocPoint, LocPoint> getBaselineDeterminingMinHeightOfConvexPolygon(QList<LocPoint> convexPolygon);
+    static int getClosestPointInRoute(LocPoint referencePoint, QList<LocPoint> route);
     static bool isRouteDrivable(QList<LocPoint> r, QList<LocPoint> outerFence, QList<QList<LocPoint> > cutouts, double maxAng);
     static QList<LocPoint> generateRecoveryRoute(QList<LocPoint> endSegment, QList<LocPoint> recoverTo, int aheadMargin, int genAttempts, bool tryShorten, QList<LocPoint> outerFence, QList<QList<LocPoint> > cutouts);
     static bool tryConnect(QList<LocPoint> *r1, QList<LocPoint> *r2, QList<LocPoint> outerFence, QList<QList<LocPoint> > cutouts);
@@ -68,9 +76,14 @@ public:
     static QList<LocPoint> generateRouteWithin(int length, QList<LocPoint> prev_traj, double speed, QList<LocPoint> outerFence, QList<QList<LocPoint> > cutouts);
 
     static QList<LocPoint> fillBoundsWithTrajectory(QList<LocPoint> bounds, QList<LocPoint> entry, QList<LocPoint> exit, double spacing, double angle, bool reduce);
+    static QList<LocPoint> fillConvexPolygonWithZigZag(QList<LocPoint> bounds, double spacing, int turnIntermediateSteps);
+    static QList<LocPoint> fillConvexPolygonWithFramedZigZag(QList<LocPoint> bounds, double spacing, int turnIntermediateSteps);
+    static QList<LocPoint> getShrinkedConvexPolygon(QList<LocPoint> bounds, double spacing);
+    static int getConvexPolygonOrientation(QList<LocPoint> bounds);
 
     static void saveRoutes(bool, QList<QList<LocPoint> > routes);
     static int  loadRoutes(QString filename, MapWidget *map);
+
 signals:
 
 public slots:

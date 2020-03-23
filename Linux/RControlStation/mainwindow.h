@@ -182,6 +182,10 @@ private slots:
 
     void on_boundsFillPushButton_clicked();
 
+    void on_boundsFillAngleSlider_sliderReleased();
+
+    void on_findOptimalAngleCheckBox_stateChanged(int checkState);
+
 private:
     Ui::MainWindow *ui;
     QTimer *mTimer;
