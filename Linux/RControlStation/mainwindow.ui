@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1062</width>
-    <height>814</height>
+    <width>1109</width>
+    <height>851</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -104,7 +104,7 @@
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>160</width>
+           <width>180</width>
            <height>108</height>
           </rect>
          </property>
@@ -1075,10 +1075,13 @@
                <enum>QTabWidget::South</enum>
               </property>
               <property name="tabShape">
-               <enum>QTabWidget::Triangular</enum>
+               <enum>QTabWidget::Rounded</enum>
               </property>
               <property name="currentIndex">
-               <number>4</number>
+               <number>0</number>
+              </property>
+              <property name="usesScrollButtons">
+               <bool>false</bool>
               </property>
               <widget class="QWidget" name="tab_6">
                <attribute name="icon">
@@ -2794,8 +2797,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>211</width>
-                     <height>475</height>
+                     <width>223</width>
+                     <height>571</height>
                     </rect>
                    </property>
                    <layout class="QVBoxLayout" name="verticalLayout_27">
@@ -2917,12 +2920,73 @@
                         </layout>
                        </item>
                        <item>
+                        <spacer name="verticalSpacer_8">
+                         <property name="orientation">
+                          <enum>Qt::Vertical</enum>
+                         </property>
+                         <property name="sizeType">
+                          <enum>QSizePolicy::Fixed</enum>
+                         </property>
+                         <property name="sizeHint" stdset="0">
+                          <size>
+                           <width>20</width>
+                           <height>5</height>
+                          </size>
+                         </property>
+                        </spacer>
+                       </item>
+                       <item>
+                        <widget class="QDoubleSpinBox" name="boundsFillSpeedSpinBox">
+                         <property name="alignment">
+                          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                         </property>
+                         <property name="prefix">
+                          <string>Speed: </string>
+                         </property>
+                         <property name="suffix">
+                          <string> km/h</string>
+                         </property>
+                         <property name="value">
+                          <double>3.000000000000000</double>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="QDoubleSpinBox" name="boundsFillSpeedInTurnsSpinBox">
+                         <property name="prefix">
+                          <string>Speed in Turns: </string>
+                         </property>
+                         <property name="suffix">
+                          <string> km/h</string>
+                         </property>
+                         <property name="value">
+                          <double>2.000000000000000</double>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <spacer name="verticalSpacer_7">
+                         <property name="orientation">
+                          <enum>Qt::Vertical</enum>
+                         </property>
+                         <property name="sizeType">
+                          <enum>QSizePolicy::Fixed</enum>
+                         </property>
+                         <property name="sizeHint" stdset="0">
+                          <size>
+                           <width>20</width>
+                           <height>5</height>
+                          </size>
+                         </property>
+                        </spacer>
+                       </item>
+                       <item>
                         <widget class="QDoubleSpinBox" name="boundsFillSpacingSpinBox">
                          <property name="prefix">
                           <string>Spacing: </string>
                          </property>
                          <property name="suffix">
-                          <string>m</string>
+                          <string> m</string>
                          </property>
                          <property name="minimum">
                           <double>1.000000000000000</double>
@@ -2943,11 +3007,43 @@
                         </widget>
                        </item>
                        <item>
+                        <spacer name="verticalSpacer_10">
+                         <property name="orientation">
+                          <enum>Qt::Vertical</enum>
+                         </property>
+                         <property name="sizeType">
+                          <enum>QSizePolicy::Fixed</enum>
+                         </property>
+                         <property name="sizeHint" stdset="0">
+                          <size>
+                           <width>20</width>
+                           <height>5</height>
+                          </size>
+                         </property>
+                        </spacer>
+                       </item>
+                       <item>
                         <widget class="QCheckBox" name="generateFrameCheckBox">
                          <property name="text">
                           <string>Generate Frame</string>
                          </property>
                         </widget>
+                       </item>
+                       <item>
+                        <spacer name="verticalSpacer_9">
+                         <property name="orientation">
+                          <enum>Qt::Vertical</enum>
+                         </property>
+                         <property name="sizeType">
+                          <enum>QSizePolicy::Fixed</enum>
+                         </property>
+                         <property name="sizeHint" stdset="0">
+                          <size>
+                           <width>20</width>
+                           <height>5</height>
+                          </size>
+                         </property>
+                        </spacer>
                        </item>
                        <item>
                         <widget class="QGroupBox" name="groupBox_21">
@@ -3220,7 +3316,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1062</width>
+     <width>1109</width>
      <height>30</height>
     </rect>
    </property>

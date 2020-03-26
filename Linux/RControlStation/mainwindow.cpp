@@ -2153,12 +2153,13 @@ void MainWindow::on_boundsFillPushButton_clicked()
     }
 
     //QList<LocPoint> test = RouteMagic::fillBoundsWithTrajectory(bounds, entry, exit, spacing, ang_rad, true);
-    // TODO: smoothen turns
     QList<LocPoint> route;
     if (ui->generateFrameCheckBox->isChecked())
-        route = RouteMagic::fillConvexPolygonWithFramedZigZag(bounds, spacing, ui->stepsForTurningSpinBox->value());
+        route = RouteMagic::fillConvexPolygonWithFramedZigZag(bounds, spacing, ui->boundsFillSpeedSpinBox->value()/3.6,
+                                                              ui->boundsFillSpeedInTurnsSpinBox->value()/3.6, ui->stepsForTurningSpinBox->value());
     else
-        route = RouteMagic::fillConvexPolygonWithZigZag(bounds, spacing, ui->stepsForTurningSpinBox->value());
+        route = RouteMagic::fillConvexPolygonWithZigZag(bounds, spacing, ui->boundsFillSpeedSpinBox->value()/3.6,
+                                                        ui->boundsFillSpeedInTurnsSpinBox->value()/3.6, ui->stepsForTurningSpinBox->value());
 
     int r = ui->mapWidget->getRoutes().size();
     ui->mapWidget->addRoute(route);

@@ -76,8 +76,8 @@ public:
     static QList<LocPoint> generateRouteWithin(int length, QList<LocPoint> prev_traj, double speed, QList<LocPoint> outerFence, QList<QList<LocPoint> > cutouts);
 
     static QList<LocPoint> fillBoundsWithTrajectory(QList<LocPoint> bounds, QList<LocPoint> entry, QList<LocPoint> exit, double spacing, double angle, bool reduce);
-    static QList<LocPoint> fillConvexPolygonWithZigZag(QList<LocPoint> bounds, double spacing, int turnIntermediateSteps);
-    static QList<LocPoint> fillConvexPolygonWithFramedZigZag(QList<LocPoint> bounds, double spacing, int turnIntermediateSteps);
+    static QList<LocPoint> fillConvexPolygonWithZigZag(QList<LocPoint> bounds, double spacing, double speed = 3.0/3.6, double speedInTurns = 2.0/3.6, int turnIntermediateSteps = 0);
+    static QList<LocPoint> fillConvexPolygonWithFramedZigZag(QList<LocPoint> bounds, double spacing, double speed = 3.0/3.6, double speedInTurns = 2.0/3.6, int turnIntermediateSteps = 0);
     static QList<LocPoint> getShrinkedConvexPolygon(QList<LocPoint> bounds, double spacing);
     static int getConvexPolygonOrientation(QList<LocPoint> bounds);
 

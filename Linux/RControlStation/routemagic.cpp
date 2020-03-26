@@ -1382,7 +1382,7 @@ QList<LocPoint> RouteMagic::fillBoundsWithTrajectory(QList<LocPoint> bounds, QLi
     return route;
 }
 
-QList<LocPoint> RouteMagic::fillConvexPolygonWithZigZag(QList<LocPoint> bounds, double spacing, int turnIntermediateSteps = 0)
+QList<LocPoint> RouteMagic::fillConvexPolygonWithZigZag(QList<LocPoint> bounds, double spacing, double speed, double speedInTurns, int turnIntermediateSteps)
 {
     QList<LocPoint> route;
 
@@ -1429,9 +1429,11 @@ QList<LocPoint> RouteMagic::fillConvexPolygonWithZigZag(QList<LocPoint> bounds, 
 
     route = getAllIntersections(route, bounds);
 
-    // 5. adjust orientations and smoothen turns
+    // 5. adjust orientations, set speed, smoothen turns
     for (int i = 1; i < route.size(); i+=4)
         std::swap(route[i-1], route[i]);
+    for (auto& pt : route)
+        pt.setSpeed(speed);
 
     if (turnIntermediateSteps > 0) {
         for (int i = 1; i < route.size()-1; i+=(2+turnIntermediateSteps)) {
@@ -1459,10 +1461,13 @@ QList<LocPoint> RouteMagic::fillConvexPolygonWithZigZag(QList<LocPoint> bounds, 
                 LocPoint turnStep(turnCenter.getX() + (spacing/2)*cos(j*piStep + angle - PI/2 * polygonDirectionSign),
                                   turnCenter.getY() + (spacing/2)*sin(j*piStep + angle - PI/2 * polygonDirectionSign));
 
-                if (j == 0 || j == turnIntermediateSteps+1)
+                if (j == 0 || j == turnIntermediateSteps+1) {
+                    turnStep.setSpeed(speed);
                     route.replace(i+j,turnStep);
-                else
+                } else {
+                    turnStep.setSpeed(speedInTurns);
                     route.insert(i+j,turnStep);
+                }
             }
         }
     }
@@ -1470,11 +1475,11 @@ QList<LocPoint> RouteMagic::fillConvexPolygonWithZigZag(QList<LocPoint> bounds, 
     return route;
 }
 
-QList<LocPoint> RouteMagic::fillConvexPolygonWithFramedZigZag(QList<LocPoint> bounds, double spacing, int turnIntermediateSteps)
+QList<LocPoint> RouteMagic::fillConvexPolygonWithFramedZigZag(QList<LocPoint> bounds, double spacing, double speed, double speedInTurns, int turnIntermediateSteps)
 {
     QList<LocPoint> frame = getShrinkedConvexPolygon(bounds, spacing);
 
-    QList<LocPoint> zigzag = fillConvexPolygonWithZigZag(frame, spacing, turnIntermediateSteps);
+    QList<LocPoint> zigzag = fillConvexPolygonWithZigZag(frame, spacing, speed, speedInTurns, turnIntermediateSteps);
 
     int pointIdx = getClosestPointInRoute(zigzag.first(), frame);
 
@@ -1485,6 +1490,8 @@ QList<LocPoint> RouteMagic::fillConvexPolygonWithFramedZigZag(QList<LocPoint> bo
         route.append(frame.at(i));
     route.append(frame.at(pointIdx));
 
+    for (auto& pt : route)
+        pt.setSpeed(speed);
     route.append(zigzag);
 
     return route;
