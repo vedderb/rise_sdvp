@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1109</width>
-    <height>851</height>
+    <width>1561</width>
+    <height>1286</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -43,8 +43,8 @@
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>180</width>
-           <height>80</height>
+           <width>241</width>
+           <height>84</height>
           </rect>
          </property>
          <attribute name="label">
@@ -104,8 +104,8 @@
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>180</width>
-           <height>108</height>
+           <width>244</width>
+           <height>138</height>
           </rect>
          </property>
          <attribute name="label">
@@ -210,7 +210,7 @@
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>184</width>
+           <width>241</width>
            <height>80</height>
           </rect>
          </property>
@@ -1284,8 +1284,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>191</width>
-                     <height>872</height>
+                     <width>261</width>
+                     <height>1080</height>
                     </rect>
                    </property>
                    <layout class="QVBoxLayout" name="verticalLayout_23">
@@ -1899,8 +1899,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>168</width>
-                     <height>483</height>
+                     <width>246</width>
+                     <height>613</height>
                     </rect>
                    </property>
                    <layout class="QVBoxLayout" name="verticalLayout_12">
@@ -2194,8 +2194,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>206</width>
-                     <height>880</height>
+                     <width>294</width>
+                     <height>1130</height>
                     </rect>
                    </property>
                    <layout class="QVBoxLayout" name="verticalLayout_15">
@@ -2797,8 +2797,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>223</width>
-                     <height>571</height>
+                     <width>314</width>
+                     <height>864</height>
                     </rect>
                    </property>
                    <layout class="QVBoxLayout" name="verticalLayout_27">
@@ -2875,6 +2875,9 @@
                          </property>
                          <item>
                           <widget class="QSpinBox" name="entryRouteSpinBox">
+                           <property name="enabled">
+                            <bool>false</bool>
+                           </property>
                            <property name="sizePolicy">
                             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
                              <horstretch>0</horstretch>
@@ -2888,6 +2891,9 @@
                          </item>
                          <item>
                           <widget class="QPushButton" name="setEntryRoutePushButton">
+                           <property name="enabled">
+                            <bool>false</bool>
+                           </property>
                            <property name="text">
                             <string>Use Active</string>
                            </property>
@@ -2899,6 +2905,9 @@
                         <layout class="QHBoxLayout" name="horizontalLayout_19">
                          <item>
                           <widget class="QSpinBox" name="exitRouteSpinBox">
+                           <property name="enabled">
+                            <bool>false</bool>
+                           </property>
                            <property name="sizePolicy">
                             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
                              <horstretch>0</horstretch>
@@ -2912,6 +2921,9 @@
                          </item>
                          <item>
                           <widget class="QPushButton" name="setExitRoutePushButton">
+                           <property name="enabled">
+                            <bool>false</bool>
+                           </property>
                            <property name="text">
                             <string>Use Active</string>
                            </property>
@@ -2991,6 +3003,9 @@
                          <property name="minimum">
                           <double>1.000000000000000</double>
                          </property>
+                         <property name="singleStep">
+                          <double>0.100000000000000</double>
+                         </property>
                          <property name="value">
                           <double>3.000000000000000</double>
                          </property>
@@ -3004,6 +3019,60 @@
                          <property name="value">
                           <number>5</number>
                          </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <spacer name="verticalSpacer_11">
+                         <property name="orientation">
+                          <enum>Qt::Vertical</enum>
+                         </property>
+                         <property name="sizeType">
+                          <enum>QSizePolicy::Fixed</enum>
+                         </property>
+                         <property name="sizeHint" stdset="0">
+                          <size>
+                           <width>20</width>
+                           <height>5</height>
+                          </size>
+                         </property>
+                        </spacer>
+                       </item>
+                       <item>
+                        <widget class="QGroupBox" name="groupBox_22">
+                         <property name="title">
+                          <string>Tool Actuation</string>
+                         </property>
+                         <layout class="QVBoxLayout" name="verticalLayout_30">
+                          <item>
+                           <widget class="QCheckBox" name="lowerToolsCheckBox">
+                            <property name="text">
+                             <string>Lower Tools on Straights</string>
+                            </property>
+                            <property name="checked">
+                             <bool>true</bool>
+                            </property>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QDoubleSpinBox" name="raiseToolsDistanceSpinBox">
+                            <property name="prefix">
+                             <string>Act. Dist. to Turn: </string>
+                            </property>
+                            <property name="suffix">
+                             <string> m</string>
+                            </property>
+                            <property name="decimals">
+                             <number>2</number>
+                            </property>
+                            <property name="singleStep">
+                             <double>0.100000000000000</double>
+                            </property>
+                            <property name="value">
+                             <double>0.500000000000000</double>
+                            </property>
+                           </widget>
+                          </item>
+                         </layout>
                         </widget>
                        </item>
                        <item>
@@ -3025,7 +3094,7 @@
                        <item>
                         <widget class="QCheckBox" name="generateFrameCheckBox">
                          <property name="text">
-                          <string>Generate Frame</string>
+                          <string>Gen. Frame around ZigZag</string>
                          </property>
                         </widget>
                        </item>
@@ -3316,8 +3385,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1109</width>
-     <height>30</height>
+     <width>1561</width>
+     <height>40</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">

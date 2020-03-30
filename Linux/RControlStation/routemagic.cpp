@@ -17,6 +17,7 @@
     */
 #include "routemagic.h"
 #include <locpoint.h>
+#include <attributes_masks.h>
 
 #include <chrono>
 using namespace std::chrono;
@@ -1382,7 +1383,7 @@ QList<LocPoint> RouteMagic::fillBoundsWithTrajectory(QList<LocPoint> bounds, QLi
     return route;
 }
 
-QList<LocPoint> RouteMagic::fillConvexPolygonWithZigZag(QList<LocPoint> bounds, double spacing, double speed, double speedInTurns, int turnIntermediateSteps)
+QList<LocPoint> RouteMagic::fillConvexPolygonWithZigZag(QList<LocPoint> bounds, double spacing, double speed, double speedInTurns, int turnIntermediateSteps, uint32_t setAttributesOnStraights, double pointWithAttributesDistanceToTurn)
 {
     QList<LocPoint> route;
 
@@ -1472,14 +1473,41 @@ QList<LocPoint> RouteMagic::fillConvexPolygonWithZigZag(QList<LocPoint> bounds, 
         }
     }
 
+    // 6. introduce points for predictable processing of attributes, set attributes
+    if (setAttributesOnStraights) {
+        for (int i = 1; i < route.size(); i+=(2+turnIntermediateSteps+2)) {
+            int turnDirectionSign = (i/(2+turnIntermediateSteps+2))%2 == 0 ? 1 : -1;
+
+            LocPoint attrStart(route.at(i-1).getX() + pointWithAttributesDistanceToTurn*turnDirectionSign*cos(angle),
+                               route.at(i-1).getY() + pointWithAttributesDistanceToTurn*turnDirectionSign*sin(angle));
+            LocPoint attrEnd(route.at(i).getX() - pointWithAttributesDistanceToTurn*turnDirectionSign*cos(angle),
+                             route.at(i).getY() - pointWithAttributesDistanceToTurn*turnDirectionSign*sin(angle));
+
+            uint32_t tmpAttr = attrStart.getAttributes();
+            tmpAttr |= setAttributesOnStraights;
+            attrStart.setAttributes(tmpAttr);
+
+            tmpAttr = attrEnd.getAttributes();
+            tmpAttr |= setAttributesOnStraights;
+            attrEnd.setAttributes(tmpAttr);
+
+            attrStart.setSpeed(speed);
+            attrEnd.setSpeed(speed);
+
+            route.insert(i,attrEnd);
+            route.insert(i,attrStart);
+        }
+    }
+
+
     return route;
 }
 
-QList<LocPoint> RouteMagic::fillConvexPolygonWithFramedZigZag(QList<LocPoint> bounds, double spacing, double speed, double speedInTurns, int turnIntermediateSteps)
+QList<LocPoint> RouteMagic::fillConvexPolygonWithFramedZigZag(QList<LocPoint> bounds, double spacing, double speed, double speedInTurns, int turnIntermediateSteps, uint32_t setAttributesOnStraights, double pointWithAttributesDistanceToTurn)
 {
     QList<LocPoint> frame = getShrinkedConvexPolygon(bounds, spacing);
 
-    QList<LocPoint> zigzag = fillConvexPolygonWithZigZag(frame, spacing, speed, speedInTurns, turnIntermediateSteps);
+    QList<LocPoint> zigzag = fillConvexPolygonWithZigZag(frame, spacing, speed, speedInTurns, turnIntermediateSteps, setAttributesOnStraights, pointWithAttributesDistanceToTurn);
 
     int pointIdx = getClosestPointInRoute(zigzag.first(), frame);
 

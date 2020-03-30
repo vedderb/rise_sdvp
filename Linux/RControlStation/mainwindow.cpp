@@ -31,6 +31,7 @@
 
 #include "utility.h"
 #include "routemagic.h"
+#include "attributes_masks.h"
 
 namespace {
 void stepTowards(double &value, double goal, double step) {
@@ -2101,7 +2102,7 @@ void MainWindow::on_routeZeroAllButton_clicked()
 void MainWindow::on_mapRoutePosAttrBox_currentIndexChanged(int index)
 {
     quint32 attr = ui->mapWidget->getRoutePointAttributes();
-    attr &= ~0b111;
+    attr &= ~ATTR_POSITIONING_MASK;
     attr |= index;
     ui->mapWidget->setRoutePointAttributes(attr);
 }
@@ -2156,10 +2157,13 @@ void MainWindow::on_boundsFillPushButton_clicked()
     QList<LocPoint> route;
     if (ui->generateFrameCheckBox->isChecked())
         route = RouteMagic::fillConvexPolygonWithFramedZigZag(bounds, spacing, ui->boundsFillSpeedSpinBox->value()/3.6,
-                                                              ui->boundsFillSpeedInTurnsSpinBox->value()/3.6, ui->stepsForTurningSpinBox->value());
+                                                              ui->boundsFillSpeedInTurnsSpinBox->value()/3.6, ui->stepsForTurningSpinBox->value(),
+                                                              ui->lowerToolsCheckBox->isChecked() ? ATTR_AGRICULTURE_TOOL_MASK : 0, ui->raiseToolsDistanceSpinBox->value()*2);
+                                                              // attribute changes at half distance
     else
         route = RouteMagic::fillConvexPolygonWithZigZag(bounds, spacing, ui->boundsFillSpeedSpinBox->value()/3.6,
-                                                        ui->boundsFillSpeedInTurnsSpinBox->value()/3.6, ui->stepsForTurningSpinBox->value());
+                                                        ui->boundsFillSpeedInTurnsSpinBox->value()/3.6, ui->stepsForTurningSpinBox->value(),
+                                                        ui->lowerToolsCheckBox->isChecked() ? ATTR_AGRICULTURE_TOOL_MASK : 0, ui->raiseToolsDistanceSpinBox->value()*2);
 
     int r = ui->mapWidget->getRoutes().size();
     ui->mapWidget->addRoute(route);
@@ -2196,4 +2200,9 @@ void MainWindow::on_findOptimalAngleCheckBox_stateChanged(int checkState)
     ui->boundsFillAngleSlider->setEnabled(!checkState);
     ui->boundsFillAngleLabel->setEnabled(!checkState);
     ui->rotateActiveTrajectoryCheckBox->setEnabled(!checkState);
+}
+
+void MainWindow::on_lowerToolsCheckBox_stateChanged(int arg1)
+{
+    ui->raiseToolsDistanceSpinBox->setEnabled(arg1 != 0);
 }
