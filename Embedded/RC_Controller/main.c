@@ -156,8 +156,9 @@ int main(void) {
 	log_set_name(main_config.log_name);
 	log_set_ext(main_config.log_mode_ext, main_config.log_uart_baud);
 
+	float pwm = 0.0;
 	for(;;) {
-		chThdSleepMilliseconds(2);
+		chThdSleepMilliseconds(10);
 		packet_timerfunc();
 	}
 }

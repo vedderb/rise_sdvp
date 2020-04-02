@@ -52,6 +52,11 @@ static int rx_frame_write;
 static thread_t *process_tp;
 static int vesc_id = VESC_ID;
 
+// IO Board
+static float io_board_adc_voltages[8];
+static bool io_board_lim_sw[8];
+static float io_board_as5047_angle;
+
 /*
  * 500KBaud, automatic wakeup, automatic recover
  * from abort mode.
@@ -273,6 +278,44 @@ static THD_FUNCTION(cancom_process_thread, arg) {
 					}
 				}
 #endif
+				if ((rxmsg.SID & 0x700) == CAN_MASK_IO_BOARD) {
+//					uint16_t id = rxmsg.SID & 0x0F;
+					uint16_t msg = (rxmsg.SID >> 4) & 0x0F;
+					int32_t ind = 0;
+
+					switch (msg) {
+					case CAN_IO_PACKET_ADC_VOLTAGES_0_1_2_3:
+						ind = 0;
+						io_board_adc_voltages[0] = buffer_get_float16(rxmsg.data8, 0.5e3, &ind);
+						io_board_adc_voltages[1] = buffer_get_float16(rxmsg.data8, 0.5e3, &ind);
+						io_board_adc_voltages[2] = buffer_get_float16(rxmsg.data8, 0.5e3, &ind);
+						io_board_adc_voltages[3] = buffer_get_float16(rxmsg.data8, 0.5e3, &ind);
+						break;
+
+					case CAN_IO_PACKET_ADC_VOLTAGES_4_5_6_7:
+						ind = 0;
+						io_board_adc_voltages[4] = buffer_get_float16(rxmsg.data8, 0.5e3, &ind);
+						io_board_adc_voltages[5] = buffer_get_float16(rxmsg.data8, 0.5e3, &ind);
+						io_board_adc_voltages[6] = buffer_get_float16(rxmsg.data8, 0.5e3, &ind);
+						io_board_adc_voltages[7] = buffer_get_float16(rxmsg.data8, 0.5e3, &ind);
+						break;
+
+					case CAN_IO_PACKET_AS5047_ANGLE:
+						ind = 0;
+						io_board_as5047_angle = buffer_get_float32(rxmsg.data8, 1e3, &ind);
+						break;
+
+					case CAN_IO_PACKET_LIM_SW:
+						for (int i = 0;i < rxmsg.DLC; i++) {
+							io_board_lim_sw[i] = rxmsg.data8[i];
+						}
+						break;
+
+					default:
+						break;
+					}
+				}
+
 			}
 
 			if (rx_frame_read == RX_FRAMES_SIZE) {
@@ -494,6 +537,39 @@ can_status_msg *comm_can_get_status_msg_id(int id) {
 	}
 
 	return 0;
+}
+
+float comm_can_io_board_adc_voltage(int ch) {
+	if (ch < 0 || ch >= 8) {
+		return 0.0;
+	}
+	return io_board_adc_voltages[ch];
+}
+
+float comm_can_io_board_as5047_angle(void) {
+	return io_board_as5047_angle;
+}
+
+bool comm_can_io_board_lim_sw(int sw) {
+	if (sw < 0 || sw >= 8) {
+		return false;
+	}
+	return io_board_lim_sw[sw];
+}
+
+void comm_can_io_board_set_valve(int board, int valve, bool set) {
+	uint8_t packet[8];
+	int32_t ind = 0;
+	packet[ind++] = valve;
+	packet[ind++] = set;
+	comm_can_transmit_sid((board & 0x0F) | CAN_MASK_IO_BOARD | (CAN_IO_PACKET_SET_VALVE << 4), packet, ind);
+}
+
+void comm_can_io_board_set_pwm_duty(int board, float duty) {
+	uint8_t packet[8];
+	int32_t ind = 0;
+	buffer_append_float16(packet, duty, 1e3, &ind);
+	comm_can_transmit_sid((board & 0x0F) | CAN_MASK_IO_BOARD | (CAN_IO_PACKET_SET_VALVE_PWM_DUTY << 4), packet, ind);
 }
 
 static void send_packet_wrapper(unsigned char *data, unsigned int len) {

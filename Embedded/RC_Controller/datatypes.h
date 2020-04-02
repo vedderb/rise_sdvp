@@ -34,6 +34,7 @@
 // CAN ID mask for DecaWave module
 #define CAN_MASK_DW					(5 << 8)
 #define CAN_DW_ID_ANY				255
+#define CAN_MASK_IO_BOARD			(3 << 8)
 
 // External log mode
 typedef enum {
@@ -1075,5 +1076,17 @@ typedef enum {
 	CMD_DW_REBOOT,
 	CMD_DW_UPTIME
 } CMD_DW;
+
+typedef enum {
+	CAN_IO_PACKET_SET_VALVE = 0,
+	CAN_IO_PACKET_SET_VALVES_ALL,
+	CAN_IO_PACKET_SET_VALVE_PWM_DUTY,
+	CAN_IO_PACKET_ADC_VOLTAGES_0_1_2_3,
+	CAN_IO_PACKET_ADC_VOLTAGES_4_5_6_7,
+	CAN_IO_PACKET_AS5047_ANGLE,
+	CAN_IO_PACKET_LIM_SW
+} CAN_IO_PACKET;
+
+// ============== IO Board Datatypes ================== //
 
 #endif /* DATATYPES_H_ */

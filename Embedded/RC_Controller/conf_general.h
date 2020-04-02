@@ -22,7 +22,7 @@
 
 // Board
 #ifndef IS_F9_BOARD
-#define IS_F9_BOARD					0
+#define IS_F9_BOARD					1
 #endif
 
 #if IS_F9_BOARD

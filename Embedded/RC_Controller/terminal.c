@@ -157,6 +157,42 @@ void terminal_process_string(char *str) {
 #else
 		commands_printf("TODO: Implement for BMI160\n");
 #endif
+	} else if (strcmp(argv[0], "io_board_read") == 0) {
+		for (int i = 0;i < 100;i++) {
+			commands_printf("ADC: %.2f %.2f %.2f %.2f %.2f %.2f %.2f",
+					(double)comm_can_io_board_adc_voltage(0),
+					(double)comm_can_io_board_adc_voltage(1),
+					(double)comm_can_io_board_adc_voltage(2),
+					(double)comm_can_io_board_adc_voltage(3),
+					(double)comm_can_io_board_adc_voltage(4),
+					(double)comm_can_io_board_adc_voltage(5),
+					(double)comm_can_io_board_adc_voltage(6));
+			commands_printf("IOs: %d %d %d %d",
+					comm_can_io_board_lim_sw(0),
+					comm_can_io_board_lim_sw(1),
+					comm_can_io_board_lim_sw(2),
+					comm_can_io_board_lim_sw(3));
+			commands_printf("AS5047: %.1f\n",
+					(double)comm_can_io_board_as5047_angle());
+			chThdSleepMilliseconds(100);
+		}
+		commands_printf("Done\n");
+	} else if (strcmp(argv[0], "io_board_set_valve") == 0) {
+		if (argc != 3) {
+			commands_printf("Invalid number of arguments\n");
+		} else {
+			int valve = -1;
+			sscanf(argv[1], "%d", &valve);
+			int state = -1;
+			sscanf(argv[2], "%d", &state);
+
+			if (valve < 0 || state < 0) {
+				commands_printf("Invalid argument\n");
+			} else {
+				comm_can_io_board_set_valve(0, valve, state);
+				commands_printf("Set valve %d to %d\n", valve, state);
+			}
+		}
 	}
 
 	// The help command
@@ -217,6 +253,12 @@ void terminal_process_string(char *str) {
 
 		commands_printf("zero_gyro");
 		commands_printf("  Zero the gyro bias. Note: The PCB must be completely still when running this command.");
+
+		commands_printf("io_board_read");
+		commands_printf("  Read and print all IO board inputs for 10 seconds.");
+
+		commands_printf("io_board_set_valve [valve] [state]");
+		commands_printf("  Set IO board valve [valve] to [state]");
 
 		for (int i = 0;i < callback_write;i++) {
 			if (callbacks[i].arg_names) {

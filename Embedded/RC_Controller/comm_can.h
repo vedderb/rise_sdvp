@@ -35,5 +35,10 @@ void comm_can_dw_get_uptime(uint8_t id);
 void comm_can_set_range_func(void(*func)(uint8_t id, uint8_t dest, float range));
 void comm_can_set_dw_ping_func(void(*func)(uint8_t id));
 void comm_can_set_dw_uptime_func(void(*func)(uint8_t id, uint32_t uptime));
+float comm_can_io_board_adc_voltage(int ch);
+float comm_can_io_board_as5047_angle(void);
+bool comm_can_io_board_lim_sw(int sw);
+void comm_can_io_board_set_valve(int board, int valve, bool set);
+void comm_can_io_board_set_pwm_duty(int board, float duty);
 
 #endif /* COMM_CAN_H_ */
