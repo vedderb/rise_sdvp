@@ -147,7 +147,8 @@ HEADERS  += mainwindow.h \
     historylineedit.h \
     imagewidget.h \
     tcpclientmulti.h \
-    routemagic.h
+    routemagic.h \
+    attributes_masks.h
 
 FORMS    += mainwindow.ui \
     carinterface.ui \

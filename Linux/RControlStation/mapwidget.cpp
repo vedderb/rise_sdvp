@@ -24,6 +24,8 @@
 
 #include "mapwidget.h"
 #include "utility.h"
+#include "attributes_masks.h"
+
 
 namespace
 {
@@ -213,7 +215,7 @@ MapWidget::MapWidget(QWidget *parent) : QWidget(parent)
     setMouseTracking(true);
 
     // Pre-render some things for speed
-    for (int i = 0;i < 3;i++) {
+    for (int i = 0;i < 4;i++) {
         QPixmap pix(24, 24);
         pix.fill(Qt::transparent);
         QPainter p(&pix);
@@ -242,6 +244,14 @@ MapWidget::MapWidget(QWidget *parent) : QWidget(parent)
             // UWB circle
             pen.setColor(Qt::darkGreen);
             p.setBrush(Qt::green);
+            p.setPen(pen);
+            p.drawEllipse(2, 2, 20, 20);
+        } break;
+
+        case 3: {
+            // Agricultural tool engaged circle
+            pen.setColor(Qt::darkCyan);
+            p.setBrush(Qt::cyan);
             p.setPen(pen);
             p.drawEllipse(2, 2, 20, 20);
         } break;
@@ -1965,19 +1975,25 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
     for (int rn = 0;rn < mRoutes.size();rn++) {
         QList<LocPoint> &routeNow = mRoutes[rn];
 
+        Qt::GlobalColor defaultDarkColor = Qt::darkGray;
+        Qt::GlobalColor defaultColor = Qt::gray;
         if (mRouteNow == rn) {
-            pen.setColor(Qt::darkYellow);
-            painter.setBrush(Qt::yellow);
-        } else {
-            pen.setColor(Qt::darkGray);
-            painter.setBrush(Qt::gray);
+            defaultDarkColor = Qt::darkYellow;
+            defaultColor = Qt::yellow;
         }
 
         pen.setWidthF(5.0 / mScaleFactor);
-        painter.setPen(pen);
         painter.setTransform(drawTrans);
 
         for (int i = 1;i < routeNow.size();i++) {
+            pen.setColor(defaultDarkColor);
+            painter.setBrush(defaultColor);
+            if (mRouteNow == rn && (routeNow[i - 1].getAttributes() & ATTR_AGRICULTURE_TOOL_MASK) && (routeNow[i].getAttributes() & ATTR_AGRICULTURE_TOOL_MASK)) {
+                pen.setColor(Qt::darkCyan);
+                painter.setBrush(Qt::cyan);
+            }
+            painter.setPen(pen);
+
             painter.setOpacity(0.7);
             painter.drawLine(routeNow[i - 1].getX() * 1000.0, routeNow[i - 1].getY() * 1000.0,
                     routeNow[i].getX() * 1000.0, routeNow[i].getY() * 1000.0);
@@ -1992,9 +2008,12 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
 
             if (highQuality) {
                 if (mRouteNow == rn) {
-                    if ((attr & 0b111) == 2) {
+                    if ((attr & ATTR_POSITIONING_MASK) == 2) {
                         pen.setColor(Qt::darkGreen);
                         painter.setBrush(Qt::green);
+                    } else if ((attr & ATTR_AGRICULTURE_TOOL_MASK) != 0) {
+                        pen.setColor(Qt::darkCyan);
+                        painter.setBrush(Qt::cyan);
                     } else {
                         pen.setColor(Qt::darkYellow);
                         painter.setBrush(Qt::yellow);
@@ -2011,7 +2030,7 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
                                     10.0 / mScaleFactor);
             } else {
                 drawCircleFast(painter, p, 10.0 / mScaleFactor, mRouteNow == rn ?
-                                   ((attr & 0b111) == 2 ? 2 : 0) : 1);
+                                   ((attr & ATTR_POSITIONING_MASK) == 2 ? 2 : ((attr & ATTR_AGRICULTURE_TOOL_MASK) != 0 ? 3 : 0)) : 1);
             }
 
             // Draw text only for selected route

@@ -30,6 +30,7 @@
 #include "comm_can.h"
 #include "hydraulic.h"
 #include "pos_uwb.h"
+#include "attributes_masks.h"
 
 // Defines
 #define AP_HZ						100 // Hz
@@ -484,7 +485,7 @@ static THD_FUNCTION(ap_thread, arg) {
 		if (len >= 2) {
 			POS_STATE pos_now;
 
-			switch (attributes_now & 0b111) {
+			switch (attributes_now & ATTR_POSITIONING_MASK) {
 			case 1:
 				pos_get_pos(&pos_now);
 				break;

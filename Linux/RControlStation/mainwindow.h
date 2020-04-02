@@ -186,6 +186,8 @@ private slots:
 
     void on_findOptimalAngleCheckBox_stateChanged(int checkState);
 
+    void on_lowerToolsCheckBox_stateChanged(int arg1);
+
 private:
     Ui::MainWindow *ui;
     QTimer *mTimer;
