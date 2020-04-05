@@ -68,6 +68,7 @@ signals:
     void setRcDuty(quint8 id, double duty, double steering);
     void showStatusInfo(QString str, bool isGood);
     void setServoDirect(quint8 id, double value);
+    void ioBoardSetPwm(quint8 id, quint8 board, double value);
 
 private slots:
     void timerSlot();
@@ -121,6 +122,7 @@ private slots:
     void on_zeroGyroButton_clicked();
     void on_uwbRebootButton_clicked();
     void on_uwbListAnchorsButton_clicked();
+    void on_ioBoardPwmSlider_valueChanged(int value);
 
 private:
     typedef struct {

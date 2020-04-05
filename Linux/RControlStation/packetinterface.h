@@ -126,6 +126,8 @@ public slots:
     void startCameraStream(quint8 id, int camera, int quality,
                            int width, int height, int fps, int skip);
     void sendCameraFrameAck(quint8 id);
+    void ioBoardSetPwmDuty(quint8 id, quint8 board, double duty);
+    void ioBoardSetValve(quint8 id, quint8 board, quint8 valve, bool set);
 
 private:
     unsigned short crc16(const unsigned char *buf, unsigned int len);

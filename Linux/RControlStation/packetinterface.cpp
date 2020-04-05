@@ -1114,6 +1114,27 @@ bool PacketInterface::clearUwbAnchors(quint8 id, int retries)
     return sendPacketAck(mSendBuffer, send_index, retries);
 }
 
+void PacketInterface::ioBoardSetPwmDuty(quint8 id, quint8 board, double duty)
+{
+    qint32 send_index = 0;
+    mSendBuffer[send_index++] = id;
+    mSendBuffer[send_index++] = CMD_IO_BOARD_SET_PWM_DUTY;
+    mSendBuffer[send_index++] = board;
+    utility::buffer_append_double32_auto(mSendBuffer, duty, &send_index);
+    sendPacket(mSendBuffer, send_index);
+}
+
+void PacketInterface::ioBoardSetValve(quint8 id, quint8 board, quint8 valve, bool set)
+{
+    qint32 send_index = 0;
+    mSendBuffer[send_index++] = id;
+    mSendBuffer[send_index++] = CMD_IO_BOARD_SET_VALVE;
+    mSendBuffer[send_index++] = board;
+    mSendBuffer[send_index++] = valve;
+    mSendBuffer[send_index++] = set;
+    sendPacket(mSendBuffer, send_index);
+}
+
 bool PacketInterface::sendMoteUbxBase(int mode,
                                       double pos_acc,
                                       int svin_min_dur,

@@ -773,6 +773,29 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
 
+		case CMD_IO_BOARD_SET_PWM_DUTY: {
+			int32_t ind = 0;
+			uint8_t board = data[ind++];
+			float value = buffer_get_float32_auto(data, &ind);
+			comm_can_io_board_set_pwm_duty(board, value);
+
+			// Send ack
+			int32_t send_index = 0;
+			m_send_buffer[send_index++] = id_ret;
+			m_send_buffer[send_index++] = packet_id;
+			commands_send_packet(m_send_buffer, send_index);
+		} break;
+
+		case CMD_IO_BOARD_SET_VALVE: {
+			comm_can_io_board_set_valve(data[0], data[1], data[2]);
+
+			// Send ack
+			int32_t send_index = 0;
+			m_send_buffer[send_index++] = id_ret;
+			m_send_buffer[send_index++] = packet_id;
+			commands_send_packet(m_send_buffer, send_index);
+		} break;
+
 		// ==================== Car commands ==================== //
 #if MAIN_MODE == MAIN_MODE_CAR
 		case CMD_GET_STATE: {

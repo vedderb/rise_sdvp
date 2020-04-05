@@ -293,6 +293,8 @@ void CarInterface::setPacketInterface(PacketInterface *packetInterface)
             this, SLOT(plotSetGraphReceived(quint8,int)));
     connect(mPacketInterface, SIGNAL(cameraImageReceived(quint8,QImage,int)),
             this, SLOT(cameraImageReceived(quint8,QImage,int)));
+    connect(this, SIGNAL(ioBoardSetPwm(quint8,quint8,double)),
+            mPacketInterface, SLOT(ioBoardSetPwmDuty(quint8,quint8,double)));
 }
 
 void CarInterface::setControlValues(double throttle, double steering, double max, bool currentMode)
@@ -1093,4 +1095,11 @@ void CarInterface::on_uwbRebootButton_clicked()
 void CarInterface::on_uwbListAnchorsButton_clicked()
 {
     emit terminalCmd(uint8_t(mId), "pos_uwb_anchors");
+}
+
+void CarInterface::on_ioBoardPwmSlider_valueChanged(int value)
+{
+    double val_mapped = (double)value / 1000.0;
+    ui->ioBoardPwmNumber->display(val_mapped);
+    emit ioBoardSetPwm(mId, 0, val_mapped);
 }

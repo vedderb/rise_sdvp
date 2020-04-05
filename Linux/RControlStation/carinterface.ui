@@ -399,6 +399,42 @@
            <layout class="QVBoxLayout" name="verticalLayout_7">
             <item>
              <layout class="QGridLayout" name="gridLayout">
+              <item row="0" column="2">
+               <widget class="QLCDNumber" name="servoDirectNumber">
+                <property name="segmentStyle">
+                 <enum>QLCDNumber::Flat</enum>
+                </property>
+                <property name="value" stdset="0">
+                 <double>0.500000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QLabel" name="label_3">
+                <property name="text">
+                 <string>Mapped steering</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QSlider" name="servoMappedSlider">
+                <property name="minimum">
+                 <number>-1000</number>
+                </property>
+                <property name="maximum">
+                 <number>1000</number>
+                </property>
+                <property name="singleStep">
+                 <number>10</number>
+                </property>
+                <property name="value">
+                 <number>0</number>
+                </property>
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+               </widget>
+              </item>
               <item row="0" column="0">
                <widget class="QLabel" name="label_2">
                 <property name="text">
@@ -425,23 +461,6 @@
                 </property>
                </widget>
               </item>
-              <item row="0" column="2">
-               <widget class="QLCDNumber" name="servoDirectNumber">
-                <property name="segmentStyle">
-                 <enum>QLCDNumber::Flat</enum>
-                </property>
-                <property name="value" stdset="0">
-                 <double>0.500000000000000</double>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="0">
-               <widget class="QLabel" name="label_3">
-                <property name="text">
-                 <string>Mapped steering</string>
-                </property>
-               </widget>
-              </item>
               <item row="1" column="2">
                <widget class="QLCDNumber" name="servoMappedNumber">
                 <property name="segmentStyle">
@@ -452,11 +471,15 @@
                 </property>
                </widget>
               </item>
-              <item row="1" column="1">
-               <widget class="QSlider" name="servoMappedSlider">
-                <property name="minimum">
-                 <number>-1000</number>
+              <item row="2" column="0">
+               <widget class="QLabel" name="label_9">
+                <property name="text">
+                 <string>IO Board PWM</string>
                 </property>
+               </widget>
+              </item>
+              <item row="2" column="1">
+               <widget class="QSlider" name="ioBoardPwmSlider">
                 <property name="maximum">
                  <number>1000</number>
                 </property>
@@ -464,10 +487,17 @@
                  <number>10</number>
                 </property>
                 <property name="value">
-                 <number>0</number>
+                 <number>500</number>
                 </property>
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="2">
+               <widget class="QLCDNumber" name="ioBoardPwmNumber">
+                <property name="segmentStyle">
+                 <enum>QLCDNumber::Flat</enum>
                 </property>
                </widget>
               </item>

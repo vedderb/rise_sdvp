@@ -358,6 +358,8 @@ typedef enum {
     CMD_CAMERA_IMAGE,
     CMD_CAMERA_STREAM_START,
     CMD_CAMERA_FRAME_ACK,
+    CMD_IO_BOARD_SET_PWM_DUTY,
+    CMD_IO_BOARD_SET_VALVE,
 
     // Car commands
     CMD_GET_STATE = 120,

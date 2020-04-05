@@ -288,8 +288,8 @@ debug-start:
 	openocd -f stm32-bv_openocd.cfg
 	
 upload_remote: build/$(PROJECT).bin
-	./upload_remote build/$(PROJECT).bin pi 10.1.151.19 22 pi_gpio
-#	./upload_remote build/$(PROJECT).bin pi 127.0.0.1 65098 pi_gpio
+#	./upload_remote build/$(PROJECT).bin pi 10.1.151.19 22 pi_gpio
+	./upload_remote build/$(PROJECT).bin pi 127.0.0.1 2230 stlink
 
 RULESPATH = $(CHIBIOS)/os/common/ports/ARMCMx/compilers/GCC
 include $(RULESPATH)/rules.mk
