@@ -49,6 +49,8 @@ static void spi_delay(void);
 static float m_pos_set = 0.5;
 static float m_pos_now = 0.0;
 static float m_pos_now_raw = 0.0;
+static int m_not_ok_cnt = 0;
+static float m_out_last = 0.0;
 
 // Threads
 static THD_WORKING_AREA(servo_thread_wa, 1024);
@@ -95,12 +97,21 @@ static THD_FUNCTION(servo_thread, arg) {
 	float prev_error = 0.0;
 	float dt_int = 0.0;
 	float d_filter = 0.0;
-	int not_ok_cnt = 0;
+
+	chThdSleepMilliseconds(5000);
 
 	for(;;) {
 		// Map s1 to 0.0 and s2 to 1.0
+#ifdef SERVO_VESC_HYDRAULIC
+		(void)as5047_read;
+		float pos_io_board = comm_can_io_board_as5047_angle();
+		bool ok = pos_io_board != m_pos_now_raw;
+		m_pos_now_raw = pos_io_board;
+#else
 		bool ok = false;
 		m_pos_now_raw = as5047_read(&ok);
+#endif
+
 		float pos = m_pos_now_raw;
 		pos -= SERVO_VESC_S1;
 
@@ -112,7 +123,6 @@ static THD_FUNCTION(servo_thread, arg) {
 
 		float end = SERVO_VESC_S2 - SERVO_VESC_S1;
 		utils_norm_angle_360(&end);
-
 		m_pos_now = utils_map(pos, 0.0, end, 0.0, 1.0);
 
 		// Run PID-controller on the output
@@ -152,17 +162,29 @@ static THD_FUNCTION(servo_thread, arg) {
 		utils_truncate_number(&output, -1.0, 1.0);
 
 		if (ok) {
-			not_ok_cnt = 0;
+			m_not_ok_cnt = 0;
 		} else {
-			not_ok_cnt++;
+			m_not_ok_cnt++;
 		}
 
-		if (not_ok_cnt < 100) {
+#ifdef SERVO_VESC_HYDRAULIC
+		if (m_not_ok_cnt < 100) {
+			float output_scaled = SERVO_VESC_INVERTED ? output : -output;
+			output_scaled *= 0.75;
+			m_out_last = (output_scaled + 1.0) / 2.0;
+			comm_can_io_board_set_pwm_duty(0, m_out_last);
+		} else {
+			comm_can_io_board_set_pwm_duty(0, 0.5);
+		}
+#else
+		if (m_not_ok_cnt < 100) {
 			comm_can_set_vesc_id(SERVO_VESC_ID);
-			bldc_interface_set_duty_cycle(SERVO_VESC_INVERTED ? output : -output);
+			m_out_last = SERVO_VESC_INVERTED ? output : -output;
+			bldc_interface_set_duty_cycle(m_out_last);
 		} else {
 			bldc_interface_set_current(0.0);
 		}
+#endif
 
 		chThdSleepMilliseconds(10);
 	}
@@ -173,8 +195,8 @@ static void terminal_state(int argc, const char **argv) {
 	(void)argv;
 
 	for (int i = 0;i < 300;i++) {
-		commands_printf("Raw: %.1f Processed: %.3f",
-				(double)m_pos_now_raw, (double)m_pos_now);
+		commands_printf("Raw: %.1f Processed: %.3f Not OK: %d: Out: %.3f",
+				(double)m_pos_now_raw, (double)m_pos_now, m_not_ok_cnt, (double)m_out_last);
 		chThdSleepMilliseconds(100);
 	}
 

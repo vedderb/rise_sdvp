@@ -24,23 +24,33 @@
 #include <math.h>
 
 // Settings
+#ifdef IS_MACTRAC
+#define SERVO_LEFT				10 // Only one servo
+#define SERVO_RIGHT				1
+#else
 #define SERVO_LEFT				1
 #define SERVO_RIGHT				2
+#endif
 #define SPEED_M_S				0.6
 #define TIMEOUT_SECONDS			2.0
 
 // Private variables
-static float m_speed_now = 0.0;
-static float m_distance_now = 0.0;
-static float m_timeout_cnt = 0.0;
+static volatile float m_speed_now = 0.0;
+static volatile float m_distance_now = 0.0;
+static volatile float m_timeout_cnt = 0.0;
 
 // Threads
 static THD_WORKING_AREA(hydro_thread_wa, 1024);
 static THD_FUNCTION(hydro_thread, arg);
 
 void hydraulic_init(void) {
+#ifdef IS_MACTRAC
+	main_config.mr.motor_pwm_min_us = 1000;
+	main_config.mr.motor_pwm_max_us = 2000;
+#else
 	main_config.mr.motor_pwm_min_us = 1000;
 	main_config.mr.motor_pwm_max_us = 2100;
+#endif
 
 	pwm_esc_init();
 	pwm_esc_set_all(0.5);

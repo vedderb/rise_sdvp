@@ -847,7 +847,11 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 				buffer_append_float32(m_send_buffer, pos.py, 1e4, &send_index); // 60
 			}
 			buffer_append_float32(m_send_buffer, pos.speed, 1e6, &send_index); // 64
+#ifdef USE_ADCONV_FOR_VIN
+			buffer_append_float32(m_send_buffer, adconv_get_vin(), 1e6, &send_index); // 68
+#else
 			buffer_append_float32(m_send_buffer, mcval.v_in, 1e6, &send_index); // 68
+#endif
 			buffer_append_float32(m_send_buffer, mcval.temp_mos, 1e6, &send_index); // 72
 			m_send_buffer[send_index++] = mcval.fault_code; // 73
 			buffer_append_float32(m_send_buffer, pos.px_gps, 1e4, &send_index); // 77
@@ -925,7 +929,11 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 #else
 #if HAS_HYDRAULIC_DRIVE
 //					hydraulic_set_speed(throttle * 10);
+#ifdef IS_MACTRAC
+					hydraulic_set_throttle_raw(throttle);
+#else
 					hydraulic_set_throttle_raw(throttle / 0.15);
+#endif
 #else
 					comm_can_set_vesc_id(VESC_ID);
 					bldc_interface_set_duty_cycle(throttle);
