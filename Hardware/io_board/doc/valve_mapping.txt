@@ -1,0 +1,7 @@
+VL1: 4 - Up
+VL2: 4 - Down
+VL3: 2 - In
+VL4: 2 - Out
+VL5: 3 - Up
+VL6: 3 - Down
+
