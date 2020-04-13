@@ -5,3 +5,7 @@ VL4: 2 - Out
 VL5: 3 - Up
 VL6: 3 - Down
 
+LIM1: Front bottom sw
+LIM2: Front top sw
+ADV_DIV1: Tachometer
+

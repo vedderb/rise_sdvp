@@ -1306,14 +1306,22 @@ static void ubx_decode_relposned(uint8_t *msg, int len) {
 	(void)len;
 
 	static ubx_nav_relposned pos;
-	int ind = 2;
+	int ind = 0;
 	uint32_t flags;
+
+	int version = ubx_get_U1(msg, &ind);
+	ubx_get_U1(msg, &ind);
 
 	pos.ref_station_id = ubx_get_U2(msg, &ind);
 	pos.i_tow = ubx_get_U4(msg, &ind);
 	pos.pos_n = (float)ubx_get_I4(msg, &ind) / 100.0;
 	pos.pos_e = (float)ubx_get_I4(msg, &ind) / 100.0;
 	pos.pos_d = (float)ubx_get_I4(msg, &ind) / 100.0;
+
+	if (version == 1) {
+		ind += 12;
+	}
+
 	pos.pos_n += (float)ubx_get_I1(msg, &ind) / 10000.0;
 	pos.pos_e += (float)ubx_get_I1(msg, &ind) / 10000.0;
 	pos.pos_d += (float)ubx_get_I1(msg, &ind) / 10000.0;
@@ -1321,6 +1329,11 @@ static void ubx_decode_relposned(uint8_t *msg, int len) {
 	pos.acc_n = (float)ubx_get_U4(msg, &ind) / 10000.0;
 	pos.acc_e = (float)ubx_get_U4(msg, &ind) / 10000.0;
 	pos.acc_d = (float)ubx_get_U4(msg, &ind) / 10000.0;
+
+	if (version == 1) {
+		ind += 12;
+	}
+
 	flags = ubx_get_X4(msg, &ind);
 	pos.fix_ok = flags & 0x01;
 	pos.diff_soln = flags & 0x02;

@@ -34,6 +34,7 @@
 #endif
 #define SPEED_M_S				0.6
 #define TIMEOUT_SECONDS			2.0
+#define TIMEOUT_SECONDS_MOVE	10.0
 
 // Private variables
 static volatile float m_speed_now = 0.0;
@@ -175,8 +176,8 @@ static THD_FUNCTION(hydro_thread, arg) {
 		}
 
 		m_move_timeout_cnt += 0.01;
-		if (m_move_timeout_cnt >= TIMEOUT_SECONDS) {
-			m_move_timeout_cnt = TIMEOUT_SECONDS - 0.5;
+		if (m_move_timeout_cnt >= TIMEOUT_SECONDS_MOVE) {
+			m_move_timeout_cnt = TIMEOUT_SECONDS_MOVE - 0.5;
 			m_move_front = HYDRAULIC_MOVE_STOP;
 			m_move_rear = HYDRAULIC_MOVE_STOP;
 			move_last_extra = HYDRAULIC_MOVE_STOP;
@@ -190,6 +191,12 @@ static THD_FUNCTION(hydro_thread, arg) {
 		}
 
 #ifdef IS_MACTRAC
+		if (comm_can_io_board_lim_sw(0) && m_move_front == HYDRAULIC_MOVE_DOWN) {
+			m_move_front = HYDRAULIC_MOVE_STOP;
+		} else if (comm_can_io_board_lim_sw(1) && m_move_front == HYDRAULIC_MOVE_UP) {
+			m_move_front = HYDRAULIC_MOVE_STOP;
+		}
+
 		if (move_last_front != m_move_front) {
 			move_last_front = m_move_front;
 			comm_can_io_board_set_valve(0, 1, move_last_front == HYDRAULIC_MOVE_UP);
