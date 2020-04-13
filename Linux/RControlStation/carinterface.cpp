@@ -337,6 +337,11 @@ void CarInterface::setCtrlKb()
     ui->keyboardControlBox->setChecked(true);
 }
 
+bool CarInterface::getCtrlKb()
+{
+    return ui->keyboardControlBox->isChecked();
+}
+
 bool CarInterface::setAp(bool on)
 {
     bool ok = false;

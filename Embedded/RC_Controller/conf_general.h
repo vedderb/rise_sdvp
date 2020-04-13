@@ -115,6 +115,10 @@
 #define SERVO_VESC_D_GAIN			0.15
 #endif
 
+#ifdef IS_DRANGEN
+#define HAS_HYDRAULIC_DRIVE			1
+#endif
+
 // Hydraulic drive
 #ifndef HAS_HYDRAULIC_DRIVE
 #define HAS_HYDRAULIC_DRIVE			0

@@ -516,7 +516,7 @@ void BaseStation::on_ubxSerialConnectButton_clicked()
         uart.out_ubx = true;
         uart.out_nmea = true;
         uart.out_rtcm3 = true;
-        mUblox->ubxCfgPrtUart(&uart);
+        qDebug() << "CfgPrtUart:" << mUblox->ubxCfgPrtUart(&uart);
 
         bool isF9p = ui->f9Button->isChecked();
         if (ui->rateBox->currentIndex() == 2 && !isF9p) {
@@ -562,6 +562,12 @@ void BaseStation::on_ubxSerialConnectButton_clicked()
             mUblox->ubloxCfgAppendEnableBds(buffer, &ind, true, true, true);
             mUblox->ubloxCfgAppendEnableGlo(buffer, &ind, true, true, true);
             mUblox->ubloxCfgValset(buffer, ind, true, true, true);
+
+            ind = 0;
+            mUblox->ubloxCfgAppendUart1Baud(buffer, &ind, 115200);
+            mUblox->ubloxCfgAppendUart1InProt(buffer, &ind, true, true, true);
+            mUblox->ubloxCfgAppendUart1OutProt(buffer, &ind, true, true, true);
+            qDebug() << "UART Config:" << mUblox->ubloxCfgValset(buffer, ind, true, true, true);
         } else {
             ubx_cfg_nmea nmea;
             memset(&nmea, 0, sizeof(ubx_cfg_nmea));
@@ -625,6 +631,7 @@ void BaseStation::on_ubxSerialConnectButton_clicked()
         // Stationary dynamic model
         ubx_cfg_nav5 nav5;
         memset(&nav5, 0, sizeof(ubx_cfg_nav5));
+        nav5.apply_dyn = true;
         nav5.apply_dyn = true;
         nav5.dyn_model = 2;
         mUblox->ubxCfgNav5(&nav5);

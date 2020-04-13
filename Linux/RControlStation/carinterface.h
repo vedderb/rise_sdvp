@@ -57,6 +57,7 @@ public:
     void emergencyStop();
     void setCtrlAp();
     void setCtrlKb();
+    bool getCtrlKb();
     bool setAp(bool on);
     void disableKbBox();
     void toggleCameraFullscreen();

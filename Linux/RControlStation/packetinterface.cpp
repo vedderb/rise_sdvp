@@ -1135,6 +1135,16 @@ void PacketInterface::ioBoardSetValve(quint8 id, quint8 board, quint8 valve, boo
     sendPacket(mSendBuffer, send_index);
 }
 
+void PacketInterface::hydraulicMove(quint8 id, HYDRAULIC_POS pos, HYDRAULIC_MOVE move)
+{
+    qint32 send_index = 0;
+    mSendBuffer[send_index++] = id;
+    mSendBuffer[send_index++] = CMD_HYDRAULIC_MOVE;
+    mSendBuffer[send_index++] = pos;
+    mSendBuffer[send_index++] = move;
+    sendPacket(mSendBuffer, send_index);
+}
+
 bool PacketInterface::sendMoteUbxBase(int mode,
                                       double pos_acc,
                                       int svin_min_dur,

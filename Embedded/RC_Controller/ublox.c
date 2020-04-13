@@ -38,7 +38,7 @@
 #define BAUDRATE					115200
 #define SERIAL_RX_BUFFER_SIZE		1024
 #define LINE_BUFFER_SIZE			256
-#define UBX_BUFFER_SIZE				2048
+#define UBX_BUFFER_SIZE				3000
 #define CFG_ACK_WAIT_MS				100
 
 // Private types
@@ -199,7 +199,7 @@ void ublox_init(void) {
 	palClearPad(HW_UBX_RESET_PORT, HW_UBX_RESET_PIN);
 	chThdSleepMilliseconds(10);
 	palSetPad(HW_UBX_RESET_PORT, HW_UBX_RESET_PIN);
-	chThdSleepMilliseconds(2000);
+	chThdSleepMilliseconds(3000);
 
 	uartStart(&HW_UART_DEV, &uart_cfg);
 

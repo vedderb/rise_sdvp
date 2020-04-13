@@ -747,6 +747,32 @@ void Ublox::ubloxCfgAppendEnableGlo(unsigned char *buffer, int *ind,
     ubx_put_U1(buffer, ind, en_l2);
 }
 
+void Ublox::ubloxCfgAppendUart1Baud(unsigned char *buffer, int *ind, uint32_t baudrate)
+{
+    ubx_put_X4(buffer, ind, CFG_UART1_BAUDRATE);
+    ubx_put_U4(buffer, ind, baudrate);
+}
+
+void Ublox::ubloxCfgAppendUart1InProt(unsigned char *buffer, int *ind, bool ubx, bool nmea, bool rtcm3x)
+{
+    ubx_put_X4(buffer, ind, CFG_UART1INPROT_UBX);
+    ubx_put_U1(buffer, ind, ubx);
+    ubx_put_X4(buffer, ind, CFG_UART1INPROT_NMEA);
+    ubx_put_U1(buffer, ind, nmea);
+    ubx_put_X4(buffer, ind, CFG_UART1INPROT_RTCM3X);
+    ubx_put_U1(buffer, ind, rtcm3x);
+}
+
+void Ublox::ubloxCfgAppendUart1OutProt(unsigned char *buffer, int *ind, bool ubx, bool nmea, bool rtcm3x)
+{
+    ubx_put_X4(buffer, ind, CFG_UART1OUTPROT_UBX);
+    ubx_put_U1(buffer, ind, ubx);
+    ubx_put_X4(buffer, ind, CFG_UART1OUTPROT_NMEA);
+    ubx_put_U1(buffer, ind, nmea);
+    ubx_put_X4(buffer, ind, CFG_UART1OUTPROT_RTCM3X);
+    ubx_put_U1(buffer, ind, rtcm3x);
+}
+
 void Ublox::serialDataAvailable()
 {
     while (mSerialPort->bytesAvailable() > 0) {
@@ -798,9 +824,13 @@ void Ublox::serialDataAvailable()
                     mDecoderState.ubx_pos++;
                 } else if (mDecoderState.ubx_pos == 5) {
                     mDecoderState.ubx_len |= ch << 8;
-                    mDecoderState.ubx_ck_a += ch;
-                    mDecoderState.ubx_ck_b += mDecoderState.ubx_ck_a;
-                    mDecoderState.ubx_pos++;
+                    if (mDecoderState.ubx_len >= sizeof(mDecoderState.ubx)) {
+                        qDebug() << "Too large UBX packet" << mDecoderState.ubx_len;
+                    } else {
+                        mDecoderState.ubx_ck_a += ch;
+                        mDecoderState.ubx_ck_b += mDecoderState.ubx_ck_a;
+                        mDecoderState.ubx_pos++;
+                    }
                 } else if ((mDecoderState.ubx_pos - 6) < mDecoderState.ubx_len) {
                     mDecoderState.ubx[mDecoderState.ubx_pos - 6] = ch;
                     mDecoderState.ubx_ck_a += ch;
@@ -828,7 +858,7 @@ void Ublox::serialDataAvailable()
             // NMEA
             if (!ch_used) {
                 mDecoderState.line[mDecoderState.line_pos++] = ch;
-                if (mDecoderState.line_pos == sizeof(mDecoderState.line)) {
+                if (mDecoderState.line_pos == sizeof (mDecoderState.line)) {
                     mDecoderState.line_pos = 0;
                 }
 

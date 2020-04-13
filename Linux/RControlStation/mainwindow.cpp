@@ -854,6 +854,53 @@ void MainWindow::jsButtonChanged(int button, bool pressed)
         } else {
             ui->mapWidget->setInteractionMode(MapWidget::InteractionModeDefault);
         }
+    } else if (mJsType == JS_TYPE_PS4) {
+        // 5: Front Up
+        // 7: Front Down
+        // 4: Rear up
+        // 6: Rear down
+        // 1: Extra out
+        // 3: Extra in
+
+        if (button == 5 || button == 7 || button == 1 ||
+                button == 3 || button == 4 || button == 6) {
+            for(QList<CarInterface*>::Iterator it_car = mCars.begin();it_car < mCars.end();it_car++) {
+                CarInterface *car = *it_car;
+                if (car->getCtrlKb()) {
+                    if (button == 5 || button == 7) {
+                        if (pressed) {
+                            if (button == 5) {
+                                mPacketInterface->hydraulicMove(car->getId(), HYDRAULIC_POS_FRONT, HYDRAULIC_MOVE_UP);
+                            } else {
+                                mPacketInterface->hydraulicMove(car->getId(), HYDRAULIC_POS_FRONT, HYDRAULIC_MOVE_DOWN);
+                            }
+                        } else {
+                            mPacketInterface->hydraulicMove(car->getId(), HYDRAULIC_POS_FRONT, HYDRAULIC_MOVE_STOP);
+                        }
+                    } else if (button == 4 || button == 6) {
+                        if (pressed) {
+                            if (button == 4) {
+                                mPacketInterface->hydraulicMove(car->getId(), HYDRAULIC_POS_REAR, HYDRAULIC_MOVE_UP);
+                            } else {
+                                mPacketInterface->hydraulicMove(car->getId(), HYDRAULIC_POS_REAR, HYDRAULIC_MOVE_DOWN);
+                            }
+                        } else {
+                            mPacketInterface->hydraulicMove(car->getId(), HYDRAULIC_POS_REAR, HYDRAULIC_MOVE_STOP);
+                        }
+                    } else if (button == 1 || button == 3) {
+                        if (pressed) {
+                            if (button == 1) {
+                                mPacketInterface->hydraulicMove(car->getId(), HYDRAULIC_POS_EXTRA, HYDRAULIC_MOVE_OUT);
+                            } else {
+                                mPacketInterface->hydraulicMove(car->getId(), HYDRAULIC_POS_EXTRA, HYDRAULIC_MOVE_IN);
+                            }
+                        } else {
+                            mPacketInterface->hydraulicMove(car->getId(), HYDRAULIC_POS_EXTRA, HYDRAULIC_MOVE_STOP);
+                        }
+                    }
+                }
+            }
+        }
     }
 #endif
 }

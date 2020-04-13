@@ -57,6 +57,9 @@ public:
                                  bool en, bool en_b1, bool en_b2);
     void ubloxCfgAppendEnableGlo(unsigned char *buffer, int *ind,
                                  bool en, bool en_l1, bool en_l2);
+    void ubloxCfgAppendUart1Baud(unsigned char *buffer, int *ind, uint32_t baudrate);
+    void ubloxCfgAppendUart1InProt(unsigned char *buffer, int *ind, bool ubx, bool nmea, bool rtcm3x);
+    void ubloxCfgAppendUart1OutProt(unsigned char *buffer, int *ind, bool ubx, bool nmea, bool rtcm3x);
 
 signals:
     void rxGga(int fields, NmeaServer::nmea_gga_info_t gga);
@@ -81,7 +84,7 @@ private slots:
 private:
     typedef struct {
         uint8_t line[256];
-        uint8_t ubx[2048];
+        uint8_t ubx[4096];
         int line_pos;
         int ubx_pos;
         uint8_t ubx_class;
@@ -174,6 +177,14 @@ private:
 #define CFG_SIGNAL_GLO_ENA              0x10310025 // GLONASS Enable
 #define CFG_SIGNAL_GLO_L1_ENA           0x10310018 // GLONASS L1
 #define CFG_SIGNAL_GLO_L2_ENA           0x1031001A // GLONASS L2 (only on u-blox F9)
+
+#define CFG_UART1_BAUDRATE              0x40520001
+#define CFG_UART1INPROT_UBX             0x10730001
+#define CFG_UART1INPROT_NMEA            0x10730002
+#define CFG_UART1INPROT_RTCM3X          0x10730004
+#define CFG_UART1OUTPROT_UBX            0x10740001
+#define CFG_UART1OUTPROT_NMEA           0x10740002
+#define CFG_UART1OUTPROT_RTCM3X         0x10740004
 
 // RTCM3 messages
 #define UBX_RTCM3_1005					0x05 // Stationary RTK reference station ARP

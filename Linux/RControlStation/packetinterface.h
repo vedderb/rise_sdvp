@@ -128,6 +128,7 @@ public slots:
     void sendCameraFrameAck(quint8 id);
     void ioBoardSetPwmDuty(quint8 id, quint8 board, double duty);
     void ioBoardSetValve(quint8 id, quint8 board, quint8 valve, bool set);
+    void hydraulicMove(quint8 id, HYDRAULIC_POS pos, HYDRAULIC_MOVE move);
 
 private:
     unsigned short crc16(const unsigned char *buf, unsigned int len);

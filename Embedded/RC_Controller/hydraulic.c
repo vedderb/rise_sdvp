@@ -21,6 +21,7 @@
 #include "conf_general.h"
 #include "pwm_esc.h"
 #include "utils.h"
+#include "comm_can.h"
 #include <math.h>
 
 // Settings
@@ -38,6 +39,10 @@
 static volatile float m_speed_now = 0.0;
 static volatile float m_distance_now = 0.0;
 static volatile float m_timeout_cnt = 0.0;
+static volatile HYDRAULIC_MOVE m_move_front = HYDRAULIC_MOVE_STOP;
+static volatile HYDRAULIC_MOVE m_move_rear = HYDRAULIC_MOVE_STOP;
+static volatile HYDRAULIC_MOVE m_move_extra = HYDRAULIC_MOVE_STOP;
+static volatile float m_move_timeout_cnt = 0.0;
 
 // Threads
 static THD_WORKING_AREA(hydro_thread_wa, 1024);
@@ -123,10 +128,36 @@ void hydraulic_set_throttle_raw(float throttle) {
 	pwm_esc_set(SERVO_RIGHT, 1.0 - pos);
 }
 
+void hydraulic_move(HYDRAULIC_POS pos, HYDRAULIC_MOVE move) {
+	m_move_timeout_cnt = 0;
+
+	switch (pos) {
+		case HYDRAULIC_POS_FRONT:
+			m_move_front = move;
+			break;
+
+		case HYDRAULIC_POS_REAR:
+			m_move_rear = move;
+			break;
+
+		case HYDRAULIC_POS_EXTRA:
+			m_move_extra = move;
+			break;
+
+		default:
+			break;
+	}
+}
+
 static THD_FUNCTION(hydro_thread, arg) {
 	(void)arg;
 
 	chRegSetThreadName("Hydraulic");
+
+	HYDRAULIC_MOVE move_last_front = HYDRAULIC_MOVE_STOP;
+	HYDRAULIC_MOVE move_last_rear = HYDRAULIC_MOVE_STOP;
+	HYDRAULIC_MOVE move_last_extra = HYDRAULIC_MOVE_STOP;
+	int move_repeat_cnt = 0;
 
 	for(;;) {
 		if (fabsf(m_speed_now) > 0.01) {
@@ -142,5 +173,44 @@ static THD_FUNCTION(hydro_thread, arg) {
 			pwm_esc_set(SERVO_RIGHT, 0.5);
 			m_speed_now = 0.0;
 		}
+
+		m_move_timeout_cnt += 0.01;
+		if (m_move_timeout_cnt >= TIMEOUT_SECONDS) {
+			m_move_timeout_cnt = TIMEOUT_SECONDS - 0.5;
+			m_move_front = HYDRAULIC_MOVE_STOP;
+			m_move_rear = HYDRAULIC_MOVE_STOP;
+			move_last_extra = HYDRAULIC_MOVE_STOP;
+		}
+
+		move_repeat_cnt++;
+		if (move_repeat_cnt > 10) {
+			move_last_front = HYDRAULIC_MOVE_UNDEFINED;
+			move_last_rear = HYDRAULIC_MOVE_UNDEFINED;
+			move_last_extra = HYDRAULIC_MOVE_UNDEFINED;
+		}
+
+#ifdef IS_MACTRAC
+		if (move_last_front != m_move_front) {
+			move_last_front = m_move_front;
+			comm_can_io_board_set_valve(0, 1, move_last_front == HYDRAULIC_MOVE_UP);
+			comm_can_io_board_set_valve(0, 2, move_last_front == HYDRAULIC_MOVE_DOWN);
+		}
+
+		if (move_last_rear != m_move_rear) {
+			move_last_rear = m_move_rear;
+			comm_can_io_board_set_valve(0, 5, move_last_rear == HYDRAULIC_MOVE_UP);
+			comm_can_io_board_set_valve(0, 6, move_last_rear == HYDRAULIC_MOVE_DOWN);
+		}
+
+		if (move_last_extra != m_move_extra) {
+			move_last_extra = m_move_extra;
+			comm_can_io_board_set_valve(0, 4, move_last_extra == HYDRAULIC_MOVE_OUT);
+			comm_can_io_board_set_valve(0, 3, move_last_extra == HYDRAULIC_MOVE_IN);
+		}
+#else
+		(void)move_last_front;
+		(void)move_last_rear;
+		(void)move_last_extra;
+#endif
 	}
 }

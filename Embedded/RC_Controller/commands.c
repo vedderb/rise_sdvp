@@ -796,6 +796,10 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			commands_send_packet(m_send_buffer, send_index);
 		} break;
 
+		case CMD_HYDRAULIC_MOVE:
+			hydraulic_move(data[0], data[1]);
+			break;
+
 		// ==================== Car commands ==================== //
 #if MAIN_MODE == MAIN_MODE_CAR
 		case CMD_GET_STATE: {
