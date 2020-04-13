@@ -442,7 +442,7 @@ bool pos_input_nmea(const char *data) {
 			// Apply antenna offset
 			const float s_yaw = sinf(-m_pos.yaw * M_PI / 180.0);
 			const float c_yaw = cosf(-m_pos.yaw * M_PI / 180.0);
-			px -= c_yaw * main_config.gps_ant_x + s_yaw * main_config.gps_ant_y;
+			px -= c_yaw * main_config.gps_ant_x - s_yaw * main_config.gps_ant_y;
 			py -= s_yaw * main_config.gps_ant_x + c_yaw * main_config.gps_ant_y;
 
 			chMtxLock(&m_mutex_pos);
