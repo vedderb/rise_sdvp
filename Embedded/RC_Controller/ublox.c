@@ -322,7 +322,7 @@ void ublox_init(void) {
 	ublox_cfg_msg(UBX_CLASS_RXM, UBX_RXM_RAWX, UBLOX_IS_F9P ? 0 : 1);
 
 	ublox_cfg_msg(UBX_CLASS_NMEA, UBX_NMEA_GGA, 1);
-	ublox_cfg_msg(UBX_CLASS_NMEA, UBX_NMEA_GSV, 1);
+	ublox_cfg_msg(UBX_CLASS_NMEA, UBX_NMEA_GSV, UBLOX_IS_F9P ? 0 : 1);
 
 	ublox_cfg_msg(UBX_CLASS_NMEA, UBX_NMEA_GLL, 0);
 	ublox_cfg_msg(UBX_CLASS_NMEA, UBX_NMEA_GSA, 0);
