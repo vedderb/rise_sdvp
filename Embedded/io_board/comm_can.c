@@ -253,6 +253,21 @@ static THD_FUNCTION(cancom_send_thread, arg) {
 		packet[ind++] = LIM_SW_READ(LINE_LIM_SW_4);
 		comm_can_transmit_sid(BOARD_ID | (BOARD_MASK << 8) | (CAN_IO_PACKET_LIM_SW << 4), packet, ind);
 
+		ind = 0;
+		buffer_append_float32_auto(packet, adc_read_get_counter(0)->high_time_last, &ind);
+		buffer_append_float32_auto(packet, adc_read_get_counter(0)->high_time_current, &ind);
+		comm_can_transmit_sid(BOARD_ID | (BOARD_MASK << 8) | (CAN_IO_PACKET_ADC0_HIGH_TIME << 4), packet, ind);
+
+		ind = 0;
+		buffer_append_float32_auto(packet, adc_read_get_counter(0)->low_time_last, &ind);
+		buffer_append_float32_auto(packet, adc_read_get_counter(0)->low_time_current, &ind);
+		comm_can_transmit_sid(BOARD_ID | (BOARD_MASK << 8) | (CAN_IO_PACKET_ADC0_LOW_TIME << 4), packet, ind);
+
+		ind = 0;
+		buffer_append_uint32(packet, adc_read_get_counter(0)->toggle_high_cnt, &ind);
+		buffer_append_uint32(packet, adc_read_get_counter(0)->toggle_low_cnt, &ind);
+		comm_can_transmit_sid(BOARD_ID | (BOARD_MASK << 8) | (CAN_IO_PACKET_ADC0_HIGH_LOW_CNT << 4), packet, ind);
+
 		chThdSleepMilliseconds(1000 / CAN_TX_HZ);
 	}
 }

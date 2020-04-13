@@ -504,6 +504,7 @@ void CarInterface::configurationReceived(quint8 id, MAIN_CONFIG config)
 {
     if (id == mId) {
         mSettingsReadDone = true;
+        mConfigLast = config;
         setConfGui(config);
         QString str;
         str.sprintf("Car %d: Configuration Received", id);
@@ -724,7 +725,7 @@ void CarInterface::on_confWriteButton_clicked()
     }
 
     if (mPacketInterface) {
-        MAIN_CONFIG conf;
+        MAIN_CONFIG conf = mConfigLast;
         getConfGui(conf);
         ui->confWriteButton->setEnabled(false);
         bool ok = mPacketInterface->setConfiguration(mId, conf, 5);

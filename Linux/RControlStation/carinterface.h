@@ -158,6 +158,7 @@ private:
     QElapsedTimer mImageTimer;
     double mImageFpsFilter;
     ImageWidget *mFullscreenImage;
+    MAIN_CONFIG mConfigLast;
 
     void getConfGui(MAIN_CONFIG &conf);
     void setConfGui(MAIN_CONFIG &conf);

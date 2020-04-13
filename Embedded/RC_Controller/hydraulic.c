@@ -28,11 +28,12 @@
 #ifdef IS_MACTRAC
 #define SERVO_LEFT				10 // Only one servo
 #define SERVO_RIGHT				1
+#define SPEED_M_S				1.1
 #else
 #define SERVO_LEFT				1
 #define SERVO_RIGHT				2
-#endif
 #define SPEED_M_S				0.6
+#endif
 #define TIMEOUT_SECONDS			2.0
 #define TIMEOUT_SECONDS_MOVE	10.0
 
@@ -44,6 +45,7 @@ static volatile HYDRAULIC_MOVE m_move_front = HYDRAULIC_MOVE_STOP;
 static volatile HYDRAULIC_MOVE m_move_rear = HYDRAULIC_MOVE_STOP;
 static volatile HYDRAULIC_MOVE m_move_extra = HYDRAULIC_MOVE_STOP;
 static volatile float m_move_timeout_cnt = 0.0;
+static volatile float m_throttle_set = 0.0;
 
 // Threads
 static THD_WORKING_AREA(hydro_thread_wa, 1024);
@@ -105,24 +107,39 @@ void hydraulic_set_speed(float speed) {
 	if (fabsf(speed) < 0.01) {
 		pwm_esc_set(SERVO_LEFT, 0.5);
 		pwm_esc_set(SERVO_RIGHT, 0.5);
+		m_throttle_set = 0.0;
+#ifndef HYDRAULIC_HAS_SPEED_SENSOR
 		m_speed_now = 0.0;
+#endif
 	} else {
+#ifdef IS_MACTRAC
+		float throttle_val = 0.35;
+#else
+		float throttle_val = 1.0;
+#endif
+
 		// TODO: Update this
-		pwm_esc_set(SERVO_LEFT, speed > 0.0 ? 1.0 : 0.0);
-		pwm_esc_set(SERVO_RIGHT, speed > 0.0 ? 0.0 : 1.0);
+		pwm_esc_set(SERVO_LEFT, speed > 0.0 ? throttle_val : 0.0);
+		pwm_esc_set(SERVO_RIGHT, speed > 0.0 ? 0.0 : throttle_val);
+		m_throttle_set = SIGN(speed) * throttle_val;
+#ifndef HYDRAULIC_HAS_SPEED_SENSOR
 		m_speed_now = SIGN(speed) * SPEED_M_S;
+#endif
 	}
 }
 
 void hydraulic_set_throttle_raw(float throttle) {
 	m_timeout_cnt = 0.0;
 	utils_truncate_number_abs(&throttle, 1.0);
+	m_throttle_set = throttle;
 
+#ifndef HYDRAULIC_HAS_SPEED_SENSOR
 	if (fabsf(throttle) > 0.9) {
 		m_speed_now = SIGN(throttle) * SPEED_M_S;
 	} else {
 		m_speed_now = 0.0;
 	}
+#endif
 
 	float pos = utils_map(throttle, -1.0, 1.0, 0.0, 1.0);
 	pwm_esc_set(SERVO_LEFT, pos);
@@ -172,7 +189,10 @@ static THD_FUNCTION(hydro_thread, arg) {
 		if (m_timeout_cnt >= TIMEOUT_SECONDS) {
 			pwm_esc_set(SERVO_LEFT, 0.5);
 			pwm_esc_set(SERVO_RIGHT, 0.5);
+			m_throttle_set = 0.0;
+#ifndef HYDRAULIC_HAS_SPEED_SENSOR
 			m_speed_now = 0.0;
+#endif
 		}
 
 		m_move_timeout_cnt += 0.01;
@@ -191,6 +211,15 @@ static THD_FUNCTION(hydro_thread, arg) {
 		}
 
 #ifdef IS_MACTRAC
+		// Measure speed
+		const float wheel_diam = 0.65;
+		const float cnts_per_rev = 16.0;
+		ADC_CNT_t cnt = *comm_can_io_board_adc0_cnt();
+		float time_last = fmaxf(cnt.high_time_current, cnt.high_time_last) +
+				fmaxf(cnt.low_time_current, cnt.low_time_last);
+		m_speed_now = SIGN(m_throttle_set) * (wheel_diam * M_PI) / (time_last * cnts_per_rev);
+
+		// Control hydraulic actuators
 		if (comm_can_io_board_lim_sw(0) && m_move_front == HYDRAULIC_MOVE_DOWN) {
 			m_move_front = HYDRAULIC_MOVE_STOP;
 		} else if (comm_can_io_board_lim_sw(1) && m_move_front == HYDRAULIC_MOVE_UP) {

@@ -1095,6 +1095,8 @@ typedef enum {
 	CMD_DW_UPTIME
 } CMD_DW;
 
+// ============== IO Board Datatypes ================== //
+
 typedef enum {
 	CAN_IO_PACKET_SET_VALVE = 0,
 	CAN_IO_PACKET_SET_VALVES_ALL,
@@ -1102,9 +1104,20 @@ typedef enum {
 	CAN_IO_PACKET_ADC_VOLTAGES_0_1_2_3,
 	CAN_IO_PACKET_ADC_VOLTAGES_4_5_6_7,
 	CAN_IO_PACKET_AS5047_ANGLE,
-	CAN_IO_PACKET_LIM_SW
+	CAN_IO_PACKET_LIM_SW,
+	CAN_IO_PACKET_ADC0_HIGH_TIME,
+	CAN_IO_PACKET_ADC0_LOW_TIME,
+	CAN_IO_PACKET_ADC0_HIGH_LOW_CNT
 } CAN_IO_PACKET;
 
-// ============== IO Board Datatypes ================== //
+typedef struct {
+	float low_time_last;
+	float high_time_last;
+	float low_time_current;
+	float high_time_current;
+	uint32_t toggle_low_cnt;
+	uint32_t toggle_high_cnt;
+	bool is_high;
+} ADC_CNT_t;
 
 #endif /* DATATYPES_H_ */

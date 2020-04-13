@@ -22,5 +22,6 @@
 
 void adc_read_init(void);
 float adc_read_get_voltage(int channel);
+volatile ADC_CNT_t* adc_read_get_counter(int channel);
 
 #endif /* ADC_READ_H_ */

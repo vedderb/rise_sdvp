@@ -20,7 +20,7 @@
 
 // Settings
 #define ADC_CHANNELS				9
-#define NUM_SAMP					8
+#define NUM_SAMP					4
 
 static const ADCConversionGroup adcgrpcfg = {
 		FALSE,
@@ -47,6 +47,7 @@ static const ADCConversionGroup adcgrpcfg = {
 
 // Variables
 static volatile float m_voltages[ADC_CHANNELS];
+static volatile ADC_CNT_t m_adc_cnt[ADC_CHANNELS] = {0};
 
 // Threads
 static THD_WORKING_AREA(adc_read_thread_wa, 512);
@@ -75,9 +76,19 @@ float adc_read_get_voltage(int channel) {
 	}
 }
 
+volatile ADC_CNT_t* adc_read_get_counter(int channel) {
+	if (channel < 0 || channel >= ADC_CHANNELS) {
+		return 0;
+	} else {
+		return &m_adc_cnt[channel];
+	}
+}
+
 static THD_FUNCTION(adc_read_thread, arg) {
 	(void)arg;
 	chRegSetThreadName("ADC read");
+
+	systime_t time_last = chVTGetSystemTimeX();
 
 	for(;;) {
 		adcsample_t samples[ADC_CHANNELS * NUM_SAMP];
@@ -95,6 +106,37 @@ static THD_FUNCTION(adc_read_thread, arg) {
 			m_voltages[i] = (voltages[i] / (float)NUM_SAMP / 4095.0) * 3.3;
 		}
 
-		chThdSleepMilliseconds(1);
+		float dt = (float)chVTTimeElapsedSinceX(time_last) / (float)CH_CFG_ST_FREQUENCY;
+		time_last = chVTGetSystemTimeX();
+
+		for (int i = 0;i < ADC_CHANNELS;i++) {
+			bool was_high = m_adc_cnt[i].is_high;
+
+			if (m_adc_cnt[i].is_high && m_voltages[i] < 0.3) {
+				m_adc_cnt[i].is_high = false;
+			} else if (!m_adc_cnt[i].is_high && m_voltages[i] >= 0.9) {
+				m_adc_cnt[i].is_high = true;
+			}
+
+			if (was_high != m_adc_cnt[i].is_high) {
+				if (was_high) {
+					m_adc_cnt[i].high_time_last = m_adc_cnt[i].high_time_current + dt / 2.0;
+					m_adc_cnt[i].high_time_current = dt / 2.0;
+					m_adc_cnt[i].toggle_low_cnt++;
+				} else {
+					m_adc_cnt[i].low_time_last = m_adc_cnt[i].low_time_current + dt / 2.0;
+					m_adc_cnt[i].low_time_current = dt / 2.0;
+					m_adc_cnt[i].toggle_high_cnt++;
+				}
+			} else {
+				if (was_high) {
+					m_adc_cnt[i].high_time_current += dt;
+				} else {
+					m_adc_cnt[i].low_time_current += dt;
+				}
+			}
+		}
+
+		chThdSleepMicroseconds(500);
 	}
 }

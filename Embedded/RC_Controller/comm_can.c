@@ -53,9 +53,10 @@ static thread_t *process_tp;
 static int vesc_id = VESC_ID;
 
 // IO Board
-static float io_board_adc_voltages[8];
-static bool io_board_lim_sw[8];
-static float io_board_as5047_angle;
+static float io_board_adc_voltages[8] = {0};
+static bool io_board_lim_sw[8] = {0};
+static float io_board_as5047_angle = 0.0;
+static ADC_CNT_t io_board_adc0_cnt = {0};
 
 /*
  * 500KBaud, automatic wakeup, automatic recover
@@ -290,6 +291,12 @@ static THD_FUNCTION(cancom_process_thread, arg) {
 						io_board_adc_voltages[1] = buffer_get_float16(rxmsg.data8, 0.5e3, &ind);
 						io_board_adc_voltages[2] = buffer_get_float16(rxmsg.data8, 0.5e3, &ind);
 						io_board_adc_voltages[3] = buffer_get_float16(rxmsg.data8, 0.5e3, &ind);
+
+						if (io_board_adc_voltages[0] >= 9.9) {
+							io_board_adc0_cnt.is_high = true;
+						} else if (io_board_adc_voltages[0] < 3.3) {
+							io_board_adc0_cnt.is_high = false;
+						}
 						break;
 
 					case CAN_IO_PACKET_ADC_VOLTAGES_4_5_6_7:
@@ -309,6 +316,24 @@ static THD_FUNCTION(cancom_process_thread, arg) {
 						for (int i = 0;i < rxmsg.DLC; i++) {
 							io_board_lim_sw[i] = rxmsg.data8[i];
 						}
+						break;
+
+					case CAN_IO_PACKET_ADC0_HIGH_TIME:
+						ind = 0;
+						io_board_adc0_cnt.high_time_last = buffer_get_float32_auto(rxmsg.data8, &ind);
+						io_board_adc0_cnt.high_time_current = buffer_get_float32_auto(rxmsg.data8, &ind);
+						break;
+
+					case CAN_IO_PACKET_ADC0_LOW_TIME:
+						ind = 0;
+						io_board_adc0_cnt.low_time_last = buffer_get_float32_auto(rxmsg.data8, &ind);
+						io_board_adc0_cnt.low_time_current = buffer_get_float32_auto(rxmsg.data8, &ind);
+						break;
+
+					case CAN_IO_PACKET_ADC0_HIGH_LOW_CNT:
+						ind = 0;
+						io_board_adc0_cnt.toggle_high_cnt = buffer_get_uint32(rxmsg.data8, &ind);
+						io_board_adc0_cnt.toggle_low_cnt = buffer_get_uint32(rxmsg.data8, &ind);
 						break;
 
 					default:
@@ -555,6 +580,10 @@ bool comm_can_io_board_lim_sw(int sw) {
 		return false;
 	}
 	return io_board_lim_sw[sw];
+}
+
+ADC_CNT_t* comm_can_io_board_adc0_cnt(void) {
+	return &io_board_adc0_cnt;
 }
 
 void comm_can_io_board_set_valve(int board, int valve, bool set) {
