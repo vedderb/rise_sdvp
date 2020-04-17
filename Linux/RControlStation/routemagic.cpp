@@ -1383,12 +1383,13 @@ QList<LocPoint> RouteMagic::fillBoundsWithTrajectory(QList<LocPoint> bounds, QLi
     return route;
 }
 
-QList<LocPoint> RouteMagic::fillConvexPolygonWithZigZag(QList<LocPoint> bounds, double spacing, double speed, double speedInTurns, int turnIntermediateSteps, uint32_t setAttributesOnStraights, double pointWithAttributesDistanceToTurn)
+QList<LocPoint> RouteMagic::fillConvexPolygonWithZigZag(QList<LocPoint> bounds, double spacing, bool spacingTowardsBounds, double speed, double speedInTurns, int turnIntermediateSteps, uint32_t setAttributesOnStraights, double pointWithAttributesDistanceToTurn)
 {
     QList<LocPoint> route;
 
-    // 1. resize bounds to ensure spacing
-    bounds = getShrinkedConvexPolygon(bounds, spacing);
+    // 1. resize bounds to ensure spacing (if applicable)
+    if (spacingTowardsBounds)
+        bounds = getShrinkedConvexPolygon(bounds, spacing);
 
     // 2. get bound that determines optimal zigzag direction
     QPair<LocPoint, LocPoint> baseline = getBaselineDeterminingMinHeightOfConvexPolygon(bounds);
@@ -1503,11 +1504,11 @@ QList<LocPoint> RouteMagic::fillConvexPolygonWithZigZag(QList<LocPoint> bounds, 
     return route;
 }
 
-QList<LocPoint> RouteMagic::fillConvexPolygonWithFramedZigZag(QList<LocPoint> bounds, double spacing, double speed, double speedInTurns, int turnIntermediateSteps, uint32_t setAttributesOnStraights, double pointWithAttributesDistanceToTurn)
+QList<LocPoint> RouteMagic::fillConvexPolygonWithFramedZigZag(QList<LocPoint> bounds, double spacing, bool spacingTowardsBounds, double speed, double speedInTurns, int turnIntermediateSteps, uint32_t setAttributesOnStraights, double pointWithAttributesDistanceToTurn)
 {
     QList<LocPoint> frame = getShrinkedConvexPolygon(bounds, spacing);
 
-    QList<LocPoint> zigzag = fillConvexPolygonWithZigZag(frame, spacing, speed, speedInTurns, turnIntermediateSteps, setAttributesOnStraights, pointWithAttributesDistanceToTurn);
+    QList<LocPoint> zigzag = fillConvexPolygonWithZigZag(frame, spacing, spacingTowardsBounds, speed, speedInTurns, turnIntermediateSteps, setAttributesOnStraights, pointWithAttributesDistanceToTurn);
 
     int pointIdx = getClosestPointInRoute(zigzag.first(), frame);
 
