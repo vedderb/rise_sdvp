@@ -44,7 +44,7 @@
            <x>0</x>
            <y>0</y>
            <width>180</width>
-           <height>68</height>
+           <height>80</height>
           </rect>
          </property>
          <attribute name="label">
@@ -105,7 +105,7 @@
            <x>0</x>
            <y>0</y>
            <width>180</width>
-           <height>88</height>
+           <height>108</height>
           </rect>
          </property>
          <attribute name="label">
@@ -210,8 +210,8 @@
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>181</width>
-           <height>71</height>
+           <width>184</width>
+           <height>80</height>
           </rect>
          </property>
          <attribute name="label">
@@ -1284,8 +1284,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>213</width>
-                     <height>749</height>
+                     <width>191</width>
+                     <height>872</height>
                     </rect>
                    </property>
                    <layout class="QVBoxLayout" name="verticalLayout_23">
@@ -1899,8 +1899,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>196</width>
-                     <height>436</height>
+                     <width>168</width>
+                     <height>483</height>
                     </rect>
                    </property>
                    <layout class="QVBoxLayout" name="verticalLayout_12">
@@ -2194,8 +2194,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>210</width>
-                     <height>783</height>
+                     <width>229</width>
+                     <height>940</height>
                     </rect>
                    </property>
                    <layout class="QVBoxLayout" name="verticalLayout_15">
@@ -2786,8 +2786,17 @@
                 </property>
                 <item>
                  <widget class="QScrollArea" name="scrollArea_4">
+                  <property name="minimumSize">
+                   <size>
+                    <width>260</width>
+                    <height>0</height>
+                   </size>
+                  </property>
                   <property name="horizontalScrollBarPolicy">
                    <enum>Qt::ScrollBarAlwaysOff</enum>
+                  </property>
+                  <property name="sizeAdjustPolicy">
+                   <enum>QAbstractScrollArea::AdjustIgnored</enum>
                   </property>
                   <property name="widgetResizable">
                    <bool>true</bool>
@@ -2797,8 +2806,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>252</width>
-                     <height>619</height>
+                     <width>256</width>
+                     <height>940</height>
                     </rect>
                    </property>
                    <layout class="QVBoxLayout" name="verticalLayout_27">
@@ -3012,22 +3021,6 @@
                         </widget>
                        </item>
                        <item>
-                        <widget class="QCheckBox" name="boundsFillSpacingTowardsBoundsCheckBox">
-                         <property name="sizePolicy">
-                          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                           <horstretch>0</horstretch>
-                           <verstretch>0</verstretch>
-                          </sizepolicy>
-                         </property>
-                         <property name="text">
-                          <string>Spacing towards Bounds</string>
-                         </property>
-                         <property name="checked">
-                          <bool>false</bool>
-                         </property>
-                        </widget>
-                       </item>
-                       <item>
                         <spacer name="verticalSpacer_12">
                          <property name="orientation">
                           <enum>Qt::Vertical</enum>
@@ -3044,12 +3037,44 @@
                         </spacer>
                        </item>
                        <item>
+                        <widget class="QSpinBox" name="visitEverySpinBox">
+                         <property name="suffix">
+                          <string> Row</string>
+                         </property>
+                         <property name="prefix">
+                          <string>Visit Every </string>
+                         </property>
+                         <property name="maximum">
+                          <number>100</number>
+                         </property>
+                         <property name="singleStep">
+                          <number>2</number>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
                         <widget class="QSpinBox" name="stepsForTurningSpinBox">
                          <property name="prefix">
                           <string>Steps For Turning: </string>
                          </property>
                          <property name="value">
                           <number>5</number>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="QCheckBox" name="boundsFillSpacingTowardsBoundsCheckBox">
+                         <property name="sizePolicy">
+                          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                           <horstretch>0</horstretch>
+                           <verstretch>0</verstretch>
+                          </sizepolicy>
+                         </property>
+                         <property name="text">
+                          <string>Keep Turns within Bounds</string>
+                         </property>
+                         <property name="checked">
+                          <bool>false</bool>
                          </property>
                         </widget>
                        </item>
@@ -3434,7 +3459,7 @@
      <x>0</x>
      <y>0</y>
      <width>1561</width>
-     <height>22</height>
+     <height>30</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">

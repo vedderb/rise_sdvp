@@ -1383,7 +1383,7 @@ QList<LocPoint> RouteMagic::fillBoundsWithTrajectory(QList<LocPoint> bounds, QLi
     return route;
 }
 
-QList<LocPoint> RouteMagic::fillConvexPolygonWithZigZag(QList<LocPoint> bounds, double spacing, bool spacingTowardsBounds, double speed, double speedInTurns, int turnIntermediateSteps, uint32_t setAttributesOnStraights, uint32_t setAttributesInTurns, double pointWithAttributesDistanceToTurn)
+QList<LocPoint> RouteMagic::fillConvexPolygonWithZigZag(QList<LocPoint> bounds, double spacing, bool spacingTowardsBounds, double speed, double speedInTurns, int turnIntermediateSteps, int visitEveryX, uint32_t setAttributesOnStraights, uint32_t setAttributesInTurns, double pointWithAttributesDistanceToTurn)
 {
     QList<LocPoint> route;
 
@@ -1411,7 +1411,7 @@ QList<LocPoint> RouteMagic::fillConvexPolygonWithZigZag(QList<LocPoint> bounds, 
         newLineEnd =   LocPoint(newLineEnd.getX() + polygonDirectionSign*spacing*cos(angle + PI/2), newLineEnd.getY() + polygonDirectionSign*spacing*sin(angle + PI/2));
     }
 
-    // 4. cut parallels down to polygon ((i) ensure "short" connections not in bounds, (ii) sort bounds to get reproducible results, (iii) get intersections with bounds)
+    // 4. cut parallels down to polygon ((i) ensure "short" connections of route are not within bounds, (ii) sort bounds to get reproducible results, (iii) get intersections with bounds)
     for (int i=1; i<route.size(); i+=4)
         std::swap(route[i-1], route[i]);
 
@@ -1431,54 +1431,113 @@ QList<LocPoint> RouteMagic::fillConvexPolygonWithZigZag(QList<LocPoint> bounds, 
 
     route = getAllIntersections(route, bounds);
 
-    // 5. adjust orientations, set speed and attributes, smoothen turns
+    // 5. Adjust orientations, visit every xth line (if applies)
     for (int i = 1; i < route.size(); i+=4)
         std::swap(route[i-1], route[i]);
+
+    QList<int> endsOfPasses;
+    if (visitEveryX > 0) {
+        QList<LocPoint> routeWIPeveryX;
+        assert(visitEveryX % 2 == 0 && "not implemented for odd visitEveryX"); // TODO
+        int currPoint = 0;
+        for (int currPass = 1; currPass <= visitEveryX; currPass++) { // go back and forth to cover skipped lines
+            // visit every everyX-th line
+            for (; currPoint<route.size() && currPoint>=0; currPoint+=2*visitEveryX) {
+                routeWIPeveryX.append(route.at(currPoint));
+                (currPoint % 2) ? currPoint-- : currPoint++;
+                routeWIPeveryX.append(route.at(currPoint));
+            }
+            currPoint -= 2*visitEveryX;
+            // Go back to origin (skipping already-visited lines)
+            if (currPass < visitEveryX)
+                currPoint = currPass*2 + ((currPoint % 2) ? 0 : 1);
+
+            endsOfPasses.append(routeWIPeveryX.size()-1);
+        }
+        route = routeWIPeveryX;
+    }
+
+    // 6. set speed and attributes, smoothen turns
     for (auto& pt : route)
         pt.setSpeed(speed);
 
     if (turnIntermediateSteps > 0) {
+        const double turnRadius = (visitEveryX > 0) ? (visitEveryX*(spacing/2)) : (spacing/2);
         for (int i = 1; i < route.size()-1; i+=(2+turnIntermediateSteps)) {
             int turnDirectionSign = (i/(2+turnIntermediateSteps))%2 == 0 ? 1 : -1;
+
+            int originalI = i - (i/(2+turnIntermediateSteps)*turnIntermediateSteps);
+            bool turnToOrigin = false;
+            if (endsOfPasses.contains(originalI))
+                turnToOrigin = true; // go back to start a new pass
 
             // Find turnCenter that guarantees to stay within bounds
             QPair<LocPoint, LocPoint> turnBound(LocPoint(route.at(i).getX(), route.at(i).getY()), LocPoint(route.at(i+1).getX(), route.at(i+1).getY()));
             double turnBoundAngle = atan2(turnBound.second.getY() - turnBound.first.getY(), turnBound.second.getX() - turnBound.first.getX());
 
-            QPair<LocPoint, LocPoint> turnBoundShifted(LocPoint(route.at(i).getX() - (spacing/2)*turnDirectionSign*(-polygonDirectionSign)*cos(turnBoundAngle + PI/2),
-                                                                route.at(i).getY() - (spacing/2)*turnDirectionSign*(-polygonDirectionSign)*sin(turnBoundAngle + PI/2)),
-                                                       LocPoint(route.at(i+1).getX() - (spacing/2)*turnDirectionSign*(-polygonDirectionSign)*cos(turnBoundAngle + PI/2),
-                                                                route.at(i+1).getY() - (spacing/2)*turnDirectionSign*(-polygonDirectionSign)*sin(turnBoundAngle + PI/2)));
+            QPair<LocPoint, LocPoint> turnBoundShifted(LocPoint(route.at(i).getX() - turnRadius*turnDirectionSign*(-polygonDirectionSign)*cos(turnBoundAngle + PI/2),
+                                                                route.at(i).getY() - turnRadius*turnDirectionSign*(-polygonDirectionSign)*sin(turnBoundAngle + PI/2)),
+                                                       LocPoint(route.at(i+1).getX() - turnRadius*turnDirectionSign*(-polygonDirectionSign)*cos(turnBoundAngle + PI/2),
+                                                                route.at(i+1).getY() - turnRadius*turnDirectionSign*(-polygonDirectionSign)*sin(turnBoundAngle + PI/2)));
 
-            QPair<LocPoint, LocPoint> turnCenterLine(LocPoint(route.at(i).getX() + (spacing/2)*polygonDirectionSign*cos(angle + PI/2),
-                                                              route.at(i).getY() + (spacing/2)*polygonDirectionSign*sin(angle + PI/2)),
-                                                     LocPoint(route.at(i-1).getX() + (spacing/2)*polygonDirectionSign*cos(angle + PI/2),
-                                                              route.at(i-1).getY() + (spacing/2)*polygonDirectionSign*sin(angle + PI/2)));
+            QPair<LocPoint, LocPoint> turnCenterLine(LocPoint(route.at(i).getX() + turnRadius*polygonDirectionSign*cos(angle + PI/2),
+                                                              route.at(i).getY() + turnRadius*polygonDirectionSign*sin(angle + PI/2)),
+                                                     LocPoint(route.at(i-1).getX() + turnRadius*polygonDirectionSign*cos(angle + PI/2),
+                                                              route.at(i-1).getY() + turnRadius*polygonDirectionSign*sin(angle + PI/2)));
 
             LocPoint turnCenter = getLineIntersection(turnBoundShifted, turnCenterLine);
 
-            // Draw half circle
             const double piStep = PI/(turnIntermediateSteps+1) * turnDirectionSign * polygonDirectionSign;
-            for (int j = 0; j <= turnIntermediateSteps+1; j++) {
-                LocPoint turnStep(turnCenter.getX() + (spacing/2)*cos(j*piStep + angle - PI/2 * polygonDirectionSign),
-                                  turnCenter.getY() + (spacing/2)*sin(j*piStep + angle - PI/2 * polygonDirectionSign));
+            if (turnToOrigin) {
+                // Turn going back to start a new pass. Draw half circleDraw two quarter circles with long connection inbetween
+                // TODO currently no option to stay within bounds
+                LocPoint turnCenterA = LocPoint(route.at(i).getX() - turnRadius*polygonDirectionSign*cos(angle + PI/2),
+                                                route.at(i).getY() - turnRadius*polygonDirectionSign*sin(angle + PI/2));
+                LocPoint turnCenterB = LocPoint(route.at(i+1).getX() + turnRadius*polygonDirectionSign*cos(angle + PI/2),
+                                                route.at(i+1).getY() + turnRadius*polygonDirectionSign*sin(angle + PI/2));
+                for (int j = 0; j <= turnIntermediateSteps+1; j++) {
+                    if (j <= (turnIntermediateSteps+1)/2)
+                        turnCenter = turnCenterA;
+                    else
+                        turnCenter = turnCenterB;
 
-                uint32_t tmpAttr = turnStep.getAttributes();
-                tmpAttr |= setAttributesInTurns;
-                turnStep.setAttributes(tmpAttr);
+                    LocPoint turnStep(turnCenter.getX() + turnRadius*cos(-j*piStep + angle + PI/2 * polygonDirectionSign),
+                                      turnCenter.getY() + turnRadius*sin(-j*piStep + angle + PI/2 * polygonDirectionSign));
 
-                if (j == 0 || j == turnIntermediateSteps+1) {
-                    turnStep.setSpeed(speed);
-                    route.replace(i+j,turnStep);
-                } else {
-                    turnStep.setSpeed(speedInTurns);
-                    route.insert(i+j,turnStep);
+                    uint32_t tmpAttr = turnStep.getAttributes();
+                    tmpAttr |= setAttributesInTurns;
+                    turnStep.setAttributes(tmpAttr);
+
+                    if (j == 0 || j == turnIntermediateSteps+1) {
+                        turnStep.setSpeed(speed);
+                        route.replace(i+j,turnStep);
+                    } else {
+                        turnStep.setSpeed(speedInTurns);
+                        route.insert(i+j,turnStep);
+                    }
                 }
-            }
+            } else
+                // Standard turn. Draw half circle
+                for (int j = 0; j <= turnIntermediateSteps+1; j++) {
+                    LocPoint turnStep(turnCenter.getX() + turnRadius*cos(j*piStep + angle - PI/2 * polygonDirectionSign),
+                                      turnCenter.getY() + turnRadius*sin(j*piStep + angle - PI/2 * polygonDirectionSign));
+
+                    uint32_t tmpAttr = turnStep.getAttributes();
+                    tmpAttr |= setAttributesInTurns;
+                    turnStep.setAttributes(tmpAttr);
+
+                    if (j == 0 || j == turnIntermediateSteps+1) {
+                        turnStep.setSpeed(speed);
+                        route.replace(i+j,turnStep);
+                    } else {
+                        turnStep.setSpeed(speedInTurns);
+                        route.insert(i+j,turnStep);
+                    }
+                }
         }
     }
 
-    // 6. introduce points for predictable processing of attributes, set attributes
+    // 7. introduce points for predictable processing of attributes, set attributes
     if (setAttributesOnStraights) {
         for (int i = 1; i < route.size(); i+=(2+turnIntermediateSteps+2)) {
             int turnDirectionSign = (i/(2+turnIntermediateSteps+2))%2 == 0 ? 1 : -1;
@@ -1504,15 +1563,14 @@ QList<LocPoint> RouteMagic::fillConvexPolygonWithZigZag(QList<LocPoint> bounds, 
         }
     }
 
-
     return route;
 }
 
-QList<LocPoint> RouteMagic::fillConvexPolygonWithFramedZigZag(QList<LocPoint> bounds, double spacing, bool spacingTowardsBounds, double speed, double speedInTurns, int turnIntermediateSteps, uint32_t setAttributesOnStraights, uint32_t setAttributesInTurns, double pointWithAttributesDistanceToTurn)
+QList<LocPoint> RouteMagic::fillConvexPolygonWithFramedZigZag(QList<LocPoint> bounds, double spacing, bool spacingTowardsBounds, double speed, double speedInTurns, int turnIntermediateSteps, int visitEveryX, uint32_t setAttributesOnStraights, uint32_t setAttributesInTurns, double pointWithAttributesDistanceToTurn)
 {
     QList<LocPoint> frame = getShrinkedConvexPolygon(bounds, spacing);
 
-    QList<LocPoint> zigzag = fillConvexPolygonWithZigZag(frame, spacing, spacingTowardsBounds, speed, speedInTurns, turnIntermediateSteps, setAttributesOnStraights, setAttributesInTurns, pointWithAttributesDistanceToTurn);
+    QList<LocPoint> zigzag = fillConvexPolygonWithZigZag(frame, spacing, spacingTowardsBounds, speed, speedInTurns, turnIntermediateSteps, visitEveryX, setAttributesOnStraights, setAttributesInTurns, pointWithAttributesDistanceToTurn);
 
     int pointIdx = getClosestPointInRoute(zigzag.first(), frame);
 
@@ -1532,7 +1590,7 @@ QList<LocPoint> RouteMagic::fillConvexPolygonWithFramedZigZag(QList<LocPoint> bo
 
 QList<LocPoint> RouteMagic::getShrinkedConvexPolygon(QList<LocPoint> bounds, double spacing)
 {
-    bounds.append(bounds.at(0)); // make sure bounds are closed
+    //bounds.append(bounds.at(0)); // NOTE: might make sense to make sure bounds are closed, but sometimes leads to strange results in this form
     int directionSign = getConvexPolygonOrientation(bounds);
     QList<LocPoint> shrinkedBounds;
     for (int i=1; i<bounds.size(); i++) {

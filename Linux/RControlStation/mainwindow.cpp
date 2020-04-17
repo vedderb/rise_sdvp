@@ -2204,19 +2204,20 @@ void MainWindow::on_boundsFillPushButton_clicked()
     QList<LocPoint> route;
     if (ui->generateFrameCheckBox->isChecked())
         route = RouteMagic::fillConvexPolygonWithFramedZigZag(bounds, spacing, ui->boundsFillSpacingTowardsBoundsCheckBox->isChecked(), ui->boundsFillSpeedSpinBox->value()/3.6,
-                                                              ui->boundsFillSpeedInTurnsSpinBox->value()/3.6, ui->stepsForTurningSpinBox->value(),
+                                                              ui->boundsFillSpeedInTurnsSpinBox->value()/3.6, ui->stepsForTurningSpinBox->value(), ui->visitEverySpinBox->value(),
                                                               ui->lowerToolsCheckBox->isChecked() ? ATTR_HYDRAULIC_FRONT_DOWN : 0, ui->raiseToolsCheckBox->isChecked() ? ATTR_HYDRAULIC_FRONT_UP : 0,
                                                               ui->raiseToolsDistanceSpinBox->value()*2);
                                                               // attribute changes at half distance
     else
         route = RouteMagic::fillConvexPolygonWithZigZag(bounds, spacing, ui->boundsFillSpacingTowardsBoundsCheckBox->isChecked(), ui->boundsFillSpeedSpinBox->value()/3.6,
-                                                        ui->boundsFillSpeedInTurnsSpinBox->value()/3.6, ui->stepsForTurningSpinBox->value(),
+                                                        ui->boundsFillSpeedInTurnsSpinBox->value()/3.6, ui->stepsForTurningSpinBox->value(), ui->visitEverySpinBox->value(),
                                                         ui->lowerToolsCheckBox->isChecked() ? ATTR_HYDRAULIC_FRONT_DOWN : 0, ui->raiseToolsCheckBox->isChecked() ? ATTR_HYDRAULIC_FRONT_UP : 0,
                                                         ui->raiseToolsDistanceSpinBox->value()*2);
 
     int r = ui->mapWidget->getRoutes().size();
     ui->mapWidget->addRoute(route);
     ui->mapWidget->setRouteNow(r);
+    ui->mapRouteBox->setValue(r);
     ui->mapWidget->repaint();
 
 }
