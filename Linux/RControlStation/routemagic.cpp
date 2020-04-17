@@ -1444,10 +1444,10 @@ QList<LocPoint> RouteMagic::fillConvexPolygonWithZigZag(QList<LocPoint> bounds, 
             QPair<LocPoint, LocPoint> turnBound(LocPoint(route.at(i).getX(), route.at(i).getY()), LocPoint(route.at(i+1).getX(), route.at(i+1).getY()));
             double turnBoundAngle = atan2(turnBound.second.getY() - turnBound.first.getY(), turnBound.second.getX() - turnBound.first.getX());
 
-            QPair<LocPoint, LocPoint> turnBoundShifted(LocPoint(route.at(i).getX() - (spacing/2)*turnDirectionSign*cos(turnBoundAngle + PI/2),
-                                                                route.at(i).getY() - (spacing/2)*turnDirectionSign*sin(turnBoundAngle + PI/2)),
-                                                       LocPoint(route.at(i+1).getX() - (spacing/2)*turnDirectionSign*cos(turnBoundAngle + PI/2),
-                                                                route.at(i+1).getY() - (spacing/2)*turnDirectionSign*sin(turnBoundAngle + PI/2)));
+            QPair<LocPoint, LocPoint> turnBoundShifted(LocPoint(route.at(i).getX() - (spacing/2)*turnDirectionSign*(-polygonDirectionSign)*cos(turnBoundAngle + PI/2),
+                                                                route.at(i).getY() - (spacing/2)*turnDirectionSign*(-polygonDirectionSign)*sin(turnBoundAngle + PI/2)),
+                                                       LocPoint(route.at(i+1).getX() - (spacing/2)*turnDirectionSign*(-polygonDirectionSign)*cos(turnBoundAngle + PI/2),
+                                                                route.at(i+1).getY() - (spacing/2)*turnDirectionSign*(-polygonDirectionSign)*sin(turnBoundAngle + PI/2)));
 
             QPair<LocPoint, LocPoint> turnCenterLine(LocPoint(route.at(i).getX() + (spacing/2)*polygonDirectionSign*cos(angle + PI/2),
                                                               route.at(i).getY() + (spacing/2)*polygonDirectionSign*sin(angle + PI/2)),
