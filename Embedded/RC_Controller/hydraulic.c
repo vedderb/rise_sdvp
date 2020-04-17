@@ -113,14 +113,16 @@ void hydraulic_set_speed(float speed) {
 #endif
 	} else {
 #ifdef IS_MACTRAC
-		float throttle_val = 0.35;
+		float throttle_val = speed * 0.5;
+		float pos = utils_map(throttle_val, -1.0, 1.0, 0.0, 1.0);
+		pwm_esc_set(SERVO_RIGHT, 1.0 - pos);
 #else
 		float throttle_val = 1.0;
+		pwm_esc_set(SERVO_LEFT, speed > 0.0 ? throttle_val : 0.0);
+		pwm_esc_set(SERVO_RIGHT, speed > 0.0 ? 0.0 : throttle_val);
 #endif
 
 		// TODO: Update this
-		pwm_esc_set(SERVO_LEFT, speed > 0.0 ? throttle_val : 0.0);
-		pwm_esc_set(SERVO_RIGHT, speed > 0.0 ? 0.0 : throttle_val);
 		m_throttle_set = SIGN(speed) * throttle_val;
 #ifndef HYDRAULIC_HAS_SPEED_SENSOR
 		m_speed_now = SIGN(speed) * SPEED_M_S;

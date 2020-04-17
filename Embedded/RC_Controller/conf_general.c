@@ -286,6 +286,7 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 	conf->car.axis_distance = 1.7;
 	conf->car.steering_max_angle_rad = atanf(conf->car.axis_distance / 1.5);
 	conf->gps_corr_gain_yaw = 2.0;
+	conf->ap_base_rad = 3.3;
 
 	conf->gps_ant_x = 1.25;
 	conf->gps_ant_y = -0.3;
