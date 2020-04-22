@@ -188,6 +188,8 @@ private slots:
 
     void on_lowerToolsCheckBox_stateChanged(int arg1);
 
+    void on_raiseToolsCheckBox_stateChanged(int arg1);
+
 private:
     Ui::MainWindow *ui;
     QTimer *mTimer;

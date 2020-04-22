@@ -3072,7 +3072,7 @@
                        <item>
                         <widget class="QGroupBox" name="groupBox_22">
                          <property name="title">
-                          <string>Tool Actuation</string>
+                          <string>Front Tool Actuation</string>
                          </property>
                          <layout class="QVBoxLayout" name="verticalLayout_30">
                           <item>
@@ -3086,7 +3086,20 @@
                            </widget>
                           </item>
                           <item>
+                           <widget class="QCheckBox" name="raiseToolsCheckBox">
+                            <property name="text">
+                             <string>Raise Tools in Turns</string>
+                            </property>
+                            <property name="checked">
+                             <bool>true</bool>
+                            </property>
+                           </widget>
+                          </item>
+                          <item>
                            <widget class="QDoubleSpinBox" name="raiseToolsDistanceSpinBox">
+                            <property name="toolTip">
+                             <string>Tools are lowered/raised this amount of meters after/before a turn</string>
+                            </property>
                             <property name="prefix">
                              <string>Act. Dist. to Turn: </string>
                             </property>

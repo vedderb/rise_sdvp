@@ -215,7 +215,7 @@ MapWidget::MapWidget(QWidget *parent) : QWidget(parent)
     setMouseTracking(true);
 
     // Pre-render some things for speed
-    for (int i = 0;i < 4;i++) {
+    for (int i = 0;i < 5;i++) {
         QPixmap pix(24, 24);
         pix.fill(Qt::transparent);
         QPainter p(&pix);
@@ -249,9 +249,17 @@ MapWidget::MapWidget(QWidget *parent) : QWidget(parent)
         } break;
 
         case 3: {
-            // Agricultural tool engaged circle
+            // Hydraulic front down circle
             pen.setColor(Qt::darkCyan);
             p.setBrush(Qt::cyan);
+            p.setPen(pen);
+            p.drawEllipse(2, 2, 20, 20);
+        } break;
+
+        case 4: {
+            // Hydraulic front up circle
+            pen.setColor(Qt::darkYellow);
+            p.setBrush(Qt::green);
             p.setPen(pen);
             p.drawEllipse(2, 2, 20, 20);
         } break;
@@ -1988,7 +1996,7 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
         for (int i = 1;i < routeNow.size();i++) {
             pen.setColor(defaultDarkColor);
             painter.setBrush(defaultColor);
-            if (mRouteNow == rn && (routeNow[i - 1].getAttributes() & ATTR_AGRICULTURE_TOOL_MASK) && (routeNow[i].getAttributes() & ATTR_AGRICULTURE_TOOL_MASK)) {
+            if (mRouteNow == rn && (routeNow[i - 1].getAttributes() & ATTR_HYDRAULIC_FRONT_DOWN) && (routeNow[i].getAttributes() & ATTR_HYDRAULIC_FRONT_DOWN)) {
                 pen.setColor(Qt::darkCyan);
                 painter.setBrush(Qt::cyan);
             }
@@ -2011,9 +2019,12 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
                     if ((attr & ATTR_POSITIONING_MASK) == 2) {
                         pen.setColor(Qt::darkGreen);
                         painter.setBrush(Qt::green);
-                    } else if ((attr & ATTR_AGRICULTURE_TOOL_MASK) != 0) {
+                    } else if ((attr & ATTR_HYDRAULIC_FRONT_DOWN) != 0) {
                         pen.setColor(Qt::darkCyan);
                         painter.setBrush(Qt::cyan);
+                    } else if ((attr & ATTR_HYDRAULIC_FRONT_UP) != 0) {
+                        pen.setColor(Qt::darkYellow);
+                        painter.setBrush(Qt::green);
                     } else {
                         pen.setColor(Qt::darkYellow);
                         painter.setBrush(Qt::yellow);
@@ -2030,7 +2041,7 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
                                     10.0 / mScaleFactor);
             } else {
                 drawCircleFast(painter, p, 10.0 / mScaleFactor, mRouteNow == rn ?
-                                   ((attr & ATTR_POSITIONING_MASK) == 2 ? 2 : ((attr & ATTR_AGRICULTURE_TOOL_MASK) != 0 ? 3 : 0)) : 1);
+                                   ((attr & ATTR_POSITIONING_MASK) == 2 ? 2 : ((attr & ATTR_HYDRAULIC_FRONT_DOWN) != 0 ? 3 : ((attr & ATTR_HYDRAULIC_FRONT_UP) != 0 ? 4 : 0))) : 1);
             }
 
             // Draw text only for selected route
