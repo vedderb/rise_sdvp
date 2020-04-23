@@ -2205,12 +2205,14 @@ void MainWindow::on_boundsFillPushButton_clicked()
     if (ui->generateFrameCheckBox->isChecked())
         route = RouteMagic::fillConvexPolygonWithFramedZigZag(bounds, spacing, ui->boundsFillSpacingTowardsBoundsCheckBox->isChecked(), ui->boundsFillSpeedSpinBox->value()/3.6,
                                                               ui->boundsFillSpeedInTurnsSpinBox->value()/3.6, ui->stepsForTurningSpinBox->value(),
-                                                              ui->lowerToolsCheckBox->isChecked() ? ATTR_AGRICULTURE_TOOL_MASK : 0, ui->raiseToolsDistanceSpinBox->value()*2);
+                                                              ui->lowerToolsCheckBox->isChecked() ? ATTR_HYDRAULIC_FRONT_DOWN : 0, ui->raiseToolsCheckBox->isChecked() ? ATTR_HYDRAULIC_FRONT_UP : 0,
+                                                              ui->raiseToolsDistanceSpinBox->value()*2);
                                                               // attribute changes at half distance
     else
         route = RouteMagic::fillConvexPolygonWithZigZag(bounds, spacing, ui->boundsFillSpacingTowardsBoundsCheckBox->isChecked(), ui->boundsFillSpeedSpinBox->value()/3.6,
                                                         ui->boundsFillSpeedInTurnsSpinBox->value()/3.6, ui->stepsForTurningSpinBox->value(),
-                                                        ui->lowerToolsCheckBox->isChecked() ? ATTR_AGRICULTURE_TOOL_MASK : 0, ui->raiseToolsDistanceSpinBox->value()*2);
+                                                        ui->lowerToolsCheckBox->isChecked() ? ATTR_HYDRAULIC_FRONT_DOWN : 0, ui->raiseToolsCheckBox->isChecked() ? ATTR_HYDRAULIC_FRONT_UP : 0,
+                                                        ui->raiseToolsDistanceSpinBox->value()*2);
 
     int r = ui->mapWidget->getRoutes().size();
     ui->mapWidget->addRoute(route);
@@ -2251,5 +2253,10 @@ void MainWindow::on_findOptimalAngleCheckBox_stateChanged(int checkState)
 
 void MainWindow::on_lowerToolsCheckBox_stateChanged(int arg1)
 {
-    ui->raiseToolsDistanceSpinBox->setEnabled(arg1 != 0);
+    ui->raiseToolsDistanceSpinBox->setEnabled(arg1 != 0 || ui->raiseToolsCheckBox->isChecked());
+}
+
+void MainWindow::on_raiseToolsCheckBox_stateChanged(int arg1)
+{
+    ui->raiseToolsDistanceSpinBox->setEnabled(arg1 != 0 || ui->lowerToolsCheckBox->isChecked());
 }

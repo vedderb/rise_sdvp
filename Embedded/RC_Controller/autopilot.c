@@ -485,12 +485,13 @@ static THD_FUNCTION(ap_thread, arg) {
 		if (len >= 2) {
 			POS_STATE pos_now;
 
+            // Set positioning according to attributes
 			switch (attributes_now & ATTR_POSITIONING_MASK) {
-			case 1:
+			case ATTR_POSITIONING_DEFAULT:
 				pos_get_pos(&pos_now);
 				break;
 
-			case 2:
+ 			case ATTR_POSITIONING_UWB:
 				pos_uwb_get_pos(&pos_now);
 				break;
 
@@ -501,7 +502,49 @@ static THD_FUNCTION(ap_thread, arg) {
 					pos_get_pos(&pos_now);
 				}
 				break;
-			}
+            }
+
+#if HAS_HYDRAULIC_DRIVE
+            // Hydraulic move according to attributes
+            // NOTE: currently, only one valve can be actuated at a time using attributes
+            switch (attributes_now & ATTR_HYDRAULIC_MASK) {
+            case ATTR_HYDRAULIC_FRONT_UP:
+                hydraulic_move(HYDRAULIC_POS_FRONT, HYDRAULIC_MOVE_UP);
+                hydraulic_move(HYDRAULIC_POS_REAR, HYDRAULIC_MOVE_STOP);
+                hydraulic_move(HYDRAULIC_POS_EXTRA, HYDRAULIC_MOVE_STOP);
+                break;
+            case ATTR_HYDRAULIC_FRONT_DOWN:
+                hydraulic_move(HYDRAULIC_POS_FRONT, HYDRAULIC_MOVE_DOWN);
+                hydraulic_move(HYDRAULIC_POS_REAR, HYDRAULIC_MOVE_STOP);
+                hydraulic_move(HYDRAULIC_POS_EXTRA, HYDRAULIC_MOVE_STOP);
+                break;
+            case ATTR_HYDRAULIC_REAR_UP:
+                hydraulic_move(HYDRAULIC_POS_FRONT, HYDRAULIC_MOVE_STOP);
+                hydraulic_move(HYDRAULIC_POS_REAR, HYDRAULIC_MOVE_UP);
+                hydraulic_move(HYDRAULIC_POS_EXTRA, HYDRAULIC_MOVE_STOP);
+                break;
+            case ATTR_HYDRAULIC_REAR_DOWN:
+                hydraulic_move(HYDRAULIC_POS_FRONT, HYDRAULIC_MOVE_STOP);
+                hydraulic_move(HYDRAULIC_POS_REAR, HYDRAULIC_MOVE_DOWN);
+                hydraulic_move(HYDRAULIC_POS_EXTRA, HYDRAULIC_MOVE_STOP);
+                break;
+            case ATTR_HYDRAULIC_EXTRA_OUT:
+                hydraulic_move(HYDRAULIC_POS_FRONT, HYDRAULIC_MOVE_STOP);
+                hydraulic_move(HYDRAULIC_POS_REAR, HYDRAULIC_MOVE_STOP);
+                hydraulic_move(HYDRAULIC_POS_EXTRA, HYDRAULIC_MOVE_OUT);
+                break;
+            case ATTR_HYDRAULIC_EXTRA_IN:
+                hydraulic_move(HYDRAULIC_POS_FRONT, HYDRAULIC_MOVE_STOP);
+                hydraulic_move(HYDRAULIC_POS_REAR, HYDRAULIC_MOVE_STOP);
+                hydraulic_move(HYDRAULIC_POS_EXTRA, HYDRAULIC_MOVE_IN);
+                break;
+            default:
+                hydraulic_move(HYDRAULIC_POS_FRONT, HYDRAULIC_MOVE_STOP);
+                hydraulic_move(HYDRAULIC_POS_REAR, HYDRAULIC_MOVE_STOP);
+                hydraulic_move(HYDRAULIC_POS_EXTRA, HYDRAULIC_MOVE_STOP);
+                break;
+            }
+#endif
 
 			// Car center
 			const float car_cx = pos_now.px;
