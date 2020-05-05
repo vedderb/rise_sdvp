@@ -1383,13 +1383,13 @@ QList<LocPoint> RouteMagic::fillBoundsWithTrajectory(QList<LocPoint> bounds, QLi
     return route;
 }
 
-QList<LocPoint> RouteMagic::fillConvexPolygonWithZigZag(QList<LocPoint> bounds, double spacing, bool spacingTowardsBounds, double speed, double speedInTurns, int turnIntermediateSteps, int visitEveryX, uint32_t setAttributesOnStraights, uint32_t setAttributesInTurns, double pointWithAttributesDistanceToTurn)
+QList<LocPoint> RouteMagic::fillConvexPolygonWithZigZag(QList<LocPoint> bounds, double spacing, bool keepTurnsInBounds, double speed, double speedInTurns, int turnIntermediateSteps, int visitEveryX, uint32_t setAttributesOnStraights, uint32_t setAttributesInTurns, double pointWithAttributesDistanceToTurn)
 {
     QList<LocPoint> route;
 
-    // 1. resize bounds to ensure spacing (if applicable)
-    if (spacingTowardsBounds)
-        bounds = getShrinkedConvexPolygon(bounds, spacing);
+    // 1. resize bounds to ensure spacing (if applicable). TODO: not sure if helpful
+//    if (distanceTowardsBounds)
+//        bounds = getShrinkedConvexPolygon(bounds, spacing);
 
     // 2. get bound that determines optimal zigzag direction
     QPair<LocPoint, LocPoint> baseline = getBaselineDeterminingMinHeightOfConvexPolygon(bounds);
@@ -1471,26 +1471,33 @@ QList<LocPoint> RouteMagic::fillConvexPolygonWithZigZag(QList<LocPoint> bounds, 
             if (endsOfPasses.contains(originalI))
                 turnToOrigin = true; // go back to start a new pass
 
-            // Find turnCenter that guarantees to stay within bounds
-            QPair<LocPoint, LocPoint> turnBound(LocPoint(route.at(i).getX(), route.at(i).getY()), LocPoint(route.at(i+1).getX(), route.at(i+1).getY()));
-            double turnBoundAngle = atan2(turnBound.second.getY() - turnBound.first.getY(), turnBound.second.getX() - turnBound.first.getX());
+            LocPoint turnCenter;
+            if (keepTurnsInBounds) {
+                // Find turnCenter that guarantees to stay within bounds
+                QPair<LocPoint, LocPoint> turnBound(LocPoint(route.at(i).getX(), route.at(i).getY()), LocPoint(route.at(i+1).getX(), route.at(i+1).getY()));
+                double turnBoundAngle = atan2(turnBound.second.getY() - turnBound.first.getY(), turnBound.second.getX() - turnBound.first.getX());
 
-            QPair<LocPoint, LocPoint> turnBoundShifted(LocPoint(route.at(i).getX() - turnRadius*turnDirectionSign*(-polygonDirectionSign)*cos(turnBoundAngle + PI/2),
-                                                                route.at(i).getY() - turnRadius*turnDirectionSign*(-polygonDirectionSign)*sin(turnBoundAngle + PI/2)),
-                                                       LocPoint(route.at(i+1).getX() - turnRadius*turnDirectionSign*(-polygonDirectionSign)*cos(turnBoundAngle + PI/2),
-                                                                route.at(i+1).getY() - turnRadius*turnDirectionSign*(-polygonDirectionSign)*sin(turnBoundAngle + PI/2)));
+                QPair<LocPoint, LocPoint> turnBoundShifted(LocPoint(route.at(i).getX() - turnRadius*turnDirectionSign*(-polygonDirectionSign)*cos(turnBoundAngle + PI/2),
+                                                                    route.at(i).getY() - turnRadius*turnDirectionSign*(-polygonDirectionSign)*sin(turnBoundAngle + PI/2)),
+                                                           LocPoint(route.at(i+1).getX() - turnRadius*turnDirectionSign*(-polygonDirectionSign)*cos(turnBoundAngle + PI/2),
+                                                                    route.at(i+1).getY() - turnRadius*turnDirectionSign*(-polygonDirectionSign)*sin(turnBoundAngle + PI/2)));
 
-            QPair<LocPoint, LocPoint> turnCenterLine(LocPoint(route.at(i).getX() + turnRadius*polygonDirectionSign*cos(angle + PI/2),
-                                                              route.at(i).getY() + turnRadius*polygonDirectionSign*sin(angle + PI/2)),
-                                                     LocPoint(route.at(i-1).getX() + turnRadius*polygonDirectionSign*cos(angle + PI/2),
-                                                              route.at(i-1).getY() + turnRadius*polygonDirectionSign*sin(angle + PI/2)));
+                QPair<LocPoint, LocPoint> turnCenterLine(LocPoint(route.at(i).getX() + turnRadius*polygonDirectionSign*cos(angle + PI/2),
+                                                                  route.at(i).getY() + turnRadius*polygonDirectionSign*sin(angle + PI/2)),
+                                                         LocPoint(route.at(i-1).getX() + turnRadius*polygonDirectionSign*cos(angle + PI/2),
+                                                                  route.at(i-1).getY() + turnRadius*polygonDirectionSign*sin(angle + PI/2)));
 
-            LocPoint turnCenter = getLineIntersection(turnBoundShifted, turnCenterLine);
+                turnCenter = getLineIntersection(turnBoundShifted, turnCenterLine);
+            } else
+                turnCenter = LocPoint(route.at(i).getX() + turnRadius*polygonDirectionSign*cos(angle + PI/2),
+                                      route.at(i).getY() + turnRadius*polygonDirectionSign*sin(angle + PI/2));
 
             const double piStep = PI/(turnIntermediateSteps+1) * turnDirectionSign * polygonDirectionSign;
             if (turnToOrigin) {
-                // Turn going back to start a new pass. Draw half circleDraw two quarter circles with long connection inbetween
+                // Turn going back to start a new pass. Draw two quarter circles with long connection inbetween
                 // TODO currently no option to stay within bounds
+                if (keepTurnsInBounds)
+                    qDebug() << "Warning: turns to origin are not kept in bounds (not implemented yet)";
                 LocPoint turnCenterA = LocPoint(route.at(i).getX() - turnRadius*polygonDirectionSign*cos(angle + PI/2),
                                                 route.at(i).getY() - turnRadius*polygonDirectionSign*sin(angle + PI/2));
                 LocPoint turnCenterB = LocPoint(route.at(i+1).getX() + turnRadius*polygonDirectionSign*cos(angle + PI/2),
@@ -1509,8 +1516,14 @@ QList<LocPoint> RouteMagic::fillConvexPolygonWithZigZag(QList<LocPoint> bounds, 
                     turnStep.setAttributes(tmpAttr);
 
                     if (j == 0 || j == turnIntermediateSteps+1) {
-                        turnStep.setSpeed(speed);
-                        route.replace(i+j,turnStep);
+                        if (keepTurnsInBounds) {
+                            turnStep.setSpeed(speed);
+                            route.replace(i+j,turnStep);
+                        } else {
+                            tmpAttr = route.at(i+j).getAttributes();
+                            tmpAttr |= setAttributesInTurns;
+                            route[i+j].setAttributes(tmpAttr);
+                        }
                     } else {
                         turnStep.setSpeed(speedInTurns);
                         route.insert(i+j,turnStep);
@@ -1526,9 +1539,15 @@ QList<LocPoint> RouteMagic::fillConvexPolygonWithZigZag(QList<LocPoint> bounds, 
                     tmpAttr |= setAttributesInTurns;
                     turnStep.setAttributes(tmpAttr);
 
-                    if (j == 0 || j == turnIntermediateSteps+1) {
-                        turnStep.setSpeed(speed);
-                        route.replace(i+j,turnStep);
+                    if ((j == 0 || j == turnIntermediateSteps+1)) {
+                        if (keepTurnsInBounds) {
+                            turnStep.setSpeed(speed);
+                            route.replace(i+j,turnStep);
+                        } else {
+                            tmpAttr = route.at(i+j).getAttributes();
+                            tmpAttr |= setAttributesInTurns;
+                            route[i+j].setAttributes(tmpAttr);
+                        }
                     } else {
                         turnStep.setSpeed(speedInTurns);
                         route.insert(i+j,turnStep);
@@ -1566,11 +1585,11 @@ QList<LocPoint> RouteMagic::fillConvexPolygonWithZigZag(QList<LocPoint> bounds, 
     return route;
 }
 
-QList<LocPoint> RouteMagic::fillConvexPolygonWithFramedZigZag(QList<LocPoint> bounds, double spacing, bool spacingTowardsBounds, double speed, double speedInTurns, int turnIntermediateSteps, int visitEveryX, uint32_t setAttributesOnStraights, uint32_t setAttributesInTurns, double pointWithAttributesDistanceToTurn)
+QList<LocPoint> RouteMagic::fillConvexPolygonWithFramedZigZag(QList<LocPoint> bounds, double spacing, bool keepTurnsInBounds, double speed, double speedInTurns, int turnIntermediateSteps, int visitEveryX, uint32_t setAttributesOnStraights, uint32_t setAttributesInTurns, double pointWithAttributesDistanceToTurn)
 {
     QList<LocPoint> frame = getShrinkedConvexPolygon(bounds, spacing);
 
-    QList<LocPoint> zigzag = fillConvexPolygonWithZigZag(frame, spacing, spacingTowardsBounds, speed, speedInTurns, turnIntermediateSteps, visitEveryX, setAttributesOnStraights, setAttributesInTurns, pointWithAttributesDistanceToTurn);
+    QList<LocPoint> zigzag = fillConvexPolygonWithZigZag(frame, spacing, keepTurnsInBounds, speed, speedInTurns, turnIntermediateSteps, visitEveryX, setAttributesOnStraights, setAttributesInTurns, pointWithAttributesDistanceToTurn);
 
     int pointIdx = getClosestPointInRoute(zigzag.first(), frame);
 

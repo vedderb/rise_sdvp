@@ -3058,12 +3058,12 @@
                           <string>Steps For Turning: </string>
                          </property>
                          <property name="value">
-                          <number>5</number>
+                          <number>6</number>
                          </property>
                         </widget>
                        </item>
                        <item>
-                        <widget class="QCheckBox" name="boundsFillSpacingTowardsBoundsCheckBox">
+                        <widget class="QCheckBox" name="boundsFillKeepTurnsInBoundsCheckBox">
                          <property name="sizePolicy">
                           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                            <horstretch>0</horstretch>
