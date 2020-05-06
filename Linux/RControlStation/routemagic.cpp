@@ -1495,13 +1495,36 @@ QList<LocPoint> RouteMagic::fillConvexPolygonWithZigZag(QList<LocPoint> bounds, 
             const double piStep = PI/(turnIntermediateSteps+1) * turnDirectionSign * polygonDirectionSign;
             if (turnToOrigin) {
                 // Turn going back to start a new pass. Draw two quarter circles with long connection inbetween
-                // TODO currently no option to stay within bounds
-                if (keepTurnsInBounds)
-                    qDebug() << "Warning: turns to origin are not kept in bounds (not implemented yet)";
-                LocPoint turnCenterA = LocPoint(route.at(i).getX() - turnRadius*polygonDirectionSign*cos(angle + PI/2),
-                                                route.at(i).getY() - turnRadius*polygonDirectionSign*sin(angle + PI/2));
-                LocPoint turnCenterB = LocPoint(route.at(i+1).getX() + turnRadius*polygonDirectionSign*cos(angle + PI/2),
-                                                route.at(i+1).getY() + turnRadius*polygonDirectionSign*sin(angle + PI/2));
+                LocPoint turnCenterA;
+                LocPoint turnCenterB;
+                if (keepTurnsInBounds) {
+                    // Find turnCenters that guarantee to stay within bounds
+                    QPair<LocPoint, LocPoint> turnBound(LocPoint(route.at(i+1).getX(), route.at(i+1).getY()), LocPoint(route.at(i).getX(), route.at(i).getY()));
+                    double turnBoundAngle = atan2(turnBound.second.getY() - turnBound.first.getY(), turnBound.second.getX() - turnBound.first.getX());
+
+                    QPair<LocPoint, LocPoint> turnBoundShifted(LocPoint(route.at(i).getX() - turnRadius*turnDirectionSign*(-polygonDirectionSign)*cos(turnBoundAngle + PI/2),
+                                                                        route.at(i).getY() - turnRadius*turnDirectionSign*(-polygonDirectionSign)*sin(turnBoundAngle + PI/2)),
+                                                               LocPoint(route.at(i+1).getX() - turnRadius*turnDirectionSign*(-polygonDirectionSign)*cos(turnBoundAngle + PI/2),
+                                                                        route.at(i+1).getY() - turnRadius*turnDirectionSign*(-polygonDirectionSign)*sin(turnBoundAngle + PI/2)));
+
+                    QPair<LocPoint, LocPoint> turnCenterLineA(LocPoint(route.at(i).getX() - turnRadius*polygonDirectionSign*cos(angle + PI/2),
+                                                                      route.at(i).getY() - turnRadius*polygonDirectionSign*sin(angle + PI/2)),
+                                                             LocPoint(route.at(i-1).getX() - turnRadius*polygonDirectionSign*cos(angle + PI/2),
+                                                                      route.at(i-1).getY() - turnRadius*polygonDirectionSign*sin(angle + PI/2)));
+                    QPair<LocPoint, LocPoint> turnCenterLineB(LocPoint(route.at(i+2).getX() + turnRadius*polygonDirectionSign*cos(angle + PI/2),
+                                                                      route.at(i+2).getY() + turnRadius*polygonDirectionSign*sin(angle + PI/2)),
+                                                             LocPoint(route.at(i+1).getX() + turnRadius*polygonDirectionSign*cos(angle + PI/2),
+                                                                      route.at(i+1).getY() + turnRadius*polygonDirectionSign*sin(angle + PI/2)));
+
+                    turnCenterA = getLineIntersection(turnBoundShifted, turnCenterLineA);
+                    turnCenterB = getLineIntersection(turnBoundShifted, turnCenterLineB);
+                } else {
+                    turnCenterA = LocPoint(route.at(i).getX() - turnRadius*polygonDirectionSign*cos(angle + PI/2),
+                                                    route.at(i).getY() - turnRadius*polygonDirectionSign*sin(angle + PI/2));
+                    turnCenterB = LocPoint(route.at(i+1).getX() + turnRadius*polygonDirectionSign*cos(angle + PI/2),
+                                                    route.at(i+1).getY() + turnRadius*polygonDirectionSign*sin(angle + PI/2));
+                }
+
                 for (int j = 0; j <= turnIntermediateSteps+1; j++) {
                     if (j <= (turnIntermediateSteps+1)/2)
                         turnCenter = turnCenterA;
