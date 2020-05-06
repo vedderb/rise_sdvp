@@ -176,15 +176,7 @@ private slots:
     void on_mapRoutePosAttrBox_currentIndexChanged(int index);
     void on_clearAnchorButton_clicked();
     void on_setBoundsRoutePushButton_clicked();
-    void on_setEntryRoutePushButton_clicked();
-    void on_setExitRoutePushButton_clicked();
-    void on_boundsFillAngleSlider_sliderMoved(int position);
-
     void on_boundsFillPushButton_clicked();
-
-    void on_boundsFillAngleSlider_sliderReleased();
-
-    void on_findOptimalAngleCheckBox_stateChanged(int checkState);
 
     void on_lowerToolsCheckBox_stateChanged(int arg1);
 

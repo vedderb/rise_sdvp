@@ -2194,8 +2194,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>229</width>
-                     <height>940</height>
+                     <width>206</width>
+                     <height>880</height>
                     </rect>
                    </property>
                    <layout class="QVBoxLayout" name="verticalLayout_15">
@@ -2878,69 +2878,6 @@
                         </layout>
                        </item>
                        <item>
-                        <layout class="QHBoxLayout" name="horizontalLayout_18">
-                         <property name="spacing">
-                          <number>6</number>
-                         </property>
-                         <item>
-                          <widget class="QSpinBox" name="entryRouteSpinBox">
-                           <property name="enabled">
-                            <bool>false</bool>
-                           </property>
-                           <property name="sizePolicy">
-                            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-                             <horstretch>0</horstretch>
-                             <verstretch>0</verstretch>
-                            </sizepolicy>
-                           </property>
-                           <property name="prefix">
-                            <string>Entry: </string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <widget class="QPushButton" name="setEntryRoutePushButton">
-                           <property name="enabled">
-                            <bool>false</bool>
-                           </property>
-                           <property name="text">
-                            <string>Use Active</string>
-                           </property>
-                          </widget>
-                         </item>
-                        </layout>
-                       </item>
-                       <item>
-                        <layout class="QHBoxLayout" name="horizontalLayout_19">
-                         <item>
-                          <widget class="QSpinBox" name="exitRouteSpinBox">
-                           <property name="enabled">
-                            <bool>false</bool>
-                           </property>
-                           <property name="sizePolicy">
-                            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-                             <horstretch>0</horstretch>
-                             <verstretch>0</verstretch>
-                            </sizepolicy>
-                           </property>
-                           <property name="prefix">
-                            <string>Exit: </string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <widget class="QPushButton" name="setExitRoutePushButton">
-                           <property name="enabled">
-                            <bool>false</bool>
-                           </property>
-                           <property name="text">
-                            <string>Use Active</string>
-                           </property>
-                          </widget>
-                         </item>
-                        </layout>
-                       </item>
-                       <item>
                         <spacer name="verticalSpacer_8">
                          <property name="orientation">
                           <enum>Qt::Vertical</enum>
@@ -3021,22 +2958,6 @@
                         </widget>
                        </item>
                        <item>
-                        <spacer name="verticalSpacer_12">
-                         <property name="orientation">
-                          <enum>Qt::Vertical</enum>
-                         </property>
-                         <property name="sizeType">
-                          <enum>QSizePolicy::Fixed</enum>
-                         </property>
-                         <property name="sizeHint" stdset="0">
-                          <size>
-                           <width>20</width>
-                           <height>5</height>
-                          </size>
-                         </property>
-                        </spacer>
-                       </item>
-                       <item>
                         <widget class="QSpinBox" name="visitEverySpinBox">
                          <property name="suffix">
                           <string> Row</string>
@@ -3049,16 +2970,6 @@
                          </property>
                          <property name="singleStep">
                           <number>2</number>
-                         </property>
-                        </widget>
-                       </item>
-                       <item>
-                        <widget class="QSpinBox" name="stepsForTurningSpinBox">
-                         <property name="prefix">
-                          <string>Steps For Turning: </string>
-                         </property>
-                         <property name="value">
-                          <number>6</number>
                          </property>
                         </widget>
                        </item>
@@ -3146,29 +3057,6 @@
                         </widget>
                        </item>
                        <item>
-                        <spacer name="verticalSpacer_10">
-                         <property name="orientation">
-                          <enum>Qt::Vertical</enum>
-                         </property>
-                         <property name="sizeType">
-                          <enum>QSizePolicy::Fixed</enum>
-                         </property>
-                         <property name="sizeHint" stdset="0">
-                          <size>
-                           <width>20</width>
-                           <height>5</height>
-                          </size>
-                         </property>
-                        </spacer>
-                       </item>
-                       <item>
-                        <widget class="QCheckBox" name="generateFrameCheckBox">
-                         <property name="text">
-                          <string>Gen. Frame around ZigZag</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item>
                         <spacer name="verticalSpacer_9">
                          <property name="orientation">
                           <enum>Qt::Vertical</enum>
@@ -3186,77 +3074,30 @@
                        </item>
                        <item>
                         <widget class="QGroupBox" name="groupBox_21">
-                         <property name="enabled">
+                         <property name="title">
+                          <string>Expert / Experimental</string>
+                         </property>
+                         <property name="flat">
                           <bool>false</bool>
                          </property>
-                         <property name="title">
-                          <string>Angle</string>
+                         <property name="checkable">
+                          <bool>false</bool>
                          </property>
                          <layout class="QVBoxLayout" name="verticalLayout_29">
                           <item>
-                           <widget class="QCheckBox" name="findOptimalAngleCheckBox">
-                            <property name="enabled">
-                             <bool>false</bool>
+                           <widget class="QSpinBox" name="stepsForTurningSpinBox">
+                            <property name="prefix">
+                             <string>Steps For Turning: </string>
                             </property>
-                            <property name="text">
-                             <string>Find Optimal Angle</string>
-                            </property>
-                            <property name="checked">
-                             <bool>true</bool>
-                            </property>
-                            <property name="tristate">
-                             <bool>false</bool>
+                            <property name="value">
+                             <number>6</number>
                             </property>
                            </widget>
                           </item>
                           <item>
-                           <widget class="QLabel" name="boundsFillAngleLabel">
-                            <property name="enabled">
-                             <bool>false</bool>
-                            </property>
+                           <widget class="QCheckBox" name="generateFrameCheckBox">
                             <property name="text">
-                             <string>Choose Angle:</string>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QSlider" name="boundsFillAngleSlider">
-                            <property name="enabled">
-                             <bool>false</bool>
-                            </property>
-                            <property name="layoutDirection">
-                             <enum>Qt::RightToLeft</enum>
-                            </property>
-                            <property name="minimum">
-                             <number>0</number>
-                            </property>
-                            <property name="maximum">
-                             <number>360</number>
-                            </property>
-                            <property name="orientation">
-                             <enum>Qt::Horizontal</enum>
-                            </property>
-                            <property name="invertedAppearance">
-                             <bool>true</bool>
-                            </property>
-                            <property name="tickPosition">
-                             <enum>QSlider::TicksBelow</enum>
-                            </property>
-                            <property name="tickInterval">
-                             <number>90</number>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QCheckBox" name="rotateActiveTrajectoryCheckBox">
-                            <property name="enabled">
-                             <bool>false</bool>
-                            </property>
-                            <property name="text">
-                             <string>Rotate Active</string>
-                            </property>
-                            <property name="checked">
-                             <bool>true</bool>
+                             <string>Gen. Frame around ZigZag</string>
                             </property>
                            </widget>
                           </item>
