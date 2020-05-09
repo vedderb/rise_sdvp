@@ -2165,90 +2165,32 @@ void MainWindow::on_setBoundsRoutePushButton_clicked()
     ui->boundsRouteSpinBox->setValue(r);
 }
 
-void MainWindow::on_setEntryRoutePushButton_clicked()
-{
-    int r = ui->mapWidget->getRouteNow();
-    ui->entryRouteSpinBox->setValue(r);
-}
-
-void MainWindow::on_setExitRoutePushButton_clicked()
-{
-    int r = ui->mapWidget->getRouteNow();
-    ui->exitRouteSpinBox->setValue(r);
-}
-
-void MainWindow::on_boundsFillAngleSlider_sliderMoved(int position)
-{
-
-    return;
-
-}
-
 void MainWindow::on_boundsFillPushButton_clicked()
 {
     QList<LocPoint> bounds = ui->mapWidget->getRoute(ui->boundsRouteSpinBox->value());
-    QList<LocPoint> entry  = ui->mapWidget->getRoute(ui->entryRouteSpinBox->value());
-    QList<LocPoint> exit   = ui->mapWidget->getRoute(ui->exitRouteSpinBox->value());
 
     double spacing = ui->boundsFillSpacingSpinBox->value();
     if (spacing < 0.5) return;
 
-    int    angle   = ui->boundsFillAngleSlider->value();
-    double ang_rad = static_cast<double>(angle) * M_PI / 180.0;
-    if (ui->findOptimalAngleCheckBox->checkState()) {
-        const auto lineForOptimalAngle = RouteMagic::getBaselineDeterminingMinHeightOfConvexPolygon(bounds);
-        ang_rad = atan2(lineForOptimalAngle.second.getY() - lineForOptimalAngle.first.getY(), lineForOptimalAngle.second.getX() - lineForOptimalAngle.first.getX()) + RouteMagic::PI/2;
-    }
-
-    //QList<LocPoint> test = RouteMagic::fillBoundsWithTrajectory(bounds, entry, exit, spacing, ang_rad, true);
     QList<LocPoint> route;
     if (ui->generateFrameCheckBox->isChecked())
-        route = RouteMagic::fillConvexPolygonWithFramedZigZag(bounds, spacing, ui->boundsFillSpacingTowardsBoundsCheckBox->isChecked(), ui->boundsFillSpeedSpinBox->value()/3.6,
-                                                              ui->boundsFillSpeedInTurnsSpinBox->value()/3.6, ui->stepsForTurningSpinBox->value(),
+        route = RouteMagic::fillConvexPolygonWithFramedZigZag(bounds, spacing, ui->boundsFillKeepTurnsInBoundsCheckBox->isChecked(), ui->boundsFillSpeedSpinBox->value()/3.6,
+                                                              ui->boundsFillSpeedInTurnsSpinBox->value()/3.6, ui->stepsForTurningSpinBox->value(), ui->visitEverySpinBox->value(),
                                                               ui->lowerToolsCheckBox->isChecked() ? ATTR_HYDRAULIC_FRONT_DOWN : 0, ui->raiseToolsCheckBox->isChecked() ? ATTR_HYDRAULIC_FRONT_UP : 0,
                                                               ui->raiseToolsDistanceSpinBox->value()*2);
                                                               // attribute changes at half distance
     else
-        route = RouteMagic::fillConvexPolygonWithZigZag(bounds, spacing, ui->boundsFillSpacingTowardsBoundsCheckBox->isChecked(), ui->boundsFillSpeedSpinBox->value()/3.6,
-                                                        ui->boundsFillSpeedInTurnsSpinBox->value()/3.6, ui->stepsForTurningSpinBox->value(),
+        route = RouteMagic::fillConvexPolygonWithZigZag(bounds, spacing, ui->boundsFillKeepTurnsInBoundsCheckBox->isChecked(), ui->boundsFillSpeedSpinBox->value()/3.6,
+                                                        ui->boundsFillSpeedInTurnsSpinBox->value()/3.6, ui->stepsForTurningSpinBox->value(), ui->visitEverySpinBox->value(),
                                                         ui->lowerToolsCheckBox->isChecked() ? ATTR_HYDRAULIC_FRONT_DOWN : 0, ui->raiseToolsCheckBox->isChecked() ? ATTR_HYDRAULIC_FRONT_UP : 0,
                                                         ui->raiseToolsDistanceSpinBox->value()*2);
 
-    int r = ui->mapWidget->getRoutes().size();
     ui->mapWidget->addRoute(route);
+    int r = ui->mapWidget->getRoutes().size()-1;
     ui->mapWidget->setRouteNow(r);
+    ui->mapRouteBox->setValue(r);
     ui->mapWidget->repaint();
 
-}
-
-// TODO Code duplication (on_boundsFillPushButton_clicked())
-void MainWindow::on_boundsFillAngleSlider_sliderReleased()
-{
-    if (!ui->rotateActiveTrajectoryCheckBox->isChecked()) {
-        on_boundsFillPushButton_clicked();
-        return;
-    }
-    int rNow = ui->mapWidget->getRouteNow();
-    if (rNow == ui->entryRouteSpinBox->value() ||
-        rNow == ui->exitRouteSpinBox->value() ||
-        rNow == ui->boundsRouteSpinBox->value()) return;
-
-    ui->mapWidget->clearRoute();
-    QList<LocPoint> bounds = ui->mapWidget->getRoute(ui->boundsRouteSpinBox->value());
-    QList<LocPoint> entry  = ui->mapWidget->getRoute(ui->entryRouteSpinBox->value());
-    QList<LocPoint> exit   = ui->mapWidget->getRoute(ui->exitRouteSpinBox->value());
-    double spacing = ui->boundsFillSpacingSpinBox->value();
-    int    angle   = ui->boundsFillAngleSlider->value();
-    double ang_rad = static_cast<double>(angle) * M_PI / 180.0;
-    QList<LocPoint> test = RouteMagic::fillBoundsWithTrajectory(bounds, entry, exit, spacing, ang_rad, true);
-    ui->mapWidget->setRoute(test);
-}
-
-void MainWindow::on_findOptimalAngleCheckBox_stateChanged(int checkState)
-{
-    ui->boundsFillAngleSlider->setEnabled(!checkState);
-    ui->boundsFillAngleLabel->setEnabled(!checkState);
-    ui->rotateActiveTrajectoryCheckBox->setEnabled(!checkState);
 }
 
 void MainWindow::on_lowerToolsCheckBox_stateChanged(int arg1)
