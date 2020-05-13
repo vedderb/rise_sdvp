@@ -34,3 +34,7 @@ touch conf_general.h
 make -j4 build_args="-DMAIN_MODE=MAIN_MODE_CAR -DIS_F9_BOARD=1"
 mv build/rc_controller.bin precompiled/fw_rise_f9.bin
 
+# rise_f9_copter
+touch conf_general.h
+make -j4 build_args="-DMAIN_MODE=MAIN_MODE_MULTIROTOR -DIS_F9_BOARD=1"
+mv build/rc_controller.bin precompiled/fw_rise_f9_copter.bin
