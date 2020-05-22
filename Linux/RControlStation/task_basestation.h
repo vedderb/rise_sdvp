@@ -2,14 +2,17 @@
 #define BASESTATIONTASK_H
 
 #include "task.h"
+#include "ublox.h"
 
-class BaseStationTask : public Task
+class Task_BaseStation : public Task
 {
     Q_OBJECT
 public:
-    BaseStationTask(QObject *parent = 0) : Task(parent) {}
+    Task_BaseStation(QObject *parent = 0) : Task(parent) {}
 
 private:
+    Ublox mUblox;
+    QMap<int, int> mRtcmUbx;
     void task();
 };
 

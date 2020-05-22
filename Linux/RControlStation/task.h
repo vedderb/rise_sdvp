@@ -11,13 +11,13 @@ public:
     Task(QObject *parent = 0) : QObject(parent) {}
 
 private:
-    virtual void task() = 0;
+    virtual void task() = 0; // the actual work to be performed
 
 public slots:
     void run()
     {
         task();
-        emit finished();
+        //emit finished();
     }
 
 signals:

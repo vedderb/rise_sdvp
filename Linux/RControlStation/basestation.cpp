@@ -510,6 +510,166 @@ void BaseStation::on_ubxSerialDisconnectButton_clicked()
     mUblox->disconnectSerial();
 }
 
+void BaseStation::configureUbx(Ublox* ublox, int rate, bool isF9p, bool isM8p, bool surveyIn, double surveyInMinAcc, bool* basePosSet, double refSendLat, double refSendLon, double refSendH)
+{
+    // Serial port baud rate
+    // if it is too low the buffer will overfill and it won't work properly.
+    ubx_cfg_prt_uart uart;
+    uart.baudrate = 115200;
+    uart.in_ubx = true;
+    uart.in_nmea = true;
+    uart.in_rtcm2 = false;
+    uart.in_rtcm3 = true;
+    uart.out_ubx = true;
+    uart.out_nmea = true;
+    uart.out_rtcm3 = true;
+    qDebug() << "CfgPrtUart:" << ublox->ubxCfgPrtUart(&uart);
+
+    ublox->ubxCfgRate(rate, 1, 0);
+
+    bool encodeRaw = !isF9p && !isM8p;
+
+    ublox->ubxCfgMsg(UBX_CLASS_RXM, UBX_RXM_RAWX, encodeRaw ? 1 : 0);
+    ublox->ubxCfgMsg(UBX_CLASS_RXM, UBX_RXM_SFRBX, encodeRaw ? 1 : 0);
+    ublox->ubxCfgMsg(UBX_CLASS_NAV, UBX_NAV_SOL, encodeRaw ? 1 : 0);
+    ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1005, encodeRaw ? 0 : 1);
+    ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1074, encodeRaw ? 0 : 1);
+    ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1077, encodeRaw ? 0 : 1);
+    ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1084, encodeRaw ? 0 : 1);
+    ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1087, encodeRaw ? 0 : 1);
+    ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1094, encodeRaw ? 0 : 1);
+    ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1097, encodeRaw ? 0 : 1);
+    ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1124, encodeRaw ? 0 : 1);
+    ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1127, encodeRaw ? 0 : 1);
+    ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1230, encodeRaw ? 0 : 1);
+    ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_4072_0, encodeRaw ? 0 : 1);
+    ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_4072_1, encodeRaw ? 0 : 1);
+
+    ublox->ubxCfgMsg(UBX_CLASS_NAV, UBX_NAV_SAT, 1);
+    ublox->ubxCfgMsg(UBX_CLASS_NAV, UBX_NAV_SVIN, encodeRaw ? 0 : 1);
+
+    if (isF9p) {
+        unsigned char buffer[512];
+        int ind = 0;
+        ublox->ubloxCfgAppendEnableGps(buffer, &ind, true, true, true);
+        ublox->ubloxCfgAppendEnableGal(buffer, &ind, true, true, true);
+        ublox->ubloxCfgAppendEnableBds(buffer, &ind, true, true, true);
+        ublox->ubloxCfgAppendEnableGlo(buffer, &ind, true, true, true);
+        ublox->ubloxCfgValset(buffer, ind, true, true, true);
+
+//          NOTE: set baudrate STM <-> UBX over USB, should not be necessary
+//            ind = 0;
+//            ublox->ubloxCfgAppendUart1Baud(buffer, &ind, 115200);
+//            ublox->ubloxCfgAppendUart1InProt(buffer, &ind, true, true, true);
+//            ublox->ubloxCfgAppendUart1OutProt(buffer, &ind, true, true, true);
+//            qDebug() << "UBX UART1 Config:" << ublox->ubloxCfgValset(buffer, ind, true, true, true);
+    } else {
+        ubx_cfg_nmea nmea;
+        memset(&nmea, 0, sizeof(ubx_cfg_nmea));
+        nmea.nmeaVersion = 0x41;
+        nmea.numSv = 0;
+        nmea.highPrec = true;
+
+        qDebug() << "CFG NMEA:" << ublox->ubloxCfgNmea(&nmea);
+
+        ubx_cfg_gnss gnss;
+        gnss.num_ch_hw = 32;
+        gnss.num_ch_use = 32;
+        gnss.num_blocks = 4;
+
+        gnss.blocks[0].gnss_id = UBX_GNSS_ID_GPS;
+        gnss.blocks[0].en = true;
+        gnss.blocks[0].minTrkCh = 8;
+        gnss.blocks[0].maxTrkCh = 32;
+        gnss.blocks[0].flags = UBX_CFG_GNSS_GPS_L1C;
+
+        gnss.blocks[1].gnss_id = UBX_GNSS_ID_GLONASS;
+        gnss.blocks[1].en = true;
+        gnss.blocks[1].minTrkCh = 8;
+        gnss.blocks[1].maxTrkCh = 32;
+        gnss.blocks[1].flags = UBX_CFG_GNSS_GLO_L1;
+
+        gnss.blocks[2].gnss_id = UBX_GNSS_ID_BEIDOU;
+        gnss.blocks[2].en = false;
+        gnss.blocks[2].minTrkCh = 8;
+        gnss.blocks[2].maxTrkCh = 16;
+        gnss.blocks[2].flags = UBX_CFG_GNSS_BDS_B1L;
+
+        gnss.blocks[3].gnss_id = UBX_GNSS_ID_GALILEO;
+        gnss.blocks[3].en = true;
+        gnss.blocks[3].minTrkCh = 8;
+        gnss.blocks[3].maxTrkCh = 10;
+        gnss.blocks[3].flags = UBX_CFG_GNSS_GAL_E1;
+
+        qDebug() << "CFG GNSS:" << ublox->ubloxCfgGnss(&gnss);
+    }
+
+    ubx_cfg_tmode3 cfg_mode;
+    memset(&cfg_mode, 0, sizeof(cfg_mode));
+    cfg_mode.mode = isF9p ? 1 : 0;
+    cfg_mode.fixed_pos_acc = 5.0;
+    cfg_mode.svin_min_dur = 20;
+    cfg_mode.svin_acc_limit = surveyInMinAcc;
+
+    if (!surveyIn && isF9p) {
+        *basePosSet = true;
+
+        cfg_mode.mode = 2;
+        cfg_mode.lla = true;
+        cfg_mode.ecefx_lat = refSendLat;
+        cfg_mode.ecefy_lon = refSendLon;
+        cfg_mode.ecefz_alt = refSendH;
+    }
+
+    ublox->ubxCfgTmode3(&cfg_mode);
+
+    // Stationary dynamic model
+    ubx_cfg_nav5 nav5;
+    memset(&nav5, 0, sizeof(ubx_cfg_nav5));
+    nav5.apply_dyn = true;
+    nav5.apply_dyn = true;
+    nav5.dyn_model = 2;
+    ublox->ubxCfgNav5(&nav5);
+
+    // Time pulse configuration
+    ubx_cfg_tp5 tp5;
+    memset(&tp5, 0, sizeof(ubx_cfg_tp5));
+    tp5.active = true;
+    tp5.polarity = true;
+    tp5.alignToTow = true;
+    tp5.lockGnssFreq = true;
+    tp5.lockedOtherSet = true;
+    tp5.syncMode = false;
+    tp5.isFreq = false;
+    tp5.isLength = true;
+    tp5.freq_period = 1000000;
+    tp5.pulse_len_ratio = 0;
+    tp5.freq_period_lock = 1000000;
+    tp5.pulse_len_ratio_lock = 100000;
+    tp5.gridUtcGnss = 0;
+    tp5.user_config_delay = 0;
+    tp5.rf_group_delay = 0;
+    tp5.ant_cable_delay = 50;
+    ublox->ubloxCfgTp5(&tp5);
+
+    // Save everything
+    ubx_cfg_cfg cfg;
+    memset(&cfg, 0, sizeof(ubx_cfg_cfg));
+    cfg.save_io_port = true;
+    cfg.save_msg_conf = true;
+    cfg.save_inf_msg = true;
+    cfg.save_nav_conf = true;
+    cfg.save_rxm_conf = true;
+    cfg.save_sen_conf = true;
+    cfg.save_rinv_conf = true;
+    cfg.save_ant_conf = true;
+    cfg.save_log_conf = true;
+    cfg.save_fts_conf = true;
+    cfg.dev_bbr = true;
+    cfg.dev_flash = true;
+    ublox->ubloxCfgCfg(&cfg);
+}
+
 void BaseStation::on_ubxSerialConnectButton_clicked()
 {
     bool res = mUblox->connectSerial(ui->ubxSerialPortBox->currentData().toString(),
@@ -520,24 +680,12 @@ void BaseStation::on_ubxSerialConnectButton_clicked()
         ui->ubxText->clear();
         ui->ubxText2->clear();
 
-        // Serial port baud rate
-        // if it is too low the buffer will overfill and it won't work properly.
-        ubx_cfg_prt_uart uart;
-        uart.baudrate = 115200;
-        uart.in_ubx = true;
-        uart.in_nmea = true;
-        uart.in_rtcm2 = false;
-        uart.in_rtcm3 = true;
-        uart.out_ubx = true;
-        uart.out_nmea = true;
-        uart.out_rtcm3 = true;
-        qDebug() << "CfgPrtUart:" << mUblox->ubxCfgPrtUart(&uart);
-
+        bool isM8p = ui->m8PButton->isChecked();
         bool isF9p = ui->f9Button->isChecked();
+
         if (ui->rateBox->currentIndex() == 2 && !isF9p) {
             ui->rateBox->setCurrentIndex(1);
         }
-
         int rate = 1000;
         switch (ui->rateBox->currentIndex()) {
         case 0: rate = 1000; break;
@@ -546,149 +694,14 @@ void BaseStation::on_ubxSerialConnectButton_clicked()
         default: break;
         }
 
-        mUblox->ubxCfgRate(rate, 1, 0);
+        bool surveyIn = ui->surveyInBox->isChecked();
+        double surveyInMinAcc = ui->surveyInMinAccBox->value();
 
-        bool encodeRaw = !isF9p && !ui->m8PButton->isChecked();
+        double refSendLat = ui->refSendLatBox->value();
+        double refSendLon = ui->refSendLonBox->value();
+        double refSendH = ui->refSendHBox->value();
 
-        mUblox->ubxCfgMsg(UBX_CLASS_RXM, UBX_RXM_RAWX, encodeRaw ? 1 : 0);
-        mUblox->ubxCfgMsg(UBX_CLASS_RXM, UBX_RXM_SFRBX, encodeRaw ? 1 : 0);
-        mUblox->ubxCfgMsg(UBX_CLASS_NAV, UBX_NAV_SOL, encodeRaw ? 1 : 0);
-        mUblox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1005, encodeRaw ? 0 : 1);
-        mUblox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1074, encodeRaw ? 0 : 1);
-        mUblox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1077, encodeRaw ? 0 : 1);
-        mUblox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1084, encodeRaw ? 0 : 1);
-        mUblox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1087, encodeRaw ? 0 : 1);
-        mUblox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1094, encodeRaw ? 0 : 1);
-        mUblox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1097, encodeRaw ? 0 : 1);
-        mUblox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1124, encodeRaw ? 0 : 1);
-        mUblox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1127, encodeRaw ? 0 : 1);
-        mUblox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1230, encodeRaw ? 0 : 1);
-        mUblox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_4072_0, encodeRaw ? 0 : 1);
-        mUblox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_4072_1, encodeRaw ? 0 : 1);
-
-        mUblox->ubxCfgMsg(UBX_CLASS_NAV, UBX_NAV_SAT, 1);
-        mUblox->ubxCfgMsg(UBX_CLASS_NAV, UBX_NAV_SVIN, encodeRaw ? 0 : 1);
-
-        if (isF9p) {
-            unsigned char buffer[512];
-            int ind = 0;
-            mUblox->ubloxCfgAppendEnableGps(buffer, &ind, true, true, true);
-            mUblox->ubloxCfgAppendEnableGal(buffer, &ind, true, true, true);
-            mUblox->ubloxCfgAppendEnableBds(buffer, &ind, true, true, true);
-            mUblox->ubloxCfgAppendEnableGlo(buffer, &ind, true, true, true);
-            mUblox->ubloxCfgValset(buffer, ind, true, true, true);
-
-//          NOTE: set baudrate STM <-> UBX over USB, should not be necessary
-//            ind = 0;
-//            mUblox->ubloxCfgAppendUart1Baud(buffer, &ind, 115200);
-//            mUblox->ubloxCfgAppendUart1InProt(buffer, &ind, true, true, true);
-//            mUblox->ubloxCfgAppendUart1OutProt(buffer, &ind, true, true, true);
-//            qDebug() << "UBX UART1 Config:" << mUblox->ubloxCfgValset(buffer, ind, true, true, true);
-        } else {
-            ubx_cfg_nmea nmea;
-            memset(&nmea, 0, sizeof(ubx_cfg_nmea));
-            nmea.nmeaVersion = 0x41;
-            nmea.numSv = 0;
-            nmea.highPrec = true;
-
-            qDebug() << "CFG NMEA:" << mUblox->ubloxCfgNmea(&nmea);
-
-            ubx_cfg_gnss gnss;
-            gnss.num_ch_hw = 32;
-            gnss.num_ch_use = 32;
-            gnss.num_blocks = 4;
-
-            gnss.blocks[0].gnss_id = UBX_GNSS_ID_GPS;
-            gnss.blocks[0].en = true;
-            gnss.blocks[0].minTrkCh = 8;
-            gnss.blocks[0].maxTrkCh = 32;
-            gnss.blocks[0].flags = UBX_CFG_GNSS_GPS_L1C;
-
-            gnss.blocks[1].gnss_id = UBX_GNSS_ID_GLONASS;
-            gnss.blocks[1].en = true;
-            gnss.blocks[1].minTrkCh = 8;
-            gnss.blocks[1].maxTrkCh = 32;
-            gnss.blocks[1].flags = UBX_CFG_GNSS_GLO_L1;
-
-            gnss.blocks[2].gnss_id = UBX_GNSS_ID_BEIDOU;
-            gnss.blocks[2].en = false;
-            gnss.blocks[2].minTrkCh = 8;
-            gnss.blocks[2].maxTrkCh = 16;
-            gnss.blocks[2].flags = UBX_CFG_GNSS_BDS_B1L;
-
-            gnss.blocks[3].gnss_id = UBX_GNSS_ID_GALILEO;
-            gnss.blocks[3].en = true;
-            gnss.blocks[3].minTrkCh = 8;
-            gnss.blocks[3].maxTrkCh = 10;
-            gnss.blocks[3].flags = UBX_CFG_GNSS_GAL_E1;
-
-            qDebug() << "CFG GNSS:" << mUblox->ubloxCfgGnss(&gnss);
-        }
-
-        ubx_cfg_tmode3 cfg_mode;
-        memset(&cfg_mode, 0, sizeof(cfg_mode));
-        cfg_mode.mode = isF9p ? 1 : 0;
-        cfg_mode.fixed_pos_acc = 5.0;
-        cfg_mode.svin_min_dur = 20;
-        cfg_mode.svin_acc_limit = ui->surveyInMinAccBox->value();
-
-        if (!ui->surveyInBox->isChecked() && isF9p) {
-            mBasePosSet = true;
-
-            cfg_mode.mode = 2;
-            cfg_mode.lla = true;
-            cfg_mode.ecefx_lat = ui->refSendLatBox->value();
-            cfg_mode.ecefy_lon = ui->refSendLonBox->value();
-            cfg_mode.ecefz_alt = ui->refSendHBox->value();
-        }
-
-        mUblox->ubxCfgTmode3(&cfg_mode);
-
-        // Stationary dynamic model
-        ubx_cfg_nav5 nav5;
-        memset(&nav5, 0, sizeof(ubx_cfg_nav5));
-        nav5.apply_dyn = true;
-        nav5.apply_dyn = true;
-        nav5.dyn_model = 2;
-        mUblox->ubxCfgNav5(&nav5);
-
-        // Time pulse configuration
-        ubx_cfg_tp5 tp5;
-        memset(&tp5, 0, sizeof(ubx_cfg_tp5));
-        tp5.active = true;
-        tp5.polarity = true;
-        tp5.alignToTow = true;
-        tp5.lockGnssFreq = true;
-        tp5.lockedOtherSet = true;
-        tp5.syncMode = false;
-        tp5.isFreq = false;
-        tp5.isLength = true;
-        tp5.freq_period = 1000000;
-        tp5.pulse_len_ratio = 0;
-        tp5.freq_period_lock = 1000000;
-        tp5.pulse_len_ratio_lock = 100000;
-        tp5.gridUtcGnss = 0;
-        tp5.user_config_delay = 0;
-        tp5.rf_group_delay = 0;
-        tp5.ant_cable_delay = 50;
-        mUblox->ubloxCfgTp5(&tp5);
-
-        // Save everything
-        ubx_cfg_cfg cfg;
-        memset(&cfg, 0, sizeof(ubx_cfg_cfg));
-        cfg.save_io_port = true;
-        cfg.save_msg_conf = true;
-        cfg.save_inf_msg = true;
-        cfg.save_nav_conf = true;
-        cfg.save_rxm_conf = true;
-        cfg.save_sen_conf = true;
-        cfg.save_rinv_conf = true;
-        cfg.save_ant_conf = true;
-        cfg.save_log_conf = true;
-        cfg.save_fts_conf = true;
-        cfg.dev_bbr = true;
-        cfg.dev_flash = true;
-        mUblox->ubloxCfgCfg(&cfg);
+        configureUbx(mUblox, rate, isF9p, isM8p, surveyIn, surveyInMinAcc, &mBasePosSet, refSendLat, refSendLon, refSendH);
     }
 }
 

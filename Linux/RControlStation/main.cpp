@@ -351,7 +351,7 @@ int main(int argc, char *argv[])
         }
     } else {
         switch (run_mode) {
-        case RUN_BASESTATION: task.reset(new BaseStationTask(a.get())); break;
+        case RUN_BASESTATION: task.reset(new Task_BaseStation(a.get())); break;
         default: break;
         }
         QObject::connect(task.get(), SIGNAL(finished()), a.get(), SLOT(quit()));
