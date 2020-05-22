@@ -523,7 +523,7 @@ void BaseStation::configureUbx(Ublox* ublox, int rate, bool isF9p, bool isM8p, b
     uart.out_ubx = true;
     uart.out_nmea = true;
     uart.out_rtcm3 = true;
-    qDebug() << "CfgPrtUart:" << ublox->ubxCfgPrtUart(&uart);
+//    qDebug() << "CfgPrtUart:" << ublox->ubxCfgPrtUart(&uart);
 
     ublox->ubxCfgRate(rate, 1, 0);
 

@@ -17,7 +17,6 @@ public slots:
     void run()
     {
         task();
-        //emit finished();
     }
 
 signals:
