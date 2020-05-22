@@ -18,13 +18,16 @@
 #include "mainwindow.h"
 #include <QApplication>
 #include <QStyleFactory>
+#include <memory>
 #include "utility.h"
 #include "mapwidget.h"
+#include "task_basestation.h"
 
 void showHelp()
 {
     qDebug() << "Arguments";
     qDebug() << "-h, --help : Show help text";
+    qDebug() << "--basestation : Run RTK GNSS basestation on command line";
     qDebug() << "--plotroutes [xmlFile] : Plot routes from XML file";
     qDebug() << "--plotroutessize [w]:[h] : Size to plot with in pixels";
     qDebug() << "--plotroutesformat [format] : plot format; PDF or PNG";
@@ -42,21 +45,14 @@ void showHelp()
 
 int main(int argc, char *argv[])
 {
-    //qputenv("QT_SCALE_FACTOR", QByteArray("1.5"));
+    QStringList args;
+    for (int i = 0; i < argc; i++)
+        args.append(argv[i]);
 
-    QApplication a(argc, argv);
-    QCoreApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
-
-    // Style
-    a.setStyleSheet("");
-    a.setStyle(QStyleFactory::create("Fusion"));
-
-    // Settings
-    a.setOrganizationName("RISE");
-    a.setOrganizationDomain("ri.se");
-    a.setApplicationName("RControlStation");
-
-    QStringList args = QCoreApplication::arguments();
+    typedef enum {
+        RUN_DEFAULT_GUI = 0,
+        RUN_BASESTATION
+    } RUN_MODE;
 
     typedef enum {
         PLOT_ROUTE_FORMAT_PDF = 0,
@@ -72,6 +68,9 @@ int main(int argc, char *argv[])
         int id;
         bool pollData;
     };
+
+    bool noGui = false;
+    RUN_MODE run_mode = RUN_DEFAULT_GUI;
 
     QString plotRoutesFile;
     int plotRoutesW = 640;
@@ -108,6 +107,12 @@ int main(int argc, char *argv[])
             showHelp();
             found = true;
             return 0;
+        }
+
+        if (str == "--basestation") {
+            noGui = true;
+            run_mode = RUN_BASESTATION;
+            found = true;
         }
 
         if (str == "--plotroutes") {
@@ -265,64 +270,93 @@ int main(int argc, char *argv[])
         }
     }
 
-    if (!plotRoutesFile.isEmpty()) {
-        MapWidget map;
-        int res = utility::loadRoutes(plotRoutesFile, &map);
-
-        if (res >= 0) {
-            map.zoomInOnRoute(-1, plotRoutesMargins, plotRoutesW, plotRoutesH);
-            map.setDrawGrid(plotRoutesShowGrid);
-            map.setDrawRouteText(plotRoutesShowText);
-
-            if (plotRoutesSelect >= 0) {
-                map.setRouteNow(plotRoutesSelect);
-            } else {
-                map.setRouteNow(map.getRouteNum() - 1);
-            }
-
-            if (plotRoutesFormat == PLOT_ROUTE_FORMAT_PDF) {
-                map.printPdf(plotRoutesFile + ".pdf", plotRoutesW, plotRoutesH);
-            } else {
-                map.printPng(plotRoutesFile + ".png", plotRoutesW, plotRoutesH);
-            }
-        } else {
-            qCritical() << "Could not load routes from" << plotRoutesFile;
-        }
+    std::unique_ptr<QCoreApplication> a;
+    QCoreApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
+    if (noGui) {
+        a.reset(new QCoreApplication(argc, argv));
     } else {
-        MainWindow w;
-        w.show();
+        a.reset(new QApplication(argc, argv));
 
-        if (!loadRoutesFile.isEmpty()) {
-            MapWidget *map = w.map();
-            int res = utility::loadRoutes(loadRoutesFile, map);
+        // Style
+        static_cast<QApplication*>(a.get())->setStyleSheet("");
+        static_cast<QApplication*>(a.get())->setStyle(QStyleFactory::create("Fusion"));
+    }
+
+    // Settings
+    a->setOrganizationName("RISE");
+    a->setOrganizationDomain("ri.se");
+    a->setApplicationName("RControlStation");
+
+
+    std::unique_ptr<Task> task;
+    std::unique_ptr<MainWindow> w;
+    if (!noGui) {
+        if (!plotRoutesFile.isEmpty()) {
+            MapWidget map;
+            int res = utility::loadRoutes(plotRoutesFile, &map);
 
             if (res >= 0) {
-                map->zoomInOnRoute(-1, 0.8, 400, 400);
+                map.zoomInOnRoute(-1, plotRoutesMargins, plotRoutesW, plotRoutesH);
+                map.setDrawGrid(plotRoutesShowGrid);
+                map.setDrawRouteText(plotRoutesShowText);
+
+                if (plotRoutesSelect >= 0) {
+                    map.setRouteNow(plotRoutesSelect);
+                } else {
+                    map.setRouteNow(map.getRouteNum() - 1);
+                }
+
+                if (plotRoutesFormat == PLOT_ROUTE_FORMAT_PDF) {
+                    map.printPdf(plotRoutesFile + ".pdf", plotRoutesW, plotRoutesH);
+                } else {
+                    map.printPng(plotRoutesFile + ".png", plotRoutesW, plotRoutesH);
+                }
             } else {
                 qCritical() << "Could not load routes from" << plotRoutesFile;
             }
-        }
+        } else {
+            w.reset(new MainWindow());
+            w->show();
 
-        for (auto c: carsToAdd) {
-            w.addCar(c.id, c.pollData);
-        }
+            if (!loadRoutesFile.isEmpty()) {
+                MapWidget *map = w->map();
+                int res = utility::loadRoutes(loadRoutesFile, map);
 
-        if (!jsStr.isEmpty()) {
-            w.connectJoystick(jsStr);
-        }
+                if (res >= 0) {
+                    map->zoomInOnRoute(-1, 0.8, 400, 400);
+                } else {
+                    qCritical() << "Could not load routes from" << plotRoutesFile;
+                }
+            }
 
-        for (auto c: carsToConn) {
-            w.addTcpConnection(c.ip, c.port);
-        }
+            for (auto c: carsToAdd) {
+                w->addCar(c.id, c.pollData);
+            }
 
-        if (xmlTcpPort >= -1) {
-            w.setNetworkTcpEnabled(true, xmlTcpPort);
-        }
+            if (!jsStr.isEmpty()) {
+                w->connectJoystick(jsStr);
+            }
 
-        if (xmlUdpPort >= -1) {
-            w.setNetworkUdpEnabled(true, xmlUdpPort);
-        }
+            for (auto c: carsToConn) {
+                w->addTcpConnection(c.ip, c.port);
+            }
 
-        return a.exec();
+            if (xmlTcpPort >= -1) {
+                w->setNetworkTcpEnabled(true, xmlTcpPort);
+            }
+
+            if (xmlUdpPort >= -1) {
+                w->setNetworkUdpEnabled(true, xmlUdpPort);
+            }
+        }
+    } else {
+        switch (run_mode) {
+        case RUN_BASESTATION: task.reset(new BaseStationTask(a.get())); break;
+        default: break;
+        }
+        QObject::connect(task.get(), SIGNAL(finished()), a.get(), SLOT(quit()));
+        QTimer::singleShot(0, task.get(), SLOT(run()));
     }
+
+    return a->exec();
 }

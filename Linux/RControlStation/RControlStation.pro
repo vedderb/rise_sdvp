@@ -109,7 +109,8 @@ SOURCES += main.cpp\
     historylineedit.cpp \
     imagewidget.cpp \
     tcpclientmulti.cpp \
-    routemagic.cpp
+    routemagic.cpp \
+    task_basestation.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
@@ -149,7 +150,9 @@ HEADERS  += mainwindow.h \
     imagewidget.h \
     tcpclientmulti.h \
     routemagic.h \
-    attributes_masks.h
+    attributes_masks.h \
+    task.h \
+    task_basestation.h
 
 FORMS    += mainwindow.ui \
     carinterface.ui \
