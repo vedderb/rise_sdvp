@@ -578,11 +578,12 @@ void BaseStation::on_ubxSerialConnectButton_clicked()
             mUblox->ubloxCfgAppendEnableGlo(buffer, &ind, true, true, true);
             mUblox->ubloxCfgValset(buffer, ind, true, true, true);
 
-            ind = 0;
-            mUblox->ubloxCfgAppendUart1Baud(buffer, &ind, 115200);
-            mUblox->ubloxCfgAppendUart1InProt(buffer, &ind, true, true, true);
-            mUblox->ubloxCfgAppendUart1OutProt(buffer, &ind, true, true, true);
-            qDebug() << "UART Config:" << mUblox->ubloxCfgValset(buffer, ind, true, true, true);
+//          NOTE: set baudrate STM <-> UBX over USB, should not be necessary
+//            ind = 0;
+//            mUblox->ubloxCfgAppendUart1Baud(buffer, &ind, 115200);
+//            mUblox->ubloxCfgAppendUart1InProt(buffer, &ind, true, true, true);
+//            mUblox->ubloxCfgAppendUart1OutProt(buffer, &ind, true, true, true);
+//            qDebug() << "UBX UART1 Config:" << mUblox->ubloxCfgValset(buffer, ind, true, true, true);
         } else {
             ubx_cfg_nmea nmea;
             memset(&nmea, 0, sizeof(ubx_cfg_nmea));
