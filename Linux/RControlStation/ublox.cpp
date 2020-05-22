@@ -992,7 +992,7 @@ void Ublox::ubx_decode(uint8_t msg_class, uint8_t id, uint8_t *msg, int len)
         case UBX_NAV_SVIN:
             ubx_decode_svin(msg, len);
             break;
-        case UBX_NAV_SOL:
+        case UBX_NAV_SOL: // TODO: dropped on F9P, implement UBX-NAV-PVT or UBX-NAV-HPPOSLLH (see: https://cdn.sparkfun.com/assets/learn_tutorials/8/5/6/ZED-F9P_FW_1.00_HPG_1.00_release_notes.pdf)
             ubx_decode_nav_sol(msg, len);
             break;
         case UBX_NAV_SAT:
