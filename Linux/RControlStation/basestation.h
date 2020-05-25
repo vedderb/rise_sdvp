@@ -65,7 +65,6 @@ private:
     Ublox *mUblox;
     TcpBroadcast *mTcpServer;
     MapWidget *mMap;
-    int mBasePosCnt;
     bool mBasePosSet;
     QMap<int, int> mRtcmUbx;
 
