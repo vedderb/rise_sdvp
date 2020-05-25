@@ -471,6 +471,10 @@ void BaseStation::rtcmRx(QByteArray data, int type)
 {
     mRtcmUbx[type]++;
     emit rtcmOut(data);
+
+    if (ui->tcpServerBox->isChecked()) {
+        mTcpServer->broadcastData(data);
+    }
 }
 
 void BaseStation::on_ubxSerialRefreshButton_clicked()
