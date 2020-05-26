@@ -39,7 +39,7 @@ public:
     ~BaseStation();
     void setMap(MapWidget *map);
 
-    static void configureUbx(Ublox *ublox, int rate, bool isF9p, bool isM8p, bool surveyIn, double surveyInMinAcc, bool *basePosSet, double refSendLat, double refSendLon, double refSendH);
+    static void configureUbx(Ublox *ublox, int rate, bool isF9p, bool isM8p, bool *basePosSet, double refSendLat, double refSendLon, double refSendH, bool surveyIn, double surveyInMinAcc, int surveyInMinDuration = 20);
 
 signals:
     void rtcmOut(QByteArray data);

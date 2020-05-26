@@ -510,7 +510,7 @@ void BaseStation::on_ubxSerialDisconnectButton_clicked()
     mUblox->disconnectSerial();
 }
 
-void BaseStation::configureUbx(Ublox* ublox, int rate, bool isF9p, bool isM8p, bool surveyIn, double surveyInMinAcc, bool* basePosSet, double refSendLat, double refSendLon, double refSendH)
+void BaseStation::configureUbx(Ublox* ublox, int rate, bool isF9p, bool isM8p, bool* basePosSet, double refSendLat, double refSendLon, double refSendH, bool surveyIn, double surveyInMinAcc, int surveyInMinDuration)
 {
     // Serial port baud rate
     // if it is too low the buffer will overfill and it won't work properly.
@@ -523,7 +523,7 @@ void BaseStation::configureUbx(Ublox* ublox, int rate, bool isF9p, bool isM8p, b
     uart.out_ubx = true;
     uart.out_nmea = true;
     uart.out_rtcm3 = true;
-//    qDebug() << "CfgPrtUart:" << ublox->ubxCfgPrtUart(&uart);
+/*    qDebug() << "CfgPrtUart:" << */ublox->ubxCfgPrtUart(&uart);
 
     ublox->ubxCfgRate(rate, 1, 0);
 
@@ -608,7 +608,7 @@ void BaseStation::configureUbx(Ublox* ublox, int rate, bool isF9p, bool isM8p, b
     memset(&cfg_mode, 0, sizeof(cfg_mode));
     cfg_mode.mode = isF9p ? 1 : 0;
     cfg_mode.fixed_pos_acc = 5.0;
-    cfg_mode.svin_min_dur = 20;
+    cfg_mode.svin_min_dur = surveyInMinDuration;
     cfg_mode.svin_acc_limit = surveyInMinAcc;
 
     if (!surveyIn && isF9p) {
@@ -701,7 +701,7 @@ void BaseStation::on_ubxSerialConnectButton_clicked()
         double refSendLon = ui->refSendLonBox->value();
         double refSendH = ui->refSendHBox->value();
 
-        configureUbx(mUblox, rate, isF9p, isM8p, surveyIn, surveyInMinAcc, &mBasePosSet, refSendLat, refSendLon, refSendH);
+        configureUbx(mUblox, rate, isF9p, isM8p, &mBasePosSet, refSendLat, refSendLon, refSendH, surveyIn, surveyInMinAcc);
     }
 }
 

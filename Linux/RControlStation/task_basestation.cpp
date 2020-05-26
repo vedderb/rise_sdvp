@@ -34,7 +34,8 @@ void Task_BaseStation::task()
     QString serialPort = "ttyACM0";
     int baudrate = 115200;
     int rate = 1000;
-    double surveyInMinAcc = 2.0;
+    int surveyInMinDuration = 300;
+    double surveyInMinAcc = 1.0;
     double refSendLat = -90;
     double refSendLon = 0;
     double refSendH = -5000;
@@ -49,7 +50,7 @@ void Task_BaseStation::task()
 
     qDebug() << "Serial connection to " << serialPort << " established.";
     mUBXCommTimer.start(500);
-    BaseStation::configureUbx(&mUblox, rate, isF9p, isM8p, mSurveyIn, surveyInMinAcc, &mBasePosSet, refSendLat, refSendLon, refSendH);
+    BaseStation::configureUbx(&mUblox, rate, isF9p, isM8p, &mBasePosSet, refSendLat, refSendLon, refSendH, mSurveyIn, surveyInMinAcc, surveyInMinDuration);
 
     mUblox.ubxPoll(UBX_CLASS_MON, UBX_MON_VER);
     mUblox.ubxPoll(UBX_CLASS_CFG, UBX_CFG_GNSS);    
@@ -174,11 +175,11 @@ void Task_BaseStation::updateConsoleOutput()
 
     QString satInfoString = QString(
         "Satellite Info.\n"
-        "GPS\t-\t%2 / %1   used / visible          \n"
-        "Galileo\t-\t%4 / %3   used / visible          \n"
-        "BeiDou\t-\t%6 / %5   used / visible          \n"
-        "GLONASS\t-\t%8 / %7   used / visible          \n"
-        "Total\t-\t%10 / %9   used / visible         \n"
+        " GPS     -\t%2 / %1   used / visible          \n"
+        " Galileo -\t%4 / %3   used / visible          \n"
+        " BeiDou  -\t%6 / %5   used / visible          \n"
+        " GLONASS -\t%8 / %7   used / visible          \n"
+        " Total   -\t%10 / %9   used / visible         \n"
         "----------------------------------------------------------------------------------------------\n").
             arg(mSatInfo.gpsVisible, 3).
             arg(mSatInfo.gpsUsed, 3).
