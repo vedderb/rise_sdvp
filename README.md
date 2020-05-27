@@ -45,7 +45,7 @@ The repository is organized as follows:
     - **Car_Client**  
     This is a Qt command line program that can run on e.g. a raspberry pi, which is connected to the Controller PCB over USB. Car_Client provides a TCP bridge, which can be used to access the Controller over a network connection instead of a radio. Car_Client also runs the Chronos software (which might be documented later) and can simulate cars for development without having access to a model car. Car_Client can also connect to cameras supported by Video For Linux (V4L) and stream them as JPEG images to RControlStation.
     - **RControlStation**  
-    This is a desktop program that can stream realtime data from the cars (including video), and edit trajectories for the model cars on top of OpenStreetMap. It can also act as a RTK base station, or connect to one. There are also many other functions, such as providing a TCP bridge to control cars and even emulating GPS signal using software-defined radio.
+    This is a desktop program that can stream realtime data from the cars (including video), and edit trajectories for the model cars on top of OpenStreetMap. It can also act as a RTK base station, or connect to one. There are also many other functions, such as providing a TCP bridge to control cars and even emulating GPS signal using software-defined radio. It is a Qt Creator project, install the following packages under Ubuntu 18.04 or later to build it: `build-essential qtcreator qt5-default qtquickcontrols2-5-dev qtdeclarative5-dev libqt5serialport5-dev`
     - **RControlStationComm**  
     A C library that can be used to interface cars and trajectories from RControlStation, when using the TCP server in RControlStation.
     - **CarNetworkTester**  
@@ -129,7 +129,7 @@ This will simulate a model car locally, including the autopilot. Then RControlSt
 A somewhat pre-configured image for the Raspberry PI 3 can be downloaded [here](http://home.vedder.se/rise_sdvp/pi_img.zip). The login credentials on the image are:
 
 ```
-User: elpgem
+User:     pi
 Password: elpgem1
 ```
 

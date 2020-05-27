@@ -28,15 +28,20 @@
 #include <math.h>
 
 // Settings
-#define HW_UART_DEV					UARTD6
+#define HW_UART_DEV				UARTD6
 #define HW_UBX_TX_PORT				GPIOC
 #define HW_UBX_TX_PIN				6
 #define HW_UBX_RX_PORT				GPIOC
 #define HW_UBX_RX_PIN				7
 #define HW_UBX_RESET_PORT			GPIOC
 #define HW_UBX_RESET_PIN			9
-#define BAUDRATE					115200
-#define SERIAL_RX_BUFFER_SIZE		1024
+#if UBLOX_IS_F9P
+#define BAUDRATE_UBX_DEFAULT			38400	// see UBX-18010854
+#else
+#define BAUDRATE_UBX_DEFAULT			9600
+#endif
+#define BAUDRATE				115200
+#define SERIAL_RX_BUFFER_SIZE			1024
 #define LINE_BUFFER_SIZE			256
 #define UBX_BUFFER_SIZE				3000
 #define CFG_ACK_WAIT_MS				100
@@ -80,7 +85,6 @@ static void ubx_terminal_cmd_poll(int argc, const char **argv);
 static void ubx_encode_send(uint8_t class, uint8_t id, uint8_t *msg, int len);
 static int wait_ack_nak(int timeout_ms);
 static void rtcm_rx(uint8_t *data, int len, int type);
-static void set_baudrate(uint32_t baud);
 
 // Decode functions
 static void ubx_decode(uint8_t class, uint8_t id, uint8_t *msg, int len);
@@ -191,6 +195,21 @@ static UARTConfig uart_cfg = {
 		0
 };
 
+/*
+ * UART driver configuration structure for unconfigured UBX.
+ */
+static UARTConfig uart_cfg_ubx_default = {
+		txend1,
+		txend2,
+		rxend,
+		rxchar,
+		rxerr,
+		BAUDRATE_UBX_DEFAULT,
+		0,
+		USART_CR2_LINEN,
+		0
+};
+
 void ublox_init(void) {
 	palSetPadMode(HW_UBX_TX_PORT, HW_UBX_TX_PIN, PAL_MODE_ALTERNATE(8));
 	palSetPadMode(HW_UBX_RX_PORT, HW_UBX_RX_PIN, PAL_MODE_ALTERNATE(8));
@@ -245,8 +264,7 @@ void ublox_init(void) {
 
 	chThdSleepMilliseconds(100);
 
-	// Make sure that the baudrate is correct.
-	// TODO: For some reason this does not work.
+	// Make sure that the baudrate is correct on unconfigured UBX.
 	if (ublox_cfg_rate(200, 1, 0) == -1) {
 		ubx_cfg_prt_uart uart;
 		uart.baudrate = BAUDRATE;
@@ -258,10 +276,12 @@ void ublox_init(void) {
 		uart.out_nmea = true;
 		uart.out_rtcm3 = true;
 
-		set_baudrate(9600);
+		uartStop(&HW_UART_DEV);
+		uartStart(&HW_UART_DEV, &uart_cfg_ubx_default);
 		reset_decoder_state();
 		ublox_cfg_prt_uart(&uart);
-		set_baudrate(BAUDRATE);
+		uartStop(&HW_UART_DEV);
+		uartStart(&HW_UART_DEV, &uart_cfg);
 		ublox_cfg_rate(200, 1, 0);
 	}
 
@@ -1150,14 +1170,6 @@ static void rtcm_rx(uint8_t *data, int len, int type) {
 #else
 	comm_cc2520_send_buffer(data, len);
 #endif
-}
-
-static void set_baudrate(uint32_t baud) {
-	if (HW_UART_DEV.usart == USART1) {
-		HW_UART_DEV.usart->BRR = STM32_PCLK2 / baud;
-	} else {
-		HW_UART_DEV.usart->BRR = STM32_PCLK1 / baud;
-	}
 }
 
 static void ubx_decode(uint8_t class, uint8_t id, uint8_t *msg, int len) {

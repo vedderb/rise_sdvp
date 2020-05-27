@@ -575,7 +575,7 @@
                </font>
               </property>
               <property name="text">
-               <string>Observaions</string>
+               <string>Observations</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
@@ -714,7 +714,7 @@
                </font>
               </property>
               <property name="text">
-               <string>Observaions</string>
+               <string>Observations</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
@@ -976,7 +976,7 @@
                </font>
               </property>
               <property name="text">
-               <string>Observaions</string>
+               <string>Observations</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
@@ -1062,7 +1062,7 @@
                </font>
               </property>
               <property name="text">
-               <string>Observaions</string>
+               <string>Observations</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
@@ -1168,7 +1168,7 @@
                </font>
               </property>
               <property name="text">
-               <string>Observaions</string>
+               <string>Observations</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>

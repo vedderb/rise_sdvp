@@ -26,6 +26,8 @@
 #include "utility.h"
 #include "rtcm3_simple.h"
 
+#define RTCM_REF_MSG_DELAY_MULT 5
+
 BaseStation::BaseStation(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::BaseStation)
@@ -35,7 +37,6 @@ BaseStation::BaseStation(QWidget *parent) :
     mMap = 0;
     mUblox = new Ublox(this);
     mTcpServer = new TcpBroadcast(this);
-    mBasePosCnt = 0;
     mBasePosSet = false;
 
     mTimer = new QTimer(this);
@@ -242,10 +243,11 @@ void BaseStation::rxRawx(ubx_rxm_rawx rawx)
             }
         }
 
-        // Send base station position every 5 cycles to save bandwidth.
-        mBasePosCnt++;
-        if (mBasePosCnt >= 5) {
-            mBasePosCnt = 0;
+        // Send base station position every RTCM_REF_MSG_DELAY_MULT cycles to save bandwidth.
+        static int basePosCnt = 0;
+        basePosCnt++;
+        if (basePosCnt >= RTCM_REF_MSG_DELAY_MULT) {
+            basePosCnt = 0;
 
             if (has_ref) {
                 emit rtcmOut(QByteArray((char*)data_ref, ref_len));
@@ -469,8 +471,21 @@ void BaseStation::rxSvin(ubx_nav_svin svin)
 
 void BaseStation::rtcmRx(QByteArray data, int type)
 {
+    // Send base station position every RTCM_REF_MSG_DELAY_MULT cycles to save bandwidth.
+    static int basePosCnt = 0;
+    if (type == 1006 || type == 1005) {
+        basePosCnt++;
+        if (basePosCnt < RTCM_REF_MSG_DELAY_MULT)
+            return;
+        basePosCnt = 0;
+    }
+
     mRtcmUbx[type]++;
     emit rtcmOut(data);
+
+    if (ui->tcpServerBox->isChecked()) {
+        mTcpServer->broadcastData(data);
+    }
 }
 
 void BaseStation::on_ubxSerialRefreshButton_clicked()
