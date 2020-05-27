@@ -4,6 +4,7 @@
 #include <QDebug>
 #include <QJsonObject>
 #include <QJsonDocument>
+#include <QSerialPortInfo>
 
 #define RTCM_REF_MSG_DELAY_MULT 5
 
@@ -31,25 +32,42 @@ void Task_BaseStation::getExternalIp()
 void Task_BaseStation::task()
 {
     // TODO: parameterize from CLI
-    QString serialPort = "ttyACM0";
+
+    QList<QSerialPortInfo> ports = QSerialPortInfo::availablePorts();
+    QSerialPortInfo ubxSerialPort;
+    foreach(const QSerialPortInfo &port, ports)
+        if (port.manufacturer().toLower().replace("-", "").contains("ublox"))
+            ubxSerialPort = port;
+    if (ubxSerialPort.isNull()) {
+        std::cerr << "Could not find u-blox serial interface. Try specifying it, see help. Exiting.\n";
+        emit finished();
+        return;
+    }
     int baudrate = 115200;
-    int rate = 1000;
+    if (!mUblox.connectSerial(ubxSerialPort.systemLocation(), baudrate)) {
+        std::cerr << "Unable to connect serial to " << ubxSerialPort.systemLocation().toStdString() << ". Exiting.\n";
+        emit finished();
+        return;
+    }
+    qDebug() << "Serial connection to " << ubxSerialPort.systemLocation() << " established.";
+
     int surveyInMinDuration = 300;
     double surveyInMinAcc = 1.0;
+
+    // TODO: allow override over CLI
     double refSendLat = -90;
     double refSendLon = 0;
     double refSendH = -5000;
+
+    // Note: only F9P (no rawx processing) supported in console basestation mode, currently no plans to change that
     bool isM8p = false;
     bool isF9p = true;
-    bool mBasePosSet = false;    
+    bool mBasePosSet = false;
 
-    if (!mUblox.connectSerial(serialPort, baudrate)) {
-        std::cerr << "Unable to connect serial to " << serialPort.toStdString() << ". Exiting.\n";
-        emit finished();
-    }
+    int rate = 1000;
+    ubxCommTimeoutDuration = 2*rate;
 
-    qDebug() << "Serial connection to " << serialPort << " established.";
-    mUBXCommTimer.start(500);
+    mUBXCommTimer.start(ubxCommTimeoutDuration);
     BaseStation::configureUbx(&mUblox, rate, isF9p, isM8p, &mBasePosSet, refSendLat, refSendLon, refSendH, mSurveyIn, surveyInMinAcc, surveyInMinDuration);
 
     mUblox.ubxPoll(UBX_CLASS_MON, UBX_MON_VER);
@@ -57,7 +75,6 @@ void Task_BaseStation::task()
 
     // Wait for UBX messages to arrive, proceed only then
     mUBXCommWaitLoop.exec();
-    mUBXCommTimer.stop();
 
     if (mPrintMonVer)
     std::cout << mMonVerString.toStdString() << std::endl;
@@ -79,6 +96,7 @@ void Task_BaseStation::task()
 
 void Task_BaseStation::rxMonVer(QString sw, QString hw, QStringList extensions)
 {
+    mUBXCommTimer.start(ubxCommTimeoutDuration);
     mMonVerString = "SW: " + sw + "\tHW: " + hw + "\tExtensions: ";
     mMonVerString += extensions.join(", ");
     if (!mCfgGnssString.isEmpty())
@@ -87,6 +105,7 @@ void Task_BaseStation::rxMonVer(QString sw, QString hw, QStringList extensions)
 
 void Task_BaseStation::rxCfgGnss(ubx_cfg_gnss cfg)
 {
+    mUBXCommTimer.start(ubxCommTimeoutDuration);
     mCfgGnssString = QString("TrkChHw   : %1\t TrkChUse  : %2\t Blocks    : %3\n").
             arg(cfg.num_ch_hw).arg(cfg.num_ch_use).arg(cfg.num_blocks);
 
@@ -112,6 +131,7 @@ void Task_BaseStation::rxCfgGnss(ubx_cfg_gnss cfg)
 
 void Task_BaseStation::rxNavSat(ubx_nav_sat satellites)
 {
+    mUBXCommTimer.start(ubxCommTimeoutDuration);
     memset(&mSatInfo, 0, sizeof(SatInfo));
 
     for (int i = 0;i < satellites.num_sv;i++) {
@@ -129,6 +149,7 @@ void Task_BaseStation::rxNavSat(ubx_nav_sat satellites)
 
 void Task_BaseStation::rxSvin(ubx_nav_svin svin)
 {
+    mUBXCommTimer.start(ubxCommTimeoutDuration);
     double llh[3];
     utility::xyzToLlh(svin.meanX, svin.meanY, svin.meanZ,
                       &llh[0], &llh[1], &llh[2]);
@@ -139,6 +160,7 @@ void Task_BaseStation::rxSvin(ubx_nav_svin svin)
 
 void Task_BaseStation::rtcmRx(QByteArray data, int type)
 {
+    mUBXCommTimer.start(ubxCommTimeoutDuration);
     // Send base station position every RTCM_REF_MSG_DELAY_MULT cycles to save bandwidth.
     static int basePosCnt = 0;
     if (type == 1006 || type == 1005) {
