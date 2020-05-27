@@ -25,22 +25,22 @@
 
 void showHelp()
 {
-    qDebug() << "Arguments";
-    qDebug() << "-h, --help : Show help text";
-    qDebug() << "--basestation : Run RTK GNSS basestation on command line";
-    qDebug() << "--plotroutes [xmlFile] : Plot routes from XML file";
-    qDebug() << "--plotroutessize [w]:[h] : Size to plot with in pixels";
-    qDebug() << "--plotroutesformat [format] : plot format; PDF or PNG";
-    qDebug() << "--plotroutesmargins [margins] : Margins around the plot";
-    qDebug() << "--plotroutesselect [id] : Select route with id";
-    qDebug() << "--plotroutesshowgrid : Show grid in plot";
-    qDebug() << "--plotroutesshowtext : Show text next to route points";
-    qDebug() << "--addcar [id]:[pollData] : Add car tab with car id";
-    qDebug() << "--connectjs [dev] : Connect to joystick dev (e.g. /dev/input/js0)";
-    qDebug() << "--connecttcp [ip]:[port] : Connect to car over TCP (multiple connections possible)";
-    qDebug() << "--xmltcpserver [port] : Run XML TCP server on port";
-    qDebug() << "--xmludpserver [port] : Run XML UDP server on port";
-    qDebug() << "--loadroutes [xmlFile] : Load routes from XML file";
+    std::cout << "Arguments" << std::endl;
+    std::cout << "-h, --help : Show help text" << std::endl;
+    std::cout << "--basestation [surveyInMinDuration:[surveyInMinAcc:[tcpPort:[ubxSerialPort:[baudrate]]]]] : Run RTK GNSS basestation on command line" << std::endl;
+    std::cout << "--plotroutes xmlFile : Plot routes from XML file" << std::endl;
+    std::cout << "--plotroutessize w:h : Size to plot with in pixels" << std::endl;
+    std::cout << "--plotroutesformat format : plot format; PDF or PNG" << std::endl;
+    std::cout << "--plotroutesmargins margins : Margins around the plot" << std::endl;
+    std::cout << "--plotroutesselect id : Select route with id" << std::endl;
+    std::cout << "--plotroutesshowgrid : Show grid in plot" << std::endl;
+    std::cout << "--plotroutesshowtext : Show text next to route points" << std::endl;
+    std::cout << "--addcar id[:pollData] : Add car tab with car id" << std::endl;
+    std::cout << "--connectjs dev : Connect to joystick dev (e.g. /dev/input/js0)" << std::endl;
+    std::cout << "--connecttcp ip[:port] : Connect to car over TCP (multiple connections possible)" << std::endl;
+    std::cout << "--xmltcpserver port : Run XML TCP server on port" << std::endl;
+    std::cout << "--xmludpserver port : Run XML UDP server on port" << std::endl;
+    std::cout << "--loadroutes xmlFile : Load routes from XML file" << std::endl;
 }
 
 int main(int argc, char *argv[])
@@ -87,6 +87,13 @@ int main(int argc, char *argv[])
     int xmlUdpPort = -2;
     QString loadRoutesFile;
 
+    // Commandline basestation parameters
+    int surveyInMinDuration = 300; // 5 minutes
+    double surveyInMinAcc = 2.0; // 2 meters
+    int tcpPort = 2101;
+    QString ubxSerialPort;
+    int ubxBaudrate = 115200;
+
     for (int i = 0;i < args.size();i++) {
         // Skip the program argument
         if (i == 0) {
@@ -113,6 +120,21 @@ int main(int argc, char *argv[])
             noGui = true;
             run_mode = RUN_BASESTATION;
             found = true;
+            if ((i + 1) < args.size()) {
+                i++;
+                QStringList modeArgs = args.at(i).split(":");
+
+                surveyInMinDuration = modeArgs.at(0).toInt();
+                if (modeArgs.size() >= 2)
+                    surveyInMinAcc = modeArgs.at(1).toDouble();
+                if (modeArgs.size() >= 3)
+                    tcpPort = modeArgs.at(2).toInt();
+                if (modeArgs.size() >= 4)
+                    ubxSerialPort = modeArgs.at(3);
+                if (modeArgs.size() >= 5)
+                    ubxBaudrate = modeArgs.at(4).toInt();
+
+            }
         }
 
         if (str == "--plotroutes") {
@@ -351,7 +373,7 @@ int main(int argc, char *argv[])
         }
     } else {
         switch (run_mode) {
-        case RUN_BASESTATION: task.reset(new Task_BaseStation(a.get())); break;
+        case RUN_BASESTATION: task.reset(new Task_BaseStation(a.get(), surveyInMinDuration, surveyInMinAcc, tcpPort, ubxSerialPort, ubxBaudrate)); break;
         default: break;
         }
         QObject::connect(task.get(), SIGNAL(finished()), a.get(), SLOT(quit()));

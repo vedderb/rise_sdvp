@@ -20,12 +20,15 @@ class Task_BaseStation : public Task
 {
     Q_OBJECT
 public:
-    Task_BaseStation(QObject *parent = 0) : Task(parent) {
-        //mTcpServer = new TcpBroadcast(this);
+    Task_BaseStation(QObject *parent = 0, int surveyInMinDuration = 300, double surveyInMinAcc = 2.0, int tcpPort = 2101, QString ubxSerialPort = "", int ubxBaudrate = 115200) : Task(parent) {
+        mSurveyInMinAcc = surveyInMinDuration;
+        mSurveyInMinAcc = surveyInMinAcc;
+        mTcpPort = tcpPort;
+        mUbxSerialPort = ubxSerialPort;
+        mUbxBaudrate = ubxBaudrate;
 
-        mUBXCommTimer.setSingleShot(true);
         connect(this, &Task_BaseStation::gotAllInitInfo, &mUBXCommWaitLoop, &QEventLoop::quit);
-        connect(&mUBXCommTimer, &QTimer::timeout, [this]{std::cout << "UBX communication timed out, exiting."; emit finished();});
+        connect(&mUBXCommTimer, &QTimer::timeout, [this]{mUpdateConsoleTimer.stop(); std::cout << "\nu-blox serial communication timed out. Exiting.\n"; emit finished();});
 
         connect(&mUblox, &Ublox::rxMonVer, this, &Task_BaseStation::rxMonVer);
         connect(&mUblox, &Ublox::rxCfgGnss, this, &Task_BaseStation::rxCfgGnss);
@@ -55,7 +58,7 @@ private:
     SatInfo mSatInfo;
     ubx_nav_svin mLastSvin;
 
-    int mTcpServerPort = 2101;
+    int mTcpPort;
     TcpBroadcast mTcpServer;
 
     std::unique_ptr<QNetworkAccessManager> mNetworkAccessManager;
@@ -63,7 +66,12 @@ private:
     bool mBasePosSet = false;
 
     bool mSurveyIn = true;
+    int mSurveyInMinDuration; // seconds
+    double mSurveyInMinAcc; // meters
     double mRefSendllh[3];
+
+    QString mUbxSerialPort;
+    int mUbxBaudrate;
 
     QString mMonVerString;
     QString mCfgGnssString;
@@ -71,6 +79,8 @@ private:
     bool mPrintMonVer = false;
     bool mPrintCfgGnss = false;
     QString consoleOutputString;
+
+    int ubxCommTimeoutDuration = 2000;
 
     void task();
     void getExternalIp();

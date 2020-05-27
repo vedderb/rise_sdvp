@@ -31,28 +31,30 @@ void Task_BaseStation::getExternalIp()
 
 void Task_BaseStation::task()
 {
-    // TODO: parameterize from CLI
-
     QList<QSerialPortInfo> ports = QSerialPortInfo::availablePorts();
     QSerialPortInfo ubxSerialPort;
-    foreach(const QSerialPortInfo &port, ports)
-        if (port.manufacturer().toLower().replace("-", "").contains("ublox"))
-            ubxSerialPort = port;
+    if (mUbxSerialPort.isEmpty()) {
+        foreach(const QSerialPortInfo &port, ports)
+            if (port.manufacturer().toLower().replace("-", "").contains("ublox"))
+                ubxSerialPort = port;
+    } else {
+        foreach(const QSerialPortInfo &port, ports)
+            if (port.systemLocation() == mUbxSerialPort)
+                ubxSerialPort = port;
+    }
+
     if (ubxSerialPort.isNull()) {
         std::cerr << "Could not find u-blox serial interface. Try specifying it, see help. Exiting.\n";
         emit finished();
         return;
     }
-    int baudrate = 115200;
-    if (!mUblox.connectSerial(ubxSerialPort.systemLocation(), baudrate)) {
+
+    if (!mUblox.connectSerial(ubxSerialPort.systemLocation(), mUbxBaudrate)) {
         std::cerr << "Unable to connect serial to " << ubxSerialPort.systemLocation().toStdString() << ". Exiting.\n";
         emit finished();
         return;
     }
     qDebug() << "Serial connection to " << ubxSerialPort.systemLocation() << " established.";
-
-    int surveyInMinDuration = 300;
-    double surveyInMinAcc = 1.0;
 
     // TODO: allow override over CLI
     double refSendLat = -90;
@@ -68,7 +70,7 @@ void Task_BaseStation::task()
     ubxCommTimeoutDuration = 2*rate;
 
     mUBXCommTimer.start(ubxCommTimeoutDuration);
-    BaseStation::configureUbx(&mUblox, rate, isF9p, isM8p, &mBasePosSet, refSendLat, refSendLon, refSendH, mSurveyIn, surveyInMinAcc, surveyInMinDuration);
+    BaseStation::configureUbx(&mUblox, rate, isF9p, isM8p, &mBasePosSet, refSendLat, refSendLon, refSendH, mSurveyIn, mSurveyInMinAcc, mSurveyInMinDuration);
 
     mUblox.ubxPoll(UBX_CLASS_MON, UBX_MON_VER);
     mUblox.ubxPoll(UBX_CLASS_CFG, UBX_CFG_GNSS);    
@@ -91,7 +93,7 @@ void Task_BaseStation::task()
 
     mUpdateConsoleTimer.start(500);
 
-    mTcpServer.startTcpServer(mTcpServerPort);
+    mTcpServer.startTcpServer(mTcpPort);
 }
 
 void Task_BaseStation::rxMonVer(QString sw, QString hw, QStringList extensions)
@@ -184,7 +186,7 @@ void Task_BaseStation::updateConsoleOutput()
         "Position  - Lat: %2   Lon: %3   Height: %4          \n"
         "Survey-In - Valid: %8   Active: %9   Duration: %7s   Accuracy: %6m   Observations: %5         \n"
         "----------------------------------------------------------------------------------------------\n").
-        arg(mTcpServerPort).
+        arg(mTcpPort).
         arg(mRefSendllh[0], 0, 'f', 8).
         arg(mRefSendllh[1], 0, 'f', 8).
         arg(mRefSendllh[2]).
@@ -223,7 +225,7 @@ void Task_BaseStation::updateConsoleOutput()
         rtcmTransmittedString += QString("%1 sent:%2   ").arg(mRtcmUbx.keys()[i]).arg(mRtcmUbx.values()[i], 6);
     }
 
-    consoleOutputString = surveyInfoString + satInfoString + rtcmTransmittedString;
+    consoleOutputString = surveyInfoString + satInfoString + rtcmTransmittedString + "\n";
 
     static int lastNumLines = 0;
     if (lastNumLines != 0) // go back to beginning
