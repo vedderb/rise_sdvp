@@ -17,7 +17,7 @@ void Task_BaseStation::getExternalIp()
         reply->deleteLater();
 
         if (reply->error()) {
-            mExtIPstring = "Uknown.";
+            mExtIPstring = "uknown.";
         } else {
             QJsonObject jsonObject = QJsonDocument::fromJson(reply->readAll()).object();
             QHostAddress ip(jsonObject["ip"].toString());
@@ -27,6 +27,23 @@ void Task_BaseStation::getExternalIp()
     });
 
     mNetworkAccessManager->get(QNetworkRequest(url));
+}
+
+void Task_BaseStation::getInternalIp() {
+    FILE *fp;
+    if ((fp = popen("hostname --all-ip-addresses", "r")) == NULL) {
+        mIntIPstring = "unknown.";
+        return;
+    }
+
+    char buffer[2048];
+    fgets((char*)&buffer, 2048, fp);
+    mIntIPstring = buffer;
+
+    if(pclose(fp))  {
+        mIntIPstring = "unknown.";
+        return;
+    }
 }
 
 void Task_BaseStation::task()
@@ -90,6 +107,7 @@ void Task_BaseStation::task()
 
     mNetworkAccessManager.reset(new QNetworkAccessManager(this));
     getExternalIp();
+    getInternalIp();
 
     mUpdateConsoleTimer.start(500);
 
@@ -181,7 +199,8 @@ void Task_BaseStation::rtcmRx(QByteArray data, int type)
 void Task_BaseStation::updateConsoleOutput()
 {
     QString surveyInfoString = QString(
-        "RTK Reference Station. Sending RTCM3 on port %1. External IP: %10         \n"
+        "RTK Reference Station. Sending RTCM3 on port %1.                 \n"
+        "External IP: %10  Internal IP: %11"
         "----------------------------------------------------------------------------------------------\n"
         "Position  - Lat: %2   Lon: %3   Height: %4          \n"
         "Survey-In - Valid: %8   Active: %9   Duration: %7s   Accuracy: %6m   Observations: %5         \n"
@@ -195,7 +214,8 @@ void Task_BaseStation::updateConsoleOutput()
         arg(mLastSvin.dur).
         arg(mLastSvin.valid).
         arg(mLastSvin.active).
-        arg(mExtIPstring);
+        arg(mExtIPstring).
+        arg(mIntIPstring);
 
     QString satInfoString = QString(
         "Satellite Info.\n"

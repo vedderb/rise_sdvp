@@ -76,6 +76,7 @@ private:
     QString mMonVerString;
     QString mCfgGnssString;
     QString mExtIPstring;
+    QString mIntIPstring;
     bool mPrintMonVer = false;
     bool mPrintCfgGnss = false;
     QString consoleOutputString;
@@ -84,6 +85,7 @@ private:
 
     void task();
     void getExternalIp();
+    void getInternalIp();
 };
 
 #endif // BASESTATIONTASK_H
