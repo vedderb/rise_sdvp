@@ -28,9 +28,11 @@
 #include <QXmlStreamReader>
 #include <QStringList>
 #include <QElapsedTimer>
+#include <QNetworkInterface>
 
 #include "utility.h"
 #include "routemagic.h"
+#include "wireguard.h"
 #include "attributes_masks.h"
 
 namespace {
@@ -177,6 +179,14 @@ MainWindow::MainWindow(QWidget *parent) :
     on_serialRefreshButton_clicked();
     on_mapCameraWidthBox_valueChanged(ui->mapCameraWidthBox->value());
     on_mapCameraOpacityBox_valueChanged(ui->mapCameraOpacityBox->value());
+    if (WireGuard::isWireGuardInstalled()) {
+        ui->wgStatusLabel->setText("Status: Ready");
+        ui->wgGroupBox->setEnabled(true);
+    } else {
+        ui->wgStatusLabel->setText("Status: Not installed");
+        ui->wgGroupBox->setEnabled(false);
+    }
+
 
 #ifdef HAS_JOYSTICK
     // Connect micronav joystick by default
@@ -2201,4 +2211,33 @@ void MainWindow::on_lowerToolsCheckBox_stateChanged(int arg1)
 void MainWindow::on_raiseToolsCheckBox_stateChanged(int arg1)
 {
     ui->raiseToolsDistanceSpinBox->setEnabled(arg1 != 0 || ui->lowerToolsCheckBox->isChecked());
+}
+
+void MainWindow::on_WgSettingsPushButton_clicked()
+{
+    if (!mWireGuard)
+        mWireGuard.reset(new WireGuard(this));
+    mWireGuard->show();
+}
+
+void MainWindow::on_WgConnectPushButton_clicked()
+{
+    system("pkexec wg-quick up wg_sdvp");
+    QList<QNetworkInterface> interfaces = QNetworkInterface::allInterfaces();
+    if (std::find_if(interfaces.begin(), interfaces.end(),
+                     [](QNetworkInterface interface){return interface.name() == "wg_sdvp";}) != interfaces.end())
+        ui->wgStatusLabel->setText("Status: Connected");
+    else
+        ui->wgStatusLabel->setText("Status: Error");
+}
+
+void MainWindow::on_WgDisconnectPushButton_clicked()
+{
+    system("pkexec wg-quick down wg_sdvp");
+    QList<QNetworkInterface> interfaces = QNetworkInterface::allInterfaces();
+    if (std::find_if(interfaces.begin(), interfaces.end(),
+                     [](QNetworkInterface interface){return interface.name() == "wg_sdvp";}) != interfaces.end())
+        ui->wgStatusLabel->setText("Status: Connected");
+    else
+        ui->wgStatusLabel->setText("Status: Not connected");
 }

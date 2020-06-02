@@ -43,8 +43,8 @@
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>180</width>
-           <height>80</height>
+           <width>241</width>
+           <height>84</height>
           </rect>
          </property>
          <attribute name="label">
@@ -104,8 +104,8 @@
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>180</width>
-           <height>108</height>
+           <width>244</width>
+           <height>138</height>
           </rect>
          </property>
          <attribute name="label">
@@ -210,7 +210,7 @@
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>184</width>
+           <width>241</width>
            <height>80</height>
           </rect>
          </property>
@@ -315,6 +315,85 @@
          <iconset resource="resources.qrc">
           <normaloff>:/models/Icons/Disconnected-96.png</normaloff>:/models/Icons/Disconnected-96.png</iconset>
         </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="Line" name="line">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QGroupBox" name="wgGroupBox">
+        <property name="title">
+         <string>WireGuard (VPN)</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_31">
+         <item>
+          <widget class="QLabel" name="wgStatusLabel">
+           <property name="text">
+            <string>Status:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_18">
+           <item>
+            <widget class="QPushButton" name="WgSettingsPushButton">
+             <property name="text">
+              <string/>
+             </property>
+             <property name="icon">
+              <iconset resource="resources.qrc">
+               <normaloff>:/models/Icons/Settings-96.png</normaloff>:/models/Icons/Settings-96.png</iconset>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QPushButton" name="WgConnectPushButton">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="icon">
+              <iconset resource="resources.qrc">
+               <normaloff>:/models/Icons/Connected-96.png</normaloff>:/models/Icons/Connected-96.png</iconset>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="WgDisconnectPushButton">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="icon">
+              <iconset resource="resources.qrc">
+               <normaloff>:/models/Icons/Disconnected-96.png</normaloff>:/models/Icons/Disconnected-96.png</iconset>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
        </widget>
       </item>
       <item>
@@ -1284,8 +1363,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>191</width>
-                     <height>872</height>
+                     <width>261</width>
+                     <height>1080</height>
                     </rect>
                    </property>
                    <layout class="QVBoxLayout" name="verticalLayout_23">
@@ -1899,8 +1978,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>168</width>
-                     <height>483</height>
+                     <width>246</width>
+                     <height>613</height>
                     </rect>
                    </property>
                    <layout class="QVBoxLayout" name="verticalLayout_12">
@@ -2194,8 +2273,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>206</width>
-                     <height>880</height>
+                     <width>270</width>
+                     <height>1130</height>
                     </rect>
                    </property>
                    <layout class="QVBoxLayout" name="verticalLayout_15">
@@ -2806,8 +2885,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>256</width>
-                     <height>940</height>
+                     <width>316</width>
+                     <height>699</height>
                     </rect>
                    </property>
                    <layout class="QVBoxLayout" name="verticalLayout_27">
@@ -3300,7 +3379,7 @@
      <x>0</x>
      <y>0</y>
      <width>1561</width>
-     <height>30</height>
+     <height>40</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
