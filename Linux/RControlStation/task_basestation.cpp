@@ -5,6 +5,7 @@
 #include <QJsonObject>
 #include <QJsonDocument>
 #include <QSerialPortInfo>
+#include <QNetworkInterface>
 
 #define RTCM_REF_MSG_DELAY_MULT 5
 
@@ -30,20 +31,10 @@ void Task_BaseStation::getExternalIp()
 }
 
 void Task_BaseStation::getInternalIp() {
-    FILE *fp;
-    if ((fp = popen("hostname --all-ip-addresses", "r")) == NULL) {
-        mIntIPstring = "unknown.";
-        return;
-    }
-
-    char buffer[2048];
-    fgets((char*)&buffer, 2048, fp);
-    mIntIPstring = buffer;
-
-    if(pclose(fp))  {
-        mIntIPstring = "unknown.";
-        return;
-    }
+    mIntIPstring = "";
+    for (QHostAddress addr : QNetworkInterface::allAddresses())
+        if (addr.protocol() == QAbstractSocket::IPv4Protocol && !addr.isLoopback())
+            mIntIPstring += QString(addr.toString() + " ");
 }
 
 void Task_BaseStation::task()
