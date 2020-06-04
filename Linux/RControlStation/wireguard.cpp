@@ -38,6 +38,7 @@ QString WireGuard::genSimpleClientConfigWithKeys(QString clientIp, QString serve
         "PublicKey = $server_pubkey\n"
         "Endpoint = $server_ip4:$server_port\n"
         "AllowedIPs = $client_ip4/24\n"
+        "PersistentKeepalive = 25\n"
         "\n" GENERATED_INFO_STRING "\n\"\n")
         .arg(clientIp)
         .arg(serverIp)
