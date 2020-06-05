@@ -191,7 +191,7 @@ void Task_BaseStation::updateConsoleOutput()
 {
     QString surveyInfoString = QString(
         "RTK Reference Station. Sending RTCM3 on port %1.                 \n"
-        "External IP: %10  Internal IP: %11"
+        "External IP: %10  Internal IP: %11                                \n"
         "----------------------------------------------------------------------------------------------\n"
         "Position  - Lat: %2   Lon: %3   Height: %4          \n"
         "Survey-In - Valid: %8   Active: %9   Duration: %7s   Accuracy: %6m   Observations: %5         \n"
