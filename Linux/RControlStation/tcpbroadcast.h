@@ -32,6 +32,7 @@ public:
     explicit TcpBroadcast(QObject *parent = 0);
     ~TcpBroadcast();
     bool startTcpServer(int port);
+    bool isRunning() {return mTcpServer->isListening();}
     QString getLastError();
     void stopServer();
     void broadcastData(QByteArray data);
