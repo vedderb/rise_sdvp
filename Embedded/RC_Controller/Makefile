@@ -318,5 +318,9 @@ drangen: override PROJECT = fw_drangen
 drangen: USE_OPT += -DMAIN_MODE=MAIN_MODE_CAR -DUBLOX_EN=1 -DBOARD_YAW_ROT=180.0 -DHAS_HYDRAULIC_DRIVE=1 -DSERVO_VESC_ID=255
 drangen: touch_conf_general build/fw_drangen.bin
 
+mactrac: override PROJECT = fw_mactrac
+mactrac: USE_OPT += -DMAIN_MODE=MAIN_MODE_CAR -DIS_MACTRAC
+mactrac: touch_conf_general build/fw_mactrac.bin
+
 RULESPATH = $(CHIBIOS)/os/common/ports/ARMCMx/compilers/GCC
 include $(RULESPATH)/rules.mk
