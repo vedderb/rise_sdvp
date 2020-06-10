@@ -296,31 +296,31 @@ touch_conf_general:
 
 vcc: override PROJECT = fw_vcc
 vcc: USE_OPT += -DMAIN_MODE=MAIN_MODE_CAR -DUBLOX_EN=0
-vcc: touch_conf_general build/fw_vcc.bin
+vcc: touch_conf_general build/fw_vcc.elf build/fw_vcc.bin
 
 tero: override PROJECT = fw_tero
 tero: USE_OPT += -DMAIN_MODE=MAIN_MODE_CAR -DCAR_TERO -DIS_F9_BOARD=1
-tero: touch_conf_general build/fw_tero.bin
+tero: touch_conf_general build/fw_tero.elf build/fw_tero.bin
 
 rise_ubx: override PROJECT = fw_rise_ubx
 rise_ubx: USE_OPT += -DMAIN_MODE=MAIN_MODE_CAR -DUBLOX_EN=1 -DBOARD_YAW_ROT=-90.0
-rise_ubx: touch_conf_general build/fw_rise_ubx.bin
+rise_ubx: touch_conf_general build/fw_rise_ubx.elf build/fw_rise_ubx.bin
 
 rise_f9: override PROJECT = fw_rise_f9
 rise_f9: USE_OPT += -DMAIN_MODE=MAIN_MODE_CAR -DIS_F9_BOARD=1
-rise_f9: touch_conf_general build/fw_rise_f9.bin
+rise_f9: touch_conf_general build/fw_rise_f9.elf build/fw_rise_f9.bin
 
 rise_f9_copter: override PROJECT = fw_rise_f9_copter
 rise_f9_copter: USE_OPT += -DMAIN_MODE=MAIN_MODE_MULTIROTOR -DIS_F9_BOARD=1
-rise_f9_copter: touch_conf_general build/fw_rise_f9_copter.bin
+rise_f9_copter: touch_conf_general build/fw_rise_f9_copter.elf build/fw_rise_f9_copter.bin
 
 drangen: override PROJECT = fw_drangen
 drangen: USE_OPT += -DMAIN_MODE=MAIN_MODE_CAR -DUBLOX_EN=1 -DBOARD_YAW_ROT=180.0 -DHAS_HYDRAULIC_DRIVE=1 -DSERVO_VESC_ID=255
-drangen: touch_conf_general build/fw_drangen.bin
+drangen: touch_conf_general build/fw_drangen.elf build/fw_drangen.bin
 
 mactrac: override PROJECT = fw_mactrac
 mactrac: USE_OPT += -DMAIN_MODE=MAIN_MODE_CAR -DIS_MACTRAC
-mactrac: touch_conf_general build/fw_mactrac.bin
+mactrac: touch_conf_general build/fw_mactrac.elf build/fw_mactrac.bin
 
 RULESPATH = $(CHIBIOS)/os/common/ports/ARMCMx/compilers/GCC
 include $(RULESPATH)/rules.mk
