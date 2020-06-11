@@ -2226,9 +2226,9 @@ void MainWindow::on_WgConnectPushButton_clicked()
     QList<QNetworkInterface> interfaces = QNetworkInterface::allInterfaces();
     if (std::find_if(interfaces.begin(), interfaces.end(),
                      [](QNetworkInterface interface){return interface.name() == "wg_sdvp";}) != interfaces.end())
-        ui->wgStatusLabel->setText("Status: Connected");
+        ui->wgStatusLabel->setText("Status: Interface up");
     else
-        ui->wgStatusLabel->setText("Status: Error");
+        ui->wgStatusLabel->setText("Status: Config. error");
 }
 
 void MainWindow::on_WgDisconnectPushButton_clicked()
@@ -2237,7 +2237,7 @@ void MainWindow::on_WgDisconnectPushButton_clicked()
     QList<QNetworkInterface> interfaces = QNetworkInterface::allInterfaces();
     if (std::find_if(interfaces.begin(), interfaces.end(),
                      [](QNetworkInterface interface){return interface.name() == "wg_sdvp";}) != interfaces.end())
-        ui->wgStatusLabel->setText("Status: Connected");
+        ui->wgStatusLabel->setText("Status: Interface up");
     else
-        ui->wgStatusLabel->setText("Status: Not connected");
+        ui->wgStatusLabel->setText("Status: Interface down");
 }
