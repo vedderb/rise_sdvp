@@ -27,9 +27,11 @@
 #include <signal.h>
 #include <QDir>
 #include <QNetworkInterface>
+#include <memory>
 
 #include "carclient.h"
 #include "chronos.h"
+#include "carstatebroadcaster.h"
 
 void showHelp()
 {
@@ -65,6 +67,7 @@ void showHelp()
     qDebug() << "--simlogen [rateHz] : Enable simulator logging output at rateHz Hz";
     qDebug() << "--simuwben [port]:[rateHz] : Enable simulator UWB emulation output on TCP port port at rateHz Hz";
     qDebug() << "--setid [id] : Override ID of board";
+    qDebug() << "--broadcastcarstate : Broadcast state received from car on TCP Port 2102";
 #ifdef HAS_GUI
     qDebug() << "--usegui : Use QML GUI";
 #endif
@@ -124,6 +127,8 @@ int main(int argc, char *argv[])
     int simUwbHz = -1;
     int simUwbTcpPort = -1;
     int carId = -1;
+    bool broadcastCarState = false;
+    std::unique_ptr<CarStateBroadcaster> carstatebroadcaster;
 
 #ifdef HAS_GUI
     bool useGui = false;
@@ -414,6 +419,11 @@ int main(int argc, char *argv[])
             }
         }
 
+        if (str == "--broadcastcarstate") {
+            broadcastCarState = true;
+            found = true;
+        }
+
 #ifdef HAS_GUI
         if (str == "--usegui") {
             useGui = true;
@@ -565,6 +575,10 @@ int main(int argc, char *argv[])
             sim->setCarTurnRad(6.0);
         }
     }
+
+    if (broadcastCarState)
+        carstatebroadcaster.reset(new CarStateBroadcaster(a, car.packetInterface(), carId == -1 ? 0 : carId));
+
 
 #ifdef HAS_GUI
     if (useGui) {
