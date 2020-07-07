@@ -331,7 +331,7 @@ void MainWindow::connectJoystick(QString dev)
         if (mJoystick->getName().contains("Sony PLAYSTATION(R)3")) {
             mJsType = JS_TYPE_PS3;
             qDebug() << "Treating joystick as PS3 USB controller.";
-            showStatusInfo("PS4 USB joystick connected!", true);
+            showStatusInfo("PS3 USB joystick connected!", true);
         } else if (mJoystick->getName().contains("sony", Qt::CaseInsensitive) ||
                    mJoystick->getName().contains("wireless controller", Qt::CaseInsensitive)) {
             mJsType = JS_TYPE_PS4;
@@ -452,6 +452,15 @@ void MainWindow::timerSlot()
             mThrottle = -(double)mJoystick->getAxis(1) / 32768.0;
             deadband(mThrottle,0.1, 1.0);
             mSteering = (double)mJoystick->getAxis(3) / 32768.0;
+
+            js_mr_thr = -(double)mJoystick->getAxis(1) / 32768.0;
+            js_mr_roll = (double)mJoystick->getAxis(3) / 32768.0;
+            js_mr_pitch = (double)mJoystick->getAxis(4) / 32768.0;
+            js_mr_yaw = (double)mJoystick->getAxis(0) / 32768.0;
+            utility::truncate_number(&js_mr_thr, 0.0, 1.0);
+            utility::truncate_number_abs(&js_mr_roll, 1.0);
+            utility::truncate_number_abs(&js_mr_pitch, 1.0);
+            utility::truncate_number_abs(&js_mr_yaw, 1.0);
         }
 
         //mSteering /= 2.0;
