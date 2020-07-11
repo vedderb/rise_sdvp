@@ -159,6 +159,8 @@ static THD_FUNCTION(servo_thread, arg) {
 
 		// Calculate output
 		float output = p_term + i_term + d_term;
+		output += SIGN(output) * SERVO_VESC_DEADBAND_COMP;
+
 		utils_truncate_number(&output, -1.0, 1.0);
 
 		if (ok) {

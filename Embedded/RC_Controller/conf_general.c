@@ -282,14 +282,18 @@ void conf_general_get_default_main_config(MAIN_CONFIG *conf) {
 
 #ifdef IS_MACTRAC
 	conf->car.steering_center = 0.5;
-	conf->car.steering_range = -0.95;
+	conf->car.steering_range = -1.0;
 	conf->car.axis_distance = 1.7;
 	conf->car.steering_max_angle_rad = atanf(conf->car.axis_distance / 1.5);
 	conf->gps_corr_gain_yaw = 2.0;
-	conf->ap_base_rad = 3.3;
+	conf->ap_base_rad = 4.0;
 
 	conf->gps_ant_x = 1.25;
 	conf->gps_ant_y = -0.3;
+
+	conf->log_en = true;
+	conf->log_mode_ext = LOG_EXT_ETHERNET;
+	conf->log_rate_hz = 10;
 #endif
 }
 

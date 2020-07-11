@@ -97,23 +97,24 @@
 #endif
 
 //#define IS_DRANGEN
-//#define IS_MACTRAC
+#define IS_MACTRAC
 
 // MacTrac
 // Steering Center: 210
 // Valve: Low values: Turn right; high values: turn left
 #ifdef IS_MACTRAC
 #define HAS_HYDRAULIC_DRIVE			1
-#define SERVO_VESC_S1				182.0 // Left
-#define SERVO_VESC_S2				236.0 // Right
+#define SERVO_VESC_S1				178.0 // Left
+#define SERVO_VESC_S2				240.0 // Right
 #define USE_ADCONV_FOR_VIN
 #define SERVO_VESC_HYDRAULIC
 #define HYDRAULIC_HAS_SPEED_SENSOR
 #define SERVO_VESC_ID				0
 #define SERVO_VESC_INVERTED			0
 #define SERVO_VESC_P_GAIN			3.0
-#define SERVO_VESC_I_GAIN			3.0
-#define SERVO_VESC_D_GAIN			0.15
+#define SERVO_VESC_I_GAIN			5.0
+#define SERVO_VESC_D_GAIN			1.0
+#define SERVO_VESC_DEADBAND_COMP    0.2
 #endif
 
 #ifdef IS_DRANGEN
@@ -159,6 +160,9 @@
 #endif
 #ifndef SERVO_VESC_ANGLE_INVERTED
 #define SERVO_VESC_ANGLE_INVERTED	0
+#endif
+#ifndef SERVO_VESC_DEADBAND_COMP
+#define SERVO_VESC_DEADBAND_COMP	0.0 // Range 0 - 1
 #endif
 
 // Ublox settings
