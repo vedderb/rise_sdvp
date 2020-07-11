@@ -56,6 +56,7 @@ static bool m_en_dynamic_rad;
 static bool m_en_angle_dist_comp;
 static int m_route_look_ahead;
 static int m_route_left;
+static bool m_route_end;
 
 #if HAS_DIFF_STEERING
 static float m_turn_rad_now;
@@ -100,6 +101,7 @@ void autopilot_init(void) {
 	m_en_angle_dist_comp = true;
 	m_route_look_ahead = 8;
 	m_route_left = 0;
+	m_route_end = false;
 
 #if HAS_DIFF_STEERING
 	m_turn_rad_now = 1e6;
@@ -319,6 +321,10 @@ void autopilot_set_active(bool active) {
 
 	m_is_active = active;
 
+	if (m_route_end && m_is_active) {
+		m_point_now = 0;
+	}
+
 	chMtxUnlock(&m_ap_lock);
 }
 
@@ -454,8 +460,6 @@ static THD_FUNCTION(ap_thread, arg) {
 
 	for(;;) {
 		chThdSleep(CH_CFG_ST_FREQUENCY / AP_HZ);
-
-		bool route_end = false;
 
 		chMtxLock(&m_ap_lock);
 
@@ -789,13 +793,15 @@ static THD_FUNCTION(ap_thread, arg) {
 			// Check if the end of route is reached
 			if (!main_config.ap_repeat_routes && m_route_left < 3 &&
 					utils_rp_distance(&m_route[last_point_ind], &car_pos) < m_rad_now) {
-				route_end = true;
+				m_route_end = true;
+			} else {
+				m_route_end = false;
 			}
 
 			m_point_now = closest1_ind;
 			m_rp_now = rp_now;
 
-			if (!route_end) {
+			if (!m_route_end) {
 				float distance = 0.0;
 				float steering_angle = 0.0;
 				float circle_radius = 1000.0;
@@ -872,17 +878,14 @@ static THD_FUNCTION(ap_thread, arg) {
 #endif
 				autopilot_set_motor_speed(speed);
 			}
-		} else {
-			route_end = true;
 		}
 
-		if (route_end) {
+		if (m_route_end) {
 			servo_simple_set_pos_ramp(main_config.car.steering_center);
 			if (!main_config.car.disable_motor) {
 				bldc_interface_set_current_brake(10.0);
 			}
 			m_rad_now = -1.0;
-			m_point_now = 0;
 		}
 
 		chMtxUnlock(&m_ap_lock);
@@ -988,7 +991,8 @@ static void terminal_state(int argc, const char **argv) {
 			"m_point_last: %i\n"
 			"m_point_rx_prev_set: %i\n"
 			"m_start_time: %i\n"
-			"m_route_left: %i\n",
+			"m_route_left: %i\n"
+			"m_route_end: %i\n",
 
 			m_is_active,
 			m_has_prev_point,
@@ -996,7 +1000,8 @@ static void terminal_state(int argc, const char **argv) {
 			m_point_last,
 			m_point_rx_prev_set,
 			m_start_time,
-			m_route_left);
+			m_route_left,
+			m_route_end);
 }
 
 static void terminal_print_closest(int argc, const char **argv) {
