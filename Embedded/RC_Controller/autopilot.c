@@ -882,6 +882,7 @@ static THD_FUNCTION(ap_thread, arg) {
 				bldc_interface_set_current_brake(10.0);
 			}
 			m_rad_now = -1.0;
+			m_point_now = 0;
 		}
 
 		chMtxUnlock(&m_ap_lock);
