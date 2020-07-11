@@ -32,10 +32,17 @@
 #define SERVO1_PIN				0
 #define SERVO2_GPIO				GPIOB
 #define SERVO2_PIN				1
+#if IS_F9_BOARD
+#define SERVO3_GPIO				GPIOA
+#define SERVO3_PIN				2
+#define SERVO4_GPIO				GPIOA
+#define SERVO4_PIN				3
+#else
 #define SERVO3_GPIO				GPIOE
 #define SERVO3_PIN				5
 #define SERVO4_GPIO				GPIOE
 #define SERVO4_PIN				6
+#endif
 
 static PWMConfig pwmcfg3 = {
 		TIM_CLOCK,

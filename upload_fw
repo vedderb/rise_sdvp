@@ -3,12 +3,12 @@
 # Exit on error
 set -e
 
-if [[ $1 == @(vcc|tero|rise_ubx|drangen|rise_f9|rise_f9_copter) ]]; then
+if [[ $1 == @(vcc|tero|rise_ubx|drangen|mactrac|rise_f9|rise_f9_copter) ]]; then
     FW=fw_$1.bin
 else
     echo No valid firmware specified. Please use
     echo ./upload_fw [fw]
-    echo where [fw] can be vcc, tero, rise_ubx, rise_f9, drangen or rise_f9_copter
+    echo where [fw] can be vcc, tero, rise_ubx, rise_f9, drangen, mactrac or rise_f9_copter
     exit 1
 fi
 

@@ -1,0 +1,2 @@
+#!/bin/bash
+openocd -f board/stm32f4discovery.cfg -c "init" -c "fw_dump.bin 0x08000000 0x00080000" -c "exit"

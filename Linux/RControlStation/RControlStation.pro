@@ -112,7 +112,8 @@ SOURCES += main.cpp\
     imagewidget.cpp \
     tcpclientmulti.cpp \
     routemagic.cpp \
-    task_basestation.cpp
+    task_basestation.cpp \
+    wireguard.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
@@ -154,7 +155,8 @@ HEADERS  += mainwindow.h \
     routemagic.h \
     attributes_masks.h \
     task.h \
-    task_basestation.h
+    task_basestation.h \
+    wireguard.h
 
 FORMS    += mainwindow.ui \
     carinterface.ui \
@@ -170,7 +172,8 @@ FORMS    += mainwindow.ui \
     confcommonwidget.ui \
     intersectiontest.ui \
     ncom.ui \
-    correctionanalysis.ui
+    correctionanalysis.ui \
+    wireguard.ui
 
 contains(DEFINES, HAS_JOYSTICK) {
     SOURCES += joystick.cpp

@@ -32,6 +32,8 @@
 #include "rtcm3_simple.h"
 #include "intersectiontest.h"
 #include "tcpclientmulti.h"
+#include "wireguard.h"
+#include <memory>
 
 #ifdef HAS_LIME_SDR
 #include "gpssim.h"
@@ -182,6 +184,12 @@ private slots:
 
     void on_raiseToolsCheckBox_stateChanged(int arg1);
 
+    void on_WgSettingsPushButton_clicked();
+
+    void on_WgConnectPushButton_clicked();
+
+    void on_WgDisconnectPushButton_clicked();
+
 private:
     Ui::MainWindow *ui;
     QTimer *mTimer;
@@ -204,6 +212,7 @@ private:
     QString mVersion;
     rtcm3_state mRtcmState;
     IntersectionTest *mIntersectionTest;
+    std::unique_ptr<WireGuard> mWireGuard;
     QString mLastImgFileName;
     QList<QPair<int, int> > mSupportedFirmwares;
 

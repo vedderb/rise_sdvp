@@ -27,6 +27,7 @@ CONFIG += console
 TEMPLATE = app
 
 SOURCES += main.cpp \
+    carstatebroadcaster.cpp \
     packetinterface.cpp \
     tcpbroadcast.cpp \
     utility.cpp \
@@ -45,6 +46,7 @@ SOURCES += main.cpp \
     vbytearray.cpp
 
 HEADERS += \
+    carstatebroadcaster.h \
     packetinterface.h \
     tcpbroadcast.h \
     utility.h \
