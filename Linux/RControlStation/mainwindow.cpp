@@ -75,11 +75,14 @@ MainWindow::MainWindow(QWidget *parent) :
 
     mVersion = "0.8";
     mSupportedFirmwares.append(qMakePair(12, 2));
+    mSupportedFirmwares.append(qMakePair(20, 0));
 
     qRegisterMetaType<LocPoint>("LocPoint");
 
     mTimer = new QTimer(this);
     mTimer->start(ui->pollIntervalBox->value());
+    mHeartbeatTimer = new QTimer(this);
+    mHeartbeatTimer->start(mHeartbeatMS);
     mStatusLabel = new QLabel(this);
     ui->statusBar->addPermanentWidget(mStatusLabel);
     mStatusInfoTime = 0;
@@ -134,6 +137,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(mSerialPort, SIGNAL(error(QSerialPort::SerialPortError)),
             this, SLOT(serialPortError(QSerialPort::SerialPortError)));
     connect(mTimer, SIGNAL(timeout()), this, SLOT(timerSlot()));
+    connect(mHeartbeatTimer, SIGNAL(timeout()), this, SLOT(sendHeartbeat()));
     connect(mPacketInterface, SIGNAL(dataToSend(QByteArray&)),
             this, SLOT(packetDataToSend(QByteArray&)));
     connect(mPacketInterface, SIGNAL(stateReceived(quint8,CAR_STATE)),
@@ -595,6 +599,15 @@ void MainWindow::timerSlot()
             ui->mapStreamNmeaConnectedLabel->setText("Not connected");
         }
     }
+}
+
+void MainWindow::sendHeartbeat()
+{
+    for(QList<CarInterface*>::Iterator it_car = mCars.begin();it_car < mCars.end();it_car++)
+            mPacketInterface->sendHeartbeat((*it_car)->getId());
+
+    for(QList<CopterInterface*>::Iterator it_copter = mCopters.begin();it_copter < mCopters.end();it_copter++)
+        mPacketInterface->sendHeartbeat((*it_copter)->getId());
 }
 
 void MainWindow::showStatusInfo(QString info, bool isGood)

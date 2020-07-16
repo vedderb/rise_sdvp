@@ -105,6 +105,7 @@ public slots:
     void timerSlot();
     void readPendingDatagrams();
     void getState(quint8 id);
+    void sendHeartbeat(quint8 id);
     void getMrState(quint8 id);
     void sendTerminalCmd(quint8 id, QString cmd);
     void forwardVesc(quint8 id, QByteArray data);

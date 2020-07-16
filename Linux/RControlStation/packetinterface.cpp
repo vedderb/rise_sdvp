@@ -1175,6 +1175,14 @@ void PacketInterface::getState(quint8 id)
     sendPacket(packet);
 }
 
+void PacketInterface::sendHeartbeat(quint8 id)
+{
+    QByteArray packet;
+    packet.append(id);
+    packet.append(CMD_HEARTBEAT);
+    sendPacket(packet);
+}
+
 void PacketInterface::getMrState(quint8 id)
 {
     QByteArray packet;

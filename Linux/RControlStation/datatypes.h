@@ -361,6 +361,7 @@ typedef enum {
     CMD_IO_BOARD_SET_PWM_DUTY,
     CMD_IO_BOARD_SET_VALVE,
     CMD_HYDRAULIC_MOVE,
+    CMD_HEARTBEAT,
 
     // Car commands
     CMD_GET_STATE = 120,
