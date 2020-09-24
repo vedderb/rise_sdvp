@@ -186,7 +186,7 @@ typedef struct {
 #define ISO_MSG_TREO                    0x0013
 #define ISO_MSG_EXAC                    0x0014
 #define ISO_MSG_CATA                    0x0015
-#define ISO_MESSAGE_ID_OPRO             0xA100
+#define ISO_MSG_OPRO                    0xA100
 #define ISO_MSG_INIT_SUP                0xA102
 
 
@@ -243,16 +243,16 @@ typedef struct {
 
 
 // OPRO
-#define VALUE_ID_OPRO_OBJECT_TYPE 0x0100
-#define VALUE_ID_OPRO_ACTOR_TYPE 0x0101
-#define VALUE_ID_OPRO_OPERATION_MODE 0x0102
-#define VALUE_ID_OPRO_MASS 0x0103
-#define VALUE_ID_OPRO_OBJECT_LENGTH_X 0x0104
-#define VALUE_ID_OPRO_OBJECT_LENGTH_Y 0x0105
-#define VALUE_ID_OPRO_OBJECT_LENGTH_Z 0x0106
-#define VALUE_ID_OPRO_POSITION_DISPLACEMENT_X 0x0107
-#define VALUE_ID_OPRO_POSITION_DISPLACEMENT_Y 0x0108
-#define VALUE_ID_OPRO_POSITION_DISPLACEMENT_Z 0x0109
+#define ISO_VALUE_ID_OPRO_OBJECT_TYPE 0x0100
+#define ISO_VALUE_ID_OPRO_ACTOR_TYPE 0x0101
+#define ISO_VALUE_ID_OPRO_OPERATION_MODE 0x0102
+#define ISO_VALUE_ID_OPRO_MASS 0x0103
+#define ISO_VALUE_ID_OPRO_OBJECT_LENGTH_X 0x0104
+#define ISO_VALUE_ID_OPRO_OBJECT_LENGTH_Y 0x0105
+#define ISO_VALUE_ID_OPRO_OBJECT_LENGTH_Z 0x0106
+#define ISO_VALUE_ID_OPRO_POSITION_DISPLACEMENT_X 0x0107
+#define ISO_VALUE_ID_OPRO_POSITION_DISPLACEMENT_Y 0x0108
+#define ISO_VALUE_ID_OPRO_POSITION_DISPLACEMENT_Z 0x0109
 
 class ChronosComm : public QObject
 {
@@ -269,6 +269,7 @@ public:
     void sendHeab(chronos_heab heab);
     void sendOsem(chronos_osem osem);
     void sendOstm(chronos_ostm ostm);
+    void sendOpro(chronos_opro opro);
     void sendStrt(chronos_strt strt);
     void sendMonr(chronos_monr monr);
     void sendInitSup(chronos_init_sup init_sup);
@@ -285,6 +286,7 @@ signals:
     void trajRx(chronos_traj traj);
     void heabRx(chronos_heab heab);
     void osemRx(chronos_osem osem);
+    void oproRx(chronos_opro opro);
     void ostmRx(chronos_ostm ostm);
     void strtRx(chronos_strt strt);
     void monrRx(chronos_monr monr);

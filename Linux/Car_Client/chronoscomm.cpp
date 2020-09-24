@@ -783,6 +783,52 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
         emit osemRx(osem);
     } break;
 
+    case ISO_MSG_OPRO: {
+        chronos_opro opro;
+        while (!vb.isEmpty()) {
+            quint16 value_id    = vb.vbPopFrontUint16();
+            quint16 value_len = vb.vbPopFrontUint16();
+            switch(value_id) {
+            case ISO_VALUE_ID_OPRO_OBJECT_TYPE:
+                opro.objectType = vb.vbPopFrontUint8();
+                break;
+            case ISO_VALUE_ID_OPRO_ACTOR_TYPE:
+                opro.actorType = vb.vbPopFrontUint8();
+                break;
+            case ISO_VALUE_ID_OPRO_OPERATION_MODE:
+                opro.operationMode = vb.vbPopFrontUint8();
+                break;
+            case ISO_VALUE_ID_OPRO_MASS:
+                opro.mass = vb.vbPopFrontUint32();
+                break;
+            case ISO_VALUE_ID_OPRO_OBJECT_LENGTH_X:
+                opro.objectLengthX = vb.vbPopFrontUint32();
+                break;
+            case ISO_VALUE_ID_OPRO_OBJECT_LENGTH_Y:
+                opro.objectLengthY = vb.vbPopFrontUint32();
+                break;
+            case ISO_VALUE_ID_OPRO_OBJECT_LENGTH_Z:
+                opro.objectLengthZ = vb.vbPopFrontUint32();
+                break;
+            case ISO_VALUE_ID_OPRO_POSITION_DISPLACEMENT_X:
+                opro.positionDisplacementX  = vb.vbPopFrontInt16();
+                break;
+            case ISO_VALUE_ID_OPRO_POSITION_DISPLACEMENT_Y:
+                opro.positionDisplacementY = vb.vbPopFrontInt16();
+                break;
+            case ISO_VALUE_ID_OPRO_POSITION_DISPLACEMENT_Z:
+                opro.positionDisplacementZ = vb.vbPopFrontInt16();
+                break;
+            default:
+                qDebug() << "OPRO: Unknown value id";
+                vb.remove(0, value_len);
+                break;
+            }
+        }
+        emit oproRx(oprp);
+    } break;
+
+
     case ISO_MSG_OSTM: {
         chronos_ostm ostm;
 
