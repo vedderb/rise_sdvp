@@ -247,7 +247,9 @@ void ChronosComm::sendHeab(chronos_heab heab)
 void ChronosComm::sendOsem(chronos_osem osem)
 {
     VByteArrayLe vb;
-
+    vb.vbAppendInt16(ISO_VALUE_ID_TRANSMITTER_ID);
+    vb.vbAppendUint16(2);
+    vb.vbAppendUint16(osem.transmitterID);
     vb.vbAppendUint16(ISO_VALUE_ID_LAT);
     vb.vbAppendUint16(6);
     vb.vbAppendUint48((quint64)(osem.lat * 1e10));
@@ -756,7 +758,7 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
             quint16 value_len = vb.vbPopFrontUint16();
             switch (value_id) {
             case ISO_VALUE_ID_TRANSMITTER_ID:
-                osem.desiredTransmitterID = vb.vbPopFrontUint32();
+                osem.transmitterID = vb.vbPopFrontUint32();
                 break;
             case ISO_VALUE_ID_LAT:
                 osem.lat = vb.vbPopFrontDouble48(1e10);

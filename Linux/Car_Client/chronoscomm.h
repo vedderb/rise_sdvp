@@ -55,7 +55,7 @@ typedef struct {
 } chronos_traj;
 
 typedef struct {
-    quint32 desiredTransmitterID;
+    quint32 transmitterID;
     double lat;
     double lon;
     double alt;
