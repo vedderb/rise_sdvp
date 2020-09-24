@@ -64,6 +64,39 @@ typedef struct {
 } chronos_osem;
 
 typedef struct {
+    uint16_t objectTypeValueID;
+    uint16_t objectTypeContentLength;
+    uint8_t objectType;
+    uint16_t actorTypeValueID;
+    uint16_t actorTypeContentLength;
+    uint8_t actorType;
+    uint16_t operationModeValueID;
+    uint16_t operationModeContentLength;
+    uint8_t operationMode;
+    uint16_t massValueID;
+    uint16_t massContentLength;
+    uint32_t mass;
+    uint16_t objectLengthXValueID;
+    uint16_t objectLengthXContentLength;
+    uint32_t objectLengthX;
+    uint16_t objectLengthYValueID;
+    uint16_t objectLengthYContentLength;
+    uint32_t objectLengthY;
+    uint16_t objectLengthZValueID;
+    uint16_t objectLengthZContentLength;
+    uint32_t objectLengthZ;
+    uint16_t positionDisplacementXValueID;
+    uint16_t positionDisplacementXContentLength;
+    int16_t positionDisplacementX;
+    uint16_t positionDisplacementYValueID;
+    uint16_t positionDisplacementYContentLength;
+    int16_t positionDisplacementY;
+    uint16_t positionDisplacementZValueID;
+    uint16_t positionDisplacementZContentLength;
+    int16_t positionDisplacementZ;
+} chronos_opro;
+
+typedef struct {
     int armed;
 } chronos_ostm;
 
@@ -153,8 +186,9 @@ typedef struct {
 #define ISO_MSG_TREO                    0x0013
 #define ISO_MSG_EXAC                    0x0014
 #define ISO_MSG_CATA                    0x0015
-
+#define ISO_MESSAGE_ID_OPRO             0xA100
 #define ISO_MSG_INIT_SUP                0xA102
+
 
 // ISO Value Types
 #define ISO_VALUE_ID_LAT                0x0020
@@ -206,6 +240,19 @@ typedef struct {
 
 #define ISO_VALUE_ID_INIT_SUP_STATUS    0x0200
 #define AUX_VALUE_ID_OBJECT_ID          0xA000
+
+
+// OPRO
+#define VALUE_ID_OPRO_OBJECT_TYPE 0x0100
+#define VALUE_ID_OPRO_ACTOR_TYPE 0x0101
+#define VALUE_ID_OPRO_OPERATION_MODE 0x0102
+#define VALUE_ID_OPRO_MASS 0x0103
+#define VALUE_ID_OPRO_OBJECT_LENGTH_X 0x0104
+#define VALUE_ID_OPRO_OBJECT_LENGTH_Y 0x0105
+#define VALUE_ID_OPRO_OBJECT_LENGTH_Z 0x0106
+#define VALUE_ID_OPRO_POSITION_DISPLACEMENT_X 0x0107
+#define VALUE_ID_OPRO_POSITION_DISPLACEMENT_Y 0x0108
+#define VALUE_ID_OPRO_POSITION_DISPLACEMENT_Z 0x0109
 
 class ChronosComm : public QObject
 {
