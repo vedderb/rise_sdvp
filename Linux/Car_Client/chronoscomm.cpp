@@ -51,18 +51,18 @@ ChronosComm::ChronosComm(QObject *parent) : QObject(parent)
             this, SLOT(tcpInputError(QAbstractSocket::SocketError)));
 }
 
-bool ChronosComm::startObject()
+bool ChronosComm::startObject(QHostAddress addr)
 {
     closeConnection();
 
-    bool res = mTcpServer->startServer(53241);
-
+    bool res = mTcpServer->startServer(53241, addr);
+    qDebug() << "Starting TCP server at" << addr.toString();
     if (!res) {
-        qWarning() << "Starting TCP server failed:" << mTcpServer->errorString();
+      qWarning() << "Starting TCP server at" << addr.toString() << "failed:" << mTcpServer->errorString();
     }
 
     if (res) {
-        res = mUdpSocket->bind(QHostAddress::Any, 53240);
+        res = mUdpSocket->bind(addr, 53240);
     }
 
     if (!res) {
@@ -82,11 +82,11 @@ bool ChronosComm::startObject()
     return res;
 }
 
-bool ChronosComm::startSupervisor()
+bool ChronosComm::startSupervisor(QHostAddress addr)
 {
     closeConnection();
 
-    bool res = mTcpServer->startServer(53010);
+    bool res = mTcpServer->startServer(53010, addr);
 
     if (res) {
         qDebug() << "Started CHRONOS supervisor";
@@ -229,6 +229,8 @@ void ChronosComm::sendTraj(chronos_traj traj)
 void ChronosComm::sendHeab(chronos_heab heab)
 {
     VByteArrayLe vb;
+    vb.vbAppendUint16(ISO_VALUE_ID_HEAB_STRUCT);
+    vb.vbAppendUint16(5); // sizeof(chronos_heab)
     vb.vbAppendUint32(heab.gps_ms_of_week * 4);
     vb.vbAppendUint8(heab.status);
 
@@ -319,7 +321,10 @@ void ChronosComm::sendStrt(chronos_strt strt)
 
 void ChronosComm::sendMonr(chronos_monr monr)
 {
+	constexpr quint16 monrContentLength = 0x001E;
     VByteArrayLe vb;
+    vb.vbAppendUint16(ISO_VALUE_ID_MONR_STRUCT);
+    vb.vbAppendUint16(monrContentLength);
     vb.vbAppendUint32(monr.gps_ms_of_week * 4);
     vb.vbAppendDouble32(monr.x,1e3);
     vb.vbAppendDouble32(monr.y,1e3);
@@ -557,9 +562,9 @@ void ChronosComm::mkChronosHeader(VByteArrayLe &vb, quint8 transmitter_id, quint
                                   bool ack_req, quint8 protocol_ver, quint16 message_id)
 {   
     // a bit unsure of is the ack req should go to leftmost or rightmost bit.
-    quint8 augmented_protocol_ver = protocol_ver << 1;
+	quint8 augmented_protocol_ver = protocol_ver;
     if (ack_req) {
-        augmented_protocol_ver |= 1;
+		augmented_protocol_ver |= 0x80;
     }
 
     VByteArrayLe vb2;
@@ -631,6 +636,46 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
     VByteArrayLe vb(payload);
 
     switch (type) {
+    case ISO_MSG_OPRO: {
+        chronos_opro opro;
+        while (!vb.isEmpty()) {
+            quint16 value_id  = vb.vbPopFrontUint16();
+            quint16 value_len = vb.vbPopFrontUint16();
+            switch (value_id){
+            case ISO_VALUE_ID_TRANSMITTER_ID:
+                opro.transmitter_id = vb.vbPopFrontUint8();
+                break;
+            case ISO_VALUE_ID_IP_ADDRESS:
+                opro.ip = vb.vbPopFrontUint32();
+                break;
+            case ISO_VALUE_ID_OBJECT_TYPE:
+                opro.object_type = (OPRO_OBJECT_TYPE)vb.vbPopFrontUint8();
+                break;
+            case ISO_VALUE_ID_OPERATION_MODE:
+                opro.operation_mode = (OPRO_OPERATION_MODE)vb.vbPopFrontUint8();
+                break;
+            case ISO_VALUE_ID_X_POS:
+                opro.dim_x = vb.vbPopFrontDouble32(1e3);
+                break;
+            case ISO_VALUE_ID_Y_POS:
+                opro.dim_y = vb.vbPopFrontDouble32(1e3);
+                break;
+            case ISO_VALUE_ID_Z_POS:
+                opro.dim_z = vb.vbPopFrontDouble32(1e3);
+                break;
+            case ISO_VALUE_ID_MASS:
+                opro.mass = vb.vbPopFrontDouble32(1e3);
+                break;
+            case ISO_VALUE_ID_ACTOR_TYPE:
+                opro.actor_type = vb.vbPopFrontUint8();
+                break;
+            default:
+                vb.remove(0, value_len);
+                break;
+            }
+        }
+        emit oproRx(opro);
+    } break;
     case ISO_MSG_INIT_SUP: {
         chronos_init_sup init_sup;
         init_sup.status = 0;
@@ -743,9 +788,21 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
 
     case ISO_MSG_HEAB: {
         chronos_heab heab;
-        heab.gps_ms_of_week = vb.vbPopFrontUint32() / 4;
-        heab.status   = vb.vbPopFrontUint8();
-        emit heabRx(heab);
+        while (!vb.isEmpty()) {
+            quint16 value_id = vb.vbPopFrontUint16();
+            quint16 value_len = vb.vbPopFrontUint16();
+            switch(value_id) {
+            case ISO_VALUE_ID_HEAB_STRUCT:
+                heab.gps_ms_of_week = vb.vbPopFrontUint32() / 4;
+                heab.status   = vb.vbPopFrontUint8();
+                emit heabRx(heab);
+                break;
+            default:
+                qDebug() << "HEAB: Unknown value id:" << value_id;
+                vb.remove(0, value_len);
+                break;
+            }
+        }
     } break;
 
     case ISO_MSG_OSEM: {
@@ -879,21 +936,34 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
     case ISO_MSG_MONR: {
         chronos_monr monr;
         VByteArrayLe vb(payload);
-        monr.gps_ms_of_week = vb.vbPopFrontUint32() / 4;
-        monr.x = vb.vbPopFrontDouble32(1e3);
-        monr.y = vb.vbPopFrontDouble32(1e3);
-        monr.z = vb.vbPopFrontDouble32(1e3);
-        monr.heading = ((double)vb.vbPopFrontUint16()) / 1e2;
-        monr.lon_speed = vb.vbPopFrontDouble16(1e2);
-        monr.lat_speed = vb.vbPopFrontDouble16(1e2);
-        monr.lon_acc = vb.vbPopFrontDouble16(1e2);
-        monr.lat_acc = vb.vbPopFrontDouble16(1e2);
-        monr.direction = vb.vbPopFrontUint8();
-        monr.status = vb.vbPopFrontUint8();
-        monr.rdyToArm = vb.vbPopFrontUint8();
-        monr.error = vb.vbPopFrontUint8();
-        monr.sender_id = sender_id;
-        emit monrRx(monr);
+        while (!vb.isEmpty()) {
+            quint16 value_id = vb.vbPopFrontUint16();
+            quint16 value_len = vb.vbPopFrontUint16();
+            switch(value_id) {
+            case ISO_VALUE_ID_MONR_STRUCT:
+                monr.gps_ms_of_week = vb.vbPopFrontUint32() / 4;
+                monr.x = vb.vbPopFrontDouble32(1e3);
+                monr.y = vb.vbPopFrontDouble32(1e3);
+                monr.z = vb.vbPopFrontDouble32(1e3);
+                monr.heading = (double(vb.vbPopFrontUint16())) / 1e2;
+                monr.lon_speed = vb.vbPopFrontDouble16(1e2);
+                monr.lat_speed = vb.vbPopFrontDouble16(1e2);
+                monr.lon_acc = vb.vbPopFrontDouble16(1e2);
+                monr.lat_acc = vb.vbPopFrontDouble16(1e2);
+                monr.direction = vb.vbPopFrontUint8();
+                monr.status = vb.vbPopFrontUint8();
+                monr.rdyToArm = vb.vbPopFrontUint8();
+                monr.error = vb.vbPopFrontUint8();
+                monr.sender_id = sender_id;
+                emit monrRx(monr);
+                break;
+
+            default:
+                qDebug() << "MONR: Unknown value id" << value_id;
+                vb.remove(0, value_len);
+                break;
+            }
+        }
     } break;
 
     case ISO_MSG_TRCM: {
@@ -936,70 +1006,43 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
     } break;
 
     case ISO_MSG_ACCM: {
-        chronos_ACCM accm;
-        VByteArrayLe vb(payload);
+           chronos_ACCM accm;
+           VByteArrayLe vb(payload);
 
-        while (!vb.isEmpty()) {
-            uint16_t valueID = vb.vbPopFrontUint16();
-            uint16_t contentLength = vb.vbPopFrontUint16();
+           while (!vb.isEmpty()) {
+               uint16_t valueID = vb.vbPopFrontUint16();
+               uint16_t contentLength = vb.vbPopFrontUint16();
 
-            switch(valueID) {
-            case ISO_VALUE_ID_ACTION_ID:
-                accm.actionID = vb.vbPopFrontUint16();
-                break;
-            case ISO_VALUE_ID_ACTION_TYPE:
-                accm.actionType = vb.vbPopFrontUint16();
-                break;
-            case ISO_VALUE_ID_ACTION_TYPE_PARAM1:
-                accm.actionTypeParam1 = vb.vbPopFrontUint32();
-                break;
-            case ISO_VALUE_ID_ACTION_TYPE_PARAM2:
-                accm.actionTypeParam2 = vb.vbPopFrontUint32();
-                break;
-            case ISO_VALUE_ID_ACTION_TYPE_PARAM3:
-                accm.actionTypeParam3 = vb.vbPopFrontUint32();
-                break;
-            default:
-                qDebug() << "ACCM: Unknown value id: " << valueID;
-                vb.remove(0, contentLength);
-                break;
-            }
-        }
+               switch(valueID) {
+               case ISO_VALUE_ID_ACTION_ID:
+                   accm.actionID = vb.vbPopFrontUint16();
+                   break;
+               case ISO_VALUE_ID_ACTION_TYPE:
+                   accm.actionType = vb.vbPopFrontUint16();
+                   break;
+               case ISO_VALUE_ID_ACTION_TYPE_PARAM1:
+                   accm.actionTypeParam1 = vb.vbPopFrontUint32();
+                   break;
+               case ISO_VALUE_ID_ACTION_TYPE_PARAM2:
+                   accm.actionTypeParam2 = vb.vbPopFrontUint32();
+                   break;
+               case ISO_VALUE_ID_ACTION_TYPE_PARAM3:
+                   accm.actionTypeParam3 = vb.vbPopFrontUint32();
+                   break;
+               default:
+                   qDebug() << "ACCM: Unknown value id: " << valueID;
+                   vb.remove(0, contentLength);
+                   break;
+                           }
+                       }
+                       qDebug() << "ACCM Rx";
+                   } break;
+                   default:
+                           break;
+                   }
 
-        configureAction(accm);
-        qDebug() << "ACCM Rx";
-    } break;
-    case ISO_MSG_EXAC: {
-        chronos_EXAC exac;
-        VByteArrayLe vb(payload);
-
-        while (!vb.isEmpty()) {
-            uint16_t valueID = vb.vbPopFrontUint16();
-            uint16_t contentLength = vb.vbPopFrontUint16();
-
-            switch(valueID) {
-            case ISO_VALUE_ID_ACTION_ID:
-                exac.actionID = vb.vbPopFrontUint16();
-                break;
-            case ISO_VALUE_ID_ACTION_TYPE:
-                exac.executeTime = vb.vbPopFrontUint32();
-                break;
-            default:
-                qDebug() << "EXAC: Unknown value id: " << valueID;
-                vb.remove(0, contentLength);
-                break;
-            }
-        }
-
-        executeAction(exac);
-        qDebug() << "EXAC Rx";
-    } break;
-    default:
-            break;
-    }
-
-    return true;
-}
+                   return true;
+               }
 
 void ChronosComm::sendData(QByteArray data, bool isUdp)
 {

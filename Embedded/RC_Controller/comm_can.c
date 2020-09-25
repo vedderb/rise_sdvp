@@ -26,7 +26,6 @@
 #include "packet.h"
 #include "bldc_interface.h"
 #include "commands.h"
-#include "radar_cont.h"
 #include "motor_sim.h"
 
 // Settings
@@ -252,20 +251,6 @@ static THD_FUNCTION(cancom_process_thread, arg) {
 					default:
 						break;
 					}
-				}
-#endif
-#if RADAR_CONT_EN
-				switch (rxmsg.SID) {
-				case 0x60A:
-				case 0x60B:
-				case 0x60C:
-				case 0x600:
-				case 0x701:
-				case 0x702:
-					radar_cont_input(rxmsg.SID, rxmsg.data8);
-					break;
-				default:
-					break;
 				}
 #endif
 			}

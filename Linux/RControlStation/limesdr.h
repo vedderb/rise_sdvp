@@ -29,6 +29,8 @@ class LimeSDR : public QThread
 public:
     explicit LimeSDR(QObject *parent = nullptr);
     void setPos(double lat, double lon, double height, double speed);
+    void setPosBase(double lat, double lon, double height);
+    void setBaseEnabled(bool en);
 
     void run() override;
 
@@ -41,6 +43,12 @@ public slots:
 private:
     bool mStop;
     GpsGen mGps;
+    GpsGen mGpsBase;
+
+    double mBaseLat;
+    double mBaseLon;
+    double mBaseHeight;
+    bool mBaseEn;
 
     void myPrint(const char* format, ...);
 

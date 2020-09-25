@@ -183,6 +183,7 @@ typedef struct {
     bool disable_motor; // Disable motor drive commands to make sure that the motor does not move.
     bool simulate_motor; // Simulate motor movement without motor controller feedback
     bool clamp_imu_yaw_stationary; // Clamp IMU yaw when car is stationary
+    bool use_uwb_pos; // Use UWB positioning instead of RTK positioning
 
     float gear_ratio;
     float wheel_diam;
@@ -294,7 +295,8 @@ typedef struct {
 
     // Autopilot parameters
     bool ap_repeat_routes; // Repeat the same route when the end is reached
-    float ap_base_rad; // Radius around car at 0 speed
+    float ap_base_rad; // Smallest allowed radius around car
+    float ap_rad_time_ahead; // Radius ahead time
     int ap_mode_time; // Drive to route points based on time (1 = abs time, 2 = rel since start)
     float ap_max_speed; // Maximum allowed speed for autopilot
     int32_t ap_time_add_repeat_ms; // Time to add to each point for each repetition of the route
@@ -343,10 +345,6 @@ typedef enum {
     CMD_SET_SYSTEM_TIME_ACK,
     CMD_REBOOT_SYSTEM,
     CMD_REBOOT_SYSTEM_ACK,
-    CMD_RADAR_SETUP_SET,
-    CMD_RADAR_SETUP_GET,
-    CMD_RADAR_SAMPLES,
-    CMD_DW_SAMPLE,
     CMD_EMERGENCY_STOP,
     CMD_SET_MAIN_CONFIG,
     CMD_GET_MAIN_CONFIG,
@@ -381,36 +379,6 @@ typedef enum {
     RC_MODE_PID,
     RC_MODE_CURRENT_BRAKE
 } RC_MODE;
-
-typedef struct {
-    bool log_en;
-    float f_center;
-    float f_span;
-    int points;
-    float t_sweep;
-    float cc_x;
-    float cc_y;
-    float cc_rad;
-    int log_rate_ms;
-    float map_plot_avg_factor;
-    float map_plot_max_div;
-    int plot_mode; // 0 = off, 1 = sample, 2 = fft
-    int map_plot_start;
-    int map_plot_end;
-} radar_settings_t;
-
-// DW Logging Info
-typedef struct {
-    bool valid;
-    uint8_t dw_anchor;
-    int32_t time_today_ms;
-    float dw_dist;
-    float px;
-    float py;
-    float px_gps;
-    float py_gps;
-    float pz_gps;
-} DW_LOG_INFO;
 
 typedef enum {
     JS_TYPE_HK = 0,

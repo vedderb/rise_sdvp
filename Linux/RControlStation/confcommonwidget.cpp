@@ -65,6 +65,7 @@ void ConfCommonWidget::getConfGui(MAIN_CONFIG &conf)
 
     conf.ap_repeat_routes = ui->confApRepeatBox->isChecked();
     conf.ap_base_rad = ui->confApBaseRadBox->value();
+    conf.ap_rad_time_ahead = ui->confApRadTimeBox->value();
     conf.ap_max_speed = ui->confApMaxSpeedBox->value() / 3.6;
     conf.ap_time_add_repeat_ms = ui->confApAddRepeatTimeEdit->time().msecsSinceStartOfDay();
 
@@ -126,6 +127,7 @@ void ConfCommonWidget::setConfGui(const MAIN_CONFIG &conf)
 
     ui->confApRepeatBox->setChecked(conf.ap_repeat_routes);
     ui->confApBaseRadBox->setValue(conf.ap_base_rad);
+    ui->confApRadTimeBox->setValue(conf.ap_rad_time_ahead);
     ui->confApMaxSpeedBox->setValue(conf.ap_max_speed * 3.6);
     ui->confApAddRepeatTimeEdit->setTime(QTime::fromMSecsSinceStartOfDay(conf.ap_time_add_repeat_ms));
 

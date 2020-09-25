@@ -23,7 +23,7 @@
 #include "hal.h"
 
 void pos_uwb_init(void);
-void pos_uwb_update_dr(float imu_yaw, float travel_dist,
+void pos_uwb_update_dr(float imu_yaw, float rtk_yaw, float travel_dist,
 		float turn_rad, float speed);
 void pos_uwb_add_anchor(UWB_ANCHOR a);
 void pos_uwb_clear_anchors(void);

@@ -28,10 +28,14 @@ unix:!macx {
 !android: DEFINES += HAS_OPENGL
 
 # Lime SDR support
-#DEFINES += HAS_LIME_SDR
+DEFINES += HAS_LIME_SDR
 
 # Simulation Scennarios
 #DEFINES += HAS_SIM_SCEN
+# Usage: From the RControlStation root do:
+# git clone https://github.com/esmini/esmini esmini
+# and uncomment this define. The the editor will show up
+# as the last tab in RControlStation.
 
 TARGET = RControlStation
 TEMPLATE = app
@@ -102,7 +106,8 @@ SOURCES += main.cpp\
     ncom.cpp \
     correctionanalysis.cpp \
     historylineedit.cpp \
-    imagewidget.cpp
+    imagewidget.cpp \
+    tcpclientmulti.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
@@ -139,7 +144,8 @@ HEADERS  += mainwindow.h \
     ncom.h \
     correctionanalysis.h \
     historylineedit.h \
-    imagewidget.h
+    imagewidget.h \
+    tcpclientmulti.h
 
 FORMS    += mainwindow.ui \
     carinterface.ui \
@@ -175,7 +181,7 @@ contains(DEFINES, HAS_LIME_SDR) {
 }
 
 contains(DEFINES, HAS_SIM_SCEN) {
-    include(env_sim/EnvironmentSimulator.pri)
+    include(esmini/EnvironmentSimulator.pri)
     SOURCES += pagesimscen.cpp
     HEADERS += pagesimscen.h \
             simscentree.h

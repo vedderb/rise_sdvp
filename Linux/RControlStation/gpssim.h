@@ -44,6 +44,7 @@ private slots:
     void on_stopButton_clicked();
     void on_setPosButton_clicked();
     void on_clearButton_clicked();
+    void on_simBaseBox_toggled(bool checked);
 
 private:
     Ui::GpsSim *ui;

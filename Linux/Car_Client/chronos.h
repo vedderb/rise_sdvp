@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QUdpSocket>
 #include <QTimer>
+#include <QElapsedTimer>
 
 #include "tcpserversimple.h"
 #include "packetinterface.h"
@@ -14,7 +15,8 @@ class Chronos : public QObject
     Q_OBJECT
 public:
     Chronos(QObject *parent = 0);
-    bool startServer(PacketInterface *packet);
+    bool startServer(PacketInterface *packet, QHostAddress addr = QHostAddress::Any);
+    ChronosComm *comm();
 
 private slots:
     void startTimerSlot();
@@ -29,11 +31,13 @@ private slots:
     void processHeab(chronos_heab heab);
     void processSypm(chronos_sypm sypm);
     void processMtsp(chronos_mtsp mtsp);
+    void processOpro(chronos_opro opro);
 
 private:
     PacketInterface *mPacket;
     ChronosComm *mChronos;
     QTimer *mStartTimer;
+    QElapsedTimer mScenarioTimer;
     bool mIsArmed;
     bool mIsStarted;
 
