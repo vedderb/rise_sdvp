@@ -23,6 +23,7 @@ private slots:
 
     void processTraj(chronos_traj traj);
     void processOsem(chronos_osem osem);
+    void processOpro(chronos_opro opro);
     void processOstm(chronos_ostm ostm);
     void processStrt(chronos_strt strt);
     void processHeab(chronos_heab heab);

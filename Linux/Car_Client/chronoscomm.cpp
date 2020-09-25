@@ -825,7 +825,7 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
                 break;
             }
         }
-        emit oproRx(oprp);
+        emit oproRx(opro);
     } break;
 
 
