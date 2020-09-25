@@ -190,6 +190,13 @@ void Chronos::processOsem(chronos_osem osem)
     }
 }
 
+
+void Chronos::processOpro(chronos_opro opro)
+{
+    qDebug() << "OPRO RX";
+    qDebug() << "Actor type: " << opro.actorType;
+}
+
 void Chronos::processOstm(chronos_ostm ostm)
 {
     qDebug() << "OSTM RX";
