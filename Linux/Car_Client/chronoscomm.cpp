@@ -557,7 +557,7 @@ void ChronosComm::mkChronosHeader(VByteArrayLe &vb, quint8 transmitter_id, quint
                                   bool ack_req, quint8 protocol_ver, quint16 message_id)
 {   
     // a bit unsure of is the ack req should go to leftmost or rightmost bit.
-    quint8 augmented_protocol_ver = protocol_ver << 1;
+    quint8 augmented_protocol_ver = protocol_ver; //<< 1; //Why bitshift this?
     if (ack_req) {
         augmented_protocol_ver |= 1;
     }
