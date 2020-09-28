@@ -133,7 +133,7 @@ typedef struct {
     uint8_t status;
 } chronos_init_sup;
 
-#define PROTOCOL_VERSION 0
+#define PROTOCOL_VERSION 2
 
 // Chronos messaging
 
