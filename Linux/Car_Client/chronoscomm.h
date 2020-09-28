@@ -180,21 +180,6 @@ typedef struct {
     uint8_t status;
 } chronos_init_sup;
 
-<<<<<<< HEAD
-=======
-typedef struct {
-    uint32_t ip;
-    uint8_t  transmitter_id;
-    OPRO_OBJECT_TYPE object_type;
-    OPRO_OPERATION_MODE operation_mode;
-    double   mass; // Kilograms
-    double   dim_x;
-    double   dim_y;
-    double   dim_z;
-    uint8_t  actor_type; // virtual or real 1 - virtual, 2 - real
-} chronos_opro;
-
->>>>>>> 9ccda07a123991dabba7f823fbf2ffa6ac942a5b
 #define PROTOCOL_VERSION 2
 
 // Chronos messaging
@@ -354,7 +339,6 @@ signals:
     void strtRx(chronos_strt strt);
     void monrRx(chronos_monr monr);
     void insupRx(chronos_init_sup init_sup);
-    void oproRx(chronos_opro opro);
 
 public slots:
 

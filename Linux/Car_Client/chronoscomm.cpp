@@ -562,11 +562,7 @@ void ChronosComm::mkChronosHeader(VByteArrayLe &vb, quint8 transmitter_id, quint
                                   bool ack_req, quint8 protocol_ver, quint16 message_id)
 {   
     // a bit unsure of is the ack req should go to leftmost or rightmost bit.
-<<<<<<< HEAD
-    quint8 augmented_protocol_ver = protocol_ver; //<< 1; //Why bitshift this?
-=======
 	quint8 augmented_protocol_ver = protocol_ver;
->>>>>>> 9ccda07a123991dabba7f823fbf2ffa6ac942a5b
     if (ack_req) {
 		augmented_protocol_ver |= 0x80;
     }
@@ -640,46 +636,6 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
     VByteArrayLe vb(payload);
 
     switch (type) {
-    case ISO_MSG_OPRO: {
-        chronos_opro opro;
-        while (!vb.isEmpty()) {
-            quint16 value_id  = vb.vbPopFrontUint16();
-            quint16 value_len = vb.vbPopFrontUint16();
-            switch (value_id){
-            case ISO_VALUE_ID_TRANSMITTER_ID:
-                opro.transmitter_id = vb.vbPopFrontUint8();
-                break;
-            case ISO_VALUE_ID_IP_ADDRESS:
-                opro.ip = vb.vbPopFrontUint32();
-                break;
-            case ISO_VALUE_ID_OBJECT_TYPE:
-                opro.object_type = (OPRO_OBJECT_TYPE)vb.vbPopFrontUint8();
-                break;
-            case ISO_VALUE_ID_OPERATION_MODE:
-                opro.operation_mode = (OPRO_OPERATION_MODE)vb.vbPopFrontUint8();
-                break;
-            case ISO_VALUE_ID_X_POS:
-                opro.dim_x = vb.vbPopFrontDouble32(1e3);
-                break;
-            case ISO_VALUE_ID_Y_POS:
-                opro.dim_y = vb.vbPopFrontDouble32(1e3);
-                break;
-            case ISO_VALUE_ID_Z_POS:
-                opro.dim_z = vb.vbPopFrontDouble32(1e3);
-                break;
-            case ISO_VALUE_ID_MASS:
-                opro.mass = vb.vbPopFrontDouble32(1e3);
-                break;
-            case ISO_VALUE_ID_ACTOR_TYPE:
-                opro.actor_type = vb.vbPopFrontUint8();
-                break;
-            default:
-                vb.remove(0, value_len);
-                break;
-            }
-        }
-        emit oproRx(opro);
-    } break;
     case ISO_MSG_INIT_SUP: {
         chronos_init_sup init_sup;
         init_sup.status = 0;

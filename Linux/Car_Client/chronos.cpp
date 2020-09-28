@@ -303,17 +303,3 @@ void Chronos::processMtsp(chronos_mtsp mtsp)
                     mSypmLast.sync_point - mSypmLast.stop_time;
     }
 }
-
-void Chronos::processOpro(chronos_opro opro)
-{
-    // Override transmitterid with value from server in Opro message.
-    qDebug() << "Setting transmitter id from opro message:" << opro.transmitter_id;
-    mChronos->setTransmitterId(opro.transmitter_id);
-
-    qDebug() << opro.ip;
-    qDebug() << opro.dim_x;
-    qDebug() << opro.dim_y;
-    qDebug() << opro.dim_z;
-
-
-}
