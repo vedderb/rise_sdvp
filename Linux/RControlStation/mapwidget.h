@@ -90,6 +90,7 @@ public:
     QList<QList<LocPoint> > getRoutes();
     void setRoute(const QList<LocPoint> &route);
     void addRoute(const QList<LocPoint> &route);
+    int getRouteNum();
     void clearRoute();
     void clearAllRoutes();
     void setRoutePointSpeed(double speed);
@@ -118,6 +119,7 @@ public:
     void setAnchorId(int id);
     void setAnchorHeight(double height);
     void removeLastRoutePoint();
+    void zoomInOnRoute(int id, double margins, double wWidth = -1, double wHeight = -1);
 
     int getOsmMaxZoomLevel() const;
     void setOsmMaxZoomLevel(int osmMaxZoomLevel);
@@ -169,6 +171,8 @@ public:
     void removeMapModule(MapModule *m);
     void removeMapModuleLast();
 
+    quint32 getRoutePointAttributes() const;
+    void setRoutePointAttributes(const quint32 &routePointAttributes);
 
 signals:
     void scaleChanged(double newScale);
@@ -204,6 +208,7 @@ private:
     QList<PerspectivePixmap> mPerspectivePixmaps;
     double mRoutePointSpeed;
     qint32 mRoutePointTime;
+    quint32 mRoutePointAttributes;
     qint32 mAnchorId;
     double mAnchorHeight;
     double mScaleFactor;

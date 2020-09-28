@@ -1,5 +1,9 @@
 ../configure -prefix /opt/Qt/5.9-pi/ -release -opensource -confirm-license -no-sql-mysql -no-sql-psql -no-sql-sqlite -no-journald -no-mtdev -qt-xkbcommon-x11 -no-compile-examples -no-xcb-xlib -no-directfb -no-linuxfb -no-kms -nomake examples -nomake tests -skip qtwebsockets -skip qtwebchannel -skip qtwebengine -skip qtwayland -skip qtwinextras -skip qtsensors -skip multimedia -no-xkbcommon-evdev -no-evdev -no-libproxy -no-icu -skip imageformats -skip location -no-xinput2 -qt-freetype -opengl es2 -no-use-gold-linker -skip 3d -platform linux-clang
 
+or
+
+../configure -prefix /opt/Qt/5.12-pi/ -release -opensource -confirm-license -no-sql-mysql -no-sql-psql -no-sql-sqlite -no-journald -no-mtdev -no-compile-examples -no-directfb -no-linuxfb -no-kms -nomake examples -nomake tests -skip qtwebsockets -skip qtwebchannel -skip qtwebengine -skip qtwayland -skip qtwinextras -skip qtsensors -no-libproxy -no-icu -skip location -qt-freetype -opengl es2 -skip 3d -no-compile-examples -reduce-exports -no-pch -evdev -no-eglfs -skip location -no-accessibility -no-sql-mysql -no-sql-psql -no-sql-sqlite -no-journald -no-openssl -no-cups -no-directfb -no-linuxfb -no-kms -qt-xcb -no-xcb-xlib
+
 make -j3
 
 sudo make install

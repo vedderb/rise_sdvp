@@ -32,13 +32,16 @@ Chronos::Chronos(QObject *parent) : QObject(parent)
             this, SLOT(processOstm(chronos_ostm)));
     connect(mChronos, SIGNAL(strtRx(chronos_strt)),
             this, SLOT(processStrt(chronos_strt)));
+    connect(mChronos, SIGNAL(oproRx(chronos_opro)),
+            this, SLOT(processOpro(chronos_opro)));
+
 }
 
-bool Chronos::startServer(PacketInterface *packet)
+bool Chronos::startServer(PacketInterface *packet, QHostAddress addr)
 {
     mPacket = packet;
 
-    bool res = mChronos->startObject();
+    bool res = mChronos->startObject(addr);
 
     if (res && mPacket) {
         connect(mPacket, SIGNAL(stateReceived(quint8,CAR_STATE)),
@@ -48,6 +51,11 @@ bool Chronos::startServer(PacketInterface *packet)
     return res;
 }
 
+ChronosComm *Chronos::comm()
+{
+    return mChronos;
+}
+
 void Chronos::startTimerSlot()
 {
     qDebug() << "Starting car";
@@ -55,6 +63,7 @@ void Chronos::startTimerSlot()
 
     if (mPacket) {
         mPacket->setApActive(255, true);
+        mScenarioTimer.start();
     }
 }
 
@@ -133,6 +142,8 @@ void Chronos::processTraj(chronos_traj traj)
             path_reduced.append(pt);
         }
     }
+
+//    qDebug() << "Last PT time" << path_reduced.last().tRel - mScenarioTimer.elapsed();
 
     if (mPacket) {
         mRouteLast.clear();
@@ -291,4 +302,18 @@ void Chronos::processMtsp(chronos_mtsp mtsp)
         qDebug() << closest_sync << mtsp.time_est - ChronosComm::gpsMsOfWeek() <<
                     mSypmLast.sync_point - mSypmLast.stop_time;
     }
+}
+
+void Chronos::processOpro(chronos_opro opro)
+{
+    // Override transmitterid with value from server in Opro message.
+    qDebug() << "Setting transmitter id from opro message:" << opro.transmitter_id;
+    mChronos->setTransmitterId(opro.transmitter_id);
+
+    qDebug() << opro.ip;
+    qDebug() << opro.dim_x;
+    qDebug() << opro.dim_y;
+    qDebug() << opro.dim_z;
+
+
 }

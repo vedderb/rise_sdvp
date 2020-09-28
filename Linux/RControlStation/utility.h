@@ -20,6 +20,7 @@
 
 #include <stdint.h>
 #include "packetinterface.h"
+#include "mapwidget.h"
 
 namespace utility {
 
@@ -58,6 +59,7 @@ double angle_difference(double angle1, double angle2);
 double angle_difference_rad(double angle1, double angle2);
 bool uploadRouteHelper(PacketInterface *packetInterface, int carId, QList<LocPoint> route);
 bool replaceRouteHelper(PacketInterface *packetInterface, int carId, QList<LocPoint> route);
+int loadRoutes(QString filename, MapWidget *map);
 
 }
 

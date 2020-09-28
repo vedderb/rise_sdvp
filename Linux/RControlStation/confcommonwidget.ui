@@ -631,7 +631,7 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_3">
        <property name="spacing">
-        <number>3</number>
+        <number>2</number>
        </property>
        <property name="leftMargin">
         <number>3</number>
@@ -657,23 +657,55 @@
         </layout>
        </item>
        <item>
-        <widget class="QDoubleSpinBox" name="confApBaseRadBox">
-         <property name="prefix">
-          <string>Base radius: </string>
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <property name="spacing">
+          <number>2</number>
          </property>
-         <property name="suffix">
-          <string> m</string>
-         </property>
-         <property name="decimals">
-          <number>3</number>
-         </property>
-         <property name="maximum">
-          <double>100.000000000000000</double>
-         </property>
-         <property name="singleStep">
-          <double>0.100000000000000</double>
-         </property>
-        </widget>
+         <item>
+          <widget class="QDoubleSpinBox" name="confApBaseRadBox">
+           <property name="toolTip">
+            <string>Minimum look ahead radius.</string>
+           </property>
+           <property name="prefix">
+            <string>Base radius: </string>
+           </property>
+           <property name="suffix">
+            <string> m</string>
+           </property>
+           <property name="decimals">
+            <number>3</number>
+           </property>
+           <property name="maximum">
+            <double>100.000000000000000</double>
+           </property>
+           <property name="singleStep">
+            <double>0.100000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QDoubleSpinBox" name="confApRadTimeBox">
+           <property name="toolTip">
+            <string>Look ahead time for autopilot.</string>
+           </property>
+           <property name="prefix">
+            <string>Rad Time: </string>
+           </property>
+           <property name="suffix">
+            <string> s</string>
+           </property>
+           <property name="decimals">
+            <number>2</number>
+           </property>
+           <property name="singleStep">
+            <double>0.100000000000000</double>
+           </property>
+           <property name="value">
+            <double>0.600000000000000</double>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
        <item>
         <widget class="QDoubleSpinBox" name="confApMaxSpeedBox">

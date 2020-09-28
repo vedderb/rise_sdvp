@@ -66,7 +66,7 @@ public:
     void startLogServer(int port = 8410);
     void connectNmea(QString server, int port = 2948);
     void startUdpServer(int port = 8300);
-    bool startTcpServer(int port = 8300);
+    bool startTcpServer(int port = 8300, QHostAddress addr = QHostAddress::Any);
     bool enableLogging(QString directory);
     void logStop();
     void rtcmRx(QByteArray data, int type);

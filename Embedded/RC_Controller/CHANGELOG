@@ -1,3 +1,16 @@
+=== FW 12.1 ===
+* Removed obsolete code.
+
+=== FW 12.0 ===
+* Added route point attributes.
+* AP radius based on time.
+
+=== FW 11.0 ===
+* UWB yaw correction.
+* Option to use UWB alone for positioning.
+* Increased AP route size.
+* Moved AP route to CCM.
+
 === FW 10.2 ===
 * Option to clamp IMU yaw when car is stationary.
 

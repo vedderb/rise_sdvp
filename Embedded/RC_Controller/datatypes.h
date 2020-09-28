@@ -67,6 +67,7 @@ typedef struct {
 	float roll; // Degrees
 	float pitch; // Degrees
 	float yaw; // Degrees
+	float yaw_imu;
 	float roll_rate; // Degrees / second
 	float pitch_rate; // Degrees / second
 	float yaw_rate; // Degrees / second
@@ -119,6 +120,7 @@ typedef struct {
 	float pz;
 	float speed;
 	int32_t time;
+	uint32_t attributes;
 } ROUTE_POINT;
 
 // Position history point
@@ -180,10 +182,6 @@ typedef enum {
 	CMD_SET_SYSTEM_TIME_ACK,
 	CMD_REBOOT_SYSTEM,
 	CMD_REBOOT_SYSTEM_ACK,
-	CMD_RADAR_SETUP_SET,
-	CMD_RADAR_SETUP_GET,
-	CMD_RADAR_SAMPLES,
-	CMD_DW_SAMPLE,
 	CMD_EMERGENCY_STOP,
 	CMD_SET_MAIN_CONFIG,
 	CMD_GET_MAIN_CONFIG,
@@ -225,6 +223,7 @@ typedef struct {
 	bool disable_motor; // Disable motor drive commands to make sure that the motor does not move.
 	bool simulate_motor; // Simulate motor movement without motor controller feedback
 	bool clamp_imu_yaw_stationary; // Clamp IMU yaw when car is stationary
+	bool use_uwb_pos; // Use UWB positioning instead of RTK positioning
 
 	float gear_ratio;
 	float wheel_diam;
@@ -338,7 +337,8 @@ typedef struct {
 
 	// Autopilot parameters
 	bool ap_repeat_routes; // Repeat the same route when the end is reached
-	float ap_base_rad; // Radius around car at 0 speed
+	float ap_base_rad; // Smallest allowed radius around car
+	float ap_rad_time_ahead; // Radius ahead time
 	int ap_mode_time; // Drive to route points based on time (1 = abs time, 2 = rel since start)
 	float ap_max_speed; // Maximum allowed speed for autopilot
 	int32_t ap_time_add_repeat_ms; // Time to add to each point for each repetition of the route

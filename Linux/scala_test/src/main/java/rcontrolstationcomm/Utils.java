@@ -21,7 +21,19 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
 import org.bridj.Pointer;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
 import java.io.Serializable;
 import java.text.NumberFormat;
 import static java.lang.Math.PI;
@@ -31,6 +43,9 @@ import static java.lang.Math.pow;
 import static java.lang.Math.sin;
 import static java.lang.Math.sqrt;
 import static java.lang.System.out;
+
+import java.io.File;
+import java.io.PrintWriter;
 
 public final class Utils {
 	public static final class RpPoint implements Serializable {
@@ -189,13 +204,13 @@ public final class Utils {
 
 	/**
 	 * Add a fault
-	 * 
+	 *
 	 * @param car
 	 * The ID of the car
-	 * 
+	 *
 	 * @param probe
 	 * The probe to inject on
-	 * 
+	 *
 	 * @param type
 	 * The fault type. Can be
 	 * NONE
@@ -203,21 +218,21 @@ public final class Utils {
 	 * OFFSET
 	 * AMPLIFICATION
 	 * SET_TO
-	 * 
+	 *
 	 * @param param
 	 * The fault parameter, e.g. amplification factor, the bit to flip.
-	 * 
+	 *
 	 * @param start
 	 * The iteration where the fault should be triggered. Iterations are
 	 * counted up when the fault injection function is called, usually
 	 * before the variable to inject the fault on is used.
-	 * 
+	 *
 	 * @param duration
 	 * The duration of the fault in iterations.
-	 * 
+	 *
 	 * @timeoutMs
 	 * Timeout for acknowledgement in milliseconds.
-	 * 
+	 *
 	 * @return
 	 * true for success, false otherwise.
 	 */
@@ -251,13 +266,13 @@ public final class Utils {
 
 	/**
 	 * Reset fault iteration counter.
-	 * 
+	 *
 	 * @param car
 	 * Car ID.
-	 * 
+	 *
 	 * @param timeoutMs
 	 * Timeout in milliseconds.
-	 * 
+	 *
 	 * @return
 	 * true for success, false otherwise
 	 */
@@ -270,7 +285,7 @@ public final class Utils {
 		terminalCmd(car, "pos_uwb_reset_pos", timeoutMs);
 		return true;
 	}
-	
+
 	public static class WaitRouteResult {
 		public double maxUwbDiff;
 		public double time;
@@ -308,14 +323,157 @@ public final class Utils {
 		}
 
 		out.println("Max UWB diff: " + maxUwbDiff + " m");
-		
+
 		if (result != null) {
 			result.maxUwbDiff = maxUwbDiff;
 			result.maxSpeed = maxSpeed;
 			result.time = (double)(System.nanoTime() - timeStart) * 1.0e-9;
 		}
 	}
+
+	public static void waitUntilRouteAlmostEndedAndLog(int car, int points_left, String filename) {
+		double accDist = 0.0;
+		PrintWriter writer;
+
+		RpPoint pLast = new RpPoint();
+		double yaw; 
+
+		try {
+			writer = new PrintWriter(filename, "UTF-8");
+		} catch (java.io.FileNotFoundException e) {
+			e.printStackTrace();
+			return;
+		} catch (java.io.UnsupportedEncodingException e) {
+			e.printStackTrace();
+			return;
+		}
+
+		CAR_STATE st = getCarState(car, 1000);
+		pLast.x = st.px();
+		pLast.y = st.py();
+		yaw = st.yaw(); 
+		
+		writer.println("");
+		writer.println("% Accumulated distance, Abs error distance," +
+						"Yaw diff, Speed, Abs error x, Abs error y, ms_today");
+		writer.println("log_data = [");
+		
+		while (st.ap_route_left() > points_left) {
+			try {
+				Thread.sleep(50);
+				st = getCarState(car, 1000);
+				RpPoint pNow = new RpPoint();
+				RpPoint pNowUwb = new RpPoint();
+				pNow.x = st.px();
+				pNow.y = st.py();
+				pNowUwb.x = st.px_uwb();
+				pNowUwb.y = st.py_uwb();
+				double dist = pointDistance(pLast,pNow);
+				accDist += dist;
+
+				double uwbDiff = pointDistance(pNow, pNowUwb);
+				double speed   = st.speed();
+				
+				double xDiff = Math.abs(st.px() - st.px_uwb());
+				double yDiff = Math.abs(st.py() - st.py_uwb());
+
+				double angChange = Math.abs(st.yaw() - yaw);
+				yaw = st.yaw();
+
+				writer.println(String.valueOf(accDist) + ", " +
+						String.valueOf(uwbDiff) + ", " +
+						String.valueOf(angChange) + ", " +
+						String.valueOf(speed) + ", " +
+						String.valueOf(xDiff) + ", " +
+						String.valueOf(yDiff) + ", " +
+						String.valueOf(st.ms_today()) + "; ");
+				writer.flush();
+
+				pLast.x = st.px();
+				pLast.y = st.py();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+				break;
+			}
+		}
+		
+		writer.println("];");
+		writer.println("");
+		writer.close();
+/*
+		out.println("Max UWB diff: " + maxUwbDiff + " m");
+
+		if (result != null) {
+			result.maxUwbDiff = maxUwbDiff;
+			result.maxSpeed = maxSpeed;
+			result.time = (double)(System.nanoTime() - timeStart) * 1.0e-9;
+		}
+		*/
+	}
 	
+	public static void saveRouteToXml(int car, int mapRoute, String fileName) {
+		List<RpPoint> routePoints = getRoute(car, mapRoute, 1000);
+		
+		if (!fileName.toLowerCase().endsWith(".xml")) {
+			fileName += ".xml";
+		}
+		
+		if (mapRoute < 0) {
+			mapRoute = 0;
+		}
+
+		try {
+			DocumentBuilderFactory documentFactory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder documentBuilder = documentFactory.newDocumentBuilder();
+			Document document = documentBuilder.newDocument();
+			
+			Element routes = document.createElement("routes");
+            document.appendChild(routes);
+            
+            Element route = document.createElement("route");
+            routes.appendChild(route);
+            
+            Element id = document.createElement("id");
+            id.appendChild(document.createTextNode("" + mapRoute));
+            route.appendChild(id);
+            
+            for (RpPoint p: routePoints) {
+            	Element point = document.createElement("point");
+            	route.appendChild(point);
+            	
+            	Element x = document.createElement("x");
+                x.appendChild(document.createTextNode("" + p.x));
+                point.appendChild(x);
+                
+                Element y = document.createElement("y");
+                y.appendChild(document.createTextNode("" + p.y));
+                point.appendChild(y);
+                
+                Element speed = document.createElement("speed");
+                speed.appendChild(document.createTextNode("" + p.speed));
+                point.appendChild(speed);
+                
+                Element time = document.createElement("time");
+                time.appendChild(document.createTextNode("" + p.time));
+                point.appendChild(time);
+            }
+			
+			TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            Transformer transformer = transformerFactory.newTransformer();
+            
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+            transformer.setOutputProperty(OutputKeys.METHOD, "xml");
+            transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
+            
+            DOMSource domSource = new DOMSource(document);
+            StreamResult streamResult = new StreamResult(new File(fileName));
+ 
+            transformer.transform(domSource, streamResult);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
 	public static void waitUntilRouteAlmostEnded(int car, int points_left) {
 		waitUntilRouteAlmostEnded(car, points_left, null);
 	}
@@ -389,39 +547,39 @@ public final class Utils {
 
 		RControlStationCommLibrary.rcsc_setAutopilotActive(car, false, 1000);
 	}
-	
+
 	public static boolean followRecoveryRouteV2(int car, int recoveryRoute, RouteInfo ri,
 			int carRoute, int aheadMargin, int genAttempts, boolean tryShorten) {
 		return followRecoveryRouteV2(car, recoveryRoute, ri, carRoute, aheadMargin, genAttempts, tryShorten, false);
 	}
-	
+
 	/**
 	 * Generate and follow a route that connects with the recovery route, and then follow the recovery route.
-	 * 
+	 *
 	 * @param car
 	 * The car ID.
-	 * 
+	 *
 	 * @param recoveryRoute
 	 * The ID of the recovery route.
-	 * 
+	 *
 	 * @param ri
 	 * RouteInfo to make sure that the connecting route is valid.
-	 * 
+	 *
 	 * @param carRoute
 	 * The route number to use when uploading the route to the car.
-	 * 
+	 *
 	 * @param aheadMargin
 	 * Margin when generating random segments in an attempt to connect with the recovery route.
-	 * 
+	 *
 	 * @param genAttempts
 	 * Attempts to generate. More attempts are likely to generate a shorter connecting route.
-	 * 
+	 *
 	 * @param genOnly
 	 * If set the route is only generated and shown on the map, but the autopilot is not activated.
-	 * 
+	 *
 	 * @param tryShorten
 	 * Try to shorten the generated recovery route.
-	 * 
+	 *
 	 * @return
 	 * True for success, false if it was not possible to generate a connecting route or if the car
 	 * was outside the valid area in the RouteInfo.
@@ -551,7 +709,7 @@ public final class Utils {
 
 				recStartBest.add(rec.get(0));
 				rec.remove(0);
-				
+
 				if (tryShorten) {
 					shortenRouteMore(recStartBest, ri);
 				}

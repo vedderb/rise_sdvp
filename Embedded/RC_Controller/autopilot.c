@@ -29,13 +29,14 @@
 #include "terminal.h"
 #include "comm_can.h"
 #include "hydraulic.h"
+#include "pos_uwb.h"
 
 // Defines
 #define AP_HZ						100 // Hz
 
 // Private variables
 static THD_WORKING_AREA(ap_thread_wa, 2048);
-static ROUTE_POINT m_route[AP_ROUTE_SIZE];
+__attribute__((section(".ram4"))) static ROUTE_POINT m_route[AP_ROUTE_SIZE];
 static bool m_is_active;
 static int m_point_last; // The last point on the route
 static int m_point_now; // The first point in the currently considered part of the route
@@ -246,7 +247,12 @@ void autopilot_sync_point(int32_t point, int32_t time, int32_t min_time_diff) {
 	}
 
 	POS_STATE p;
-	pos_get_pos(&p);
+
+	if (main_config.car.use_uwb_pos) {
+		pos_uwb_get_pos(&p);
+	} else {
+		pos_get_pos(&p);
+	}
 
 	// Car center
 	const float car_cx = p.px;
@@ -443,6 +449,8 @@ static THD_FUNCTION(ap_thread, arg) {
 
 	chRegSetThreadName("Autopilot");
 
+	uint32_t attributes_now = 0;
+
 	for(;;) {
 		chThdSleep(CH_CFG_ST_FREQUENCY / AP_HZ);
 
@@ -475,7 +483,24 @@ static THD_FUNCTION(ap_thread, arg) {
 
 		if (len >= 2) {
 			POS_STATE pos_now;
-			pos_get_pos(&pos_now);
+
+			switch (attributes_now & 0b111) {
+			case 1:
+				pos_get_pos(&pos_now);
+				break;
+
+			case 2:
+				pos_uwb_get_pos(&pos_now);
+				break;
+
+			default:
+				if (main_config.car.use_uwb_pos) {
+					pos_uwb_get_pos(&pos_now);
+				} else {
+					pos_get_pos(&pos_now);
+				}
+				break;
+			}
 
 			// Car center
 			const float car_cx = pos_now.px;
@@ -494,8 +519,14 @@ static THD_FUNCTION(ap_thread, arg) {
 			int end = m_point_now + add;
 
 			// Speed-dependent radius
-			m_rad_now = main_config.ap_base_rad /
-					(m_en_dynamic_rad ? autopilot_get_steering_scale() : 1.0);
+			if (m_en_dynamic_rad) {
+				m_rad_now = fabsf(main_config.ap_rad_time_ahead * pos_get_speed());
+				if (m_rad_now < main_config.ap_base_rad) {
+					m_rad_now = main_config.ap_base_rad;
+				}
+			} else {
+				m_rad_now = main_config.ap_base_rad;
+			}
 
 			ROUTE_POINT rp_now; // The point we should follow now.
 			int circle_intersections = 0;
@@ -513,6 +544,8 @@ static THD_FUNCTION(ap_thread, arg) {
 
 			ROUTE_POINT *closest1_speed = &m_route[0];
 			ROUTE_POINT *closest2_speed = &m_route[1];
+
+			ROUTE_POINT *closest_to_car = &m_route[0];
 
 			for (int i = start;i < end;i++) {
 				int ind = i; // First point index for this iteration
@@ -538,6 +571,12 @@ static THD_FUNCTION(ap_thread, arg) {
 							indn -= AP_ROUTE_SIZE;
 						}
 					}
+				}
+
+				// Find closest point to car
+				if (utils_rp_distance(&car_pos, &m_route[ind]) <
+						utils_rp_distance(&car_pos, closest_to_car)) {
+					closest_to_car = &m_route[ind];
 				}
 
 				// Check for circle intersection. If there are many intersections
@@ -596,6 +635,8 @@ static THD_FUNCTION(ap_thread, arg) {
 					}
 				}
 			}
+
+			attributes_now = closest_to_car->attributes;
 
 			// Look for closest points
 			ROUTE_POINT closest; // Closest point on route to car
