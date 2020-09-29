@@ -561,7 +561,7 @@ void ChronosComm::mkChronosHeader(VByteArrayLe &vb, quint8 transmitter_id, quint
     // a bit unsure of is the ack req should go to leftmost or rightmost bit.
     quint8 augmented_protocol_ver = protocol_ver;
     if (ack_req) {
-        augmented_protocol_ver |= 1;
+        augmented_protocol_ver |= 0x80;
     }
 
     VByteArrayLe vb2;
