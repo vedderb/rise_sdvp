@@ -529,7 +529,7 @@ void ChronosComm::readPendingDatagrams()
         if (checksum == 0) {
             decodeMsg(message_id, message_len, vb, sender_id);
         } else {
-            qDebug() << "Checksum Error";
+            //qDebug() << "Checksum Error";
         }
     }
 }
