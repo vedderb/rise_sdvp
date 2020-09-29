@@ -1,0 +1,477 @@
+[info] Loading settings from plugins.sbt ...
+[info] Loading project definition from /home/benjamin/Dokument/rise_sdvp/Linux/scala_test/project
+[info] Loading settings from build.sbt ...
+[info] Set current project to RcCar Test (in build file:/home/benjamin/Dokument/rise_sdvp/Linux/scala_test/)
+[info] Compiling 1 Scala source to /home/benjamin/Dokument/rise_sdvp/Linux/scala_test/target/scala-2.12/classes ...
+[info] Done compiling.
+[info] Packaging /home/benjamin/Dokument/rise_sdvp/Linux/scala_test/target/scala-2.12/rccar-test_2.12-0.1.jar ...
+[info] Done packaging.
+[info] Running (fork) rcontrolstationcomm.CarTester 
+[error] Java HotSpot(TM) 64-Bit Server VM warning: You have loaded library /tmp/BridJExtractedLibraries8514706666237351805/libbridj.so which might have disabled stack guard. The VM will try to fix the stack guard now.
+[error] It's highly recommended that you fix the library with 'execstack -c <libfile>', or link it with '-z noexecstack'.
+[error] libRControlStation: TCP connected
+[info] New initial state created
+[info] Generated points: 11798, Outer loops: 360
+[info] Segment size: 9
+[info] Generated points: 2996, Outer loops: 76
+[info] Segment size: 16
+[info] Generated points: 11179, Outer loops: 302
+[info] Segment size: 20
+[info] New SUT created
+[info] [CarCmd] Clearing faults
+[info] [CarCmd] Clearing route
+[info] [CarCmd] Following recovery route
+[info] Max UWB diff: 0.5069339700592146 m
+[info] [CarCmd] Resetting UWB position
+[info] [CarCmd] Activating autopilot
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.3399738813497303 m
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.40518761086686417 m
+[info] [CarCmd] Adding fault; Probe: uwb_range_50 Type: AMPLIFICATION Param: 5.0 Start: 66 Duration: 8
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.40041223757522787 m
+[info] [CarCmd] Adding fault; Probe: uwb_range_234 Type: AMPLIFICATION Param: 0.0 Start: 2 Duration: 4
+[info] [CarCmd] Deactivating autopilot
+[info] Generated points: 7348, Outer loops: 228
+[info] Segment size: 8
+[info] Generated points: 98467, Outer loops: 4680
+[info] Segment size: 15
+[info] Generated points: 15463, Outer loops: 317
+[info] Segment size: 19
+[info] Generated points: 15558, Outer loops: 537
+[info] Segment size: 23
+[info] Generated points: 19997, Outer loops: 374
+[info] Segment size: 29
+[info] Generated points: 12960, Outer loops: 424
+[info] Segment size: 7
+[info] Generated points: 7136, Outer loops: 235
+[info] Segment size: 13
+[info] Generated points: 7539, Outer loops: 137
+[info] Segment size: 20
+[info] Generated points: 9447, Outer loops: 217
+[info] Segment size: 27
+[info] Generated points: 62462, Outer loops: 1583
+[info] Segment size: 33
+[info] Generated points: 3477, Outer loops: 107
+[info] Segment size: 39
+[info] Generated points: 23357, Outer loops: 776
+[info] Segment size: 46
+[info] Generated points: 44890, Outer loops: 1535
+[info] Segment size: 52
+[info] Generated points: 177604, Outer loops: 5000
+[info] Segment size: 57
+[info] Generated points: 154098, Outer loops: 2759
+[info] Segment size: 61
+[info] Generated points: 10141, Outer loops: 270
+[info] Segment size: 67
+[info] Generated points: 76964, Outer loops: 3341
+[info] Segment size: 73
+[info] New SUT created
+[info] [CarCmd] Clearing faults
+[info] [CarCmd] Clearing route
+[info] [CarCmd] Following recovery route
+[info] Max UWB diff: 0.4920880917071662 m
+[info] [CarCmd] Resetting UWB position
+[info] [CarCmd] Activating autopilot
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.25990559824674697 m
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.43098683274549826 m
+[info] [CarCmd] Adding fault; Probe: uwb_range_50 Type: OFFSET Param: 0.0 Start: 48 Duration: 8
+[info] [CarCmd] Adding fault; Probe: uwb_range_50 Type: AMPLIFICATION Param: 1.0 Start: 87 Duration: 4
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.41348984268056616 m
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.29269385029412415 m
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.350898347103543 m
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.5282418006935865 m
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.20973721653535388 m
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.3726479571928406 m
+[info] [CarCmd] Adding fault; Probe: uwb_range_50 Type: AMPLIFICATION Param: 2.0 Start: 32 Duration: 3
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.36934153570915773 m
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.22063517398637905 m
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.45786679285574244 m
+[info] [CarCmd] Running generated segments
+[info] Max UWB diff: 0.48502800950048414 m
+[info] [CarCmd] Deactivating autopilot
+[info] Generated points: 9933, Outer loops: 317
+[info] Segment size: 8
+[info] Generated points: 21431, Outer loops: 611
+[info] Segment size: 13
+[info] Generated points: 71888, Outer loops: 1032
+[info] Segment size: 20
+[info] Generated points: 117020, Outer loops: 5000
+[info] Segment size: 24
+[info] Generated points: 23520, Outer loops: 501
+[info] Segment size: 30
+[info] Generated points: 23141, Outer loops: 494
+[info] Segment size: 36
+[info] Generated points: 54182, Outer loops: 1846
+[info] Segment size: 42
+[info] Generated points: 126918, Outer loops: 2136
+[info] Segment size: 46
+[info] Generated points: 110976, Outer loops: 5000
+[info] Segment size: 53
+[info] Generated points: 30421, Outer loops: 1428
+[info] Segment size: 58
+[info] Generated points: 36861, Outer loops: 1812
+[info] Segment size: 65
+[info] Generated points: 48163, Outer loops: 825
+[info] Segment size: 70
+[info] Generated points: 12427, Outer loops: 384
+[info] Segment size: 8
+[info] Generated points: 102277, Outer loops: 1897
+[info] Segment size: 13
+[info] Generated points: 97246, Outer loops: 1950
+[info] Segment size: 19
+[info] Generated points: 29725, Outer loops: 939
+[info] Segment size: 7
+[info] Generated points: 18254, Outer loops: 543
+[info] Segment size: 8
+[info] Generated points: 2594, Outer loops: 120
+[info] Segment size: 13
+[info] Generated points: 2715, Outer loops: 48
+[info] Segment size: 18
+[info] Generated points: 77794, Outer loops: 1753
+[info] Segment size: 24
+[info] Generated points: 110247, Outer loops: 2626
+[info] Segment size: 28
+[info] Generated points: 67898, Outer loops: 1313
+[info] Segment size: 33
+[info] Generated points: 156208, Outer loops: 5000
+[info] Segment size: 10
+[info] Generated points: 6170, Outer loops: 207
+[info] Segment size: 14
+[info] Generated points: 8476, Outer loops: 126
+[info] Segment size: 20
+[info] Generated points: 163544, Outer loops: 4075
+[info] Segment size: 26
+[info] Generated points: 23739, Outer loops: 547
+[info] Segment size: 30
+[info] Generated points: 86687, Outer loops: 2684
+[info] Segment size: 8
+[info] Generated points: 955, Outer loops: 29
+[info] Segment size: 15
+[info] Generated points: 9995, Outer loops: 251
+[info] Segment size: 21
+[info] Generated points: 26417, Outer loops: 628
+[info] Segment size: 28
+[info] Generated points: 18125, Outer loops: 455
+[info] Segment size: 34
+[info] Generated points: 23763, Outer loops: 634
+[info] Segment size: 40
+[info] Generated points: 45378, Outer loops: 1410
+[info] Segment size: 8
+[info] Generated points: 47876, Outer loops: 2219
+[info] Segment size: 15
+[info] Generated points: 39448, Outer loops: 938
+[info] Segment size: 21
+[info] Generated points: 23060, Outer loops: 841
+[info] Segment size: 27
+[info] Generated points: 15631, Outer loops: 324
+[info] Segment size: 31
+[info] Generated points: 20127, Outer loops: 771
+[info] Segment size: 37
+[info] Generated points: 36900, Outer loops: 1691
+[info] Segment size: 42
+[info] Generated points: 26338, Outer loops: 594
+[info] Segment size: 49
+[info] Generated points: 22483, Outer loops: 729
+[info] Segment size: 7
+[info] Generated points: 65580, Outer loops: 2452
+[info] Segment size: 12
+[info] Generated points: 3905, Outer loops: 176
+[info] Segment size: 16
+[info] Generated points: 57901, Outer loops: 1897
+[info] Segment size: 8
+[info] Generated points: 17393, Outer loops: 600
+[info] Segment size: 15
+[info] Generated points: 6774, Outer loops: 190
+[info] Segment size: 19
+[info] Generated points: 1295, Outer loops: 23
+[info] Segment size: 26
+[info] Generated points: 110431, Outer loops: 5000
+[info] Segment size: 32
+[info] Generated points: 3535, Outer loops: 62
+[info] Segment size: 37
+[info] Generated points: 19560, Outer loops: 614
+[info] Segment size: 41
+[info] Generated points: 12422, Outer loops: 375
+[info] Segment size: 10
+[info] Generated points: 5093, Outer loops: 174
+[info] Segment size: 14
+[info] Generated points: 967, Outer loops: 16
+[info] Segment size: 19
+[info] Generated points: 24591, Outer loops: 1332
+[info] Segment size: 24
+[info] Generated points: 154178, Outer loops: 3766
+[info] Segment size: 29
+[info] Generated points: 1442, Outer loops: 58
+[info] Segment size: 34
+[info] Generated points: 52038, Outer loops: 1290
+[info] Segment size: 38
+[info] Generated points: 109197, Outer loops: 5000
+[info] Segment size: 43
+[info] Generated points: 313050, Outer loops: 4699
+[info] Segment size: 48
+[info] Generated points: 35258, Outer loops: 901
+[info] Segment size: 52
+[info] Generated points: 388, Outer loops: 9
+[info] Segment size: 9
+[info] Generated points: 5912, Outer loops: 195
+[info] Segment size: 13
+[info] Generated points: 49021, Outer loops: 1599
+[info] Segment size: 17
+[info] Generated points: 6441, Outer loops: 186
+[info] Segment size: 21
+[info] Generated points: 19541, Outer loops: 735
+[info] Segment size: 25
+[info] Generated points: 17538, Outer loops: 376
+[info] Segment size: 29
+[info] Generated points: 9541, Outer loops: 256
+[info] Segment size: 36
+[info] Generated points: 99299, Outer loops: 3189
+[info] Segment size: 9
+[info] Generated points: 45738, Outer loops: 1684
+[info] Segment size: 13
+[info] Generated points: 112738, Outer loops: 2016
+[info] Segment size: 18
+[info] Generated points: 24681, Outer loops: 678
+[info] Segment size: 22
+[info] Generated points: 46720, Outer loops: 898
+[info] Segment size: 28
+[info] Generated points: 13931, Outer loops: 482
+[info] Segment size: 32
+[info] Generated points: 15793, Outer loops: 580
+[info] Segment size: 39
+[info] Generated points: 15482, Outer loops: 229
+[info] Segment size: 46
+[info] Generated points: 53959, Outer loops: 1445
+[info] Segment size: 53
+[info] Generated points: 182166, Outer loops: 5000
+[info] Segment size: 59
+[info] Generated points: 40329, Outer loops: 1328
+[info] Segment size: 7
+[info] Generated points: 30572, Outer loops: 1230
+[info] Segment size: 13
+[info] Generated points: 115172, Outer loops: 5000
+[info] Segment size: 20
+[info] Generated points: 1041, Outer loops: 25
+[info] Segment size: 26
+[info] Generated points: 25172, Outer loops: 653
+[info] Segment size: 30
+[info] Generated points: 8334, Outer loops: 288
+[info] Segment size: 7
+[info] Generated points: 94209, Outer loops: 5000
+[info] Segment size: 11
+[info] Generated points: 30555, Outer loops: 465
+[info] Segment size: 16
+[info] Generated points: 40439, Outer loops: 906
+[info] Segment size: 23
+[info] Generated points: 3951, Outer loops: 147
+[info] Segment size: 30
+[info] Generated points: 69730, Outer loops: 1072
+[info] Segment size: 37
+[info] Tests passed: 2
+[info] Time: 184496 ms
+[info] Tests failed. Failing command sequence:
+[info] RunSegment(rcontrolstationcomm.RpList@20d3d15a)
+[info] RunSegment(rcontrolstationcomm.RpList@2893de87)
+[info] AddFault(uwb_range_50,OFFSET,0.0,48,8)
+[info] AddFault(uwb_range_50,AMPLIFICATION,1.0,87,4)
+[info] RunSegment(rcontrolstationcomm.RpList@55ca8de8)
+[info] RunSegment(rcontrolstationcomm.RpList@2c34f934)
+[info] RunSegment(rcontrolstationcomm.RpList@12d3a4e9)
+[info] RunSegment(rcontrolstationcomm.RpList@240237d2)
+[info] RunSegment(rcontrolstationcomm.RpList@25a65b77)
+[info] RunSegment(rcontrolstationcomm.RpList@2ed0fbae)
+[info] AddFault(uwb_range_50,AMPLIFICATION,2.0,32,3)
+[info] RunSegment(rcontrolstationcomm.RpList@212bf671)
+[info] RunSegment(rcontrolstationcomm.RpList@14a2f921)
+[info] RunSegment(rcontrolstationcomm.RpList@3c87521)
+[info] RunSegment(rcontrolstationcomm.RpList@2aece37d)
+[error] libRControlStation: TCP disconnected
+[success] Total time: 198 s, completed 2018-jul-24 15:36:52
+
+RERUN 1
+
+scala> CarTester.runLastTestHdd
+Re-running test...
+Commands to re-run
+RunSegment(rcontrolstationcomm.RpList@30c0d731)
+RunSegment(rcontrolstationcomm.RpList@6d5037a9)
+AddFault(uwb_range_50,OFFSET,0.0,48,8)
+AddFault(uwb_range_50,AMPLIFICATION,1.0,87,4)
+RunSegment(rcontrolstationcomm.RpList@422b8438)
+RunSegment(rcontrolstationcomm.RpList@30669dac)
+RunSegment(rcontrolstationcomm.RpList@629adce)
+RunSegment(rcontrolstationcomm.RpList@6a282fdd)
+RunSegment(rcontrolstationcomm.RpList@743c6ce4)
+RunSegment(rcontrolstationcomm.RpList@70331432)
+AddFault(uwb_range_50,AMPLIFICATION,2.0,32,3)
+RunSegment(rcontrolstationcomm.RpList@3bbf9027)
+RunSegment(rcontrolstationcomm.RpList@10c2064a)
+RunSegment(rcontrolstationcomm.RpList@70e13fa)
+RunSegment(rcontrolstationcomm.RpList@6ff415ad)
+
+New initial state created
+New SUT created
+[CarCmd] Clearing faults
+[CarCmd] Clearing route
+[CarCmd] Following recovery route
+Max UWB diff: 0.5116498802892494 m
+[CarCmd] Resetting UWB position
+[CarCmd] Activating autopilot
+[CarCmd] Running generated segments
+Max UWB diff: 0.2813433844965991 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.4288259553711763 m
+[CarCmd] Adding fault; Probe: uwb_range_50 Type: OFFSET Param: 0.0 Start: 48 Duration: 8
+[CarCmd] Adding fault; Probe: uwb_range_50 Type: AMPLIFICATION Param: 1.0 Start: 87 Duration: 4
+[CarCmd] Running generated segments
+Max UWB diff: 0.47383314573803037 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.3283444075966609 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.39631386551570275 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.6086059234020044 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.2874347404194577 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.4132684962587882 m
+[CarCmd] Adding fault; Probe: uwb_range_50 Type: AMPLIFICATION Param: 2.0 Start: 32 Duration: 3
+[CarCmd] Running generated segments
+Max UWB diff: 0.388908549661744 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.6042834186042191 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.35531540917894233 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.5219569426686494 m
+Test sequence successful
+
+RERUN 2
+
+scala> CarTester.runLastTestHdd
+Re-running test...
+Commands to re-run
+RunSegment(rcontrolstationcomm.RpList@55a609dd)
+RunSegment(rcontrolstationcomm.RpList@4afd21c6)
+AddFault(uwb_range_50,OFFSET,0.0,48,8)
+AddFault(uwb_range_50,AMPLIFICATION,1.0,87,4)
+RunSegment(rcontrolstationcomm.RpList@4d0753c9)
+RunSegment(rcontrolstationcomm.RpList@1416a80a)
+RunSegment(rcontrolstationcomm.RpList@719bb3b4)
+RunSegment(rcontrolstationcomm.RpList@52cb4f50)
+RunSegment(rcontrolstationcomm.RpList@25a5c7db)
+RunSegment(rcontrolstationcomm.RpList@4d27d9d)
+AddFault(uwb_range_50,AMPLIFICATION,2.0,32,3)
+RunSegment(rcontrolstationcomm.RpList@28f878a0)
+RunSegment(rcontrolstationcomm.RpList@20411320)
+RunSegment(rcontrolstationcomm.RpList@2b5183ec)
+RunSegment(rcontrolstationcomm.RpList@3c782d8e)
+
+New initial state created
+New SUT created
+[CarCmd] Clearing faults
+[CarCmd] Clearing route
+[CarCmd] Following recovery route
+Max UWB diff: 0.44195492982882495 m
+[CarCmd] Resetting UWB position
+[CarCmd] Activating autopilot
+[CarCmd] Running generated segments
+Max UWB diff: 0.2958105643820043 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.4633547237268629 m
+[CarCmd] Adding fault; Probe: uwb_range_50 Type: OFFSET Param: 0.0 Start: 48 Duration: 8
+[CarCmd] Adding fault; Probe: uwb_range_50 Type: AMPLIFICATION Param: 1.0 Start: 87 Duration: 4
+[CarCmd] Running generated segments
+Max UWB diff: 0.43196727885338954 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.3282515651143194 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.36975890793867816 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.6243933455763256 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.3204405873168996 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.41683052911224877 m
+[CarCmd] Adding fault; Probe: uwb_range_50 Type: AMPLIFICATION Param: 2.0 Start: 32 Duration: 3
+[CarCmd] Running generated segments
+Max UWB diff: 0.4117116709543246 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.39075017594365435 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.5719614759754359 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.5246706586040413 m
+Test sequence successful
+
+RERUN 3
+
+scala> CarTester.runLastTestHdd
+Re-running test...
+Commands to re-run
+RunSegment(rcontrolstationcomm.RpList@3baf6936)
+RunSegment(rcontrolstationcomm.RpList@285f38f6)
+AddFault(uwb_range_50,OFFSET,0.0,48,8)
+AddFault(uwb_range_50,AMPLIFICATION,1.0,87,4)
+RunSegment(rcontrolstationcomm.RpList@4e1459ea)
+RunSegment(rcontrolstationcomm.RpList@3ab6678b)
+RunSegment(rcontrolstationcomm.RpList@7a904f32)
+RunSegment(rcontrolstationcomm.RpList@2b59501e)
+RunSegment(rcontrolstationcomm.RpList@476e8796)
+RunSegment(rcontrolstationcomm.RpList@4eed2acf)
+AddFault(uwb_range_50,AMPLIFICATION,2.0,32,3)
+RunSegment(rcontrolstationcomm.RpList@36fc05ff)
+RunSegment(rcontrolstationcomm.RpList@57c47a9e)
+RunSegment(rcontrolstationcomm.RpList@642505c7)
+RunSegment(rcontrolstationcomm.RpList@4339e0de)
+
+New initial state created
+New SUT created
+[CarCmd] Clearing faults
+[CarCmd] Clearing route
+[CarCmd] Following recovery route
+Max UWB diff: 0.4933465820293107 m
+[CarCmd] Resetting UWB position
+[CarCmd] Activating autopilot
+[CarCmd] Running generated segments
+Max UWB diff: 0.2654212689292261 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.4386503847029006 m
+[CarCmd] Adding fault; Probe: uwb_range_50 Type: OFFSET Param: 0.0 Start: 48 Duration: 8
+[CarCmd] Adding fault; Probe: uwb_range_50 Type: AMPLIFICATION Param: 1.0 Start: 87 Duration: 4
+[CarCmd] Running generated segments
+Max UWB diff: 0.4436822737049566 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.3081506125257584 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.3571543783855932 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.6630833733400372 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.25695524902207934 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.3965910992445525 m
+[CarCmd] Adding fault; Probe: uwb_range_50 Type: AMPLIFICATION Param: 2.0 Start: 32 Duration: 3
+[CarCmd] Running generated segments
+Max UWB diff: 0.3962545772606324 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.29360558577792206 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.4720415765586791 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.5094776933291543 m
+Test sequence successful
+

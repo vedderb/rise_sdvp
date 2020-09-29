@@ -17,6 +17,9 @@
 
 #include "utility.h"
 #include <cmath>
+#include <QDebug>
+#include <QXmlStreamWriter>
+#include <QXmlStreamReader>
 
 namespace {
 inline double roundDouble(double x) {
@@ -449,6 +452,142 @@ bool replaceRouteHelper(PacketInterface *packetInterface, int carId, QList<LocPo
     }
 
     return ok;
+}
+
+int loadRoutes(QString filename, MapWidget *map)
+{
+    int res = 0;
+
+    QFile file(filename);
+    if (!file.open(QIODevice::ReadOnly)) {
+        res = -1;
+        return res;
+    }
+
+    QXmlStreamReader stream(&file);
+
+    // Look for routes tag
+    bool routes_found = false;
+    while (stream.readNextStartElement()) {
+        if (stream.name() == "routes") {
+            routes_found = true;
+            break;
+        }
+    }
+
+    if (routes_found) {
+        QList<QPair<int, QList<LocPoint> > > routes;
+        QList<LocPoint> anchors;
+
+        while (stream.readNextStartElement()) {
+            QString name = stream.name().toString();
+
+            if (name == "route") {
+                int id = -1;
+                QList<LocPoint> route;
+
+                while (stream.readNextStartElement()) {
+                    QString name2 = stream.name().toString();
+
+                    if (name2 == "id") {
+                        id = stream.readElementText().toInt();
+                    } else if (name2 == "point") {
+                        LocPoint p;
+
+                        while (stream.readNextStartElement()) {
+                            QString name3 = stream.name().toString();
+
+                            if (name3 == "x") {
+                                p.setX(stream.readElementText().toDouble());
+                            } else if (name3 == "y") {
+                                p.setY(stream.readElementText().toDouble());
+                            } else if (name3 == "speed") {
+                                p.setSpeed(stream.readElementText().toDouble());
+                            } else if (name3 == "time") {
+                                p.setTime(stream.readElementText().toInt());
+                            } else if (name3 == "attributes") {
+                                p.setAttributes(stream.readElementText().toInt());
+                            } else {
+                                qWarning() << ": Unknown XML element :" << name2;
+                                stream.skipCurrentElement();
+                            }
+                        }
+
+                        route.append(p);
+                    } else {
+                        qWarning() << ": Unknown XML element :" << name2;
+                        stream.skipCurrentElement();
+                    }
+
+                    if (stream.hasError()) {
+                        qWarning() << " : XML ERROR :" << stream.errorString();
+                    }
+                }
+
+                routes.append(QPair<int, QList<LocPoint> >(id, route));
+            } else if (name == "anchors") {
+                while (stream.readNextStartElement()) {
+                    QString name2 = stream.name().toString();
+
+                    if (name2 == "anchor") {
+                        LocPoint p;
+
+                        while (stream.readNextStartElement()) {
+                            QString name3 = stream.name().toString();
+
+                            if (name3 == "x") {
+                                p.setX(stream.readElementText().toDouble());
+                            } else if (name3 == "y") {
+                                p.setY(stream.readElementText().toDouble());
+                            } else if (name3 == "height") {
+                                p.setHeight(stream.readElementText().toDouble());
+                            } else if (name3 == "id") {
+                                p.setId(stream.readElementText().toInt());
+                            } else {
+                                qWarning() << ": Unknown XML element :" << name2;
+                                stream.skipCurrentElement();
+                            }
+                        }
+
+                        anchors.append(p);
+                    } else {
+                        qWarning() << ": Unknown XML element :" << name2;
+                        stream.skipCurrentElement();
+                    }
+
+                    if (stream.hasError()) {
+                        qWarning() << " : XML ERROR :" << stream.errorString();
+                    }
+                }
+            }
+
+            if (stream.hasError()) {
+                qWarning() << "XML ERROR :" << stream.errorString();
+                qWarning() << stream.lineNumber() << stream.columnNumber();
+            }
+        }
+
+        for (QPair<int, QList<LocPoint> > r: routes) {
+            if (r.first >= 0) {
+                int routeLast = map->getRouteNow();
+                map->setRouteNow(r.first);
+                map->setRoute(r.second);
+                map->setRouteNow(routeLast);
+            } else {
+                map->addRoute(r.second);
+            }
+        }
+
+        for (LocPoint p: anchors) {
+            map->addAnchor(p);
+        }
+
+        file.close();
+    } else {
+        res = -2;
+    }
+
+    return res;
 }
 
 }

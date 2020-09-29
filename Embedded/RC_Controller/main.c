@@ -41,13 +41,11 @@
 #include "autopilot.h"
 #include "timeout.h"
 #include "log.h"
-#include "radar.h"
 #include "comm_cc1120.h"
 #include "ublox.h"
 #include "srf10.h"
 #include "pwm_esc.h"
 #include "mr_control.h"
-#include "radar_cont.h"
 #include "motor_sim.h"
 #include "m8t_base.h"
 #include "pos_uwb.h"
@@ -97,13 +95,6 @@ int main(void) {
 	timeout_init();
 	log_init();
 	motor_sim_init();
-#if RADAR_EN
-	radar_init();
-	radar_setup_measurement_default();
-#endif
-#if RADAR_CONT_EN
-	radar_cont_init();
-#endif
 #if HAS_HYDRAULIC_DRIVE
 	hydraulic_init();
 #endif

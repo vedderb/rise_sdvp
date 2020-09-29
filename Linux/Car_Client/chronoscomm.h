@@ -25,6 +25,7 @@
 #include <tcpserversimple.h>
 #include "gpio.h"
 
+#define PROTOCOL_VERSION 2
 
 typedef enum {
     COMM_MODE_UNDEFINED = 0,
@@ -32,6 +33,21 @@ typedef enum {
     COMM_MODE_SUPERVISOR,
     COMM_MODE_SERVER
 } COMM_MODE;
+
+typedef enum {
+    OPRO_MODE_STATIC = 1,
+    OPRO_MODE_PREDEFINED_TRAJ,
+    OPRO_MODE_VOP,
+    OPRO_MODE_DTM,
+    OPRO_MODE_VOP_AND_DTM,
+    OPRO_MODE_AUTONOMOUS_VUT
+} OPRO_OPERATION_MODE;
+
+typedef enum {
+    OPRO_TYPE_CAR = 1,
+    OPRO_TYPE_BICYCLE = 2,
+    OPRO_TYPE_PEDESTRIAN = 30
+} OPRO_OBJECT_TYPE;
 
 typedef struct {
     uint32_t tRel;
@@ -133,6 +149,18 @@ typedef struct {
     uint8_t status;
 } chronos_init_sup;
 
+typedef struct {
+    uint32_t ip;
+    uint8_t  transmitter_id;
+    OPRO_OBJECT_TYPE object_type;
+    OPRO_OPERATION_MODE operation_mode;
+    double   mass; // Kilograms
+    double   dim_x;
+    double   dim_y;
+    double   dim_z;
+    uint8_t  actor_type; // virtual or real 1 - virtual, 2 - real
+} chronos_opro;
+
 #define PROTOCOL_VERSION 2
 
 // Chronos messaging
@@ -155,6 +183,8 @@ typedef struct {
 #define ISO_MSG_EXAC                    0x0014
 #define ISO_MSG_CATA                    0x0015
 
+#define ISO_MSG_OPRO                    0x000B
+#define ISO_MSG_OPRO_TO_OBJECT          0x0016
 #define ISO_MSG_INIT_SUP                0xA102
 
 // ISO Value Types
@@ -180,6 +210,35 @@ typedef struct {
 #define ISO_VALUE_ID_LONG_ACC           0x0050
 #define ISO_VALUE_ID_LAT_ACC            0x0051
 #define ISO_VALUE_ID_CURVATURE          0x0052
+#define ISO_VALUE_ID_IP_ADDRESS         0x0053
+#define ISO_VALUE_ID_OBJECT_TYPE        0x0054
+#define ISO_VALUE_ID_OPERATION_MODE     0x0055
+#define ISO_VALUE_ID_MASS               0x0056
+#define ISO_VALUE_ID_ACTOR_TYPE         0x0057
+#define ISO_VALUE_ID_TRANSMITTER_ID     0x0058
+#define ISO_VALUE_ID_MONR_STRUCT        0x0080
+#define ISO_VALUE_ID_HEAB_STRUCT        0x0090
+
+//ACCM
+#define ISO_VALUE_ID_ACTION_ID          0x0002
+#define ISO_VALUE_ID_ACTION_TYPE        0x0003
+#define ISO_VALUE_ID_ACTION_TYPE_PARAM1    0x00A1
+#define ISO_VALUE_ID_ACTION_TYPE_PARAM2    0x00A2
+#define ISO_VALUE_ID_ACTION_TYPE_PARAM3    0x00A3
+#define ISO_ACTION_TYPE_MISC_DIGITAL_OUT 0x00E0
+#define ISO_ACTION_TYPE_PARAM_SET_FALSE 0x0000
+#define ISO_ACTION_TYPE_PARAM_SET_TRUE 0x0001
+
+//TRCM
+#define ISO_VALUE_ID_TRIGGER_ID          0x0001
+#define ISO_VALUE_ID_TRIGGER_TYPE        0x0002
+#define ISO_VALUE_ID_TRIGGER_TYPE_PARAM1    0x00A1
+#define ISO_VALUE_ID_TRIGGER_TYPE_PARAM2    0x00A2
+#define ISO_VALUE_ID_TRIGGER_TYPE_PARAM3    0x00A3
+
+//EXAC
+#define ISO_VALUE_ID_ACTION_ID          0x0002
+#define ISO_VALUE_ID_EXECUTE_TIME       0x0003
 
 //ACCM
 #define ISO_VALUE_ID_ACTION_ID          0x0002
@@ -214,8 +273,8 @@ class ChronosComm : public QObject
     Q_OBJECT
 public:
     explicit ChronosComm(QObject *parent = nullptr);
-    bool startObject();
-    bool startSupervisor();
+    bool startObject(QHostAddress addr = QHostAddress::Any);
+    bool startSupervisor(QHostAddress addr = QHostAddress::Any);
     bool connectAsServer(QString address);
     void closeConnection();
     COMM_MODE getCommMode();
@@ -244,6 +303,7 @@ signals:
     void strtRx(chronos_strt strt);
     void monrRx(chronos_monr monr);
     void insupRx(chronos_init_sup init_sup);
+    void oproRx(chronos_opro opro);
 
 public slots:
 

@@ -184,6 +184,373 @@ void PacketInterface::processData(QByteArray &data)
     }
 }
 
+void PacketInterface::processPacket(const unsigned char *data, int len)
+{
+    QByteArray pkt = QByteArray((const char*)data, len);
+
+    unsigned char id = data[0];
+    data++;
+    len--;
+
+    CMD_PACKET cmd = (CMD_PACKET)(quint8)data[0];
+    data++;
+    len--;
+
+    emit packetReceived(id, cmd, pkt);
+
+    switch (cmd) {
+    case CMD_PRINTF: {
+        QByteArray tmpArray = QByteArray::fromRawData((const char*)data, len);
+        tmpArray[len] = '\0';
+        emit printReceived(id, QString::fromLatin1(tmpArray));
+    } break;
+
+    case CMD_GET_ENU_REF: {
+        int32_t ind = 0;
+        double lat, lon, height;
+        lat = utility::buffer_get_double64(data, 1e16, &ind);
+        lon = utility::buffer_get_double64(data, 1e16, &ind);
+        height = utility::buffer_get_double32(data, 1e3, &ind);
+        emit enuRefReceived(id, lat, lon, height);
+    } break;
+
+    case CMD_AP_GET_ROUTE_PART: {
+        int32_t ind = 0;
+        QList<LocPoint> route;
+
+        int routeLen = utility::buffer_get_int32(data, &ind);
+
+        while (ind < len) {
+            LocPoint p;
+            p.setX(utility::buffer_get_double32_auto(data, &ind));
+            p.setY(utility::buffer_get_double32_auto(data, &ind));
+            p.setHeight(utility::buffer_get_double32_auto(data, &ind));
+            p.setSpeed(utility::buffer_get_double32_auto(data, &ind));
+            p.setTime(utility::buffer_get_int32(data, &ind));
+            p.setAttributes(utility::buffer_get_uint32(data, &ind));
+            route.append(p);
+        }
+
+        emit routePartReceived(id, routeLen, route);
+    } break;
+
+    case CMD_SEND_RTCM_USB: {
+        QByteArray tmpArray((char*)data, len);
+        emit rtcmUsbReceived(id, tmpArray);
+    } break;
+
+    case CMD_SEND_NMEA_RADIO: {
+        QByteArray tmpArray((char*)data, len);
+        emit nmeaRadioReceived(id, tmpArray);
+    } break;
+
+    case CMD_GET_MAIN_CONFIG:
+    case CMD_GET_MAIN_CONFIG_DEFAULT: {
+        MAIN_CONFIG conf;
+
+        int32_t ind = 0;
+        conf.mag_use = data[ind++];
+        conf.mag_comp = data[ind++];
+        conf.yaw_mag_gain = utility::buffer_get_double32_auto(data, &ind);
+
+        conf.mag_cal_cx = utility::buffer_get_double32_auto(data, &ind);
+        conf.mag_cal_cy = utility::buffer_get_double32_auto(data, &ind);
+        conf.mag_cal_cz = utility::buffer_get_double32_auto(data, &ind);
+        conf.mag_cal_xx = utility::buffer_get_double32_auto(data, &ind);
+        conf.mag_cal_xy = utility::buffer_get_double32_auto(data, &ind);
+        conf.mag_cal_xz = utility::buffer_get_double32_auto(data, &ind);
+        conf.mag_cal_yx = utility::buffer_get_double32_auto(data, &ind);
+        conf.mag_cal_yy = utility::buffer_get_double32_auto(data, &ind);
+        conf.mag_cal_yz = utility::buffer_get_double32_auto(data, &ind);
+        conf.mag_cal_zx = utility::buffer_get_double32_auto(data, &ind);
+        conf.mag_cal_zy = utility::buffer_get_double32_auto(data, &ind);
+        conf.mag_cal_zz = utility::buffer_get_double32_auto(data, &ind);
+
+        conf.gps_ant_x = utility::buffer_get_double32_auto(data, &ind);
+        conf.gps_ant_y = utility::buffer_get_double32_auto(data, &ind);
+        conf.gps_comp = data[ind++];
+        conf.gps_req_rtk = data[ind++];
+        conf.gps_use_rtcm_base_as_enu_ref = data[ind++];
+        conf.gps_corr_gain_stat = utility::buffer_get_double32_auto(data, &ind);
+        conf.gps_corr_gain_dyn = utility::buffer_get_double32_auto(data, &ind);
+        conf.gps_corr_gain_yaw = utility::buffer_get_double32_auto(data, &ind);
+        conf.gps_send_nmea = data[ind++];
+        conf.gps_use_ubx_info = data[ind++];
+        conf.gps_ubx_max_acc = utility::buffer_get_double32_auto(data, &ind);
+
+        conf.ap_repeat_routes = data[ind++];
+        conf.ap_base_rad = utility::buffer_get_double32_auto(data, &ind);
+        conf.ap_rad_time_ahead = utility::buffer_get_double32_auto(data, &ind);
+        conf.ap_mode_time = data[ind++];
+        conf.ap_max_speed = utility::buffer_get_double32_auto(data, &ind);
+        conf.ap_time_add_repeat_ms = utility::buffer_get_int32(data, &ind);
+
+        conf.log_rate_hz = utility::buffer_get_int16(data, &ind);
+        conf.log_en = data[ind++];
+        strcpy(conf.log_name, (const char*)(data + ind));
+        ind += strlen(conf.log_name) + 1;
+        conf.log_mode_ext = (LOG_EXT_MODE)data[ind++];
+        conf.log_uart_baud = utility::buffer_get_uint32(data, &ind);
+
+        // Car settings
+        conf.car.yaw_use_odometry = data[ind++];
+        conf.car.yaw_imu_gain = utility::buffer_get_double32_auto(data, &ind);
+        conf.car.disable_motor = data[ind++];
+        conf.car.simulate_motor = data[ind++];
+        conf.car.clamp_imu_yaw_stationary = data[ind++];
+        conf.car.use_uwb_pos = data[ind++];
+
+        conf.car.gear_ratio = utility::buffer_get_double32_auto(data, &ind);
+        conf.car.wheel_diam = utility::buffer_get_double32_auto(data, &ind);
+        conf.car.motor_poles = utility::buffer_get_double32_auto(data, &ind);
+        conf.car.steering_max_angle_rad = utility::buffer_get_double32_auto(data, &ind);
+        conf.car.steering_center = utility::buffer_get_double32_auto(data, &ind);
+        conf.car.steering_range = utility::buffer_get_double32_auto(data, &ind);
+        conf.car.steering_ramp_time = utility::buffer_get_double32_auto(data, &ind);
+        conf.car.axis_distance = utility::buffer_get_double32_auto(data, &ind);
+
+        // Multirotor settings
+        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.vel_decay_l = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.vel_max = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.map_min_x = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.map_max_x = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.map_min_y = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.map_max_y = utility::buffer_get_double32_auto(data, &ind);
+
+        conf.mr.vel_gain_p = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.vel_gain_i = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.vel_gain_d = utility::buffer_get_double32_auto(data, &ind);
+
+        conf.mr.tilt_gain_p = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.tilt_gain_i = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.tilt_gain_d = utility::buffer_get_double32_auto(data, &ind);
+
+        conf.mr.max_corr_error = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.max_tilt_error = utility::buffer_get_double32_auto(data, &ind);
+
+        conf.mr.ctrl_gain_roll_p = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_roll_i = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_roll_dp = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_roll_de = utility::buffer_get_double32_auto(data, &ind);
+
+        conf.mr.ctrl_gain_pitch_p = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_pitch_i = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_pitch_dp = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_pitch_de = utility::buffer_get_double32_auto(data, &ind);
+
+        conf.mr.ctrl_gain_yaw_p = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_yaw_i = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_yaw_dp = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_yaw_de = utility::buffer_get_double32_auto(data, &ind);
+
+        conf.mr.ctrl_gain_pos_p = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_pos_i = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_pos_d = utility::buffer_get_double32_auto(data, &ind);
+
+        conf.mr.ctrl_gain_alt_p = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_alt_i = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.ctrl_gain_alt_d = utility::buffer_get_double32_auto(data, &ind);
+
+        conf.mr.js_gain_tilt = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.js_gain_yaw = utility::buffer_get_double32_auto(data, &ind);
+        conf.mr.js_mode_rate = data[ind++];
+
+        conf.mr.motor_fl_f = data[ind++];
+        conf.mr.motor_bl_l = data[ind++];
+        conf.mr.motor_fr_r = data[ind++];
+        conf.mr.motor_br_b = data[ind++];
+        conf.mr.motors_x = data[ind++];
+        conf.mr.motors_cw = data[ind++];
+        conf.mr.motor_pwm_min_us = utility::buffer_get_uint16(data, &ind);
+        conf.mr.motor_pwm_max_us = utility::buffer_get_uint16(data, &ind);
+
+        emit configurationReceived(id, conf);
+    } break;
+
+    case CMD_LOG_LINE_USB: {
+        QByteArray tmpArray = QByteArray::fromRawData((const char*)data, len);
+        tmpArray[len] = '\0';
+        emit logLineUsbReceived(id, QString::fromLocal8Bit(tmpArray));
+    } break;
+
+    case CMD_PLOT_INIT: {
+        QString xL = QString::fromLocal8Bit((const char*)data);
+        QString yL = QString::fromLocal8Bit((const char*)data + xL.size() + 1);
+        emit plotInitReceived(id, xL, yL);
+    } break;
+
+    case CMD_PLOT_DATA: {
+        int32_t ind = 0;
+        double x = utility::buffer_get_double32_auto(data, &ind);
+        double y = utility::buffer_get_double32_auto(data, &ind);
+        emit plotDataReceived(id, x, y);
+    } break;
+
+    case CMD_PLOT_ADD_GRAPH: {
+        emit plotAddGraphReceived(id, QString::fromLocal8Bit((const char*)data));
+    } break;
+
+    case CMD_PLOT_SET_GRAPH: {
+        emit plotSetGraphReceived(id, data[0]);
+    } break;
+
+    case CMD_SET_SYSTEM_TIME: {
+        int32_t ind = 0;
+        qint32 sec = utility::buffer_get_int32(data, &ind);
+        qint32 usec = utility::buffer_get_int32(data, &ind);
+        emit systemTimeReceived(id, sec, usec);
+    } break;
+
+    case CMD_REBOOT_SYSTEM: {
+        int32_t ind = 0;
+        bool power_off = data[ind++];
+        emit rebootSystemReceived(id, power_off);
+    } break;
+
+    case CMD_LOG_ETHERNET: {
+        QByteArray tmpArray((char*)data, len);
+        emit logEthernetReceived(id, tmpArray);
+    } break;
+
+    case CMD_CAMERA_IMAGE: {
+        emit cameraImageReceived(id, QImage::fromData(data, len), len);
+    } break;
+
+        // Car commands
+    case CMD_GET_STATE: {
+        CAR_STATE state;
+        int32_t ind = 0;
+
+        if (len <= 1) {
+            break;
+        }
+
+        state.fw_major = data[ind++];
+        state.fw_minor = data[ind++];
+        state.roll = utility::buffer_get_double32(data, 1e6, &ind);
+        state.pitch = utility::buffer_get_double32(data, 1e6, &ind);
+        state.yaw = utility::buffer_get_double32(data, 1e6, &ind);
+        state.accel[0] = utility::buffer_get_double32(data, 1e6, &ind);
+        state.accel[1] = utility::buffer_get_double32(data, 1e6, &ind);
+        state.accel[2] = utility::buffer_get_double32(data, 1e6, &ind);
+        state.gyro[0] = utility::buffer_get_double32(data, 1e6, &ind);
+        state.gyro[1] = utility::buffer_get_double32(data, 1e6, &ind);
+        state.gyro[2] = utility::buffer_get_double32(data, 1e6, &ind);
+        state.mag[0] = utility::buffer_get_double32(data, 1e6, &ind);
+        state.mag[1] = utility::buffer_get_double32(data, 1e6, &ind);
+        state.mag[2] = utility::buffer_get_double32(data, 1e6, &ind);
+        state.px = utility::buffer_get_double32(data, 1e4, &ind);
+        state.py = utility::buffer_get_double32(data, 1e4, &ind);
+        state.speed = utility::buffer_get_double32(data, 1e6, &ind);
+        state.vin = utility::buffer_get_double32(data, 1e6, &ind);
+        state.temp_fet = utility::buffer_get_double32(data, 1e6, &ind);
+        state.mc_fault = (mc_fault_code)data[ind++];
+        state.px_gps = utility::buffer_get_double32(data, 1e4, &ind);
+        state.py_gps = utility::buffer_get_double32(data, 1e4, &ind);
+        state.ap_goal_px = utility::buffer_get_double32(data, 1e4, &ind);
+        state.ap_goal_py = utility::buffer_get_double32(data, 1e4, &ind);
+        state.ap_rad = utility::buffer_get_double32(data, 1e6, &ind);
+        state.ms_today = utility::buffer_get_int32(data, &ind);
+        state.ap_route_left = utility::buffer_get_int16(data, &ind);
+        state.px_uwb = utility::buffer_get_double32(data, 1e4, &ind);
+        state.py_uwb = utility::buffer_get_double32(data, 1e4, &ind);
+        emit stateReceived(id, state);
+    } break;
+
+    case CMD_VESC_FWD:
+        emit vescFwdReceived(id, QByteArray::fromRawData((char*)data, len));
+        break;
+
+        // Multirotor commands
+    case CMD_MR_GET_STATE: {
+        MULTIROTOR_STATE state;
+        int32_t ind = 0;
+
+        if (len <= 1) {
+            break;
+        }
+
+        state.fw_major = data[ind++];
+        state.fw_minor = data[ind++];
+        state.roll = utility::buffer_get_double32_auto(data, &ind);
+        state.pitch = utility::buffer_get_double32_auto(data, &ind);
+        state.yaw = utility::buffer_get_double32_auto(data, &ind);
+        state.accel[0] = utility::buffer_get_double32_auto(data, &ind);
+        state.accel[1] = utility::buffer_get_double32_auto(data, &ind);
+        state.accel[2] = utility::buffer_get_double32_auto(data, &ind);
+        state.gyro[0] = utility::buffer_get_double32_auto(data, &ind);
+        state.gyro[1] = utility::buffer_get_double32_auto(data, &ind);
+        state.gyro[2] = utility::buffer_get_double32_auto(data, &ind);
+        state.mag[0] = utility::buffer_get_double32_auto(data, &ind);
+        state.mag[1] = utility::buffer_get_double32_auto(data, &ind);
+        state.mag[2] = utility::buffer_get_double32_auto(data, &ind);
+        state.px = utility::buffer_get_double32_auto(data, &ind);
+        state.py = utility::buffer_get_double32_auto(data, &ind);
+        state.pz = utility::buffer_get_double32_auto(data, &ind);
+        state.speed = utility::buffer_get_double32_auto(data, &ind);
+        state.vin = utility::buffer_get_double32_auto(data, &ind);
+        state.px_gps = utility::buffer_get_double32_auto(data, &ind);
+        state.py_gps = utility::buffer_get_double32_auto(data, &ind);
+        state.ap_goal_px = utility::buffer_get_double32_auto(data, &ind);
+        state.ap_goal_py = utility::buffer_get_double32_auto(data, &ind);
+        state.ms_today = utility::buffer_get_int32(data, &ind);
+
+        emit mrStateReceived(id, state);
+    } break;
+
+        // Acks
+    case CMD_AP_ADD_POINTS:
+        emit ackReceived(id, cmd, "CMD_AP_ADD_POINTS");
+        break;
+    case CMD_AP_REMOVE_LAST_POINT:
+        emit ackReceived(id, cmd, "CMD_AP_REMOVE_LAST_POINT");
+        break;
+    case CMD_AP_CLEAR_POINTS:
+        emit ackReceived(id, cmd, "CMD_AP_CLEAR_POINTS");
+        break;
+    case CMD_AP_SET_ACTIVE:
+        emit ackReceived(id, cmd, "CMD_AP_SET_ACTIVE");
+        break;
+    case CMD_AP_REPLACE_ROUTE:
+        emit ackReceived(id, cmd, "CMD_AP_REPLACE_ROUTE");
+        break;
+    case CMD_AP_SYNC_POINT:
+        emit ackReceived(id, cmd, "CMD_AP_SYNC_POINT");
+        break;
+    case CMD_SET_MAIN_CONFIG:
+        emit ackReceived(id, cmd, "CMD_SET_MAIN_CONFIG");
+        break;
+    case CMD_SET_POS_ACK:
+        emit ackReceived(id, cmd, "CMD_SET_POS_ACK");
+        break;
+    case CMD_SET_ENU_REF:
+        emit ackReceived(id, cmd, "CMD_SET_ENU_REF");
+        break;
+    case CMD_SET_YAW_OFFSET_ACK:
+        emit ackReceived(id, cmd, "CMD_SET_YAW_OFFSET_ACK");
+        break;
+    case CMD_SET_SYSTEM_TIME_ACK:
+        emit ackReceived(id, cmd, "CMD_SET_SYSTEM_TIME_ACK");
+        break;
+    case CMD_REBOOT_SYSTEM_ACK:
+        emit ackReceived(id, cmd, "CMD_REBOOT_SYSTEM_ACK");
+        break;
+    case CMD_MOTE_UBX_START_BASE_ACK:
+        emit ackReceived(id, cmd, "CMD_MOTE_UBX_START_BASE_ACK");
+        break;
+    case CMD_ADD_UWB_ANCHOR:
+        emit ackReceived(id, cmd, "CMD_ADD_UWB_ANCHOR");
+        break;
+    case CMD_CLEAR_UWB_ANCHORS:
+        emit ackReceived(id, cmd, "CMD_CLEAR_UWB_ANCHORS");
+        break;
+
+    default:
+        break;
+    }
+}
+
 void PacketInterface::timerSlot()
 {
     if (mRxTimer) {
@@ -357,424 +724,6 @@ bool PacketInterface::waitSignal(QObject *sender, const char *signal, int timeou
     return timeoutTimer.isActive();
 }
 
-void PacketInterface::processPacket(const unsigned char *data, int len)
-{
-    QByteArray pkt = QByteArray((const char*)data, len);
-
-    unsigned char id = data[0];
-    data++;
-    len--;
-
-    CMD_PACKET cmd = (CMD_PACKET)(quint8)data[0];
-    data++;
-    len--;
-
-    emit packetReceived(id, cmd, pkt);
-
-    switch (cmd) {
-    case CMD_PRINTF: {
-        QByteArray tmpArray = QByteArray::fromRawData((const char*)data, len);
-        tmpArray[len] = '\0';
-        emit printReceived(id, QString::fromLatin1(tmpArray));
-    } break;
-
-    case CMD_GET_ENU_REF: {
-        int32_t ind = 0;
-        double lat, lon, height;
-        lat = utility::buffer_get_double64(data, 1e16, &ind);
-        lon = utility::buffer_get_double64(data, 1e16, &ind);
-        height = utility::buffer_get_double32(data, 1e3, &ind);
-        emit enuRefReceived(id, lat, lon, height);
-    } break;
-
-    case CMD_AP_GET_ROUTE_PART: {
-        int32_t ind = 0;
-        QList<LocPoint> route;
-
-        int routeLen = utility::buffer_get_int32(data, &ind);
-
-        while (ind < len) {
-            LocPoint p;
-            p.setX(utility::buffer_get_double32_auto(data, &ind));
-            p.setY(utility::buffer_get_double32_auto(data, &ind));
-            p.setSpeed(utility::buffer_get_double32_auto(data, &ind));
-            p.setTime(utility::buffer_get_int32(data, &ind));
-            route.append(p);
-        }
-
-        emit routePartReceived(id, routeLen, route);
-    } break;
-
-    case CMD_SEND_RTCM_USB: {
-        QByteArray tmpArray((char*)data, len);
-        emit rtcmUsbReceived(id, tmpArray);
-    } break;
-
-    case CMD_SEND_NMEA_RADIO: {
-        QByteArray tmpArray((char*)data, len);
-        emit nmeaRadioReceived(id, tmpArray);
-    } break;
-
-    case CMD_GET_MAIN_CONFIG:
-    case CMD_GET_MAIN_CONFIG_DEFAULT: {
-        MAIN_CONFIG conf;
-
-        int32_t ind = 0;
-        conf.mag_use = data[ind++];
-        conf.mag_comp = data[ind++];
-        conf.yaw_mag_gain = utility::buffer_get_double32_auto(data, &ind);
-
-        conf.mag_cal_cx = utility::buffer_get_double32_auto(data, &ind);
-        conf.mag_cal_cy = utility::buffer_get_double32_auto(data, &ind);
-        conf.mag_cal_cz = utility::buffer_get_double32_auto(data, &ind);
-        conf.mag_cal_xx = utility::buffer_get_double32_auto(data, &ind);
-        conf.mag_cal_xy = utility::buffer_get_double32_auto(data, &ind);
-        conf.mag_cal_xz = utility::buffer_get_double32_auto(data, &ind);
-        conf.mag_cal_yx = utility::buffer_get_double32_auto(data, &ind);
-        conf.mag_cal_yy = utility::buffer_get_double32_auto(data, &ind);
-        conf.mag_cal_yz = utility::buffer_get_double32_auto(data, &ind);
-        conf.mag_cal_zx = utility::buffer_get_double32_auto(data, &ind);
-        conf.mag_cal_zy = utility::buffer_get_double32_auto(data, &ind);
-        conf.mag_cal_zz = utility::buffer_get_double32_auto(data, &ind);
-
-        conf.gps_ant_x = utility::buffer_get_double32_auto(data, &ind);
-        conf.gps_ant_y = utility::buffer_get_double32_auto(data, &ind);
-        conf.gps_comp = data[ind++];
-        conf.gps_req_rtk = data[ind++];
-        conf.gps_use_rtcm_base_as_enu_ref = data[ind++];
-        conf.gps_corr_gain_stat = utility::buffer_get_double32_auto(data, &ind);
-        conf.gps_corr_gain_dyn = utility::buffer_get_double32_auto(data, &ind);
-        conf.gps_corr_gain_yaw = utility::buffer_get_double32_auto(data, &ind);
-        conf.gps_send_nmea = data[ind++];
-        conf.gps_use_ubx_info = data[ind++];
-        conf.gps_ubx_max_acc = utility::buffer_get_double32_auto(data, &ind);
-
-        conf.ap_repeat_routes = data[ind++];
-        conf.ap_base_rad = utility::buffer_get_double32_auto(data, &ind);
-        conf.ap_mode_time = data[ind++];
-        conf.ap_max_speed = utility::buffer_get_double32_auto(data, &ind);
-        conf.ap_time_add_repeat_ms = utility::buffer_get_int32(data, &ind);
-
-        conf.log_rate_hz = utility::buffer_get_int16(data, &ind);
-        conf.log_en = data[ind++];
-        strcpy(conf.log_name, (const char*)(data + ind));
-        ind += strlen(conf.log_name) + 1;
-        conf.log_mode_ext = (LOG_EXT_MODE)data[ind++];
-        conf.log_uart_baud = utility::buffer_get_uint32(data, &ind);
-
-        // Car settings
-        conf.car.yaw_use_odometry = data[ind++];
-        conf.car.yaw_imu_gain = utility::buffer_get_double32_auto(data, &ind);
-        conf.car.disable_motor = data[ind++];
-        conf.car.simulate_motor = data[ind++];
-        conf.car.clamp_imu_yaw_stationary = data[ind++];
-
-        conf.car.gear_ratio = utility::buffer_get_double32_auto(data, &ind);
-        conf.car.wheel_diam = utility::buffer_get_double32_auto(data, &ind);
-        conf.car.motor_poles = utility::buffer_get_double32_auto(data, &ind);
-        conf.car.steering_max_angle_rad = utility::buffer_get_double32_auto(data, &ind);
-        conf.car.steering_center = utility::buffer_get_double32_auto(data, &ind);
-        conf.car.steering_range = utility::buffer_get_double32_auto(data, &ind);
-        conf.car.steering_ramp_time = utility::buffer_get_double32_auto(data, &ind);
-        conf.car.axis_distance = utility::buffer_get_double32_auto(data, &ind);
-
-        // Multirotor settings
-        conf.mr.vel_decay_e = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_decay_l = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_max = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.map_min_x = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.map_max_x = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.map_min_y = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.map_max_y = utility::buffer_get_double32_auto(data, &ind);
-
-        conf.mr.vel_gain_p = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_gain_i = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.vel_gain_d = utility::buffer_get_double32_auto(data, &ind);
-
-        conf.mr.tilt_gain_p = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.tilt_gain_i = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.tilt_gain_d = utility::buffer_get_double32_auto(data, &ind);
-
-        conf.mr.max_corr_error = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.max_tilt_error = utility::buffer_get_double32_auto(data, &ind);
-
-        conf.mr.ctrl_gain_roll_p = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.ctrl_gain_roll_i = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.ctrl_gain_roll_dp = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.ctrl_gain_roll_de = utility::buffer_get_double32_auto(data, &ind);
-
-        conf.mr.ctrl_gain_pitch_p = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.ctrl_gain_pitch_i = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.ctrl_gain_pitch_dp = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.ctrl_gain_pitch_de = utility::buffer_get_double32_auto(data, &ind);
-
-        conf.mr.ctrl_gain_yaw_p = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.ctrl_gain_yaw_i = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.ctrl_gain_yaw_dp = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.ctrl_gain_yaw_de = utility::buffer_get_double32_auto(data, &ind);
-
-        conf.mr.ctrl_gain_pos_p = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.ctrl_gain_pos_i = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.ctrl_gain_pos_d = utility::buffer_get_double32_auto(data, &ind);
-
-        conf.mr.ctrl_gain_alt_p = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.ctrl_gain_alt_i = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.ctrl_gain_alt_d = utility::buffer_get_double32_auto(data, &ind);
-
-        conf.mr.js_gain_tilt = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.js_gain_yaw = utility::buffer_get_double32_auto(data, &ind);
-        conf.mr.js_mode_rate = data[ind++];
-
-        conf.mr.motor_fl_f = data[ind++];
-        conf.mr.motor_bl_l = data[ind++];
-        conf.mr.motor_fr_r = data[ind++];
-        conf.mr.motor_br_b = data[ind++];
-        conf.mr.motors_x = data[ind++];
-        conf.mr.motors_cw = data[ind++];
-        conf.mr.motor_pwm_min_us = utility::buffer_get_uint16(data, &ind);
-        conf.mr.motor_pwm_max_us = utility::buffer_get_uint16(data, &ind);
-
-        emit configurationReceived(id, conf);
-    } break;
-
-    case CMD_LOG_LINE_USB: {
-        QByteArray tmpArray = QByteArray::fromRawData((const char*)data, len);
-        tmpArray[len] = '\0';
-        emit logLineUsbReceived(id, QString::fromLocal8Bit(tmpArray));
-    } break;
-
-    case CMD_PLOT_INIT: {
-        QString xL = QString::fromLocal8Bit((const char*)data);
-        QString yL = QString::fromLocal8Bit((const char*)data + xL.size() + 1);
-        emit plotInitReceived(id, xL, yL);
-    } break;
-
-    case CMD_PLOT_DATA: {
-        int32_t ind = 0;
-        double x = utility::buffer_get_double32_auto(data, &ind);
-        double y = utility::buffer_get_double32_auto(data, &ind);
-        emit plotDataReceived(id, x, y);
-    } break;
-
-    case CMD_PLOT_ADD_GRAPH: {
-        emit plotAddGraphReceived(id, QString::fromLocal8Bit((const char*)data));
-    } break;
-
-    case CMD_PLOT_SET_GRAPH: {
-        emit plotSetGraphReceived(id, data[0]);
-    } break;
-
-    case CMD_RADAR_SETUP_GET: {
-        int32_t ind = 0;
-        radar_settings_t s;
-
-        s.f_center = utility::buffer_get_double32_auto(data, &ind);
-        s.f_span = utility::buffer_get_double32_auto(data, &ind);
-        s.points = utility::buffer_get_int16(data, &ind);
-        s.t_sweep = utility::buffer_get_double32_auto(data, &ind);
-        s.cc_x = utility::buffer_get_double32_auto(data, &ind);
-        s.cc_y = utility::buffer_get_double32_auto(data, &ind);
-        s.cc_rad = utility::buffer_get_double32_auto(data, &ind);
-        s.log_rate_ms = utility::buffer_get_int32(data, &ind);
-        s.log_en = data[ind++];
-        s.map_plot_avg_factor = utility::buffer_get_double32_auto(data, &ind);
-        s.map_plot_max_div = utility::buffer_get_double32_auto(data, &ind);
-        s.plot_mode = data[ind++];
-        s.map_plot_start = utility::buffer_get_uint16(data, &ind);
-        s.map_plot_end = utility::buffer_get_uint16(data, &ind);
-
-        emit radarSetupReceived(id, s);
-    } break;
-
-    case CMD_RADAR_SAMPLES: {
-        int32_t ind = 0;
-        QVector<QPair<double, double> > samples;
-        while (ind < len) {
-            QPair<double, double> p;
-            p.first = utility::buffer_get_double32_auto(data, &ind);
-            p.second = utility::buffer_get_double32_auto(data, &ind);
-            samples.append(p);
-        }
-
-        emit radarSamplesReceived(id, samples);
-    } break;
-
-    case CMD_DW_SAMPLE: {
-        int32_t ind = 0;
-        DW_LOG_INFO dw;
-
-        dw.valid = data[ind++];
-        dw.dw_anchor = data[ind++];
-        dw.time_today_ms = utility::buffer_get_int32(data, &ind);
-        dw.dw_dist = utility::buffer_get_double32_auto(data, &ind);
-        dw.px = utility::buffer_get_double32_auto(data, &ind);
-        dw.py = utility::buffer_get_double32_auto(data, &ind);
-        dw.px_gps = utility::buffer_get_double32_auto(data, &ind);
-        dw.py_gps = utility::buffer_get_double32_auto(data, &ind);
-        dw.pz_gps = utility::buffer_get_double32_auto(data, &ind);
-
-        emit dwSampleReceived(id, dw);
-    } break;
-
-    case CMD_SET_SYSTEM_TIME: {
-        int32_t ind = 0;
-        qint32 sec = utility::buffer_get_int32(data, &ind);
-        qint32 usec = utility::buffer_get_int32(data, &ind);
-        emit systemTimeReceived(id, sec, usec);
-    } break;
-
-    case CMD_REBOOT_SYSTEM: {
-        int32_t ind = 0;
-        bool power_off = data[ind++];
-        emit rebootSystemReceived(id, power_off);
-    } break;
-
-    case CMD_LOG_ETHERNET: {
-        QByteArray tmpArray((char*)data, len);
-        emit logEthernetReceived(id, tmpArray);
-    } break;
-
-    case CMD_CAMERA_IMAGE: {
-        emit cameraImageReceived(id, QImage::fromData(data, len), len);
-    } break;
-
-        // Car commands
-    case CMD_GET_STATE: {
-        CAR_STATE state;
-        int32_t ind = 0;
-
-        if (len <= 1) {
-            break;
-        }
-
-        state.fw_major = data[ind++];
-        state.fw_minor = data[ind++];
-        state.roll = utility::buffer_get_double32(data, 1e6, &ind);
-        state.pitch = utility::buffer_get_double32(data, 1e6, &ind);
-        state.yaw = utility::buffer_get_double32(data, 1e6, &ind);
-        state.accel[0] = utility::buffer_get_double32(data, 1e6, &ind);
-        state.accel[1] = utility::buffer_get_double32(data, 1e6, &ind);
-        state.accel[2] = utility::buffer_get_double32(data, 1e6, &ind);
-        state.gyro[0] = utility::buffer_get_double32(data, 1e6, &ind);
-        state.gyro[1] = utility::buffer_get_double32(data, 1e6, &ind);
-        state.gyro[2] = utility::buffer_get_double32(data, 1e6, &ind);
-        state.mag[0] = utility::buffer_get_double32(data, 1e6, &ind);
-        state.mag[1] = utility::buffer_get_double32(data, 1e6, &ind);
-        state.mag[2] = utility::buffer_get_double32(data, 1e6, &ind);
-        state.px = utility::buffer_get_double32(data, 1e4, &ind);
-        state.py = utility::buffer_get_double32(data, 1e4, &ind);
-        state.speed = utility::buffer_get_double32(data, 1e6, &ind);
-        state.vin = utility::buffer_get_double32(data, 1e6, &ind);
-        state.temp_fet = utility::buffer_get_double32(data, 1e6, &ind);
-        state.mc_fault = (mc_fault_code)data[ind++];
-        state.px_gps = utility::buffer_get_double32(data, 1e4, &ind);
-        state.py_gps = utility::buffer_get_double32(data, 1e4, &ind);
-        state.ap_goal_px = utility::buffer_get_double32(data, 1e4, &ind);
-        state.ap_goal_py = utility::buffer_get_double32(data, 1e4, &ind);
-        state.ap_rad = utility::buffer_get_double32(data, 1e6, &ind);
-        state.ms_today = utility::buffer_get_int32(data, &ind);
-        state.ap_route_left = utility::buffer_get_int16(data, &ind);
-        state.px_uwb = utility::buffer_get_double32(data, 1e4, &ind);
-        state.py_uwb = utility::buffer_get_double32(data, 1e4, &ind);
-        emit stateReceived(id, state);
-    } break;
-
-    case CMD_VESC_FWD:
-        emit vescFwdReceived(id, QByteArray::fromRawData((char*)data, len));
-        break;
-
-        // Multirotor commands
-    case CMD_MR_GET_STATE: {
-        MULTIROTOR_STATE state;
-        int32_t ind = 0;
-
-        if (len <= 1) {
-            break;
-        }
-
-        state.fw_major = data[ind++];
-        state.fw_minor = data[ind++];
-        state.roll = utility::buffer_get_double32_auto(data, &ind);
-        state.pitch = utility::buffer_get_double32_auto(data, &ind);
-        state.yaw = utility::buffer_get_double32_auto(data, &ind);
-        state.accel[0] = utility::buffer_get_double32_auto(data, &ind);
-        state.accel[1] = utility::buffer_get_double32_auto(data, &ind);
-        state.accel[2] = utility::buffer_get_double32_auto(data, &ind);
-        state.gyro[0] = utility::buffer_get_double32_auto(data, &ind);
-        state.gyro[1] = utility::buffer_get_double32_auto(data, &ind);
-        state.gyro[2] = utility::buffer_get_double32_auto(data, &ind);
-        state.mag[0] = utility::buffer_get_double32_auto(data, &ind);
-        state.mag[1] = utility::buffer_get_double32_auto(data, &ind);
-        state.mag[2] = utility::buffer_get_double32_auto(data, &ind);
-        state.px = utility::buffer_get_double32_auto(data, &ind);
-        state.py = utility::buffer_get_double32_auto(data, &ind);
-        state.pz = utility::buffer_get_double32_auto(data, &ind);
-        state.speed = utility::buffer_get_double32_auto(data, &ind);
-        state.vin = utility::buffer_get_double32_auto(data, &ind);
-        state.px_gps = utility::buffer_get_double32_auto(data, &ind);
-        state.py_gps = utility::buffer_get_double32_auto(data, &ind);
-        state.ap_goal_px = utility::buffer_get_double32_auto(data, &ind);
-        state.ap_goal_py = utility::buffer_get_double32_auto(data, &ind);
-        state.ms_today = utility::buffer_get_int32(data, &ind);
-
-        emit mrStateReceived(id, state);
-    } break;
-
-        // Acks
-    case CMD_AP_ADD_POINTS:
-        emit ackReceived(id, cmd, "CMD_AP_ADD_POINTS");
-        break;
-    case CMD_AP_REMOVE_LAST_POINT:
-        emit ackReceived(id, cmd, "CMD_AP_REMOVE_LAST_POINT");
-        break;
-    case CMD_AP_CLEAR_POINTS:
-        emit ackReceived(id, cmd, "CMD_AP_CLEAR_POINTS");
-        break;
-    case CMD_AP_SET_ACTIVE:
-        emit ackReceived(id, cmd, "CMD_AP_SET_ACTIVE");
-        break;
-    case CMD_AP_REPLACE_ROUTE:
-        emit ackReceived(id, cmd, "CMD_AP_REPLACE_ROUTE");
-        break;
-    case CMD_AP_SYNC_POINT:
-        emit ackReceived(id, cmd, "CMD_AP_SYNC_POINT");
-        break;
-    case CMD_SET_MAIN_CONFIG:
-        emit ackReceived(id, cmd, "CMD_SET_MAIN_CONFIG");
-        break;
-    case CMD_SET_POS_ACK:
-        emit ackReceived(id, cmd, "CMD_SET_POS_ACK");
-        break;
-    case CMD_SET_ENU_REF:
-        emit ackReceived(id, cmd, "CMD_SET_ENU_REF");
-        break;
-    case CMD_SET_YAW_OFFSET_ACK:
-        emit ackReceived(id, cmd, "CMD_SET_YAW_OFFSET_ACK");
-        break;
-    case CMD_RADAR_SETUP_SET:
-        emit ackReceived(id, cmd, "CMD_RADAR_SETUP_SET");
-        break;
-    case CMD_SET_SYSTEM_TIME_ACK:
-        emit ackReceived(id, cmd, "CMD_SET_SYSTEM_TIME_ACK");
-        break;
-    case CMD_REBOOT_SYSTEM_ACK:
-        emit ackReceived(id, cmd, "CMD_REBOOT_SYSTEM_ACK");
-        break;
-    case CMD_MOTE_UBX_START_BASE_ACK:
-        emit ackReceived(id, cmd, "CMD_MOTE_UBX_START_BASE_ACK");
-        break;
-    case CMD_ADD_UWB_ANCHOR:
-        emit ackReceived(id, cmd, "CMD_ADD_UWB_ANCHOR");
-        break;
-    case CMD_CLEAR_UWB_ANCHORS:
-        emit ackReceived(id, cmd, "CMD_CLEAR_UWB_ANCHORS");
-        break;
-
-    default:
-        break;
-    }
-}
-
 void PacketInterface::startUdpConnection(QHostAddress ip, int port)
 {
     mHostAddress = ip;
@@ -821,8 +770,10 @@ bool PacketInterface::setRoutePoints(quint8 id, QList<LocPoint> points, int retr
         LocPoint *p = &points[i];
         utility::buffer_append_double32(mSendBuffer, p->getX(), 1e4, &send_index);
         utility::buffer_append_double32(mSendBuffer, p->getY(), 1e4, &send_index);
+        utility::buffer_append_double32(mSendBuffer, p->getHeight(), 1e4, &send_index);
         utility::buffer_append_double32(mSendBuffer, p->getSpeed(), 1e6, &send_index);
         utility::buffer_append_int32(mSendBuffer, p->getTime(), &send_index);
+        utility::buffer_append_uint32(mSendBuffer, p->getAttributes(), &send_index);
     }
 
     return sendPacketAck(mSendBuffer, send_index, retries);
@@ -838,8 +789,10 @@ bool PacketInterface::replaceRoute(quint8 id, QList<LocPoint> points, int retrie
         LocPoint *p = &points[i];
         utility::buffer_append_double32(mSendBuffer, p->getX(), 1e4, &send_index);
         utility::buffer_append_double32(mSendBuffer, p->getY(), 1e4, &send_index);
+        utility::buffer_append_double32(mSendBuffer, p->getHeight(), 1e4, &send_index);
         utility::buffer_append_double32(mSendBuffer, p->getSpeed(), 1e6, &send_index);
         utility::buffer_append_int32(mSendBuffer, p->getTime(), &send_index);
+        utility::buffer_append_uint32(mSendBuffer, p->getAttributes(), &send_index);
     }
 
     return sendPacketAck(mSendBuffer, send_index, retries);
@@ -910,6 +863,7 @@ bool PacketInterface::setConfiguration(quint8 id, MAIN_CONFIG &conf, int retries
 
     mSendBuffer[send_index++] = conf.ap_repeat_routes;
     utility::buffer_append_double32_auto(mSendBuffer, conf.ap_base_rad, &send_index);
+    utility::buffer_append_double32_auto(mSendBuffer, conf.ap_rad_time_ahead, &send_index);
     mSendBuffer[send_index++] = conf.ap_mode_time;
     utility::buffer_append_double32_auto(mSendBuffer, conf.ap_max_speed, &send_index);
     utility::buffer_append_int32(mSendBuffer, conf.ap_time_add_repeat_ms, &send_index);
@@ -927,6 +881,7 @@ bool PacketInterface::setConfiguration(quint8 id, MAIN_CONFIG &conf, int retries
     mSendBuffer[send_index++] = conf.car.disable_motor;
     mSendBuffer[send_index++] = conf.car.simulate_motor;
     mSendBuffer[send_index++] = conf.car.clamp_imu_yaw_stationary;
+    mSendBuffer[send_index++] = conf.car.use_uwb_pos;
 
     utility::buffer_append_double32_auto(mSendBuffer, conf.car.gear_ratio, &send_index);
     utility::buffer_append_double32_auto(mSendBuffer, conf.car.wheel_diam, &send_index);
@@ -1027,28 +982,6 @@ bool PacketInterface::setEnuRef(quint8 id, double *llh, int retries)
     return sendPacketAck(mSendBuffer, send_index, retries);
 }
 
-bool PacketInterface::radarSetupSet(quint8 id, radar_settings_t *s, int retries)
-{
-    qint32 send_index = 0;
-    mSendBuffer[send_index++] = id;
-    mSendBuffer[send_index++] = CMD_RADAR_SETUP_SET;
-    utility::buffer_append_double32_auto(mSendBuffer, s->f_center, &send_index);
-    utility::buffer_append_double32_auto(mSendBuffer, s->f_span, &send_index);
-    utility::buffer_append_int16(mSendBuffer, s->points, &send_index);
-    utility::buffer_append_double32_auto(mSendBuffer, s->t_sweep, &send_index);
-    utility::buffer_append_double32_auto(mSendBuffer, s->cc_x, &send_index);
-    utility::buffer_append_double32_auto(mSendBuffer, s->cc_y, &send_index);
-    utility::buffer_append_double32_auto(mSendBuffer, s->cc_rad, &send_index);
-    utility::buffer_append_int32(mSendBuffer, s->log_rate_ms, &send_index);
-    mSendBuffer[send_index++] = s->log_en;
-    utility::buffer_append_double32_auto(mSendBuffer, s->map_plot_avg_factor, &send_index);
-    utility::buffer_append_double32_auto(mSendBuffer, s->map_plot_max_div, &send_index);
-    mSendBuffer[send_index++] = s->plot_mode;
-    utility::buffer_append_uint16(mSendBuffer, s->map_plot_start, &send_index);
-    utility::buffer_append_uint16(mSendBuffer, s->map_plot_end, &send_index);
-    return sendPacketAck(mSendBuffer, send_index, retries);
-}
-
 bool PacketInterface::setSystemTime(quint8 id, qint32 sec, qint32 usec, int retries)
 {
     qint32 send_index = 0;
@@ -1075,32 +1008,37 @@ bool PacketInterface::getRoutePart(quint8 id,
                                    int &routeLen,
                                    int retries)
 {
-    quint8 idRx;
+    bool appendDone = false;
 
     auto conn = connect(this, &PacketInterface::routePartReceived,
-                        [&routeLen, &points, &idRx](quint8 id, int len,
-                        const QList<LocPoint> &route){
-        idRx = id;
-        routeLen = len;
-        points.append(route);
-    }
-    );
+                        [&routeLen, &points, &appendDone](quint8 id, int len,
+                        const QList<LocPoint> &route) {
+        (void)id;
+
+        if (points.isEmpty() || route.isEmpty() ||
+                points.last().getDistanceTo(route.last()) > 1e-4) {
+            routeLen = len;
+            points.append(route);
+            appendDone = true;
+        }
+    });
 
     bool res = false;
     for (int i = 0;i < retries;i++) {
         qint32 send_index = 0;
-        mSendBuffer[send_index++] = id;
-        mSendBuffer[send_index++] = CMD_AP_GET_ROUTE_PART;
-        utility::buffer_append_int32(mSendBuffer, first, &send_index);
-        mSendBuffer[send_index++] = num;
+        quint8 buffer[20];
+        buffer[send_index++] = id;
+        buffer[send_index++] = CMD_AP_GET_ROUTE_PART;
+        utility::buffer_append_int32(buffer, first, &send_index);
+        buffer[send_index++] = num;
 
-        QTimer::singleShot(0, [this, &send_index]() {
-            sendPacket(mSendBuffer, send_index);
+        QTimer::singleShot(0, [this, &send_index, &buffer]() {
+            sendPacket(buffer, send_index);
         });
 
         res = waitSignal(this, SIGNAL(routePartReceived(quint8,int,QList<LocPoint>)), 200);
 
-        if (res) {
+        if (res && appendDone) {
             break;
         }
 
@@ -1109,7 +1047,12 @@ bool PacketInterface::getRoutePart(quint8 id,
 
     disconnect(conn);
 
-    return res;
+    if (res && !appendDone) {
+        qDebug() << "Route contains the same part multiple times. Make sure that it is not "
+                    "corrupted.";
+    }
+
+    return res && appendDone;
 }
 
 bool PacketInterface::getRoute(quint8 id, QList<LocPoint> &points, int retries)
@@ -1352,15 +1295,6 @@ void PacketInterface::setMsToday(quint8 id, qint32 time)
     mSendBuffer[send_index++] = CMD_SET_MS_TODAY;
     utility::buffer_append_int32(mSendBuffer, time, &send_index);
     sendPacket(mSendBuffer, send_index);
-}
-
-void PacketInterface::radarSetupGet(quint8 id)
-{
-    QByteArray packet;
-    packet.clear();
-    packet.append(id);
-    packet.append((char)CMD_RADAR_SETUP_GET);
-    sendPacket(packet);
 }
 
 void PacketInterface::mrRcControl(quint8 id, double throttle, double roll, double pitch, double yaw)

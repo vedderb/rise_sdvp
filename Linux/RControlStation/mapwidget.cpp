@@ -147,6 +147,7 @@ MapWidget::MapWidget(QWidget *parent) : QWidget(parent)
     yRealPos = 0;
     mRoutePointSpeed = 1.0;
     mRoutePointTime = 0.0;
+    mRoutePointAttributes = 0;
     mAnchorId = 0;
     mAnchorHeight = 1.0;
     mAntialiasDrawings = false;
@@ -212,10 +213,10 @@ MapWidget::MapWidget(QWidget *parent) : QWidget(parent)
     setMouseTracking(true);
 
     // Pre-render some things for speed
-    for (int i = 0;i < 2;i++) {
+    for (int i = 0;i < 3;i++) {
         QPixmap pix(24, 24);
         pix.fill(Qt::transparent);
-        QPainter *p = new QPainter(&pix);
+        QPainter p(&pix);
 
         QPen pen;
         pen.setWidth(4);
@@ -224,22 +225,29 @@ MapWidget::MapWidget(QWidget *parent) : QWidget(parent)
         case 0: {
             // Circle
             pen.setColor(Qt::darkYellow);
-            p->setBrush(Qt::yellow);
-            p->setPen(pen);
-            p->drawEllipse(2, 2, 20, 20);
+            p.setBrush(Qt::yellow);
+            p.setPen(pen);
+            p.drawEllipse(2, 2, 20, 20);
         } break;
 
         case 1: {
             // Inactive circle
             pen.setColor(Qt::darkGray);
-            p->setBrush(Qt::gray);
-            p->setPen(pen);
-            p->drawEllipse(2, 2, 20, 20);
+            p.setBrush(Qt::gray);
+            p.setPen(pen);
+            p.drawEllipse(2, 2, 20, 20);
+        } break;
+
+        case 2: {
+            // UWB circle
+            pen.setColor(Qt::darkGreen);
+            p.setBrush(Qt::green);
+            p.setPen(pen);
+            p.drawEllipse(2, 2, 20, 20);
         } break;
 
         }
 
-        delete p;
         mPixmaps.append(pix);
     }
 
@@ -453,6 +461,11 @@ void MapWidget::addRoute(const QList<LocPoint> &route)
 
     mRoutes.append(route);
     update();
+}
+
+int MapWidget::getRouteNum()
+{
+    return mRoutes.size();
 }
 
 void MapWidget::clearRoute()
@@ -690,6 +703,7 @@ void MapWidget::mousePressEvent(QMouseEvent *e)
 
     mousePosMap.setSpeed(mRoutePointSpeed);
     mousePosMap.setTime(mRoutePointTime);
+    mousePosMap.setAttributes(mRoutePointAttributes);
     mousePosMap.setId(mAnchorId);
     mousePosMap.setHeight(mAnchorHeight);
 
@@ -735,6 +749,7 @@ void MapWidget::mousePressEvent(QMouseEvent *e)
                 if (routeFound) {
                     mRoutes[mRouteNow][routeInd].setSpeed(mRoutePointSpeed);
                     mRoutes[mRouteNow][routeInd].setTime(mRoutePointTime);
+                    mRoutes[mRouteNow][routeInd].setAttributes(mRoutePointAttributes);
                 }
             }
         }
@@ -973,6 +988,16 @@ bool MapWidget::event(QEvent *event)
     }
 
     return QWidget::event(event);
+}
+
+quint32 MapWidget::getRoutePointAttributes() const
+{
+    return mRoutePointAttributes;
+}
+
+void MapWidget::setRoutePointAttributes(const quint32 &routePointAttributes)
+{
+    mRoutePointAttributes = routePointAttributes;
 }
 
 MapWidget::InteractionMode MapWidget::getInteractionMode() const
@@ -1411,6 +1436,66 @@ void MapWidget::removeLastRoutePoint()
     }
     emit lastRoutePointRemoved(pos);
     update();
+}
+
+void MapWidget::zoomInOnRoute(int id, double margins, double wWidth, double wHeight)
+{
+    QList<LocPoint> route;
+
+    if (id >= 0) {
+        route = getRoute(id);
+    } else {
+        for (auto r: mRoutes) {
+            route.append(r);
+        }
+    }
+
+    if (route.size() > 0) {
+        double xMin = 1e12;
+        double xMax = -1e12;
+        double yMin = 1e12;
+        double yMax = -1e12;
+
+        for (auto p: route) {
+            if (p.getX() < xMin) {
+                xMin = p.getX();
+            }
+            if (p.getX() > xMax) {
+                xMax = p.getX();
+            }
+            if (p.getY() < yMin) {
+                yMin = p.getY();
+            }
+            if (p.getY() > yMax) {
+                yMax = p.getY();
+            }
+        }
+
+        double width = xMax - xMin;
+        double height = yMax - yMin;
+
+        if (wWidth <= 0 || wHeight <= 0) {
+            wWidth = this->width();
+            wHeight = this->height();
+        }
+
+        xMax += width * margins * 0.5;
+        xMin -= width * margins * 0.5;
+        yMax += height * margins * 0.5;
+        yMin -= height * margins * 0.5;
+
+        width = xMax - xMin;
+        height = yMax - yMin;
+
+        double scaleX = 1.0 / ((width * 1000) / wWidth);
+        double scaleY = 1.0 / ((height * 1000) / wHeight);
+
+        mScaleFactor = qMin(scaleX, scaleY);
+        mXOffset = -(xMin + width / 2.0) * mScaleFactor * 1000.0;
+        mYOffset = -(yMin + height / 2.0) * mScaleFactor * 1000.0;
+
+        update();
+    }
 }
 
 double MapWidget::getOsmRes() const
@@ -1901,13 +1986,19 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
 
         for (int i = 0;i < routeNow.size();i++) {
             QPointF p = routeNow[i].getPointMm();
+            quint32 attr = routeNow.at(i).getAttributes();
 
             painter.setTransform(drawTrans);
 
             if (highQuality) {
                 if (mRouteNow == rn) {
-                    pen.setColor(Qt::darkYellow);
-                    painter.setBrush(Qt::yellow);
+                    if ((attr & 0b111) == 2) {
+                        pen.setColor(Qt::darkGreen);
+                        painter.setBrush(Qt::green);
+                    } else {
+                        pen.setColor(Qt::darkYellow);
+                        painter.setBrush(Qt::yellow);
+                    }
                 } else {
                     pen.setColor(Qt::darkGray);
                     painter.setBrush(Qt::gray);
@@ -1919,7 +2010,8 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
                 painter.drawEllipse(p, 10.0 / mScaleFactor,
                                     10.0 / mScaleFactor);
             } else {
-                drawCircleFast(painter, p, 10.0 / mScaleFactor, mRouteNow == rn ? 0 : 1);
+                drawCircleFast(painter, p, 10.0 / mScaleFactor, mRouteNow == rn ?
+                                   ((attr & 0b111) == 2 ? 2 : 0) : 1);
             }
 
             // Draw text only for selected route
@@ -1927,10 +2019,12 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
                 QTime t = QTime::fromMSecsSinceStartOfDay(routeNow[i].getTime());
                 txt.sprintf("P: %d\n"
                             "%.1f km/h\n"
-                            "%02d:%02d:%02d:%03d",
+                            "%02d:%02d:%02d:%03d\n"
+                            "A: %08X",
                             i,
                             routeNow[i].getSpeed() * 3.6,
-                            t.hour(), t.minute(), t.second(), t.msec());
+                            t.hour(), t.minute(), t.second(), t.msec(),
+                            routeNow[i].getAttributes());
 
                 pt_txt.setX(p.x() + 10 / mScaleFactor);
                 pt_txt.setY(p.y());
@@ -1939,7 +2033,7 @@ void MapWidget::paint(QPainter &painter, int width, int height, bool highQuality
                 pen.setColor(Qt::black);
                 painter.setPen(pen);
                 rect_txt.setCoords(pt_txt.x(), pt_txt.y() - 20,
-                                   pt_txt.x() + 150, pt_txt.y() + 25);
+                                   pt_txt.x() + 150, pt_txt.y() + 45);
                 painter.drawText(rect_txt, txt);
             } else {
                 txt.sprintf("%d", rn);

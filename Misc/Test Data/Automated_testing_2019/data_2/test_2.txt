@@ -1,0 +1,49 @@
+Notes:
+* Anchor position 45 cm wrong
+
+AddFault(uwb_range_50,OFFSET,3.0,88,2)
+AddFault(uwb_range_234,OFFSET,3.0,74,3)
+RunSegment(List(rcontrolstationcomm.Utils$RpPoint@554cd74a, rcontrolstationcomm.Utils$RpPoint@37ed010a, rcontrolstationcomm.Utils$RpPoint@633a2e99, rcontrolstationcomm.Utils$RpPoint@28f878a0, rcontrolstationcomm.Utils$RpPoint@20411320, rcontrolstationcomm.Utils$RpPoint@2b5183ec, rcontrolstationcomm.Utils$RpPoint@3c782d8e, rcontrolstationcomm.Utils$RpPoint@572e6fd9, rcontrolstationcomm.Utils$RpPoint@7f5eae0f, rcontrolstationcomm.Utils$RpPoint@58b71ceb))
+AddFault(uwb_yaw,OFFSET,-5.0,28,2)
+RunSegment(List(rcontrolstationcomm.Utils$RpPoint@255e5e2e, rcontrolstationcomm.Utils$RpPoint@12abdfb, rcontrolstationcomm.Utils$RpPoint@b0e5507, rcontrolstationcomm.Utils$RpPoint@6bbe50c9))
+RunSegment(List(rcontrolstationcomm.Utils$RpPoint@3c46dcbe, rcontrolstationcomm.Utils$RpPoint@68577ba8, rcontrolstationcomm.Utils$RpPoint@1108adc8, rcontrolstationcomm.Utils$RpPoint@8a98f38))
+AddFault(uwb_range_234,OFFSET,5.0,45,1)
+RunSegment(List(rcontrolstationcomm.Utils$RpPoint@20011bf, rcontrolstationcomm.Utils$RpPoint@51d9b06c, rcontrolstationcomm.Utils$RpPoint@5eb2172, rcontrolstationcomm.Utils$RpPoint@41ffaeb8, rcontrolstationcomm.Utils$RpPoint@43f0c2d1, rcontrolstationcomm.Utils$RpPoint@5fb65013))
+RunSegment(List(rcontrolstationcomm.Utils$RpPoint@38a1a26, rcontrolstationcomm.Utils$RpPoint@3fbcfe81, rcontrolstationcomm.Utils$RpPoint@7a1f45ed, rcontrolstationcomm.Utils$RpPoint@1744a475))
+AddFault(uwb_range_50,OFFSET,4.0,86,6)
+AddFault(uwb_travel_dist,AMPLIFICATION,4.0,53,6)
+
+New initial state created
+New SUT created
+[CarCmd] Clearing faults
+[CarCmd] Clearing route
+[CarCmd] Following recovery route (V2)
+Route shortened with 0.00 m in 4.04 ms (passes: 0, okChecks: 1627, removed: 0)
+Found direct valid recovery route in 168.53 ms
+Max UWB diff: 0.9687734513290528 m
+[CarCmd] Clearing route
+[CarCmd] Resetting UWB position
+[CarCmd] Activating autopilot
+[CarCmd] Adding fault; Probe: uwb_range_50 Type: OFFSET Param: 3.0 Start: 88 Duration: 2
+[CarCmd] Adding fault; Probe: uwb_range_234 Type: OFFSET Param: 3.0 Start: 74 Duration: 3
+[CarCmd] Running generated segments
+Max UWB diff: 0.34691424012282934 m
+[CarCmd] Adding fault; Probe: uwb_yaw Type: OFFSET Param: -5.0 Start: 28 Duration: 2
+[CarCmd] Running generated segments
+Max UWB diff: 0.37935782580566757 m
+[CarCmd] Running generated segments
+Max UWB diff: 0.6984971295574667 m
+[CarCmd] Adding fault; Probe: uwb_range_234 Type: OFFSET Param: 5.0 Start: 45 Duration: 1
+[CarCmd] Running generated segments
+Max UWB diff: 1.1566523073075907 m
+[Error] Too large difference between the UWB-based and RTKGNSS-based positions.
+Postcondition failed
+[CarCmd] Running generated segments
+Max UWB diff: 1.1401546430199738 m
+[Error] Too large difference between the UWB-based and RTKGNSS-based positions.
+Postcondition failed
+[CarCmd] Adding fault; Probe: uwb_range_50 Type: OFFSET Param: 4.0 Start: 86 Duration: 6
+[CarCmd] Adding fault; Probe: uwb_travel_dist Type: AMPLIFICATION Param: 4.0 Start: 53 Duration: 6
+[CarCmd] Deactivating autopilot
+Test sequence failed
+
