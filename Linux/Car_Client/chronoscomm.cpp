@@ -808,6 +808,8 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
     } break;
 
     case ISO_MSG_OSEM: {
+        qDebug() << "OSEM";
+
         chronos_osem osem;
 
         while (!vb.isEmpty()) {
