@@ -480,11 +480,12 @@ void ChronosComm::tcpRx(QByteArray data)
         case 13: // checksum
             mTcpChecksum |= ((uint8_t)c) << 8;
             mTcpState = 0;
-            if (mTcpChecksum == 0) {
-                decodeMsg(mTcpType, mTcpLen, mTcpData, sender_id);
-            } else {
-                qWarning() << "Invalid checksum";
+
+            if (mTcpChecksum != 0) {
+                qWarning() << "Checksum calculation not implemented";
             }
+
+            decodeMsg(mTcpType, mTcpLen, mTcpData, sender_id);
             break;
         default:
             break;
@@ -526,10 +527,10 @@ void ChronosComm::readPendingDatagrams()
 
         vb.remove(vb.size() - 2, 2);
 
-        if (checksum == 0) {
+        if (true || checksum == 0) {
             decodeMsg(message_id, message_len, vb, sender_id);
         } else {
-            //qDebug() << "Checksum Error";
+            qDebug() << "Checksum Error";
         }
     }
 }
