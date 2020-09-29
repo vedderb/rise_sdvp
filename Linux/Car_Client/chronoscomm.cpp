@@ -818,24 +818,31 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
             quint16 value_len = vb.vbPopFrontUint16();
             switch (value_id) {
             case ISO_VALUE_ID_TRANSMITTER_ID:
+                qDebug() << "ISO_VALUE_ID_TRANSMITTER_ID";
                 osem.transmitterID = vb.vbPopFrontUint32();
                 break;
             case ISO_VALUE_ID_LAT:
+                qDebug() << "ISO_VALUE_ID_LAT";
                 osem.lat = vb.vbPopFrontDouble48(1e10);
                 break;
             case ISO_VALUE_ID_LON:
+                qDebug() << "ISO_VALUE_ID_LON";
                 osem.lon = vb.vbPopFrontDouble48(1e10);
                 break;
             case ISO_VALUE_ID_ALT:
+                qDebug() << "ISO_VALUE_ID_ALT";
                 osem.alt = vb.vbPopFrontDouble32(1e2);
                 break;
             case ISO_VALUE_ID_DateISO8601:
+                qDebug() << "ISO_VALUE_ID_DateISO8601";
                 vb.vbPopFrontUint32(); // pop and throw away
                 break;
             case ISO_VALUE_ID_GPS_WEEK:
+                qDebug() << "ISO_VALUE_ID_GPS_WEEK";
                 osem.gps_week = vb.vbPopFrontUint16();
                 break;
             case ISO_VALUE_ID_GPS_SEC_OF_WEEK:
+                qDebug() << "ISO_VALUE_ID_GPS_SEC_OF_WEEK";
                 osem.gps_ms_of_week = vb.vbPopFrontUint32() / 4;
                 break;
             default:
