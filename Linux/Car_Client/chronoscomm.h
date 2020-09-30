@@ -79,35 +79,15 @@ typedef struct {
 } chronos_osem;
 
 typedef struct {
-    uint16_t objectTypeValueID;
-    uint16_t objectTypeContentLength;
     uint8_t objectType;
-    uint16_t actorTypeValueID;
-    uint16_t actorTypeContentLength;
     uint8_t actorType;
-    uint16_t operationModeValueID;
-    uint16_t operationModeContentLength;
     uint8_t operationMode;
-    uint16_t massValueID;
-    uint16_t massContentLength;
     uint32_t mass;
-    uint16_t objectLengthXValueID;
-    uint16_t objectLengthXContentLength;
     uint32_t objectLengthX;
-    uint16_t objectLengthYValueID;
-    uint16_t objectLengthYContentLength;
     uint32_t objectLengthY;
-    uint16_t objectLengthZValueID;
-    uint16_t objectLengthZContentLength;
     uint32_t objectLengthZ;
-    uint16_t positionDisplacementXValueID;
-    uint16_t positionDisplacementXContentLength;
     int16_t positionDisplacementX;
-    uint16_t positionDisplacementYValueID;
-    uint16_t positionDisplacementYContentLength;
     int16_t positionDisplacementY;
-    uint16_t positionDisplacementZValueID;
-    uint16_t positionDisplacementZContentLength;
     int16_t positionDisplacementZ;
 } chronos_opro;
 
