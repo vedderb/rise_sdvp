@@ -188,7 +188,6 @@ typedef struct {
 #define ISO_MSG_INIT_SUP                0xA102
 
 // ISO Value Types
-#define ISO_VALUE_ID_TRANSMITTER_ID     0x0010
 #define ISO_VALUE_ID_LAT                0x0020
 #define ISO_VALUE_ID_LON                0x0021
 #define ISO_VALUE_ID_ALT                0x0022
