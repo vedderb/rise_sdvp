@@ -816,6 +816,8 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
         while (!vb.isEmpty()) {
             quint16 value_id = vb.vbPopFrontUint16();
             quint16 value_len = vb.vbPopFrontUint16();
+            qDebug() << "OSEM: value id:" << value_id;
+
             switch (value_id) {
             case VALUE_ID_OSEM_TRANSMITTER_ID:
                 qDebug() << "ISO_VALUE_ID_TRANSMITTER_ID";
