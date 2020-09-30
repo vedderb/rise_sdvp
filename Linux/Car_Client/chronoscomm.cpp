@@ -301,34 +301,31 @@ void ChronosComm::sendOpro(chronos_opro opro){
 
     VByteArrayLe vb;
     vb.vbAppendUint16(ISO_VALUE_ID_OPRO_OBJECT_TYPE);
-    vb.vbAppendUint16(4);
     vb.vbAppendUint8(opro.objectType);
     vb.vbAppendUint16(ISO_VALUE_ID_OPRO_ACTOR_TYPE);
-    vb.vbAppendUint16(2);
     vb.vbAppendUint8(opro.actorType);
     vb.vbAppendUint16(ISO_VALUE_ID_OPRO_OPERATION_MODE);
-    vb.vbAppendUint16(2);
     vb.vbAppendUint8(opro.operationMode);
     vb.vbAppendUint16(ISO_VALUE_ID_OPRO_MASS);
-    vb.vbAppendUint16(2);
+    vb.vbAppendUint16(0);
     vb.vbAppendUint32(opro.mass);
     vb.vbAppendUint16(ISO_VALUE_ID_OPRO_OBJECT_LENGTH_X);
-    vb.vbAppendUint16(2);
+    vb.vbAppendUint16(0);
     vb.vbAppendUint32(opro.objectLengthX);
     vb.vbAppendUint16(ISO_VALUE_ID_OPRO_OBJECT_LENGTH_Y);
-    vb.vbAppendUint16(2);
+    vb.vbAppendUint16(0);
     vb.vbAppendUint32(opro.objectLengthY);
     vb.vbAppendUint16(ISO_VALUE_ID_OPRO_OBJECT_LENGTH_Z);
-    vb.vbAppendUint16(2);
+    vb.vbAppendUint16(0);
     vb.vbAppendUint16(opro.objectLengthZ);
     vb.vbAppendUint16(ISO_VALUE_ID_OPRO_POSITION_DISPLACEMENT_X);
-    vb.vbAppendUint16(2);
+    vb.vbAppendUint16(0);
     vb.vbAppendUint32(opro.positionDisplacementX);
     vb.vbAppendUint16(ISO_VALUE_ID_OPRO_POSITION_DISPLACEMENT_Y);
-    vb.vbAppendUint16(2);
+    vb.vbAppendUint16(0);
     vb.vbAppendUint16(opro.positionDisplacementY);
     vb.vbAppendUint16(ISO_VALUE_ID_OPRO_POSITION_DISPLACEMENT_Z);
-    vb.vbAppendUint16(2);
+    vb.vbAppendUint16(0);
     vb.vbAppendUint16(opro.positionDisplacementZ);
 
     mkChronosHeader(vb,
