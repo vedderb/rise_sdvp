@@ -528,6 +528,13 @@ void ChronosComm::tcpRx(QByteArray data)
 void ChronosComm::tcpConnectionChanged(bool connected, QString address)
 {
     emit connectionChanged(connected, address);
+    chronos_opro opro;
+
+    opro.mass = 6400;
+    opro.objectLengthX = 81450;
+    opro.objectLengthZ = 36085;
+    sendOpro(opro);
+
 }
 
 void ChronosComm::readPendingDatagrams()
