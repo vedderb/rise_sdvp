@@ -193,6 +193,7 @@ typedef struct {
 #define ISO_MSG_INIT_SUP                0xA102
 
 // ISO Value Types
+#define ISO_VALUE_ID_TRANSMITTER_ID     0x0010
 #define ISO_VALUE_ID_LAT                0x0020
 #define ISO_VALUE_ID_LON                0x0021
 #define ISO_VALUE_ID_ALT                0x0022
@@ -219,7 +220,6 @@ typedef struct {
 #define ISO_VALUE_ID_OPERATION_MODE     0x0055
 #define ISO_VALUE_ID_MASS               0x0056
 #define ISO_VALUE_ID_ACTOR_TYPE         0x0057
-#define ISO_VALUE_ID_TRANSMITTER_ID     0x0058
 #define ISO_VALUE_ID_MONR_STRUCT        0x0080
 #define ISO_VALUE_ID_HEAB_STRUCT        0x0090
 
