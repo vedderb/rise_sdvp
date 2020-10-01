@@ -78,6 +78,11 @@ typedef struct {
     double heading;
     quint32 gps_ms_of_week;
     quint16 gps_week;
+    quint16 maxWayDeviation;
+    quint16 maxLateralDeviation;
+    quint16 minPosAccuracy;
+
+
 } chronos_osem;
 
 typedef struct {

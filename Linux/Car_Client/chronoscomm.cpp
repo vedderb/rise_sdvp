@@ -838,20 +838,18 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
             case VALUE_ID_OSEM_GPS_QUARTER_MILLISECOND_OF_WEEK:
                 osem.gps_ms_of_week = vb.vbPopFrontUint32() / 4;
                 break;
-                /*
             case VALUE_ID_OSEM_MAX_WAY_DEVIATION:
                 qDebug() << "VALUE_ID_OSEM_MAX_WAY_DEVIATION";
-                //TODO
+                osem.maxWayDeviation  = vb.vbPopFrontUint16();
                 break;
             case VALUE_ID_OSEM_MAX_LATERAL_DEVIATION:
                 qDebug() << "VALUE_ID_OSEM_MAX_LATERAL_DEVIATION";
-                //TODO
+                osem.maxLateralDeviation = vb.vbPopFrontUint16();
                 break;
             case VALUE_ID_OSEM_MIN_POSITIONING_ACCURACY:
                 qDebug() << "VALUE_ID_OSEM_MIN_POSITIONING_ACCURACY";
-                //TODO
+                osem.minPosAccuracy = vb.vbPopFrontUint16();
                 break;
-                */
             default:
                 qDebug() << "OSEM: Unknown value id:" << value_id;
                 vb.remove(0, value_len);
