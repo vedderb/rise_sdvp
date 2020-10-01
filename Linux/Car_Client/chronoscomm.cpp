@@ -699,16 +699,6 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
         emit insupRx(init_sup);
     } break;
 
-    case ISO_MSG_CONNECT: {
-
-        chronos_opro opro;
-
-        opro.actorType = 1;
-        opro.objectType = 1;
-        opro.mass = 1;
-        sendOpro(opro);
-    } break;
-
     case ISO_MSG_TRAJ: {
         qDebug() << "decoding TRAJ";
 
