@@ -817,7 +817,7 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
             quint16 value_len = vb.vbPopFrontUint16();
 
             switch (value_id) {
-            case ISO_VALUE_ID_TRANSMITTER_ID:
+            case ISO_VALUE_ID_OSEM_TRANSMITTER_ID:
                 osem.transmitterID = vb.vbPopFrontUint32();
                 break;
             case ISO_VALUE_ID_LAT :

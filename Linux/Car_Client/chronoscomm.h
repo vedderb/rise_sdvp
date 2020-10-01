@@ -193,7 +193,6 @@ typedef struct {
 #define ISO_MSG_INIT_SUP                0xA102
 
 // ISO Value Types
-#define ISO_VALUE_ID_TRANSMITTER_ID     0x0010
 #define ISO_VALUE_ID_LAT                0x0020
 #define ISO_VALUE_ID_LON                0x0021
 #define ISO_VALUE_ID_ALT                0x0022
@@ -220,6 +219,7 @@ typedef struct {
 #define ISO_VALUE_ID_OPERATION_MODE     0x0055
 #define ISO_VALUE_ID_MASS               0x0056
 #define ISO_VALUE_ID_ACTOR_TYPE         0x0057
+#define ISO_VALUE_ID_TRANSMITTER_ID     0x0058
 #define ISO_VALUE_ID_MONR_STRUCT        0x0080
 #define ISO_VALUE_ID_HEAB_STRUCT        0x0090
 
@@ -273,16 +273,8 @@ typedef struct {
 #define AUX_VALUE_ID_OBJECT_ID          0xA000
 
 //OSEM
-#define VALUE_ID_OSEM_TRANSMITTER_ID 0x0010
-#define VALUE_ID_OSEM_LATITUDE 0x0020
-#define VALUE_ID_OSEM_LONGITUDE 0x0021
-#define VALUE_ID_OSEM_ALTITUDE 0x0022
-#define VALUE_ID_OSEM_DATE 0x0004
-#define VALUE_ID_OSEM_GPS_WEEK 0x0003
-#define VALUE_ID_OSEM_GPS_QUARTER_MILLISECOND_OF_WEEK 0x0002
-#define VALUE_ID_OSEM_MAX_WAY_DEVIATION 0x0070
-#define VALUE_ID_OSEM_MAX_LATERAL_DEVIATION 0x0072
-#define VALUE_ID_OSEM_MIN_POSITIONING_ACCURACY 0x0074
+#define ISO_VALUE_ID_OSEM_TRANSMITTER_ID 0x0010
+
 
 class ChronosComm : public QObject
 {
