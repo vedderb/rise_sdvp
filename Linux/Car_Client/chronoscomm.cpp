@@ -307,25 +307,18 @@ void ChronosComm::sendOpro(chronos_opro opro){
     vb.vbAppendUint16(ISO_VALUE_ID_OPRO_OPERATION_MODE);
     vb.vbAppendUint8(opro.operationMode);
     vb.vbAppendUint16(ISO_VALUE_ID_OPRO_MASS);
-    vb.vbAppendUint16(0);
     vb.vbAppendUint32(opro.mass);
     vb.vbAppendUint16(ISO_VALUE_ID_OPRO_OBJECT_LENGTH_X);
-    vb.vbAppendUint16(0);
     vb.vbAppendUint32(opro.objectLengthX);
     vb.vbAppendUint16(ISO_VALUE_ID_OPRO_OBJECT_LENGTH_Y);
-    vb.vbAppendUint16(0);
     vb.vbAppendUint32(opro.objectLengthY);
     vb.vbAppendUint16(ISO_VALUE_ID_OPRO_OBJECT_LENGTH_Z);
-    vb.vbAppendUint16(0);
     vb.vbAppendUint16(opro.objectLengthZ);
     vb.vbAppendUint16(ISO_VALUE_ID_OPRO_POSITION_DISPLACEMENT_X);
-    vb.vbAppendUint16(0);
     vb.vbAppendUint32(opro.positionDisplacementX);
     vb.vbAppendUint16(ISO_VALUE_ID_OPRO_POSITION_DISPLACEMENT_Y);
-    vb.vbAppendUint16(0);
     vb.vbAppendUint16(opro.positionDisplacementY);
     vb.vbAppendUint16(ISO_VALUE_ID_OPRO_POSITION_DISPLACEMENT_Z);
-    vb.vbAppendUint16(0);
     vb.vbAppendUint16(opro.positionDisplacementZ);
 
     mkChronosHeader(vb,
@@ -336,7 +329,6 @@ void ChronosComm::sendOpro(chronos_opro opro){
                     ISO_MSG_OPRO);
 
     appendChronosChecksum(vb);
-
     sendData(vb, false);
 }
 
@@ -698,6 +690,16 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
         }
 
         emit insupRx(init_sup);
+    } break;
+
+    case ISO_MSG_CONNECT: {
+
+        chronos_opro opro;
+
+        opro.actorType = 1;
+        opro.objectType = 1;
+        opro.mass = 1;
+        sendOpro(opro);
     } break;
 
     case ISO_MSG_TRAJ: {
