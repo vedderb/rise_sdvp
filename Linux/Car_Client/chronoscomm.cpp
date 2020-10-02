@@ -528,13 +528,6 @@ void ChronosComm::tcpRx(QByteArray data)
 void ChronosComm::tcpConnectionChanged(bool connected, QString address)
 {
     emit connectionChanged(connected, address);
-    chronos_opro opro;
-
-    opro.mass = 6400;
-    opro.objectLengthX = 81450;
-    opro.objectLengthZ = 36085;
-    sendOpro(opro);
-
 }
 
 void ChronosComm::readPendingDatagrams()
@@ -840,6 +833,16 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
         }
 
         emit osemRx(osem);
+
+        //OSEMrx --> Send OPRO  //TODO: read values from file.
+        chronos_opro opro;
+        opro.mass = 12345;
+        opro.objectLengthX = 6789;
+        opro.objectLengthZ = 12345;
+        sendOpro(opro);
+
+        sendOpro(opro);
+
     } break;
 
     case ISO_MSG_OPRO: {
