@@ -142,6 +142,3 @@ void RCSLocationProvider::get_rcs_locations()
         sleep_for(milliseconds(100));
     }
 }
-
-const double RCSLocationProvider::LATITUDE_DEG_PER_METER = 0.000009044;
-const double RCSLocationProvider::LONGITUDE_DEG_PER_METER = 0.000008985;

@@ -31,6 +31,9 @@ using namespace std::this_thread; // for sleep_for()
 #define TELEMETRY_CONSOLE_TEXT "\033[34m" // Turn text on console blue
 #define NORMAL_CONSOLE_TEXT "\033[0m" // Restore normal console colour
 
+// For sanity check of position to follow
+#define MAX_FOLLOW_DISTANCE_METERS 20.0
+
 inline void action_error_exit(Action::Result result, const std::string& message);
 inline void follow_me_error_exit(FollowMe::Result result, const std::string& message);
 inline void connection_error_exit(ConnectionResult result, const std::string& message);
@@ -125,11 +128,20 @@ int main(int argc, char** argv)
         std::placeholders::_1));
 
     RCSLocationProvider location_provider;
-    location_provider.request_location_updates("localhost", 65191, 0, [&follow_me](double lat, double lon) {
+    location_provider.request_location_updates("localhost", 65191, 0, [&follow_me, &telemetry](double lat, double lon) {
         FollowMe::TargetLocation target_location{};
         target_location.latitude_deg = lat;
         target_location.longitude_deg = lon;
-        follow_me->set_target_location(target_location);
+
+        double lat_diff = telemetry->position().latitude_deg - target_location.latitude_deg;
+        double lon_diff = telemetry->position().longitude_deg - target_location.longitude_deg;
+
+        // Sanity-check: do not follow if target is more than (roughly) MAX_FOLLOW_DISTANCE_METERS away in either x or y
+        if (lat_diff/RCSLocationProvider::LATITUDE_DEG_PER_METER < MAX_FOLLOW_DISTANCE_METERS
+                && lon_diff/RCSLocationProvider::LONGITUDE_DEG_PER_METER < MAX_FOLLOW_DISTANCE_METERS)
+            follow_me->set_target_location(target_location);
+        else
+            std::cout << "Warning: skipped position " << target_location.latitude_deg << ", " << target_location.longitude_deg << std::endl;
     });
 
     while (location_provider.is_running()) {
