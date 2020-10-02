@@ -249,7 +249,9 @@ void ChronosComm::sendHeab(chronos_heab heab)
 void ChronosComm::sendOsem(chronos_osem osem)
 {
     VByteArrayLe vb;
-
+    vb.vbAppendInt16(ISO_VALUE_ID_TRANSMITTER_ID);
+    vb.vbAppendUint16(2);
+    vb.vbAppendUint16(osem.transmitterID);
     vb.vbAppendUint16(ISO_VALUE_ID_LAT);
     vb.vbAppendUint16(6);
     vb.vbAppendUint48((quint64)(osem.lat * 1e10));
@@ -513,11 +515,12 @@ void ChronosComm::tcpRx(QByteArray data)
         case 13: // checksum
             mTcpChecksum |= ((uint8_t)c) << 8;
             mTcpState = 0;
-            if (mTcpChecksum == 0) {
-                decodeMsg(mTcpType, mTcpLen, mTcpData, sender_id);
-            } else {
-                qWarning() << "Invalid checksum";
+
+            if (mTcpChecksum != 0) {
+                qWarning() << "Checksum calculation not implemented";
             }
+
+            decodeMsg(mTcpType, mTcpLen, mTcpData, sender_id);
             break;
         default:
             break;
@@ -559,7 +562,7 @@ void ChronosComm::readPendingDatagrams()
 
         vb.remove(vb.size() - 2, 2);
 
-        if (checksum == 0) {
+        if (true || checksum == 0) {
             decodeMsg(message_id, message_len, vb, sender_id);
         } else {
             qDebug() << "Checksum Error";
@@ -597,9 +600,9 @@ void ChronosComm::mkChronosHeader(VByteArrayLe &vb, quint8 transmitter_id, quint
                                   bool ack_req, quint8 protocol_ver, quint16 message_id)
 {   
     // a bit unsure of is the ack req should go to leftmost or rightmost bit.
-	quint8 augmented_protocol_ver = protocol_ver;
+    quint8 augmented_protocol_ver = protocol_ver;
     if (ack_req) {
-		augmented_protocol_ver |= 0x80;
+        augmented_protocol_ver |= 0x80;
     }
 
     VByteArrayLe vb2;
@@ -801,13 +804,18 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
     } break;
 
     case ISO_MSG_OSEM: {
+
         chronos_osem osem;
 
         while (!vb.isEmpty()) {
             quint16 value_id = vb.vbPopFrontUint16();
             quint16 value_len = vb.vbPopFrontUint16();
+
             switch (value_id) {
-            case ISO_VALUE_ID_LAT:
+            case ISO_VALUE_ID_OSEM_TRANSMITTER_ID:
+                osem.transmitterID = vb.vbPopFrontUint32();
+                break;
+            case ISO_VALUE_ID_LAT :
                 osem.lat = vb.vbPopFrontDouble48(1e10);
                 break;
             case ISO_VALUE_ID_LON:
@@ -824,6 +832,15 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
                 break;
             case ISO_VALUE_ID_GPS_SEC_OF_WEEK:
                 osem.gps_ms_of_week = vb.vbPopFrontUint32() / 4;
+                break;
+            case ISO_VALUE_ID_MAX_WAY_DEV:
+                osem.maxWayDeviation  = vb.vbPopFrontUint16();
+                break;
+            case ISO_VALUE_ID_MAX_LATERAL_DEV:
+                osem.maxLateralDeviation = vb.vbPopFrontUint16();
+                break;
+            case ISO_VALUE_ID_MIN_POS_ACCURACY:
+                osem.minPosAccuracy =vb.vbPopFrontUint16();
                 break;
             default:
                 qDebug() << "OSEM: Unknown value id:" << value_id;

@@ -25,6 +25,7 @@
 #include <tcpserversimple.h>
 #include "gpio.h"
 
+#define PROTOCOL_VERSION 2
 
 typedef enum {
     COMM_MODE_UNDEFINED = 0,
@@ -70,12 +71,18 @@ typedef struct {
 } chronos_traj;
 
 typedef struct {
+    quint32 transmitterID;
     double lat;
     double lon;
     double alt;
     double heading;
     quint32 gps_ms_of_week;
     quint16 gps_week;
+    quint16 maxWayDeviation;
+    quint16 maxLateralDeviation;
+    quint16 minPosAccuracy;
+
+
 } chronos_osem;
 
 typedef struct {
@@ -268,6 +275,10 @@ typedef struct {
 
 #define ISO_VALUE_ID_INIT_SUP_STATUS    0x0200
 #define AUX_VALUE_ID_OBJECT_ID          0xA000
+
+//OSEM
+#define ISO_VALUE_ID_OSEM_TRANSMITTER_ID 0x0010
+
 
 
 // OPRO

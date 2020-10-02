@@ -192,6 +192,8 @@ void Chronos::processOsem(chronos_osem osem)
     mLlhRef[0] = osem.lat;
     mLlhRef[1] = osem.lon;
     mLlhRef[2] = osem.alt;
+    mChronos->setTransmitterId(osem.transmitterID);
+    qDebug() << "Got OSEM with transmitter ID: " << osem.transmitterID;
 
     // TODO: Rotate route with heading
 
