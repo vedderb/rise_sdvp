@@ -26,6 +26,8 @@ Chronos::Chronos(QObject *parent) : QObject(parent)
             this, SLOT(processHeab(chronos_heab)));
     connect(mChronos, SIGNAL(osemRx(chronos_osem)),
             this, SLOT(processOsem(chronos_osem)));
+    connect(mChronos, SIGNAL(oproRx(chronos_opro)),
+            this, SLOT(processOpro(chronos_opro)));
     connect(mChronos, SIGNAL(ostmRx(chronos_ostm)),
             this, SLOT(processOstm(chronos_ostm)));
     connect(mChronos, SIGNAL(strtRx(chronos_strt)),
@@ -201,6 +203,13 @@ void Chronos::processOsem(chronos_osem osem)
     }
 }
 
+
+void Chronos::processOpro(chronos_opro opro)
+{
+    qDebug() << "OPRO RX";
+    qDebug() << "Actor type: " << opro.actorType;
+}
+
 void Chronos::processOstm(chronos_ostm ostm)
 {
     qDebug() << "OSTM RX";
@@ -295,18 +304,4 @@ void Chronos::processMtsp(chronos_mtsp mtsp)
         qDebug() << closest_sync << mtsp.time_est - ChronosComm::gpsMsOfWeek() <<
                     mSypmLast.sync_point - mSypmLast.stop_time;
     }
-}
-
-void Chronos::processOpro(chronos_opro opro)
-{
-    // Override transmitterid with value from server in Opro message.
-    qDebug() << "Setting transmitter id from opro message:" << opro.transmitter_id;
-    mChronos->setTransmitterId(opro.transmitter_id);
-
-    qDebug() << opro.ip;
-    qDebug() << opro.dim_x;
-    qDebug() << opro.dim_y;
-    qDebug() << opro.dim_z;
-
-
 }

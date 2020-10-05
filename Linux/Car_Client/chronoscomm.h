@@ -86,6 +86,19 @@ typedef struct {
 } chronos_osem;
 
 typedef struct {
+    uint8_t objectType;
+    uint8_t actorType;
+    uint8_t operationMode;
+    uint32_t mass;
+    uint32_t objectLengthX;
+    uint32_t objectLengthY;
+    uint32_t objectLengthZ;
+    int16_t positionDisplacementX;
+    int16_t positionDisplacementY;
+    int16_t positionDisplacementZ;
+} chronos_opro;
+
+typedef struct {
     int armed;
 } chronos_ostm;
 
@@ -154,18 +167,6 @@ typedef struct {
     uint8_t status;
 } chronos_init_sup;
 
-typedef struct {
-    uint32_t ip;
-    uint8_t  transmitter_id;
-    OPRO_OBJECT_TYPE object_type;
-    OPRO_OPERATION_MODE operation_mode;
-    double   mass; // Kilograms
-    double   dim_x;
-    double   dim_y;
-    double   dim_z;
-    uint8_t  actor_type; // virtual or real 1 - virtual, 2 - real
-} chronos_opro;
-
 #define PROTOCOL_VERSION 2
 
 // Chronos messaging
@@ -187,10 +188,13 @@ typedef struct {
 #define ISO_MSG_TREO                    0x0013
 #define ISO_MSG_EXAC                    0x0014
 #define ISO_MSG_CATA                    0x0015
+#define ISO_MSG_OPRO                    0xA100
 
-#define ISO_MSG_OPRO                    0x000B
-#define ISO_MSG_OPRO_TO_OBJECT          0x0016
+//#define ISO_MSG_OPRO                    0x000B
+//#define ISO_MSG_OPRO_TO_OBJECT          0x0016
+
 #define ISO_MSG_INIT_SUP                0xA102
+
 
 // ISO Value Types
 #define ISO_VALUE_ID_LAT                0x0020
@@ -276,6 +280,19 @@ typedef struct {
 #define ISO_VALUE_ID_OSEM_TRANSMITTER_ID 0x0010
 
 
+
+// OPRO
+#define ISO_VALUE_ID_OPRO_OBJECT_TYPE 0x0100
+#define ISO_VALUE_ID_OPRO_ACTOR_TYPE 0x0101
+#define ISO_VALUE_ID_OPRO_OPERATION_MODE 0x0102
+#define ISO_VALUE_ID_OPRO_MASS 0x0103
+#define ISO_VALUE_ID_OPRO_OBJECT_LENGTH_X 0x0104
+#define ISO_VALUE_ID_OPRO_OBJECT_LENGTH_Y 0x0105
+#define ISO_VALUE_ID_OPRO_OBJECT_LENGTH_Z 0x0106
+#define ISO_VALUE_ID_OPRO_POSITION_DISPLACEMENT_X 0x0107
+#define ISO_VALUE_ID_OPRO_POSITION_DISPLACEMENT_Y 0x0108
+#define ISO_VALUE_ID_OPRO_POSITION_DISPLACEMENT_Z 0x0109
+
 class ChronosComm : public QObject
 {
     Q_OBJECT
@@ -291,6 +308,7 @@ public:
     void sendHeab(chronos_heab heab);
     void sendOsem(chronos_osem osem);
     void sendOstm(chronos_ostm ostm);
+    void sendOpro(chronos_opro opro);
     void sendStrt(chronos_strt strt);
     void sendMonr(chronos_monr monr);
     void sendInitSup(chronos_init_sup init_sup);
@@ -307,11 +325,11 @@ signals:
     void trajRx(chronos_traj traj);
     void heabRx(chronos_heab heab);
     void osemRx(chronos_osem osem);
+    void oproRx(chronos_opro opro);
     void ostmRx(chronos_ostm ostm);
     void strtRx(chronos_strt strt);
     void monrRx(chronos_monr monr);
     void insupRx(chronos_init_sup init_sup);
-    void oproRx(chronos_opro opro);
 
 public slots:
 

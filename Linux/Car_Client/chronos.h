@@ -25,12 +25,12 @@ private slots:
 
     void processTraj(chronos_traj traj);
     void processOsem(chronos_osem osem);
+    void processOpro(chronos_opro opro);
     void processOstm(chronos_ostm ostm);
     void processStrt(chronos_strt strt);
     void processHeab(chronos_heab heab);
     void processSypm(chronos_sypm sypm);
     void processMtsp(chronos_mtsp mtsp);
-    void processOpro(chronos_opro opro);
 
 private:
     PacketInterface *mPacket;
