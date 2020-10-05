@@ -856,7 +856,6 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
         opro.mass = 12345;
         opro.objectLengthX = 6789;
         opro.objectLengthZ = 12345;
-        sendOpro(opro);
 
         sendOpro(opro);
 
