@@ -32,7 +32,7 @@ using namespace std::this_thread; // for sleep_for()
 #define NORMAL_CONSOLE_TEXT "\033[0m" // Restore normal console colour
 
 // For sanity check of position to follow
-#define MAX_FOLLOW_DISTANCE_METERS 20.0
+#define MAX_FOLLOW_DISTANCE_METERS 10.0
 
 inline void action_error_exit(Action::Result result, const std::string& message);
 inline void follow_me_error_exit(FollowMe::Result result, const std::string& message);
@@ -68,14 +68,21 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    // Wait for the system to connect via heartbeat
-    while (!dc.is_connected()) {
-        std::cout << "Wait for system to connect via heartbeat" << std::endl;
-        sleep_for(seconds(1));
-    }
+//    // Wait for the system to connect via heartbeat
+//    while (!dc.is_connected()) {
+//        std::cout << "Wait for system to connect via heartbeat" << std::endl;
+//        sleep_for(seconds(1));
+//    }
+
+    sleep_for(seconds(5));
+//    std::vector<uint64_t> system_vector = dc.system_uuids();
+//    for ( auto i = system_vector.begin(); i != system_vector.end(); i++ ) {
+//        std::cout << *i << std::endl;
+//    }
+//    return 0;
 
     // System got discovered.
-    System& system = dc.system();
+    System& system = dc.system(3762846593019032885);
     auto action = std::make_shared<Action>(system);
     auto follow_me = std::make_shared<FollowMe>(system);
     auto telemetry = std::make_shared<Telemetry>(system);
@@ -146,6 +153,10 @@ int main(int argc, char** argv)
 
     while (location_provider.is_running()) {
         sleep_for(seconds(1));
+        static int count = 0;
+        count++;
+        if (count == 60)
+            break;
     }
 
     // Stop Follow Me
@@ -155,14 +166,14 @@ int main(int argc, char** argv)
     // Stop flight mode updates.
     telemetry->subscribe_flight_mode(nullptr);
 
-//    // Land
-//    const Action::Result land_result = action->land();
-//    action_error_exit(land_result, "Landing failed");
-//    while (telemetry->in_air()) {
-//        std::cout << "waiting until landed" << std::endl;
-//        sleep_for(seconds(1));
-//    }
-//    std::cout << "Landed..." << std::endl;
+    // Land
+    const Action::Result land_result = action->land();
+    action_error_exit(land_result, "Landing failed");
+    while (telemetry->in_air()) {
+        std::cout << "waiting until landed" << std::endl;
+        sleep_for(seconds(1));
+    }
+    std::cout << "Landed..." << std::endl;
     return 0;
 }
 
