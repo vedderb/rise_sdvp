@@ -32,7 +32,9 @@ using namespace std::this_thread; // for sleep_for()
 #define NORMAL_CONSOLE_TEXT "\033[0m" // Restore normal console colour
 
 // For sanity check of position to follow
-#define MAX_FOLLOW_DISTANCE_METERS 10.0
+#define MAX_FOLLOW_DISTANCE_METERS 5.0
+
+#define MAX_SECONDS_TO_FOLLOW 60
 
 inline void action_error_exit(Action::Result result, const std::string& message);
 inline void follow_me_error_exit(FollowMe::Result result, const std::string& message);
@@ -68,21 +70,23 @@ int main(int argc, char** argv)
         return 1;
     }
 
-//    // Wait for the system to connect via heartbeat
-//    while (!dc.is_connected()) {
-//        std::cout << "Wait for system to connect via heartbeat" << std::endl;
-//        sleep_for(seconds(1));
-//    }
+    std::cout << "Waiting to discover system..." << std::endl;
+    bool discovered_system = false;
+    dc.register_on_discover([&discovered_system](uint64_t uuid) {
+        std::cout << "Discovered system with UUID: " << uuid << std::endl;
+        discovered_system = true;
+    });
 
-    sleep_for(seconds(5));
-//    std::vector<uint64_t> system_vector = dc.system_uuids();
-//    for ( auto i = system_vector.begin(); i != system_vector.end(); i++ ) {
-//        std::cout << *i << std::endl;
-//    }
-//    return 0;
+    while (!discovered_system)
+        sleep_for(seconds(1));
+
+    if (dc.system_uuids().size() > 1) {
+        std::cout << "Discovered more than one system! Exiting." << std::endl;
+        exit(1);
+    }
 
     // System got discovered.
-    System& system = dc.system(3762846593019032885);
+    System& system = dc.system(dc.system_uuids().front());
     auto action = std::make_shared<Action>(system);
     auto follow_me = std::make_shared<FollowMe>(system);
     auto telemetry = std::make_shared<Telemetry>(system);
@@ -140,8 +144,8 @@ int main(int argc, char** argv)
         target_location.latitude_deg = lat;
         target_location.longitude_deg = lon;
 
-        double lat_diff = telemetry->position().latitude_deg - target_location.latitude_deg;
-        double lon_diff = telemetry->position().longitude_deg - target_location.longitude_deg;
+        double lat_diff = fabs(telemetry->position().latitude_deg - target_location.latitude_deg);
+        double lon_diff = fabs(telemetry->position().longitude_deg - target_location.longitude_deg);
 
         // Sanity-check: do not follow if target is more than (roughly) MAX_FOLLOW_DISTANCE_METERS away in either x or y
         if (lat_diff/RCSLocationProvider::LATITUDE_DEG_PER_METER < MAX_FOLLOW_DISTANCE_METERS
@@ -152,10 +156,10 @@ int main(int argc, char** argv)
     });
 
     while (location_provider.is_running()) {
-        sleep_for(seconds(1));
         static int count = 0;
-        count++;
-        if (count == 60)
+
+        sleep_for(seconds(1));
+        if (++count >= MAX_SECONDS_TO_FOLLOW)
             break;
     }
 
