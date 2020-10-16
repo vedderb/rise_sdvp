@@ -61,6 +61,7 @@ public:
     bool setAp(bool on);
     void disableKbBox();
     void toggleCameraFullscreen();
+    QPair<int,int> getFirmwareVersion();
 
 signals:
     void terminalCmd(quint8 id, QString cmd);
@@ -159,10 +160,12 @@ private:
     double mImageFpsFilter;
     ImageWidget *mFullscreenImage;
     MAIN_CONFIG mConfigLast;
+    QPair<int,int> mFirmwareVersion;
 
     void getConfGui(MAIN_CONFIG &conf);
     void setConfGui(MAIN_CONFIG &conf);
     void updateExperimentZoom();
+    void setFirmwareVersion(QPair<int,int> firmwareVersion);
 
 };
 

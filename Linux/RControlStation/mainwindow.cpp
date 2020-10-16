@@ -604,10 +604,12 @@ void MainWindow::timerSlot()
 void MainWindow::sendHeartbeat()
 {
     for(QList<CarInterface*>::Iterator it_car = mCars.begin();it_car < mCars.end();it_car++)
+        if ((*it_car)->getFirmwareVersion().first >= 20)
             mPacketInterface->sendHeartbeat((*it_car)->getId());
 
     for(QList<CopterInterface*>::Iterator it_copter = mCopters.begin();it_copter < mCopters.end();it_copter++)
-        mPacketInterface->sendHeartbeat((*it_copter)->getId());
+        if ((*it_copter)->getFirmwareVersion().first >= 20)
+            mPacketInterface->sendHeartbeat((*it_copter)->getId());
 }
 
 void MainWindow::showStatusInfo(QString info, bool isGood)
@@ -644,12 +646,12 @@ void MainWindow::stateReceived(quint8 id, CAR_STATE state)
                              "This version of RControlStation is not compatible with the "
                              "firmware of the connected car. Update RControlStation, the car "
                              "firmware or both.");
-    }
-
-    for(QList<CarInterface*>::Iterator it_car = mCars.begin();it_car < mCars.end();it_car++) {
-        CarInterface *car = *it_car;
-        if (car->getId() == id) {
-            car->setStateData(state);
+    } else {
+        for(QList<CarInterface*>::Iterator it_car = mCars.begin();it_car < mCars.end();it_car++) {
+            CarInterface *car = *it_car;
+            if (car->getId() == id) {
+                car->setStateData(state);
+            }
         }
     }
 }

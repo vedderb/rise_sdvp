@@ -167,6 +167,7 @@ void CarInterface::setStateData(CAR_STATE data)
     QString fwStr;
     fwStr.sprintf("FW %d.%d", data.fw_major, data.fw_minor);
     ui->fwLabel->setText(fwStr);
+    setFirmwareVersion(qMakePair(data.fw_major, data.fw_minor));
 
     // Speed bar
     QString speedTxt;
@@ -376,6 +377,16 @@ void CarInterface::toggleCameraFullscreen()
             mFullscreenImage = 0;
         });
     }
+}
+
+QPair<int,int> CarInterface::getFirmwareVersion()
+{
+    return mFirmwareVersion;
+}
+
+void CarInterface::setFirmwareVersion(QPair<int,int> firmwareVersion)
+{
+    mFirmwareVersion = firmwareVersion;
 }
 
 void CarInterface::timerSlot()
