@@ -522,8 +522,8 @@ void Autopilot::timerSlot()
 
         // Look m_route_look_ahead points ahead, or less than that if the route is shorter
         int add = m_route_look_ahead;
-        if (add > len) {
-            add = len;
+        if (add >= len) {
+            add = len-1;
         }
 
         int start = m_point_now;
