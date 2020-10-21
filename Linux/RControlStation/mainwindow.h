@@ -191,6 +191,16 @@ private slots:
 
     void on_WgDisconnectPushButton_clicked();
 
+    void on_AutopilotConfigurePushButton_clicked();
+
+    void on_AutopilotStartPushButton_clicked();
+
+    void on_AutopilotStopPushButton_clicked();
+
+    void on_AutopilotRestartPushButton_clicked();
+
+    void on_AutopilotPausePushButton_clicked();
+
 private:
     Ui::MainWindow *ui;
     QTimer *mTimer;

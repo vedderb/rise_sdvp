@@ -69,6 +69,8 @@
         <file>Icons/expand_v_on.png</file>
         <file>Icons/size_off.png</file>
         <file>Icons/size_on.png</file>
+        <file>Icons/Stop-96.png</file>
+        <file>Icons/Play-96.png</file>
     </qresource>
     <qresource prefix="/">
         <file>res/brdc0990.18n</file>

@@ -73,7 +73,7 @@ private slots:
 
 private:
     static const quint8 FW_VERSION_MAJOR = 12;
-    static const quint8 FW_VERSION_MINOR = 2;
+    static const quint8 FW_VERSION_MINOR = 3;
 
     double mCarTurnRad;
     double mGearRatio;

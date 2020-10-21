@@ -818,12 +818,13 @@ bool PacketInterface::clearRoute(quint8 id, int retries)
     return sendPacketAck(mSendBuffer, send_index, retries);
 }
 
-bool PacketInterface::setApActive(quint8 id, bool active, int retries)
+bool PacketInterface::setApActive(quint8 id, bool active, bool resetState, int retries)
 {
     qint32 send_index = 0;
     mSendBuffer[send_index++] = id;
     mSendBuffer[send_index++] = CMD_AP_SET_ACTIVE;
-    mSendBuffer[send_index++] = active ? 1 : 0;
+    mSendBuffer[send_index++] = active ? 1 : 0;    
+    mSendBuffer[send_index++] = resetState ? 1 : 0;
 
     return sendPacketAck(mSendBuffer, send_index, retries);
 }

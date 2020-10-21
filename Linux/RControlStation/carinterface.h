@@ -58,10 +58,14 @@ public:
     void setCtrlAp();
     void setCtrlKb();
     bool getCtrlKb();
-    bool setAp(bool on);
+    bool setAp(bool on, bool resetState = false);
     void disableKbBox();
     void toggleCameraFullscreen();
+    void showAutoPilotConfiguration();
     QPair<int,int> getFirmwareVersion();
+
+    bool getResetApOnEmergencyStop() const;
+    void setResetApOnEmergencyStop(bool value);
 
 signals:
     void terminalCmd(quint8 id, QString cmd);
@@ -145,6 +149,7 @@ private:
 #endif
 
     int mId;
+    bool resetApOnEmergencyStop;
     CAR_STATE mLastCarState;
     QTimer *mTimer;
     QUdpSocket *mUdpSocket;

@@ -74,8 +74,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     mVersion = "0.8";
-    mSupportedFirmwares.append(qMakePair(12, 2));
-    mSupportedFirmwares.append(qMakePair(20, 0));
+    mSupportedFirmwares.append(qMakePair(12, 3));
+    mSupportedFirmwares.append(qMakePair(20, 1));
 
     qRegisterMetaType<LocPoint>("LocPoint");
 
@@ -1401,6 +1401,7 @@ void MainWindow::on_mapApButton_clicked()
             mCars[i]->setCtrlAp();
         }
     }
+    ui->throttleOffButton->setChecked(true);
 }
 
 void MainWindow::on_mapKbButton_clicked()
@@ -1410,6 +1411,7 @@ void MainWindow::on_mapKbButton_clicked()
             mCars[i]->setCtrlKb();
         }
     }
+    ui->throttleDutyButton->setChecked(true);
 }
 
 void MainWindow::on_mapOffButton_clicked()
@@ -2264,4 +2266,54 @@ void MainWindow::on_WgDisconnectPushButton_clicked()
         ui->wgStatusLabel->setText("Status: Interface up");
     else
         ui->wgStatusLabel->setText("Status: Interface down");
+}
+
+void MainWindow::on_AutopilotConfigurePushButton_clicked()
+{
+    ui->mainTabWidget->setCurrentIndex(ui->mainTabWidget->indexOf(ui->tab));
+    ui->carsWidget->setCurrentIndex(ui->mapCarBox->value());
+
+    QWidget *tmp = ui->carsWidget->widget(ui->mapCarBox->value());
+    if (tmp) {
+        CarInterface *car = dynamic_cast<CarInterface*>(tmp);
+        car->showAutoPilotConfiguration();
+    }
+}
+
+void MainWindow::on_AutopilotStartPushButton_clicked()
+{
+    ui->throttleOffButton->setChecked(true);
+    QWidget *tmp = ui->carsWidget->widget(ui->mapCarBox->value());
+    if (tmp) {
+        CarInterface *car = dynamic_cast<CarInterface*>(tmp);
+        car->setAp(true, false);
+    }
+}
+
+void MainWindow::on_AutopilotStopPushButton_clicked()
+{
+    QWidget *tmp = ui->carsWidget->widget(ui->mapCarBox->value());
+    if (tmp) {
+        CarInterface *car = dynamic_cast<CarInterface*>(tmp);
+        car->setAp(false, true);
+    }
+}
+
+void MainWindow::on_AutopilotRestartPushButton_clicked()
+{
+    ui->throttleOffButton->setChecked(true);
+    QWidget *tmp = ui->carsWidget->widget(ui->mapCarBox->value());
+    if (tmp) {
+        CarInterface *car = dynamic_cast<CarInterface*>(tmp);
+        car->setAp(true, true);
+    }
+}
+
+void MainWindow::on_AutopilotPausePushButton_clicked()
+{
+    QWidget *tmp = ui->carsWidget->widget(ui->mapCarBox->value());
+    if (tmp) {
+        CarInterface *car = dynamic_cast<CarInterface*>(tmp);
+        car->setAp(false, false);
+    }
 }

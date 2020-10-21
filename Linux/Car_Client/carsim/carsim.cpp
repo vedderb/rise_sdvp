@@ -623,6 +623,8 @@ void CarSim::processPacket(VByteArray vb)
 
         case CMD_AP_SET_ACTIVE: {
             mAutoPilot->autopilot_set_active(vb.vbPopFrontInt8());
+            if (vb.vbPopFrontInt8())
+                mAutoPilot->autopilot_reset_state();
 
             // Send ack
             VByteArray ack;

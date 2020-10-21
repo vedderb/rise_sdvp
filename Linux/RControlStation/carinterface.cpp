@@ -63,6 +63,7 @@ CarInterface::CarInterface(QWidget *parent) :
     mMap = 0;
     mPacketInterface = 0;
     mId = 0;
+    resetApOnEmergencyStop = true;
     mExperimentReplot = false;
     mExperimentPlotNow = 0;
     mSettingsReadDone = false;
@@ -320,16 +321,17 @@ void CarInterface::emergencyStop()
     } else {
         // Send the AP stop command even if the autopilot was not active in the UI.
         if (mPacketInterface) {
-            mPacketInterface->setApActive(mId, false);
+            mPacketInterface->setApActive(mId, false, resetApOnEmergencyStop);
         }
     }
+
     ui->keyboardControlBox->setChecked(false);
 }
 
 void CarInterface::setCtrlAp()
 {
-    ui->autopilotBox->setChecked(true);
     ui->keyboardControlBox->setChecked(false);
+    ui->autopilotBox->setChecked(true);
 }
 
 void CarInterface::setCtrlKb()
@@ -343,12 +345,12 @@ bool CarInterface::getCtrlKb()
     return ui->keyboardControlBox->isChecked();
 }
 
-bool CarInterface::setAp(bool on)
+bool CarInterface::setAp(bool on, bool resetState)
 {
     bool ok = false;
 
     if (mPacketInterface) {
-        ok = mPacketInterface->setApActive(mId, on);
+        ok = mPacketInterface->setApActive(mId, on, resetState);
 
         if (ok) {
             ui->autopilotBox->setChecked(on);
@@ -377,6 +379,14 @@ void CarInterface::toggleCameraFullscreen()
             mFullscreenImage = 0;
         });
     }
+}
+
+void CarInterface::showAutoPilotConfiguration()
+{
+    on_confReadButton_clicked();
+    ui->tabWidget->setCurrentIndex(ui->tabWidget->indexOf(ui->tab_5));
+    ui->confCommonWidget->showAutoPilotConfiguration();
+
 }
 
 QPair<int,int> CarInterface::getFirmwareVersion()
@@ -1119,4 +1129,14 @@ void CarInterface::on_ioBoardPwmSlider_valueChanged(int value)
     double val_mapped = (double)value / 1000.0;
     ui->ioBoardPwmNumber->display(val_mapped);
     emit ioBoardSetPwm(mId, 0, val_mapped);
+}
+
+bool CarInterface::getResetApOnEmergencyStop() const
+{
+    return resetApOnEmergencyStop;
+}
+
+void CarInterface::setResetApOnEmergencyStop(bool value)
+{
+    resetApOnEmergencyStop = value;
 }

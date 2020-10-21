@@ -39,7 +39,8 @@
 static THD_WORKING_AREA(ap_thread_wa, 2048);
 __attribute__((section(".ram4"))) static ROUTE_POINT m_route[AP_ROUTE_SIZE];
 static bool m_is_active;
-static int m_point_last; // The last point on the route
+static bool m_is_route_started;
+static int m_point_last; // Pointing behind last point on the route
 static int m_point_now; // The first point in the currently considered part of the route
 static bool m_has_prev_point;
 static float m_override_speed;
@@ -84,6 +85,7 @@ static void terminal_look_ahead(int argc, const char **argv);
 void autopilot_init(void) {
 	memset(m_route, 0, sizeof(m_route));
 	m_is_active = false;
+	m_is_route_started = false;
 	m_point_now = 0;
 	m_point_last = 0;
 	m_has_prev_point = false;
@@ -332,6 +334,19 @@ bool autopilot_is_active(void) {
 	return m_is_active;
 }
 
+void autopilot_reset_state(void) {
+	chMtxLock(&m_ap_lock);
+
+	m_point_now = 0;
+	m_is_route_started = false;
+	m_start_time = pos_get_ms_today();
+	m_sync_rx = false;
+	m_route_left = 0;
+	memset(&m_rp_now, 0, sizeof(ROUTE_POINT));
+
+	chMtxUnlock(&m_ap_lock);
+}
+
 int autopilot_get_route_len(void) {
 	return m_point_last;
 }
@@ -469,7 +484,7 @@ static THD_FUNCTION(ap_thread, arg) {
 			continue;
 		}
 
-		// the length of the route that is left
+		// the length of the route
 		int len = m_point_last;
 
 		// This means that the route has wrapped around
@@ -478,6 +493,7 @@ static THD_FUNCTION(ap_thread, arg) {
 			len = AP_ROUTE_SIZE + m_point_last - m_point_now;
 		}
 
+		// the length of the route that is left
 		m_route_left = len - m_point_now;
 		if (m_route_left < 0) {
 			m_route_left += AP_ROUTE_SIZE;
@@ -557,15 +573,6 @@ static THD_FUNCTION(ap_thread, arg) {
 			car_pos.px = car_cx;
 			car_pos.py = car_cy;
 
-			// Look m_route_look_ahead points ahead, or less than that if the route is shorter
-			int add = m_route_look_ahead;
-			if (add >= len) {
-				add = len-1;
-			}
-
-			int start = m_point_now;
-			int end = m_point_now + add;
-
 			// Speed-dependent radius
 			if (m_en_dynamic_rad) {
 				m_rad_now = fabsf(main_config.ap_rad_time_ahead * pos_get_speed());
@@ -576,9 +583,30 @@ static THD_FUNCTION(ap_thread, arg) {
 				m_rad_now = main_config.ap_base_rad;
 			}
 
+			// Look m_route_look_ahead points ahead, or less than that if the route is shorter
+			int look_ahead = m_route_look_ahead;
+			if (look_ahead >= len) {
+				look_ahead = len-1;
+			}
+
+			int start;
+			int end;
 			ROUTE_POINT rp_now; // The point we should follow now.
 			int circle_intersections = 0;
 			bool last_point_reached = false;
+
+			if (m_is_route_started) {
+				start = m_point_now;
+				end = m_point_now + look_ahead;
+			} else { // initially, go to first point of the route
+				start = 0;
+				end = 0;
+				rp_now = m_route[0];
+				circle_intersections = 1;
+
+				if (utils_rp_distance(&rp_now, &car_pos) < 1.5*m_rad_now) // leave a bit more slack than turn radius, might come from a very bad angle
+					m_is_route_started = true;
+			}
 
 			// Last point in route
 			int last_point_ind = m_point_last - 1;
@@ -684,7 +712,7 @@ static THD_FUNCTION(ap_thread, arg) {
 				}
 			}
 
-			attributes_now = closest_to_car->attributes;
+			attributes_now = m_is_route_started ? closest_to_car->attributes : 0;
 
 			// Look for closest points
 			ROUTE_POINT closest; // Closest point on route to car
@@ -692,54 +720,52 @@ static THD_FUNCTION(ap_thread, arg) {
 			ROUTE_POINT *closest2 = &m_route[1]; // End of closest line segment
 			int closest1_ind = 0; // Index of the first closest point
 
-			{
-				bool closest_set = false;
+			bool closest_set = false;
 
-				for (int i = start;i < end;i++) {
-					int ind = i; // First point index for this iteration
-					int indn = i + 1; // Next point index for this iteration
+			for (int i = start;i < end;i++) {
+				int ind = i; // First point index for this iteration
+				int indn = i + 1; // Next point index for this iteration
 
-					// Wrap around
-					if (ind >= m_point_last) {
-						if (m_point_now <= m_point_last) {
-							ind -= m_point_last;
-						} else {
-							if (ind >= AP_ROUTE_SIZE) {
-								ind -= AP_ROUTE_SIZE;
-							}
+				// Wrap around
+				if (ind >= m_point_last) {
+					if (m_point_now <= m_point_last) {
+						ind -= m_point_last;
+					} else {
+						if (ind >= AP_ROUTE_SIZE) {
+							ind -= AP_ROUTE_SIZE;
 						}
 					}
+				}
 
-					// Wrap around
-					if (indn >= m_point_last) {
-						if (m_point_now <= m_point_last) {
-							indn -= m_point_last;
-						} else {
-							if (indn >= AP_ROUTE_SIZE) {
-								indn -= AP_ROUTE_SIZE;
-							}
+				// Wrap around
+				if (indn >= m_point_last) {
+					if (m_point_now <= m_point_last) {
+						indn -= m_point_last;
+					} else {
+						if (indn >= AP_ROUTE_SIZE) {
+							indn -= AP_ROUTE_SIZE;
 						}
 					}
+				}
 
-					ROUTE_POINT tmp;
-					ROUTE_POINT *p1, *p2;
-					p1 = &m_route[ind];
-					p2 = &m_route[indn];
-					utils_closest_point_line(p1, p2, car_cx, car_cy, &tmp);
+				ROUTE_POINT tmp;
+				ROUTE_POINT *p1, *p2;
+				p1 = &m_route[ind];
+				p2 = &m_route[indn];
+				utils_closest_point_line(p1, p2, car_cx, car_cy, &tmp);
 
-					if (!closest_set || utils_rp_distance(&tmp, &car_pos) < utils_rp_distance(&closest, &car_pos)) {
-						closest_set = true;
-						closest = tmp;
-						closest1 = p1;
-						closest2 = p2;
-						closest1_ind = ind;
-					}
+				if (!closest_set || utils_rp_distance(&tmp, &car_pos) < utils_rp_distance(&closest, &car_pos)) {
+					closest_set = true;
+					closest = tmp;
+					closest1 = p1;
+					closest2 = p2;
+					closest1_ind = ind;
+				}
 
-					// Do not look past the last point if we aren't repeating routes.
-					if (!main_config.ap_repeat_routes) {
-						if (indn == last_point_ind) {
-							break;
-						}
+				// Do not look past the last point if we aren't repeating routes.
+				if (!main_config.ap_repeat_routes) {
+					if (indn == last_point_ind) {
+						break;
 					}
 				}
 			}
@@ -770,8 +796,8 @@ static THD_FUNCTION(ap_thread, arg) {
 					commands_plot_set_graph(3);
 					commands_send_plot_points((float)sample, m_rad_now * 10.0);
 
-					commands_printf("D: %.1f cm, S: %.2f km/h, Yaw: %.1f deg, Rad: %.2f m",
-							(double)diff, (double)speed, (double)pos_now.yaw, (double)m_rad_now);
+					commands_printf("D: %.1f cm, S: %.2f km/h, Yaw: %.1f deg, Rad: %.2f m, closest1_ind: %d",
+							(double)diff, (double)speed, (double)pos_now.yaw, (double)m_rad_now, closest1_ind);
 				}
 
 				sample++;

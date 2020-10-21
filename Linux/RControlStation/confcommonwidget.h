@@ -40,11 +40,15 @@ public:
     void setMagComp(QVector<double> comp);
     void setMagCompCenter(QVector<double> center);
 
+    void showAutoPilotConfiguration();
+
 signals:
     void loadMagCal();
 
 private slots:
     void on_magCalLoadButton_clicked();
+
+    void on_confApResetOnEmergencyStopBox_toggled(bool checked);
 
 private:
     Ui::ConfCommonWidget *ui;
