@@ -353,6 +353,8 @@ bool CarInterface::setAp(bool on, bool resetState)
         ok = mPacketInterface->setApActive(mId, on, resetState);
 
         if (ok) {
+            if (on)
+                ui->keyboardControlBox->setChecked(false);
             ui->autopilotBox->setChecked(on);
         }
     }

@@ -2977,7 +2977,7 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>316</width>
+                     <width>330</width>
                      <height>864</height>
                     </rect>
                    </property>
@@ -3293,6 +3293,18 @@
                        </item>
                        <item>
                         <widget class="QPushButton" name="boundsFillPushButton">
+                         <property name="sizePolicy">
+                          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                           <horstretch>0</horstretch>
+                           <verstretch>0</verstretch>
+                          </sizepolicy>
+                         </property>
+                         <property name="minimumSize">
+                          <size>
+                           <width>310</width>
+                           <height>0</height>
+                          </size>
+                         </property>
                          <property name="text">
                           <string>Fill</string>
                          </property>
