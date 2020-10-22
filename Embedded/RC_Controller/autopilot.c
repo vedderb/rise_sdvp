@@ -81,6 +81,7 @@ static void terminal_print_closest(int argc, const char **argv);
 static void terminal_dynamic_rad(int argc, const char **argv);
 static void terminal_angle_dist_comp(int argc, const char **argv);
 static void terminal_look_ahead(int argc, const char **argv);
+static void reset_state(void);
 
 void autopilot_init(void) {
 	memset(m_route, 0, sizeof(m_route));
@@ -337,14 +338,19 @@ bool autopilot_is_active(void) {
 void autopilot_reset_state(void) {
 	chMtxLock(&m_ap_lock);
 
+	reset_state();
+
+	chMtxUnlock(&m_ap_lock);
+}
+
+void reset_state(void) {
 	m_point_now = 0;
 	m_is_route_started = false;
 	m_start_time = pos_get_ms_today();
 	m_sync_rx = false;
 	m_route_left = 0;
+	m_route_end = false;
 	memset(&m_rp_now, 0, sizeof(ROUTE_POINT));
-
-	chMtxUnlock(&m_ap_lock);
 }
 
 int autopilot_get_route_len(void) {
@@ -912,6 +918,8 @@ static THD_FUNCTION(ap_thread, arg) {
 				bldc_interface_set_current_brake(10.0);
 			}
 			m_rad_now = -1.0;
+			m_is_active = false;
+			reset_state();
 		}
 
 		chMtxUnlock(&m_ap_lock);
