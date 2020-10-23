@@ -39,7 +39,7 @@
         <string>000.000.000.000;_</string>
        </property>
        <property name="text">
-        <string>192.168..</string>
+        <string>192.168.200.</string>
        </property>
       </widget>
      </item>
@@ -76,7 +76,7 @@
         <number>99999</number>
        </property>
        <property name="value">
-        <number>9499</number>
+        <number>51820</number>
        </property>
       </widget>
      </item>
@@ -89,7 +89,7 @@
         <string>000.000.000.000;_</string>
        </property>
        <property name="text">
-        <string>194.218.146.239</string>
+        <string>195.67.74.248</string>
        </property>
       </widget>
      </item>
@@ -115,7 +115,7 @@
           <string>VPN (WireGuard) server's public key.</string>
          </property>
          <property name="text">
-          <string notr="true">/Sg1oxPQLRCaO+6oQxeO+yTYjKcBahLg/xt0mVfDPVE=</string>
+          <string notr="true">8qwcWC2JgTUrnK0fLrotkb8tr+AeVoZtZI0Bn2f3vAI=</string>
          </property>
         </widget>
        </item>
