@@ -3193,6 +3193,22 @@
                            </widget>
                           </item>
                           <item>
+                           <widget class="QDoubleSpinBox" name="lowerToolsDistanceSpinBox">
+                            <property name="prefix">
+                             <string>Lower </string>
+                            </property>
+                            <property name="suffix">
+                             <string> m after Turn</string>
+                            </property>
+                            <property name="singleStep">
+                             <double>0.100000000000000</double>
+                            </property>
+                            <property name="value">
+                             <double>0.500000000000000</double>
+                            </property>
+                           </widget>
+                          </item>
+                          <item>
                            <widget class="QCheckBox" name="raiseToolsCheckBox">
                             <property name="text">
                              <string>Raise Tools in Turns</string>
@@ -3208,10 +3224,10 @@
                              <string>Tools are lowered/raised this amount of meters after/before a turn</string>
                             </property>
                             <property name="prefix">
-                             <string>Act. Dist. to Turn: </string>
+                             <string>Raise </string>
                             </property>
                             <property name="suffix">
-                             <string> m</string>
+                             <string> m before Turn</string>
                             </property>
                             <property name="decimals">
                              <number>2</number>
@@ -3258,7 +3274,7 @@
                           <item>
                            <widget class="QSpinBox" name="stepsForTurningSpinBox">
                             <property name="prefix">
-                             <string>Steps For Turning: </string>
+                             <string>Steps for Turning: </string>
                             </property>
                             <property name="value">
                              <number>6</number>
