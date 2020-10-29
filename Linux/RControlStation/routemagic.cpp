@@ -1563,8 +1563,9 @@ QList<LocPoint> RouteMagic::fillConvexPolygonWithZigZag(QList<LocPoint> bounds, 
                     tmpAttr |= setAttributesInTurns;
                     turnStep.setAttributes(tmpAttr);
 
+                    // Make sure that first and last point comply to bounds without breaking the turn
                     if ((j == 0 || j == turnIntermediateSteps+1)) {
-                        if (keepTurnsInBounds) {
+                        if (keepTurnsInBounds || isPointWithin(turnStep, bounds)) {
                             turnStep.setSpeed(speed);
                             route.replace(i+j,turnStep);
                         } else {
