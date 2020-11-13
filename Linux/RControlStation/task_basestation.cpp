@@ -74,11 +74,12 @@ void Task_BaseStation::task()
     bool isF9p = true;
     bool mBasePosSet = false;
 
-    int rate = 1000;
-    ubxCommTimeoutDuration = 2*rate;
+    int rate_meas = 1000;
+    ubxCommTimeoutDuration = 2*rate_meas;
+    int rate_nav = 1;
 
     mUBXCommTimer.start(ubxCommTimeoutDuration);
-    BaseStation::configureUbx(&mUblox, rate, isF9p, isM8p, &mBasePosSet, refSendLat, refSendLon, refSendH, mSurveyIn, mSurveyInMinAcc, mSurveyInMinDuration);
+    BaseStation::configureUbx(&mUblox, 921000, rate_meas, rate_nav, isF9p, isM8p, &mBasePosSet, refSendLat, refSendLon, refSendH, BaseStation::BaseStationPositionMode::SURVEY_IN, mSurveyInMinAcc, mSurveyInMinDuration);
 
     mUblox.ubxPoll(UBX_CLASS_MON, UBX_MON_VER);
     mUblox.ubxPoll(UBX_CLASS_CFG, UBX_CFG_GNSS);    

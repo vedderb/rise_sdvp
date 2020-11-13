@@ -65,7 +65,6 @@ private:
 
     bool mBasePosSet = false;
 
-    bool mSurveyIn = true;
     int mSurveyInMinDuration; // seconds
     double mSurveyInMinAcc; // meters
     double mRefSendllh[3];

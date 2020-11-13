@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>738</width>
-    <height>536</height>
+    <width>1551</width>
+    <height>1044</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -74,7 +74,7 @@
                <number>4000000</number>
               </property>
               <property name="value">
-               <number>115200</number>
+               <number>921000</number>
               </property>
              </widget>
             </item>
@@ -158,16 +158,44 @@
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_4">
             <item>
-             <widget class="QCheckBox" name="ubxPlotMapBox">
+             <widget class="QLabel" name="label">
               <property name="text">
-               <string>Plot on Map</string>
+               <string>Navigation Solution Config.:</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QCheckBox" name="ubxFollowMapBox">
-              <property name="text">
-               <string>Follow on Map</string>
+             <widget class="QSpinBox" name="rateMeasBox">
+              <property name="suffix">
+               <string> Hz</string>
+              </property>
+              <property name="prefix">
+               <string>Measure. Rate: </string>
+              </property>
+              <property name="minimum">
+               <number>1</number>
+              </property>
+              <property name="maximum">
+               <number>20</number>
+              </property>
+              <property name="value">
+               <number>1</number>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSpinBox" name="rateNavBox">
+              <property name="prefix">
+               <string>Measure. per Solution: </string>
+              </property>
+              <property name="minimum">
+               <number>1</number>
+              </property>
+              <property name="maximum">
+               <number>128</number>
+              </property>
+              <property name="value">
+               <number>1</number>
               </property>
              </widget>
             </item>
@@ -198,25 +226,6 @@
               </property>
              </widget>
             </item>
-            <item>
-             <widget class="QComboBox" name="rateBox">
-              <item>
-               <property name="text">
-                <string>1 Hz</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>5 Hz</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>10 Hz</string>
-               </property>
-              </item>
-             </widget>
-            </item>
            </layout>
           </item>
          </layout>
@@ -233,7 +242,7 @@
          <property name="checked">
           <bool>false</bool>
          </property>
-         <layout class="QHBoxLayout" name="horizontalLayout">
+         <layout class="QVBoxLayout" name="verticalLayout_3">
           <property name="spacing">
            <number>3</number>
           </property>
@@ -250,159 +259,245 @@
            <number>3</number>
           </property>
           <item>
-           <widget class="QDoubleSpinBox" name="refSendLatBox">
-            <property name="prefix">
-             <string>Lat: </string>
+           <widget class="QGroupBox" name="groupBox">
+            <property name="title">
+             <string>Mode</string>
             </property>
-            <property name="decimals">
-             <number>8</number>
-            </property>
-            <property name="minimum">
-             <double>-90.000000000000000</double>
-            </property>
-            <property name="maximum">
-             <double>90.000000000000000</double>
-            </property>
-            <property name="value">
-             <double>0.000000000000000</double>
-            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_5">
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_9">
+               <item>
+                <widget class="QRadioButton" name="fixedPositionRadioButton">
+                 <property name="text">
+                  <string>Fixed Position</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QRadioButton" name="movingBaseRadioButton">
+                 <property name="text">
+                  <string>Moving Base</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QRadioButton" name="surveyInRadioButton">
+                 <property name="text">
+                  <string>Survey In</string>
+                 </property>
+                 <property name="checked">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QDoubleSpinBox" name="surveyInMinAccBox">
+                 <property name="toolTip">
+                  <string>Accuracy must be better than this</string>
+                 </property>
+                 <property name="prefix">
+                  <string>Min Acc: </string>
+                 </property>
+                 <property name="suffix">
+                  <string> m</string>
+                 </property>
+                 <property name="value">
+                  <double>2.000000000000000</double>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QDoubleSpinBox" name="surveyInMaxDiffBox">
+                 <property name="toolTip">
+                  <string>Update if position moves more than this</string>
+                 </property>
+                 <property name="prefix">
+                  <string>Max Diff: </string>
+                 </property>
+                 <property name="suffix">
+                  <string> m</string>
+                 </property>
+                 <property name="singleStep">
+                  <double>1.000000000000000</double>
+                 </property>
+                 <property name="value">
+                  <double>5.000000000000000</double>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QSpinBox" name="surveyInMinDurationBox">
+                 <property name="suffix">
+                  <string> s</string>
+                 </property>
+                 <property name="prefix">
+                  <string>Min Duration: </string>
+                 </property>
+                 <property name="maximum">
+                  <number>9999</number>
+                 </property>
+                 <property name="value">
+                  <number>60</number>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_7">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+              </layout>
+             </item>
+            </layout>
            </widget>
           </item>
           <item>
-           <widget class="QDoubleSpinBox" name="refSendLonBox">
-            <property name="prefix">
-             <string>Lon: </string>
+           <widget class="QGroupBox" name="groupBox_2">
+            <property name="title">
+             <string>Current Position</string>
             </property>
-            <property name="decimals">
-             <number>8</number>
-            </property>
-            <property name="minimum">
-             <double>-180.000000000000000</double>
-            </property>
-            <property name="maximum">
-             <double>180.000000000000000</double>
-            </property>
-            <property name="value">
-             <double>0.000000000000000</double>
-            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_6">
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_7">
+               <item>
+                <widget class="QDoubleSpinBox" name="refSendLonBox">
+                 <property name="prefix">
+                  <string>Lon: </string>
+                 </property>
+                 <property name="decimals">
+                  <number>8</number>
+                 </property>
+                 <property name="minimum">
+                  <double>-180.000000000000000</double>
+                 </property>
+                 <property name="maximum">
+                  <double>180.000000000000000</double>
+                 </property>
+                 <property name="value">
+                  <double>0.000000000000000</double>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QDoubleSpinBox" name="refSendLatBox">
+                 <property name="prefix">
+                  <string>Lat: </string>
+                 </property>
+                 <property name="decimals">
+                  <number>8</number>
+                 </property>
+                 <property name="minimum">
+                  <double>-90.000000000000000</double>
+                 </property>
+                 <property name="maximum">
+                  <double>90.000000000000000</double>
+                 </property>
+                 <property name="value">
+                  <double>0.000000000000000</double>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QDoubleSpinBox" name="refSendHBox">
+                 <property name="prefix">
+                  <string>h: </string>
+                 </property>
+                 <property name="decimals">
+                  <number>3</number>
+                 </property>
+                 <property name="minimum">
+                  <double>-5000.000000000000000</double>
+                 </property>
+                 <property name="maximum">
+                  <double>100000.000000000000000</double>
+                 </property>
+                 <property name="value">
+                  <double>0.000000000000000</double>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QDoubleSpinBox" name="refSendAntHBox">
+                 <property name="prefix">
+                  <string>Ant h: </string>
+                 </property>
+                 <property name="decimals">
+                  <number>3</number>
+                 </property>
+                 <property name="maximum">
+                  <double>180.000000000000000</double>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_6">
+               <item>
+                <widget class="QCheckBox" name="sendBaseBox">
+                 <property name="text">
+                  <string>Send Position</string>
+                 </property>
+                 <property name="checked">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_6">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeType">
+                  <enum>QSizePolicy::Preferred</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
+                <widget class="QCheckBox" name="ubxPlotMapBox">
+                 <property name="text">
+                  <string>Plot on Map</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QCheckBox" name="ubxFollowMapBox">
+                 <property name="text">
+                  <string>Follow on Map</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_4">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+              </layout>
+             </item>
+            </layout>
            </widget>
-          </item>
-          <item>
-           <widget class="QDoubleSpinBox" name="refSendHBox">
-            <property name="prefix">
-             <string>h: </string>
-            </property>
-            <property name="decimals">
-             <number>3</number>
-            </property>
-            <property name="minimum">
-             <double>-5000.000000000000000</double>
-            </property>
-            <property name="maximum">
-             <double>100000.000000000000000</double>
-            </property>
-            <property name="value">
-             <double>0.000000000000000</double>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QDoubleSpinBox" name="refSendAntHBox">
-            <property name="prefix">
-             <string>Ant h: </string>
-            </property>
-            <property name="decimals">
-             <number>3</number>
-            </property>
-            <property name="maximum">
-             <double>180.000000000000000</double>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="sendBaseBox">
-            <property name="text">
-             <string>Send</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
-        <widget class="QGroupBox" name="surveyInBox">
-         <property name="title">
-          <string>Survey In</string>
-         </property>
-         <property name="checkable">
-          <bool>true</bool>
-         </property>
-         <layout class="QHBoxLayout" name="horizontalLayout_2">
-          <property name="spacing">
-           <number>3</number>
-          </property>
-          <property name="leftMargin">
-           <number>3</number>
-          </property>
-          <property name="topMargin">
-           <number>3</number>
-          </property>
-          <property name="rightMargin">
-           <number>3</number>
-          </property>
-          <property name="bottomMargin">
-           <number>3</number>
-          </property>
-          <item>
-           <widget class="QDoubleSpinBox" name="surveyInMinAccBox">
-            <property name="toolTip">
-             <string>Accuracy must be better than this</string>
-            </property>
-            <property name="prefix">
-             <string>Min Acc: </string>
-            </property>
-            <property name="suffix">
-             <string> m</string>
-            </property>
-            <property name="value">
-             <double>2.000000000000000</double>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QDoubleSpinBox" name="surveyInMaxDiffBox">
-            <property name="toolTip">
-             <string>Update if position moves more than this</string>
-            </property>
-            <property name="prefix">
-             <string>Max Diff: </string>
-            </property>
-            <property name="suffix">
-             <string> m</string>
-            </property>
-            <property name="singleStep">
-             <double>1.000000000000000</double>
-            </property>
-            <property name="value">
-             <double>5.000000000000000</double>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <spacer name="horizontalSpacer">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
           </item>
          </layout>
         </widget>
