@@ -1329,28 +1329,39 @@ static void ubx_decode_relposned(uint8_t *msg, int len) {
 	pos.pos_n = (float)ubx_get_I4(msg, &ind) / 100.0;
 	pos.pos_e = (float)ubx_get_I4(msg, &ind) / 100.0;
 	pos.pos_d = (float)ubx_get_I4(msg, &ind) / 100.0;
-
 	if (version == 1) {
-		ind += 12;
+		pos.pos_length = (float)ubx_get_I4(msg, &ind) / 100.0;
+		pos.pos_heading = (float)ubx_get_I4(msg, &ind) / 100000.0;
+		ind += 4;
 	}
 
 	pos.pos_n += (float)ubx_get_I1(msg, &ind) / 10000.0;
 	pos.pos_e += (float)ubx_get_I1(msg, &ind) / 10000.0;
 	pos.pos_d += (float)ubx_get_I1(msg, &ind) / 10000.0;
-	ind += 1;
+	if (version == 1)
+		pos.pos_length += (float)ubx_get_I1(msg, &ind) / 10000.0;
+	else
+		ind += 1;
+
 	pos.acc_n = (float)ubx_get_U4(msg, &ind) / 10000.0;
 	pos.acc_e = (float)ubx_get_U4(msg, &ind) / 10000.0;
 	pos.acc_d = (float)ubx_get_U4(msg, &ind) / 10000.0;
-
 	if (version == 1) {
-		ind += 12;
+		pos.acc_length = (float)ubx_get_I4(msg, &ind) / 10000.0;
+		pos.acc_heading = (float)ubx_get_I4(msg, &ind) / 100000.0;
+		ind += 4;
 	}
 
 	flags = ubx_get_X4(msg, &ind);
-	pos.fix_ok = flags & 0x01;
-	pos.diff_soln = flags & 0x02;
-	pos.rel_pos_valid = flags & 0x04;
-	pos.carr_soln = (flags >> 3) & 0x03;
+	pos.fix_ok =                (flags >> 0) & 1;
+	pos.diff_soln =             (flags >> 1) & 1;
+	pos.rel_pos_valid =         (flags >> 2) & 1;
+	pos.carr_soln =             (flags >> 3) & 3;
+	pos.is_moving =             (flags >> 5) & 1;
+	pos.ref_pos_miss =          (flags >> 6) & 1;
+	pos.ref_obs_miss =          (flags >> 7) & 1;
+	pos.rel_pos_heading_valid = (flags >> 8) & 1;
+	pos.rel_pos_normalized =    (flags >> 9) & 1;
 
 	if (rx_relposned) {
 		rx_relposned(&pos);
@@ -1364,17 +1375,27 @@ static void ubx_decode_relposned(uint8_t *msg, int len) {
 				"N: %.3f m\n"
 				"E: %.3f m\n"
 				"D: %.3f m\n"
-				"N_ACC: %.3f m\n"
-				"E_ACC: %.3f m\n"
-				"D_ACC: %.3f m\n"
+				"Length: %.3f m\n"
+				"Heading: %.3f\n"
+				"N_Acc: %.3f m\n"
+				"E_Acc: %.3f m\n"
+				"D_Acc: %.3f m\n"
+				"Length_Acc: %.3f m\n"
+				"Heading_Acc: %.3f\n"
 				"Fix OK: %d\n"
 				"Diff Soln: %d\n"
 				"Rel Pos Valid: %d\n"
-				"Carr Soln: %d\n",
+				"Carr Soln: %d\n"
+				"Is Moving: %d\n"
+				"Ref Pos Miss: %d\n"
+				"Ref Obs Miss: %d\n"
+				"Heading Valid: %d\n"
+				"Normalized: %d\n",
 				pos.i_tow,
-				(double)pos.pos_n, (double)pos.pos_e, (double)pos.pos_d,
-				(double)pos.acc_n, (double)pos.acc_e, (double)pos.acc_d,
-				pos.fix_ok, pos.diff_soln, pos.rel_pos_valid, pos.carr_soln);
+				(double)pos.pos_n, (double)pos.pos_e, (double)pos.pos_d, (double)pos.pos_length, (double)pos.pos_heading,
+				(double)pos.acc_n, (double)pos.acc_e, (double)pos.acc_d, (double)pos.acc_length, (double)pos.acc_heading,
+				pos.fix_ok, pos.diff_soln, pos.rel_pos_valid, pos.carr_soln, pos.is_moving,
+				pos.ref_pos_miss, pos.ref_obs_miss, pos.rel_pos_heading_valid, pos.rel_pos_normalized);
 	}
 }
 
