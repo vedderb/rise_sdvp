@@ -48,7 +48,8 @@ public:
     bool replaceRoute(quint8 id, QList<LocPoint> points, int retries = 10);
     bool removeLastRoutePoint(quint8 id, int retries = 10);
     bool clearRoute(quint8 id, int retries = 10);
-    bool setApActive(quint8 id, bool active, int retries = 10);
+    bool setApActive(quint8 id, bool active, bool resetState = false, int retries = 10);
+    bool resetApState(quint8 id, int retries = 10);
     bool setConfiguration(quint8 id, MAIN_CONFIG &conf, int retries = 10);
     bool setPosAck(quint8 id, double x, double y, double angle, int retries = 10);
     bool setYawOffsetAck(quint8 id, double angle, int retries = 10);
@@ -105,6 +106,7 @@ public slots:
     void timerSlot();
     void readPendingDatagrams();
     void getState(quint8 id);
+    void sendHeartbeat(quint8 id);
     void getMrState(quint8 id);
     void sendTerminalCmd(quint8 id, QString cmd);
     void forwardVesc(quint8 id, QByteArray data);

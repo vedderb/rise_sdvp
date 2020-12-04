@@ -306,6 +306,8 @@ void commands_process_packet(unsigned char *data, unsigned int len,
 			commands_set_send_func(func);
 
 			autopilot_set_active(data[0]);
+			if (data[1])
+				autopilot_reset_state();
 
 			// Send ack
 			int32_t send_index = 0;

@@ -467,13 +467,22 @@ typedef struct {
 	float pos_n; // Position north in meters
 	float pos_e; // Position east in meters
 	float pos_d; // Position down in meters
+	float pos_length; // Length of the relative position vector in meters
+	float pos_heading; // Heading of the relative position vector in degree
 	float acc_n; // Accuracy north in meters
 	float acc_e; // Accuracy east in meters
 	float acc_d; // Accuracy down in meters
+	float acc_length; // Accuracy length in meters
+	float acc_heading; // Accuracy heading in degree
 	bool fix_ok; // A valid fix
 	bool diff_soln; // Differential corrections are applied
 	bool rel_pos_valid; // Relative position components and accuracies valid
 	int carr_soln; // fix_type 0: no fix, 1: float, 2: fix
+	bool is_moving; // Operating in moving base mode
+	bool ref_pos_miss; // Extrapolated reference position was used to compute moving base solution
+	bool ref_obs_miss; // Extrapolated reference observations were used to compute moving base solution
+	bool rel_pos_heading_valid; // Heading is valid
+	bool rel_pos_normalized; // Position values are normalized
 } ubx_nav_relposned;
 
 typedef struct {

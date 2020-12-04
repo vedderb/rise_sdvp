@@ -29,6 +29,7 @@ bool autopilot_replace_route(ROUTE_POINT *p);
 void autopilot_sync_point(int32_t point, int32_t time, int32_t min_time_diff);
 void autopilot_set_active(bool active);
 bool autopilot_is_active(void);
+void autopilot_reset_state(void);
 int autopilot_get_route_len(void);
 int autopilot_get_point_now(void);
 int autopilot_get_route_left(void);

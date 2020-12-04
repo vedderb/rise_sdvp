@@ -39,7 +39,9 @@ public:
     ~BaseStation();
     void setMap(MapWidget *map);
 
-    static void configureUbx(Ublox *ublox, int rate, bool isF9p, bool isM8p, bool *basePosSet, double refSendLat, double refSendLon, double refSendH, bool surveyIn, double surveyInMinAcc, int surveyInMinDuration = 20);
+    // TODO: move to u-blox?
+    enum BaseStationPositionMode {FIXED, MOVING_BASE, SURVEY_IN};
+    static void configureUbx(Ublox *ublox, unsigned int baudrate, int rate_meas, int rate_nav, bool isF9p, bool isM8p, bool *basePosSet, double refSendLat, double refSendLon, double refSendH, BaseStationPositionMode positionMode, double surveyInMinAcc, int surveyInMinDuration = 20);
 
 signals:
     void rtcmOut(QByteArray data);
@@ -60,6 +62,12 @@ private slots:
     void on_readVersionButton_clicked();
 
     void on_gnssInfoButton_clicked();
+
+    void on_surveyInRadioButton_toggled(bool checked);
+
+    void on_m8Button_toggled(bool checked);
+
+    void on_movingBaseRadioButton_toggled(bool checked);
 
 private:
     Ui::BaseStation *ui;

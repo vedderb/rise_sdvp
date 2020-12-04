@@ -119,7 +119,8 @@ void CopterInterface::setStateData(MULTIROTOR_STATE data)
     // Firmware label
     QString fwStr;
     fwStr.sprintf("FW %d.%d", data.fw_major, data.fw_minor);
-    ui->fwLabel->setText(fwStr);
+    ui->fwLabel->setText(fwStr);    
+    setFirmwareVersion(qMakePair(data.fw_major, data.fw_minor));
 
     // Speed bar
     QString speedTxt;
@@ -242,6 +243,16 @@ bool CopterInterface::setAp(bool on)
     }
 
     return ok;
+}
+
+QPair<int, int> CopterInterface::getFirmwareVersion()
+{
+    return mFirmwareVersion;
+}
+
+void CopterInterface::setFirmwareVersion(QPair<int,int> firmwareVersion)
+{
+    mFirmwareVersion = firmwareVersion;
 }
 
 void CopterInterface::timerSlot()

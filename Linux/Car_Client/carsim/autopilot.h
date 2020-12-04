@@ -44,6 +44,7 @@ public:
     bool autopilot_replace_route(ROUTE_POINT *p);
     void autopilot_sync_point(int32_t point, int32_t time, int32_t min_time_diff);
     void autopilot_set_active(bool active);
+    void autopilot_reset_state(void);
     bool autopilot_is_active(void);
     int autopilot_get_route_len(void);
     int autopilot_get_point_now(void);
@@ -108,7 +109,8 @@ private:
 
     ROUTE_POINT *m_route;
     bool m_is_active;
-    int m_point_last; // The last point on the route
+    bool m_is_route_started;
+    int m_point_last; // Pointing behind last point on the route
     int m_point_now; // The first point in the currently considered part of the route
     bool m_has_prev_point;
     float m_override_speed;

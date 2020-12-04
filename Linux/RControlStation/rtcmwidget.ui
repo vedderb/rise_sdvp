@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>958</width>
-    <height>696</height>
+    <height>772</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -45,7 +45,7 @@
            <number>65535</number>
           </property>
           <property name="value">
-           <number>65300</number>
+           <number>2101</number>
           </property>
          </widget>
         </item>
@@ -104,7 +104,7 @@
         <item>
          <widget class="QLineEdit" name="ntripStreamEdit">
           <property name="text">
-           <string>SPT00</string>
+           <string>SPT000SWE0</string>
           </property>
           <property name="echoMode">
            <enum>QLineEdit::Normal</enum>

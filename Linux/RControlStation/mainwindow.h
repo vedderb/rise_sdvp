@@ -71,6 +71,7 @@ private slots:
     void serialDataAvailable();
     void serialPortError(QSerialPort::SerialPortError error);
     void timerSlot();
+    void sendHeartbeat();
     void showStatusInfo(QString info, bool isGood);
     void packetDataToSend(QByteArray &data);
     void stateReceived(quint8 id, CAR_STATE state);
@@ -190,9 +191,21 @@ private slots:
 
     void on_WgDisconnectPushButton_clicked();
 
+    void on_AutopilotConfigurePushButton_clicked();
+
+    void on_AutopilotStartPushButton_clicked();
+
+    void on_AutopilotStopPushButton_clicked();
+
+    void on_AutopilotRestartPushButton_clicked();
+
+    void on_AutopilotPausePushButton_clicked();
+
 private:
     Ui::MainWindow *ui;
     QTimer *mTimer;
+    QTimer *mHeartbeatTimer; // periodic heartbeat to vehicles for safety
+    const int mHeartbeatMS = 300;
     QSerialPort *mSerialPort;
     PacketInterface *mPacketInterface;
     QList<CarInterface*> mCars;

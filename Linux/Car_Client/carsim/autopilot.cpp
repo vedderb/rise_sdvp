@@ -192,6 +192,7 @@ Autopilot::Autopilot(QObject *parent) : QObject(parent)
 
     memset(m_route, 0, sizeof(ROUTE_POINT) * ap_route_size);
     m_is_active = false;
+    m_is_route_started = false;
     m_point_now = 0;
     m_point_last = 0;
     m_has_prev_point = false;
@@ -349,6 +350,16 @@ void Autopilot::autopilot_set_active(bool active)
     m_is_active = active;
 }
 
+void Autopilot::autopilot_reset_state()
+{
+    m_point_now = 0;
+    m_is_route_started = false;
+    m_start_time = utility::getTimeUtcToday();
+    m_sync_rx = false;
+    m_route_left = 0;
+    memset(&m_rp_now, 0, sizeof(ROUTE_POINT));
+}
+
 bool Autopilot::autopilot_is_active()
 {
     return m_is_active;
@@ -394,7 +405,7 @@ void Autopilot::autopilot_set_motor_speed(float speed)
 
 float Autopilot::autopilot_get_steering_scale()
 {
-    const float div = 1.0 + fabsf(mSpeed) * 0.05;
+    const float div = 1.0 + std::abs(mSpeed) * 0.05;
     return 1.0 / (div * div);
 }
 
@@ -495,7 +506,7 @@ void Autopilot::timerSlot()
         return;
     }
 
-    // the length of the route that is left
+    // the length of the route
     int len = m_point_last;
 
     // This means that the route has wrapped around
@@ -504,6 +515,7 @@ void Autopilot::timerSlot()
         len = ap_route_size + m_point_last - m_point_now;
     }
 
+    // the length of the route that is left
     m_route_left = len - m_point_now;
     if (m_route_left < 0) {
         m_route_left += ap_route_size;
@@ -520,18 +532,9 @@ void Autopilot::timerSlot()
         car_pos.px = car_cx;
         car_pos.py = car_cy;
 
-        // Look m_route_look_ahead points ahead, or less than that if the route is shorter
-        int add = m_route_look_ahead;
-        if (add > len) {
-            add = len;
-        }
-
-        int start = m_point_now;
-        int end = m_point_now + add;
-
         // Speed-dependent radius
         if (m_en_dynamic_rad) {
-            m_rad_now = fabsf(mRadTime * mSpeed);
+            m_rad_now = std::abs(mRadTime * mSpeed);
             if (m_rad_now < mBaseRad) {
                 m_rad_now = mBaseRad;
             }
@@ -539,9 +542,31 @@ void Autopilot::timerSlot()
             m_rad_now = mBaseRad;
         }
 
+        // Look m_route_look_ahead points ahead, or less than that if the route is shorter
+        int look_ahead = m_route_look_ahead;
+        if (look_ahead >= len) {
+            look_ahead = len-1;
+        }
+
+        int start;
+        int end;
         ROUTE_POINT rp_now; // The point we should follow now.
         int circle_intersections = 0;
         bool last_point_reached = false;
+
+       if (m_is_route_started) {
+           start = m_point_now;
+           end = m_point_now + look_ahead;
+       } else { // initially, go to first point of the route
+           start = 0;
+           end = 0;
+           rp_now = m_route[0];
+           circle_intersections = 1;
+
+           if (utils_rp_distance(&rp_now, &car_pos) < 1.5*m_rad_now) // leave a bit more slack than turn radius, might come from a very bad angle
+                m_is_route_started = true;
+       }
+
 
         // Last point in route
         int last_point_ind = m_point_last - 1;
@@ -645,54 +670,52 @@ void Autopilot::timerSlot()
         ROUTE_POINT *closest2 = &m_route[1]; // End of closest line segment
         int closest1_ind = 0; // Index of the first closest point
 
-        {
-            bool closest_set = false;
+        bool closest_set = false;
 
-            for (int i = start;i < end;i++) {
-                int ind = i; // First point index for this iteration
-                int indn = i + 1; // Next point index for this iteration
+        for (int i = start;i < end;i++) {
+            int ind = i; // First point index for this iteration
+            int indn = i + 1; // Next point index for this iteration
 
-                // Wrap around
-                if (ind >= m_point_last) {
-                    if (m_point_now <= m_point_last) {
-                        ind -= m_point_last;
-                    } else {
-                        if (ind >= ap_route_size) {
-                            ind -= ap_route_size;
-                        }
+            // Wrap around
+            if (ind >= m_point_last) {
+                if (m_point_now <= m_point_last) {
+                    ind -= m_point_last;
+                } else {
+                    if (ind >= ap_route_size) {
+                        ind -= ap_route_size;
                     }
                 }
+            }
 
-                // Wrap around
-                if (indn >= m_point_last) {
-                    if (m_point_now <= m_point_last) {
-                        indn -= m_point_last;
-                    } else {
-                        if (indn >= ap_route_size) {
-                            indn -= ap_route_size;
-                        }
+            // Wrap around
+            if (indn >= m_point_last) {
+                if (m_point_now <= m_point_last) {
+                    indn -= m_point_last;
+                } else {
+                    if (indn >= ap_route_size) {
+                        indn -= ap_route_size;
                     }
                 }
+            }
 
-                ROUTE_POINT tmp;
-                ROUTE_POINT *p1, *p2;
-                p1 = &m_route[ind];
-                p2 = &m_route[indn];
-                utils_closest_point_line(p1, p2, car_cx, car_cy, &tmp);
+            ROUTE_POINT tmp;
+            ROUTE_POINT *p1, *p2;
+            p1 = &m_route[ind];
+            p2 = &m_route[indn];
+            utils_closest_point_line(p1, p2, car_cx, car_cy, &tmp);
 
-                if (!closest_set || utils_rp_distance(&tmp, &car_pos) < utils_rp_distance(&closest, &car_pos)) {
-                    closest_set = true;
-                    closest = tmp;
-                    closest1 = p1;
-                    closest2 = p2;
-                    closest1_ind = ind;
-                }
+            if (!closest_set || utils_rp_distance(&tmp, &car_pos) < utils_rp_distance(&closest, &car_pos)) {
+                closest_set = true;
+                closest = tmp;
+                closest1 = p1;
+                closest2 = p2;
+                closest1_ind = ind;
+            }
 
-                // Do not look past the last point if we aren't repeating routes.
-                if (!mRepeatRoutes) {
-                    if (indn == last_point_ind) {
-                        break;
-                    }
+            // Do not look past the last point if we aren't repeating routes.
+            if (!mRepeatRoutes) {
+                if (indn == last_point_ind) {
+                    break;
                 }
             }
         }

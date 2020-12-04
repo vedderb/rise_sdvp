@@ -50,6 +50,7 @@ public:
     void setCtrlAp();
     void setCtrlJs();
     bool setAp(bool on);
+    QPair<int,int> getFirmwareVersion();
 
 signals:
     void terminalCmd(quint8 id, QString cmd);
@@ -89,9 +90,11 @@ private:
 
     QVector<double> mAltitudeData;
     QVector<double> mAltitudeXAxis;
+    QPair<int,int> mFirmwareVersion;
 
     void getConfGui(MAIN_CONFIG &conf);
     void setConfGui(MAIN_CONFIG &conf);
+    void setFirmwareVersion(QPair<int,int> firmwareVersion);
 
 };
 

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>591</width>
-    <height>259</height>
+    <width>787</width>
+    <height>361</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -693,6 +693,16 @@
        </property>
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_14">
+         <item>
+          <widget class="QCheckBox" name="confApResetOnEmergencyStopBox">
+           <property name="text">
+            <string>Reset state on Emergency Stop</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
          <item>
           <widget class="QCheckBox" name="confApRepeatBox">
            <property name="text">

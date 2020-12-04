@@ -211,7 +211,7 @@
            <x>0</x>
            <y>0</y>
            <width>241</width>
-           <height>80</height>
+           <height>83</height>
           </rect>
          </property>
          <attribute name="label">
@@ -463,6 +463,12 @@
       </item>
       <item>
        <widget class="QGroupBox" name="groupBox">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="maximumSize">
          <size>
           <width>180</width>
@@ -651,6 +657,9 @@
              <property name="text">
               <string>Off</string>
              </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
             </widget>
            </item>
            <item>
@@ -659,7 +668,7 @@
               <string>D</string>
              </property>
              <property name="checked">
-              <bool>true</bool>
+              <bool>false</bool>
              </property>
             </widget>
            </item>
@@ -801,7 +810,7 @@
        <enum>QTabWidget::North</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="icon">
@@ -1190,6 +1199,89 @@
                  <number>4</number>
                 </property>
                 <item>
+                 <widget class="QGroupBox" name="groupBox_23">
+                  <property name="title">
+                   <string>Autopilot</string>
+                  </property>
+                  <layout class="QVBoxLayout" name="verticalLayout_33">
+                   <item>
+                    <layout class="QHBoxLayout" name="horizontalLayout_20">
+                     <item>
+                      <widget class="QPushButton" name="AutopilotRestartPushButton">
+                       <property name="toolTip">
+                        <string>Reset &amp; Start</string>
+                       </property>
+                       <property name="text">
+                        <string/>
+                       </property>
+                       <property name="icon">
+                        <iconset resource="resources.qrc">
+                         <normaloff>:/models/Icons/Restart-96.png</normaloff>:/models/Icons/Restart-96.png</iconset>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="AutopilotStartPushButton">
+                       <property name="toolTip">
+                        <string>Start</string>
+                       </property>
+                       <property name="text">
+                        <string/>
+                       </property>
+                       <property name="icon">
+                        <iconset resource="resources.qrc">
+                         <normaloff>:/models/Icons/Play-96.png</normaloff>:/models/Icons/Play-96.png</iconset>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="AutopilotPausePushButton">
+                       <property name="toolTip">
+                        <string>Pause (keep state)</string>
+                       </property>
+                       <property name="text">
+                        <string/>
+                       </property>
+                       <property name="icon">
+                        <iconset resource="resources.qrc">
+                         <normaloff>:/models/Icons/Pause-96.png</normaloff>:/models/Icons/Pause-96.png</iconset>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="AutopilotStopPushButton">
+                       <property name="toolTip">
+                        <string>Stop (reset state)</string>
+                       </property>
+                       <property name="text">
+                        <string/>
+                       </property>
+                       <property name="icon">
+                        <iconset resource="resources.qrc">
+                         <normaloff>:/models/Icons/Stop-96.png</normaloff>:/models/Icons/Stop-96.png</iconset>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="AutopilotConfigurePushButton">
+                     <property name="toolTip">
+                      <string>Settings</string>
+                     </property>
+                     <property name="text">
+                      <string/>
+                     </property>
+                     <property name="icon">
+                      <iconset>
+                       <normaloff>Icons/Settings-96.png</normaloff>Icons/Settings-96.png</iconset>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </widget>
+                </item>
+                <item>
                  <widget class="QGroupBox" name="groupBox_7">
                   <property name="title">
                    <string>ENU Reference Point</string>
@@ -1363,7 +1455,7 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>261</width>
+                     <width>265</width>
                      <height>1080</height>
                     </rect>
                    </property>
@@ -2885,8 +2977,8 @@
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>316</width>
-                     <height>699</height>
+                     <width>330</width>
+                     <height>864</height>
                     </rect>
                    </property>
                    <layout class="QVBoxLayout" name="verticalLayout_27">
@@ -3101,6 +3193,22 @@
                            </widget>
                           </item>
                           <item>
+                           <widget class="QDoubleSpinBox" name="lowerToolsDistanceSpinBox">
+                            <property name="prefix">
+                             <string>Lower </string>
+                            </property>
+                            <property name="suffix">
+                             <string> m after Turn</string>
+                            </property>
+                            <property name="singleStep">
+                             <double>0.100000000000000</double>
+                            </property>
+                            <property name="value">
+                             <double>0.500000000000000</double>
+                            </property>
+                           </widget>
+                          </item>
+                          <item>
                            <widget class="QCheckBox" name="raiseToolsCheckBox">
                             <property name="text">
                              <string>Raise Tools in Turns</string>
@@ -3116,10 +3224,10 @@
                              <string>Tools are lowered/raised this amount of meters after/before a turn</string>
                             </property>
                             <property name="prefix">
-                             <string>Act. Dist. to Turn: </string>
+                             <string>Raise </string>
                             </property>
                             <property name="suffix">
-                             <string> m</string>
+                             <string> m before Turn</string>
                             </property>
                             <property name="decimals">
                              <number>2</number>
@@ -3166,7 +3274,7 @@
                           <item>
                            <widget class="QSpinBox" name="stepsForTurningSpinBox">
                             <property name="prefix">
-                             <string>Steps For Turning: </string>
+                             <string>Steps for Turning: </string>
                             </property>
                             <property name="value">
                              <number>6</number>
@@ -3201,6 +3309,18 @@
                        </item>
                        <item>
                         <widget class="QPushButton" name="boundsFillPushButton">
+                         <property name="sizePolicy">
+                          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                           <horstretch>0</horstretch>
+                           <verstretch>0</verstretch>
+                          </sizepolicy>
+                         </property>
+                         <property name="minimumSize">
+                          <size>
+                           <width>310</width>
+                           <height>0</height>
+                          </size>
+                         </property>
                          <property name="text">
                           <string>Fill</string>
                          </property>

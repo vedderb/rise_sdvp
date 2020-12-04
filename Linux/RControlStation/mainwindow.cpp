@@ -74,12 +74,15 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     mVersion = "0.8";
-    mSupportedFirmwares.append(qMakePair(12, 2));
+    mSupportedFirmwares.append(qMakePair(12, 3));
+    mSupportedFirmwares.append(qMakePair(20, 1));
 
     qRegisterMetaType<LocPoint>("LocPoint");
 
     mTimer = new QTimer(this);
     mTimer->start(ui->pollIntervalBox->value());
+    mHeartbeatTimer = new QTimer(this);
+    mHeartbeatTimer->start(mHeartbeatMS);
     mStatusLabel = new QLabel(this);
     ui->statusBar->addPermanentWidget(mStatusLabel);
     mStatusInfoTime = 0;
@@ -134,6 +137,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(mSerialPort, SIGNAL(error(QSerialPort::SerialPortError)),
             this, SLOT(serialPortError(QSerialPort::SerialPortError)));
     connect(mTimer, SIGNAL(timeout()), this, SLOT(timerSlot()));
+    connect(mHeartbeatTimer, SIGNAL(timeout()), this, SLOT(sendHeartbeat()));
     connect(mPacketInterface, SIGNAL(dataToSend(QByteArray&)),
             this, SLOT(packetDataToSend(QByteArray&)));
     connect(mPacketInterface, SIGNAL(stateReceived(quint8,CAR_STATE)),
@@ -331,7 +335,7 @@ void MainWindow::connectJoystick(QString dev)
         if (mJoystick->getName().contains("Sony PLAYSTATION(R)3")) {
             mJsType = JS_TYPE_PS3;
             qDebug() << "Treating joystick as PS3 USB controller.";
-            showStatusInfo("PS4 USB joystick connected!", true);
+            showStatusInfo("PS3 USB joystick connected!", true);
         } else if (mJoystick->getName().contains("sony", Qt::CaseInsensitive) ||
                    mJoystick->getName().contains("wireless controller", Qt::CaseInsensitive)) {
             mJsType = JS_TYPE_PS4;
@@ -452,6 +456,15 @@ void MainWindow::timerSlot()
             mThrottle = -(double)mJoystick->getAxis(1) / 32768.0;
             deadband(mThrottle,0.1, 1.0);
             mSteering = (double)mJoystick->getAxis(3) / 32768.0;
+
+            js_mr_thr = -(double)mJoystick->getAxis(1) / 32768.0;
+            js_mr_roll = (double)mJoystick->getAxis(3) / 32768.0;
+            js_mr_pitch = (double)mJoystick->getAxis(4) / 32768.0;
+            js_mr_yaw = (double)mJoystick->getAxis(0) / 32768.0;
+            utility::truncate_number(&js_mr_thr, 0.0, 1.0);
+            utility::truncate_number_abs(&js_mr_roll, 1.0);
+            utility::truncate_number_abs(&js_mr_pitch, 1.0);
+            utility::truncate_number_abs(&js_mr_yaw, 1.0);
         }
 
         //mSteering /= 2.0;
@@ -588,6 +601,17 @@ void MainWindow::timerSlot()
     }
 }
 
+void MainWindow::sendHeartbeat()
+{
+    for(QList<CarInterface*>::Iterator it_car = mCars.begin();it_car < mCars.end();it_car++)
+        if ((*it_car)->getFirmwareVersion().first >= 20)
+            mPacketInterface->sendHeartbeat((*it_car)->getId());
+
+    for(QList<CopterInterface*>::Iterator it_copter = mCopters.begin();it_copter < mCopters.end();it_copter++)
+        if ((*it_copter)->getFirmwareVersion().first >= 20)
+            mPacketInterface->sendHeartbeat((*it_copter)->getId());
+}
+
 void MainWindow::showStatusInfo(QString info, bool isGood)
 {
     if (mStatusLabel->text() == info) {
@@ -622,12 +646,12 @@ void MainWindow::stateReceived(quint8 id, CAR_STATE state)
                              "This version of RControlStation is not compatible with the "
                              "firmware of the connected car. Update RControlStation, the car "
                              "firmware or both.");
-    }
-
-    for(QList<CarInterface*>::Iterator it_car = mCars.begin();it_car < mCars.end();it_car++) {
-        CarInterface *car = *it_car;
-        if (car->getId() == id) {
-            car->setStateData(state);
+    } else {
+        for(QList<CarInterface*>::Iterator it_car = mCars.begin();it_car < mCars.end();it_car++) {
+            CarInterface *car = *it_car;
+            if (car->getId() == id) {
+                car->setStateData(state);
+            }
         }
     }
 }
@@ -1377,6 +1401,7 @@ void MainWindow::on_mapApButton_clicked()
             mCars[i]->setCtrlAp();
         }
     }
+    ui->throttleOffButton->setChecked(true);
 }
 
 void MainWindow::on_mapKbButton_clicked()
@@ -1386,6 +1411,7 @@ void MainWindow::on_mapKbButton_clicked()
             mCars[i]->setCtrlKb();
         }
     }
+    ui->throttleDutyButton->setChecked(true);
 }
 
 void MainWindow::on_mapOffButton_clicked()
@@ -2187,13 +2213,13 @@ void MainWindow::on_boundsFillPushButton_clicked()
         route = RouteMagic::fillConvexPolygonWithFramedZigZag(bounds, spacing, ui->boundsFillKeepTurnsInBoundsCheckBox->isChecked(), ui->boundsFillSpeedSpinBox->value()/3.6,
                                                               ui->boundsFillSpeedInTurnsSpinBox->value()/3.6, ui->stepsForTurningSpinBox->value(), ui->visitEverySpinBox->value(),
                                                               ui->lowerToolsCheckBox->isChecked() ? ATTR_HYDRAULIC_FRONT_DOWN : 0, ui->raiseToolsCheckBox->isChecked() ? ATTR_HYDRAULIC_FRONT_UP : 0,
-                                                              ui->raiseToolsDistanceSpinBox->value()*2);
+                                                              ui->lowerToolsDistanceSpinBox->value()*2, ui->raiseToolsDistanceSpinBox->value()*2);
                                                               // attribute changes at half distance
     else
         route = RouteMagic::fillConvexPolygonWithZigZag(bounds, spacing, ui->boundsFillKeepTurnsInBoundsCheckBox->isChecked(), ui->boundsFillSpeedSpinBox->value()/3.6,
                                                         ui->boundsFillSpeedInTurnsSpinBox->value()/3.6, ui->stepsForTurningSpinBox->value(), ui->visitEverySpinBox->value(),
                                                         ui->lowerToolsCheckBox->isChecked() ? ATTR_HYDRAULIC_FRONT_DOWN : 0, ui->raiseToolsCheckBox->isChecked() ? ATTR_HYDRAULIC_FRONT_UP : 0,
-                                                        ui->raiseToolsDistanceSpinBox->value()*2);
+                                                        ui->lowerToolsDistanceSpinBox->value()*2, ui->raiseToolsDistanceSpinBox->value()*2);
 
     ui->mapWidget->addRoute(route);
     int r = ui->mapWidget->getRoutes().size()-1;
@@ -2205,12 +2231,12 @@ void MainWindow::on_boundsFillPushButton_clicked()
 
 void MainWindow::on_lowerToolsCheckBox_stateChanged(int arg1)
 {
-    ui->raiseToolsDistanceSpinBox->setEnabled(arg1 != 0 || ui->raiseToolsCheckBox->isChecked());
+    ui->lowerToolsDistanceSpinBox->setEnabled(arg1 != 0);
 }
 
 void MainWindow::on_raiseToolsCheckBox_stateChanged(int arg1)
 {
-    ui->raiseToolsDistanceSpinBox->setEnabled(arg1 != 0 || ui->lowerToolsCheckBox->isChecked());
+    ui->raiseToolsDistanceSpinBox->setEnabled(arg1 != 0);
 }
 
 void MainWindow::on_WgSettingsPushButton_clicked()
@@ -2225,7 +2251,7 @@ void MainWindow::on_WgConnectPushButton_clicked()
     system("pkexec wg-quick up wg_sdvp");
     QList<QNetworkInterface> interfaces = QNetworkInterface::allInterfaces();
     if (std::find_if(interfaces.begin(), interfaces.end(),
-                     [](QNetworkInterface interface){return interface.name() == "wg_sdvp";}) != interfaces.end())
+                     [](QNetworkInterface currInterface){return currInterface.name() == "wg_sdvp";}) != interfaces.end())
         ui->wgStatusLabel->setText("Status: Interface up");
     else
         ui->wgStatusLabel->setText("Status: Config. error");
@@ -2236,8 +2262,58 @@ void MainWindow::on_WgDisconnectPushButton_clicked()
     system("pkexec wg-quick down wg_sdvp");
     QList<QNetworkInterface> interfaces = QNetworkInterface::allInterfaces();
     if (std::find_if(interfaces.begin(), interfaces.end(),
-                     [](QNetworkInterface interface){return interface.name() == "wg_sdvp";}) != interfaces.end())
+                     [](QNetworkInterface currInterface){return currInterface.name() == "wg_sdvp";}) != interfaces.end())
         ui->wgStatusLabel->setText("Status: Interface up");
     else
         ui->wgStatusLabel->setText("Status: Interface down");
+}
+
+void MainWindow::on_AutopilotConfigurePushButton_clicked()
+{
+    ui->mainTabWidget->setCurrentIndex(ui->mainTabWidget->indexOf(ui->tab));
+    ui->carsWidget->setCurrentIndex(ui->mapCarBox->value());
+
+    QWidget *tmp = ui->carsWidget->widget(ui->mapCarBox->value());
+    if (tmp) {
+        CarInterface *car = dynamic_cast<CarInterface*>(tmp);
+        car->showAutoPilotConfiguration();
+    }
+}
+
+void MainWindow::on_AutopilotStartPushButton_clicked()
+{
+    ui->throttleOffButton->setChecked(true);
+    QWidget *tmp = ui->carsWidget->widget(ui->mapCarBox->value());
+    if (tmp) {
+        CarInterface *car = dynamic_cast<CarInterface*>(tmp);
+        car->setAp(true, false);
+    }
+}
+
+void MainWindow::on_AutopilotStopPushButton_clicked()
+{
+    QWidget *tmp = ui->carsWidget->widget(ui->mapCarBox->value());
+    if (tmp) {
+        CarInterface *car = dynamic_cast<CarInterface*>(tmp);
+        car->setAp(false, true);
+    }
+}
+
+void MainWindow::on_AutopilotRestartPushButton_clicked()
+{
+    ui->throttleOffButton->setChecked(true);
+    QWidget *tmp = ui->carsWidget->widget(ui->mapCarBox->value());
+    if (tmp) {
+        CarInterface *car = dynamic_cast<CarInterface*>(tmp);
+        car->setAp(true, true);
+    }
+}
+
+void MainWindow::on_AutopilotPausePushButton_clicked()
+{
+    QWidget *tmp = ui->carsWidget->widget(ui->mapCarBox->value());
+    if (tmp) {
+        CarInterface *car = dynamic_cast<CarInterface*>(tmp);
+        car->setAp(false, false);
+    }
 }

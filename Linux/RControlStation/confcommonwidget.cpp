@@ -17,6 +17,7 @@
 
 #include "confcommonwidget.h"
 #include "ui_confcommonwidget.h"
+#include "carinterface.h"
 
 #include <cstring>
 
@@ -130,6 +131,8 @@ void ConfCommonWidget::setConfGui(const MAIN_CONFIG &conf)
     ui->confUwbMaxCorrBox->setValue(conf.uwb_max_corr);
 
     ui->confApRepeatBox->setChecked(conf.ap_repeat_routes);
+    CarInterface * car = dynamic_cast<CarInterface *>(parentWidget()->parentWidget()->parentWidget()->parentWidget());
+    ui->confApResetOnEmergencyStopBox->setChecked(car->getResetApOnEmergencyStop());
     ui->confApBaseRadBox->setValue(conf.ap_base_rad);
     ui->confApRadTimeBox->setValue(conf.ap_rad_time_ahead);
     ui->confApMaxSpeedBox->setValue(conf.ap_max_speed * 3.6);
@@ -183,7 +186,18 @@ void ConfCommonWidget::setMagCompCenter(QVector<double> center)
     }
 }
 
+void ConfCommonWidget::showAutoPilotConfiguration()
+{
+    ui->tabWidget_2->setCurrentIndex(ui->tabWidget_2->indexOf(ui->tab_9));
+}
+
 void ConfCommonWidget::on_magCalLoadButton_clicked()
 {
     emit loadMagCal();
+}
+
+void ConfCommonWidget::on_confApResetOnEmergencyStopBox_toggled(bool checked)
+{
+    CarInterface * car = dynamic_cast<CarInterface *>(parentWidget()->parentWidget()->parentWidget()->parentWidget());
+    car->setResetApOnEmergencyStop(checked);
 }

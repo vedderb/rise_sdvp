@@ -313,7 +313,7 @@ void BaseStation::rxNavSol(ubx_nav_sol sol)
     ui->ubxText->clear();
     ui->ubxText->appendPlainText(txt);
 
-    if (sol.p_acc < ui->surveyInMinAccBox->value() && ui->surveyInBox->isChecked()) {
+    if (sol.p_acc < ui->surveyInMinAccBox->value() && ui->surveyInRadioButton->isChecked()) {
         ui->sendBaseBox->setChecked(true);
 
         if (mBasePosSet) {
@@ -424,7 +424,7 @@ void BaseStation::rxSvin(ubx_nav_svin svin)
     utility::xyzToLlh(svin.meanX, svin.meanY, svin.meanZ,
                       &llh[0], &llh[1], &llh[2]);
 
-    if (ui->surveyInBox->isChecked()) {
+    if (ui->surveyInRadioButton->isChecked()) {
         ui->refSendLatBox->setValue(llh[0]);
         ui->refSendLonBox->setValue(llh[1]);
         ui->refSendHBox->setValue(llh[2]);
@@ -510,12 +510,13 @@ void BaseStation::on_ubxSerialDisconnectButton_clicked()
     mUblox->disconnectSerial();
 }
 
-void BaseStation::configureUbx(Ublox* ublox, int rate, bool isF9p, bool isM8p, bool* basePosSet, double refSendLat, double refSendLon, double refSendH, bool surveyIn, double surveyInMinAcc, int surveyInMinDuration)
+// TODO: refactor! :-/
+void BaseStation::configureUbx(Ublox* ublox, unsigned int baudrate, int rate_meas, int rate_nav, bool isF9p, bool isM8p, bool* basePosSet, double refSendLat, double refSendLon, double refSendH, BaseStationPositionMode positionMode, double surveyInMinAcc, int surveyInMinDuration)
 {
     // Serial port baud rate
     // if it is too low the buffer will overfill and it won't work properly.
     ubx_cfg_prt_uart uart;
-    uart.baudrate = 115200;
+    uart.baudrate = baudrate;
     uart.in_ubx = true;
     uart.in_nmea = true;
     uart.in_rtcm2 = false;
@@ -525,28 +526,45 @@ void BaseStation::configureUbx(Ublox* ublox, int rate, bool isF9p, bool isM8p, b
     uart.out_rtcm3 = true;
 /*    qDebug() << "CfgPrtUart:" << */ublox->ubxCfgPrtUart(&uart);
 
-    ublox->ubxCfgRate(rate, 1, 0);
+    ublox->ubxCfgRate(rate_meas, rate_nav, 0);
 
     bool encodeRaw = !isF9p && !isM8p;
 
-    ublox->ubxCfgMsg(UBX_CLASS_RXM, UBX_RXM_RAWX, encodeRaw ? 1 : 0);
-    ublox->ubxCfgMsg(UBX_CLASS_RXM, UBX_RXM_SFRBX, encodeRaw ? 1 : 0);
-    ublox->ubxCfgMsg(UBX_CLASS_NAV, UBX_NAV_SOL, encodeRaw ? 1 : 0);
-    ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1005, encodeRaw ? 0 : 1);
-    ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1074, encodeRaw ? 0 : 1);
-    ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1077, encodeRaw ? 0 : 1);
-    ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1084, encodeRaw ? 0 : 1);
-    ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1087, encodeRaw ? 0 : 1);
-    ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1094, encodeRaw ? 0 : 1);
-    ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1097, encodeRaw ? 0 : 1);
-    ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1124, encodeRaw ? 0 : 1);
-    ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1127, encodeRaw ? 0 : 1);
-    ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1230, encodeRaw ? 0 : 1);
-    ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_4072_0, encodeRaw ? 0 : 1);
-    ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_4072_1, encodeRaw ? 0 : 1);
+    if (positionMode == MOVING_BASE) {
+        ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1005, 0);
+        ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1074, 1);
+        ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1077, 0);
+        ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1084, 1);
+        ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1087, 0);
+        ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1094, 1);
+        ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1097, 0);
+        ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1124, 1);
+        ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1127, 0);
+        ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1230, 1);
+        ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_4072_0, 1);
+        ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_4072_1, 0);
+        ublox->ubxCfgMsg(UBX_CLASS_NAV, UBX_NAV_SVIN, 0);
+    } else {
+        ublox->ubxCfgMsg(UBX_CLASS_RXM, UBX_RXM_RAWX, encodeRaw ? 1 : 0);
+        ublox->ubxCfgMsg(UBX_CLASS_RXM, UBX_RXM_SFRBX, encodeRaw ? 1 : 0);
+        ublox->ubxCfgMsg(UBX_CLASS_NAV, UBX_NAV_SOL, encodeRaw ? 1 : 0);
+        ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1005, encodeRaw ? 0 : 1);
+        ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1074, encodeRaw ? 0 : 1);
+        ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1077, encodeRaw ? 0 : 1);
+        ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1084, encodeRaw ? 0 : 1);
+        ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1087, encodeRaw ? 0 : 1);
+        ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1094, encodeRaw ? 0 : 1);
+        ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1097, encodeRaw ? 0 : 1);
+        ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1124, encodeRaw ? 0 : 1);
+        ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1127, encodeRaw ? 0 : 1);
+        ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_1230, encodeRaw ? 0 : 1);
+        ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_4072_0, encodeRaw ? 0 : 1);
+        ublox->ubxCfgMsg(UBX_CLASS_RTCM3, UBX_RTCM3_4072_1, encodeRaw ? 0 : 1);
+
+        ublox->ubxCfgMsg(UBX_CLASS_NAV, UBX_NAV_SVIN, encodeRaw ? 0 : 1);
+}
 
     ublox->ubxCfgMsg(UBX_CLASS_NAV, UBX_NAV_SAT, 1);
-    ublox->ubxCfgMsg(UBX_CLASS_NAV, UBX_NAV_SVIN, encodeRaw ? 0 : 1);
 
     if (isF9p) {
         unsigned char buffer[512];
@@ -606,21 +624,24 @@ void BaseStation::configureUbx(Ublox* ublox, int rate, bool isF9p, bool isM8p, b
 
     ubx_cfg_tmode3 cfg_mode;
     memset(&cfg_mode, 0, sizeof(cfg_mode));
-    cfg_mode.mode = isF9p ? 1 : 0;
-    cfg_mode.fixed_pos_acc = 5.0;
-    cfg_mode.svin_min_dur = surveyInMinDuration;
-    cfg_mode.svin_acc_limit = surveyInMinAcc;
+    if (positionMode == MOVING_BASE)
+        cfg_mode.mode = 0;
+    else {
+        cfg_mode.mode = isF9p ? 1 : 0;
+        cfg_mode.fixed_pos_acc = 5.0;
+        cfg_mode.svin_min_dur = surveyInMinDuration;
+        cfg_mode.svin_acc_limit = surveyInMinAcc;
 
-    if (!surveyIn && isF9p) {
-        *basePosSet = true;
+        if (positionMode == FIXED && isF9p) {
+            *basePosSet = true;
 
-        cfg_mode.mode = 2;
-        cfg_mode.lla = true;
-        cfg_mode.ecefx_lat = refSendLat;
-        cfg_mode.ecefy_lon = refSendLon;
-        cfg_mode.ecefz_alt = refSendH;
+            cfg_mode.mode = 2;
+            cfg_mode.lla = true;
+            cfg_mode.ecefx_lat = refSendLat;
+            cfg_mode.ecefy_lon = refSendLon;
+            cfg_mode.ecefz_alt = refSendH;
+        }
     }
-
     ublox->ubxCfgTmode3(&cfg_mode);
 
     // Stationary dynamic model
@@ -682,26 +703,24 @@ void BaseStation::on_ubxSerialConnectButton_clicked()
 
         bool isM8p = ui->m8PButton->isChecked();
         bool isF9p = ui->f9Button->isChecked();
+        if (!isF9p)
+            ui->rateMeasBox->setValue(5);
 
-        if (ui->rateBox->currentIndex() == 2 && !isF9p) {
-            ui->rateBox->setCurrentIndex(1);
-        }
-        int rate = 1000;
-        switch (ui->rateBox->currentIndex()) {
-        case 0: rate = 1000; break;
-        case 1: rate = 200; break;
-        case 2: rate = 100; break;
-        default: break;
-        }
+        BaseStationPositionMode positionMode;
+        if (ui->surveyInRadioButton->isChecked())
+            positionMode = SURVEY_IN;
+        else if (ui->movingBaseRadioButton->isChecked())
+            positionMode = MOVING_BASE;
+        else
+            positionMode = FIXED;
 
-        bool surveyIn = ui->surveyInBox->isChecked();
         double surveyInMinAcc = ui->surveyInMinAccBox->value();
 
         double refSendLat = ui->refSendLatBox->value();
         double refSendLon = ui->refSendLonBox->value();
         double refSendH = ui->refSendHBox->value();
 
-        configureUbx(mUblox, rate, isF9p, isM8p, &mBasePosSet, refSendLat, refSendLon, refSendH, surveyIn, surveyInMinAcc);
+        configureUbx(mUblox, ui->ubxSerialBaudBox->value(), 1000/ui->rateMeasBox->value(), ui->rateNavBox->value(), isF9p, isM8p, &mBasePosSet, refSendLat, refSendLon, refSendH, positionMode, surveyInMinAcc, ui->surveyInMinDurationBox->value());
     }
 }
 
@@ -727,4 +746,24 @@ void BaseStation::on_readVersionButton_clicked()
 void BaseStation::on_gnssInfoButton_clicked()
 {
     mUblox->ubxPoll(UBX_CLASS_CFG, UBX_CFG_GNSS);
+}
+
+void BaseStation::on_surveyInRadioButton_toggled(bool checked)
+{
+    ui->surveyInMinAccBox->setEnabled(checked);
+    ui->surveyInMaxDiffBox->setEnabled(checked);
+    ui->surveyInMinDurationBox->setEnabled(checked);
+}
+
+void BaseStation::on_m8Button_toggled(bool checked)
+{
+    ui->movingBaseRadioButton->setEnabled(!checked);
+    if (checked)
+        ui->surveyInRadioButton->setChecked(true);
+}
+
+void BaseStation::on_movingBaseRadioButton_toggled(bool checked)
+{
+    if (checked)
+        ui->rateMeasBox->setValue(5);
 }
