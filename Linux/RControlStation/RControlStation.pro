@@ -193,7 +193,11 @@ contains(DEFINES, HAS_LIME_SDR) {
 }
 
 contains(DEFINES, HAS_SIM_SCEN) {
-    include(esmini/EnvironmentSimulator.pri)
+    INCLUDEPATH += esmini/EnvironmentSimulator/Libraries/esminiLib \
+            esmini/EnvironmentSimulator/Modules/RoadManager \
+            esmini/externals/pugixml \
+            esmini/EnvironmentSimulator/Modules/CommonMini
+    LIBS += -L"esmini/bin/" -lesminiLib
     SOURCES += pagesimscen.cpp
     HEADERS += pagesimscen.h \
             simscentree.h

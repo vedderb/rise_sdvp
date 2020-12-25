@@ -28,6 +28,7 @@
 #include <QSpacerItem>
 #include <cmath>
 #include <clocale>
+#include <sstream>
 
 void log_callback(const char *str)
 {
@@ -44,9 +45,7 @@ PageSimScen::PageSimScen(QWidget *parent) :
 
 //    Logger::Inst().SetCallback(log_callback);
 
-    mScenarioEngine = 0;
     mOdrManager = 0;
-    mScenarioGateway = 0;
     mSimTime = 0.0;
     mStory = new OscStory();
 
@@ -70,10 +69,9 @@ PageSimScen::PageSimScen(QWidget *parent) :
 
 PageSimScen::~PageSimScen()
 {
-    delete mScenarioEngine;
+    delete mOdrManager;
     delete mStory;
 
-    mScenarioEngine = 0;
     mOdrManager = 0;
 
     delete ui;
@@ -309,28 +307,28 @@ void PageSimScen::timerSlot()
     ui->map->setFollowCar(ui->followBox->isChecked() ? ui->carBox->value() : -1);
     ui->map->setDrawGrid(ui->drawGridBox->isChecked());
 
-    if (mScenarioEngine && !ui->pauseButton->isChecked()) {
-        mScenarioEngine->step(dt);
+    if (!ui->pauseButton->isChecked()) {
+        SE_StepDT(dt);
 
-        for (int i = 0;i < mScenarioGateway->getNumberOfObjects();i++) {
-            auto objState = mScenarioGateway->getObjectStatePtrByIdx(i)->state_;
-            auto pos = objState.pos;
+        for (int i = 0;i < SE_GetNumberOfObjects();i++) {
+            SE_ScenarioObjectState objState;
+            SE_GetObjectState(i, &objState);
 
             CarInfo *car = ui->map->getCarInfo(i);
             if (!car) {
                 CarInfo c(i);
-                c.setLength(4.5);
-                c.setWidth(2.0);
+                c.setLength(objState.length);
+                c.setWidth(objState.width);
                 c.setCornerRadius(0.1);
                 ui->map->addCar(c);
                 car = ui->map->getCarInfo(i);
             }
 
-            car->getLocation().setXY(pos.GetX(), pos.GetY());
-            car->getLocation().setYaw(-pos.GetH());
+            car->getLocation().setXY(objState.x, objState.y);
+            car->getLocation().setYaw(-objState.h);
             car->getApGoal().setRadius(0.0);
-            car->setName(objState.name);
-            car->setColor(QString(objState.name).toLower() == "ego" ? Qt::blue : Qt::red);
+            car->setName(SE_GetObjectName(i));
+            car->setColor(i == 0 ? Qt::blue : Qt::red);
         }
 
         ui->map->update();
@@ -426,25 +424,16 @@ void PageSimScen::on_restartButton_clicked()
     ui->map->clearCars();
 
     try {
-        if (mScenarioEngine) {
-            delete mScenarioEngine;
-        }
-
-        mSimTime = 0.0;
-        mScenarioEngine = new scenarioengine::ScenarioEngine(mScenarioDoc, mOscFileName.toStdString(), mSimTime,
-                                                             scenarioengine::ExternalControlMode::EXT_CONTROL_BY_OSC);
-        mScenarioGateway = mScenarioEngine->getScenarioGateway();
-        mOdrManager = mScenarioEngine->getRoadManager();
+        std::stringstream ss;
+        mScenarioDoc.save(ss, "  ");
+        SE_InitWithString(ss.str().c_str(), 1, 0, 0, 0);
+        mOdrManager = (roadmanager::OpenDrive*)SE_GetODRManager();
     } catch (const std::exception& e) {
-        mScenarioEngine = 0;
         mOdrManager = 0;
-        mScenarioGateway = 0;
         qDebug() << "Could not open OSC file:" << e.what();
     }
 
-    if (mScenarioEngine) {
-        mScenarioEngine->step(0.0, true);
-    }
+    SE_StepDT(0.0);
 
     ui->map->update();
 }
