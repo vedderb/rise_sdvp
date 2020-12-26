@@ -27,7 +27,7 @@
 
 #include "mapwidget.h"
 
-#include "ScenarioEngine.hpp"
+#include "esminiLib.hpp"
 #include "RoadManager.hpp"
 #include "CommonMini.hpp"
 #include "pugixml.hpp"
@@ -66,9 +66,8 @@ private slots:
 
 private:
     Ui::PageSimScen *ui;
-    scenarioengine::ScenarioEngine *mScenarioEngine;
+
     roadmanager::OpenDrive *mOdrManager;
-    scenarioengine::ScenarioGateway *mScenarioGateway;
     double mSimTime;
     QTimer *mTimer;
     QString mOscFileName;
