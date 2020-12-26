@@ -30,22 +30,22 @@ public:
         type = OscActionUnknown;
 
         for (auto child = node.first_child(); child; child = child.next_sibling()) {
-            if (QString(child.name()) == "Private") {
+            if (QString(child.name()) == "PrivateAction") {
                 for (auto child2 = child.first_child(); child2; child2 = child2.next_sibling()) {
-                    if (QString(child2.name()) == "Lateral") {
+                    if (QString(child2.name()) == "LateralAction") {
                         for (auto child3 = child2.first_child(); child3; child3 = child3.next_sibling()) {
-                            if (QString(child3.name()) == "LaneChange") {
+                            if (QString(child3.name()) == "LaneChangeAction") {
                                 latLaneChAbs_obj = child3.attribute("object").as_string();
                                 latLaneChAbs_freespace = QString(child3.attribute("freespace").as_string()).toLower() == "true";
                                 latLaneChAbs_timegap = child3.attribute("timeGap").as_double();
                             }
                             for (auto child4 = child3.first_child(); child4; child4 = child4.next_sibling()) {
-                                if (QString(child4.name()) == "Dynamics") {
+                                if (QString(child4.name()) == "LaneChangeActionDynamics") {
                                     latLaneChAbs_time = child4.attribute("time").as_double();
-                                    latLaneChAbs_shape = child4.attribute("shape").as_string("sinusoidal");
-                                } else if (QString(child4.name()) == "Target") {
+                                    latLaneChAbs_shape = child4.attribute("dynamicsShape").as_string("sinusoidal");
+                                } else if (QString(child4.name()) == "LaneChangeTarget") {
                                     for (auto child5 = child4.first_child(); child5; child5 = child5.next_sibling()) {
-                                        if (QString(child5.name()) == "Absolute") {
+                                        if (QString(child5.name()) == "AbsoluteTargetLane") {
                                             type = OscActionLatLaneChAbs;
                                             latLaneChAbs_value = child5.attribute("value").as_int();
                                         }
@@ -64,16 +64,16 @@ public:
 
         switch (type) {
         case OscActionLatLaneChAbs: {
-            pugi::xml_node laneChange = node.child("Private").child("Lateral").child("LaneChange");
+            pugi::xml_node laneChange = node.child("PrivateAction").child("LateralAction").child("LaneChangeAction");
             laneChange.attribute("object").set_value(latLaneChAbs_obj.toLocal8Bit().data());
             laneChange.attribute("freespace").set_value(latLaneChAbs_freespace ? "true" : "false");
             laneChange.attribute("timeGap").set_value(latLaneChAbs_timegap);
 
-            pugi::xml_node dynamics = laneChange.child("Dynamics");
+            pugi::xml_node dynamics = laneChange.child("LaneChangeActionDynamics");
             dynamics.attribute("time").set_value(latLaneChAbs_time);
-            dynamics.attribute("shape").set_value(latLaneChAbs_shape.toLocal8Bit().data());
+            dynamics.attribute("dynamicsShape").set_value(latLaneChAbs_shape.toLocal8Bit().data());
 
-            laneChange.child("Target").child("Absolute").attribute("value").set_value(latLaneChAbs_value);
+            laneChange.child("LaneChangeTarget").child("AbsoluteTargetLane").attribute("value").set_value(latLaneChAbs_value);
         } break;
 
         default:
@@ -113,22 +113,22 @@ public:
         type = OscCondUnknown;
 
         for (auto child = node.first_child(); child; child = child.next_sibling()) {
-            if (QString(child.name()) == "ByEntity") {
+            if (QString(child.name()) == "ByEntityCondition") {
                 for (auto child2 = child.first_child(); child2; child2 = child2.next_sibling()) {
                     if (QString(child2.name()) == "TriggeringEntities") {
                         for (auto child3 = child2.first_child(); child3; child3 = child3.next_sibling()) {
-                            if (QString(child3.name()) == "Entity") {
+                            if (QString(child3.name()) == "EntityRef") {
                                 entityName = child3.attribute("name").as_string();
                             }
                         }
                     } else if (QString(child2.name()) == "EntityCondition") {
                         for (auto child3 = child2.first_child(); child3; child3 = child3.next_sibling()) {
-                            if (QString(child3.name()) == "ReachPosition") {
+                            if (QString(child3.name()) == "ReachPositionCondition") {
                                 reachPosTolerance = child3.attribute("tolerance").as_double();
                                 for (auto child4 = child3.first_child(); child4; child4 = child4.next_sibling()) {
                                     if (QString(child4.name()) == "Position") {
                                         for (auto child5 = child4.first_child(); child5; child5 = child5.next_sibling()) {
-                                            if (QString(child5.name()) == "Lane") {
+                                            if (QString(child5.name()) == "LanePosition") {
                                                 type = OscCondByEntityReachPosLane;
                                                 reachPosRoad = child5.attribute("roadId").as_int();
                                                 reachPosLane = child5.attribute("laneId").as_int();
@@ -150,21 +150,21 @@ public:
 
         switch (type) {
         case OscCondByEntityReachPosLane: {
-            node.child("ByEntity").
+            node.child("ByEntityCondition").
                     child("TriggeringEntities").
-                    child("Entity").attribute("name").
+                    child("EntityRef").attribute("name").
                     set_value(entityName.toLocal8Bit().data());
-            node.child("ByEntity").
+            node.child("ByEntityCondition").
                     child("EntityCondition").
-                    child("ReachPosition").
+                    child("ReachPositionCondition").
                     attribute("tolerance").
                     set_value(reachPosTolerance);
 
-            pugi::xml_node lane = node.child("ByEntity").
+            pugi::xml_node lane = node.child("ByEntityCondition").
                     child("EntityCondition").
-                    child("ReachPosition").
+                    child("ReachPositionCondition").
                     child("Position").
-                    child("Lane");
+                    child("LanePosition");
 
             lane.attribute("roadId").set_value(reachPosRoad);
             lane.attribute("laneId").set_value(reachPosLane);
@@ -197,7 +197,7 @@ public:
         for (auto child = node.first_child(); child; child = child.next_sibling()) {
             if (QString(child.name()) == "Action") {
                 action.load(child);
-            } else if (QString(child.name()) == "StartConditions") {
+            } else if (QString(child.name()) == "StartTrigger") {
                 for (auto child2 = child.first_child(); child2; child2 = child2.next_sibling()) {
                     if (QString(child2.name()) == "ConditionGroup") {
                         for (auto child3 = child2.first_child(); child3; child3 = child3.next_sibling()) {
@@ -262,28 +262,28 @@ public:
 
         pugi::xml_node actionNode = eventNode.append_child("Action");
         actionNode.append_attribute("name").set_value(QString(name + "Action").toLocal8Bit().data());
-        pugi::xml_node laneChangeNode = actionNode.append_child("Private").
-                append_child("Lateral").append_child("LaneChange");
+        pugi::xml_node laneChangeNode = actionNode.append_child("PrivateAction").
+                append_child("LateralAction").append_child("LaneChangeAction");
         laneChangeNode.append_attribute("object").set_value("Ego");
         laneChangeNode.append_attribute("freespace").set_value("true");
         laneChangeNode.append_attribute("timeGap").set_value(1.0);
-        pugi::xml_node dynamicsNode = laneChangeNode.append_child("Dynamics");
+        pugi::xml_node dynamicsNode = laneChangeNode.append_child("LaneChangeActionDynamics");
         dynamicsNode.append_attribute("time").set_value(2.0);
-        dynamicsNode.append_attribute("shape").set_value("sinusoidal");
-        laneChangeNode.append_child("Target").append_child("Absolute").append_attribute("value").set_value(0);
+        dynamicsNode.append_attribute("dynamicsShape").set_value("sinusoidal");
+        laneChangeNode.append_child("LaneChangeTarget").append_child("AbsoluteTargetLane").append_attribute("value").set_value(0);
 
-        pugi::xml_node conditionNode = eventNode.append_child("StartConditions").
+        pugi::xml_node conditionNode = eventNode.append_child("StartTrigger").
                 append_child("ConditionGroup").append_child("Condition");
         conditionNode.append_attribute("name").set_value(QString(name + "Condition").toLocal8Bit().data());
         conditionNode.append_attribute("delay").set_value(0.0);
-        conditionNode.append_attribute("edge").set_value("rising");
-        pugi::xml_node byEntNode = conditionNode.append_child("ByEntity");
+        conditionNode.append_attribute("conditionEdge").set_value("rising");
+        pugi::xml_node byEntNode = conditionNode.append_child("ByEntityCondition");
         pugi::xml_node triggerEntNode = byEntNode.append_child("TriggeringEntities");
         triggerEntNode.append_attribute("rule").set_value("any");
-        triggerEntNode.append_child("Entity").append_attribute("name").set_value("Ego");
-        pugi::xml_node reachPosNode = byEntNode.append_child("EntityCondition").append_child("ReachPosition");
+        triggerEntNode.append_child("EntityRef").append_attribute("name").set_value("Ego");
+        pugi::xml_node reachPosNode = byEntNode.append_child("EntityCondition").append_child("ReachPositionCondition");
         reachPosNode.append_attribute("tolerance").set_value(1.0);
-        pugi::xml_node laneNode = reachPosNode.append_child("Position").append_child("Lane");
+        pugi::xml_node laneNode = reachPosNode.append_child("Position").append_child("LanePosition");
         laneNode.append_attribute("roadId").set_value(0);
         laneNode.append_attribute("laneId").set_value(0);
         laneNode.append_attribute("s").set_value(0.0);
@@ -389,9 +389,9 @@ public:
     void addSequence(QString name) {
         pugi::xml_node newNode;
         if (sequences.empty()) {
-            newNode = node.prepend_child("Sequence");
+            newNode = node.prepend_child("ManeuverGroup");
         } else {
-            newNode = node.insert_child_after("Sequence", sequences.last().node);
+            newNode = node.insert_child_after("ManeuverGroup", sequences.last().node);
         }
         newNode.append_attribute("name").set_value(name.toLocal8Bit().data());
         sequences.append(OscSequence(newNode));
@@ -402,7 +402,7 @@ public:
         name = node.attribute("name").as_string();
 
         for (auto child = node.first_child(); child; child = child.next_sibling()) {
-            if (QString(child.name()) == "Sequence") {
+            if (QString(child.name()) == "ManeuverGroup") {
                 sequences.append(OscSequence(child));
             }
         }
