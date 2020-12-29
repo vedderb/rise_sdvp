@@ -45,6 +45,10 @@ PageSimScen::PageSimScen(QWidget *parent) :
 
 //    Logger::Inst().SetCallback(log_callback);
 
+    // Add default location for scenario files
+    SE_AddPath("esmini/resources/xodr");
+    SE_AddPath("esmini/resources/xosc");
+
     mOdrManager = 0;
     mSimTime = 0.0;
     mStory = new OscStory();
