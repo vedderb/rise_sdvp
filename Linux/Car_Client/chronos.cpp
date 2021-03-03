@@ -34,6 +34,8 @@ Chronos::Chronos(QObject *parent) : QObject(parent)
             this, SLOT(processStrt(chronos_strt)));
     connect(mChronos, SIGNAL(oproRx(chronos_opro)),
             this, SLOT(processOpro(chronos_opro)));
+    connect(mChronos, SIGNAL(rcmmRx(chronos_rcmm)),
+            this, SLOT(processRcmm(chronos_rcmm)));
 
 }
 
@@ -303,5 +305,19 @@ void Chronos::processMtsp(chronos_mtsp mtsp)
 
         qDebug() << closest_sync << mtsp.time_est - ChronosComm::gpsMsOfWeek() <<
                     mSypmLast.sync_point - mSypmLast.stop_time;
+    }
+}
+
+void Chronos::processRcmm(chronos_rcmm rcmm)
+{
+    qDebug() << "RCMM RX";
+
+    // Todo: Check object states?
+
+    if(mPacket) {
+        double dutySpeed = rcmm.speed / (100.0 / 0.15); // RControlStation min/max values: -0.15 -> 0.15
+        double dutySteering = rcmm.steering / 100.0;    // RControlStation min/max values: -1 -> 1
+        mPacket->setRcControlDuty(255, dutySpeed, dutySteering); // Duty refers to one of the control modes: Off, Duty, Current.
+        qDebug() << "setRcControlCurrent speed / steering" << dutySpeed << " / " << dutySteering;
     }
 }

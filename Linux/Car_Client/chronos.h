@@ -31,6 +31,7 @@ private slots:
     void processHeab(chronos_heab heab);
     void processSypm(chronos_sypm sypm);
     void processMtsp(chronos_mtsp mtsp);
+    void processRcmm(chronos_rcmm rcmm);
 
 private:
     PacketInterface *mPacket;

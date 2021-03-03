@@ -81,8 +81,6 @@ typedef struct {
     quint16 maxWayDeviation;
     quint16 maxLateralDeviation;
     quint16 minPosAccuracy;
-
-
 } chronos_osem;
 
 typedef struct {
@@ -129,6 +127,13 @@ typedef struct {
                         // [AbortReq, BrokeGeoFence, PoorPosAccuracy, EngineFault, BatFault, OtherObjError, Vendor, Vendor]
     uint8_t sender_id;
 } chronos_monr;
+
+typedef struct {
+    uint8_t controlStatus;
+    int16_t speed;
+    int16_t steering;
+    uint8_t command;
+} chronos_rcmm;
 
 typedef struct {
     uint16_t actionID;
@@ -182,6 +187,7 @@ typedef struct {
 #define ISO_MSG_STRT                    0x0004
 #define ISO_MSG_HEAB                    0x0005
 #define ISO_MSG_MONR                    0x0006
+#define ISO_MSG_RCMM                    0x000A
 
 #define ISO_MSG_TRCM                    0x0011
 #define ISO_MSG_ACCM                    0x0012
@@ -279,7 +285,13 @@ typedef struct {
 //OSEM
 #define ISO_VALUE_ID_OSEM_TRANSMITTER_ID 0x0010
 
-
+//RCMM
+#define ISO_VALUE_ID_RCMM_CONTROL_STATUS         0x0001
+#define ISO_VALUE_ID_RCMM_SPEED_METER_PER_SECOND 0x0011
+#define ISO_VALUE_ID_RCMM_STEERING_ANGLE         0x0012
+#define ISO_VALUE_ID_RCMM_STEERING_PERCENTAGE    0x0031
+#define ISO_VALUE_ID_RCMM_SPEED_PERCENTAGE       0x0032
+#define ISO_VALUE_ID_RCMM_CONTROL                0xA201
 
 // OPRO
 #define ISO_VALUE_ID_OPRO_OBJECT_TYPE 0x0100
@@ -330,6 +342,7 @@ signals:
     void strtRx(chronos_strt strt);
     void monrRx(chronos_monr monr);
     void insupRx(chronos_init_sup init_sup);
+    void rcmmRx(chronos_rcmm rcmm);
 
 public slots:
 
