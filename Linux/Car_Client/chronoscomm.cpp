@@ -828,25 +828,35 @@ bool ChronosComm::decodeMsg(quint16 type, quint32 len, QByteArray payload, uint8
         while (!vb.isEmpty()) {
             quint16 value_id = vb.vbPopFrontUint16();
             quint16 value_len = vb.vbPopFrontUint16();
+
             switch(value_id) {
             case ISO_VALUE_ID_RCMM_CONTROL_STATUS:
-                rcmm.controlStatus = vb.vbPopFrontUint8();
-                qDebug() << "RCMM: controlStatus: 0x" << rcmm.controlStatus;
+                qDebug() << "RCMM: ignoring control status value id:" << QString::number(value_id, 16);
+                vb.remove(0, value_len);
                 break;
-            //TODO:
-            //case ISO_VALUE_ID_RCMM_SPEED_METER_PER_SECOND:
-            //case ISO_VALUE_ID_RCMM_STEERING_ANGLE:
-            case ISO_VALUE_ID_RCMM_STEERING_PERCENTAGE:
+            case ISO_VALUE_ID_RCMM_STEERING_ANGLE:
+                rcmm.steeringUnit = ISO_UNIT_TYPE_STEERING_DEGREES;
                 rcmm.steering = vb.vbPopFrontUint16();
-                qDebug() << "RCMM: steering: 0x" << rcmm.steering;
+                qDebug() << "RCMM: steering abs (rad): " << rcmm.steering;
+                break;
+            case ISO_VALUE_ID_RCMM_STEERING_PERCENTAGE:
+                rcmm.steeringUnit = ISO_UNIT_TYPE_STEERING_PERCENTAGE;
+                rcmm.steering = vb.vbPopFrontUint16();
+                qDebug() << "RCMM: steering relative (%): " << rcmm.steering;
+                break;
+            case ISO_VALUE_ID_RCMM_SPEED_METER_PER_SECOND:
+                rcmm.speedUnit = ISO_UNIT_TYPE_SPEED_METER_SECOND;
+                rcmm.speed = vb.vbPopFrontUint16();
+                qDebug() << "RCMM: speed abs (m/s): " << rcmm.speed;
                 break;
             case ISO_VALUE_ID_RCMM_SPEED_PERCENTAGE:
+                rcmm.speedUnit = ISO_UNIT_TYPE_SPEED_PERCENTAGE;
                 rcmm.speed = vb.vbPopFrontUint16();
-                qDebug() << "RCMM: speed: 0x" << rcmm.speed;
+                qDebug() << "RCMM: speed (%): " << rcmm.speed;
                 break;
             case ISO_VALUE_ID_RCMM_CONTROL:
                 rcmm.command = vb.vbPopFrontUint8();
-                qDebug() << "RCMM: control / command: 0x" << rcmm.command;
+                qDebug() << "RCMM: control command: " << rcmm.command;
                 break;
             default:
                 qDebug() << "RCMM: Unknown value id:" << QString::number(value_id, 16);

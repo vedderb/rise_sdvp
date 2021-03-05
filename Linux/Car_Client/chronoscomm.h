@@ -49,6 +49,13 @@ typedef enum {
     OPRO_TYPE_PEDESTRIAN = 30
 } OPRO_OBJECT_TYPE;
 
+typedef enum {
+    ISO_UNIT_TYPE_STEERING_DEGREES = 0,
+    ISO_UNIT_TYPE_STEERING_PERCENTAGE = 1,
+    ISO_UNIT_TYPE_SPEED_METER_SECOND = 2,
+    ISO_UNIT_TYPE_SPEED_PERCENTAGE = 3
+} ISO_UNIT_TYPE;
+
 typedef struct {
     uint32_t tRel;
     double x;
@@ -129,10 +136,11 @@ typedef struct {
 } chronos_monr;
 
 typedef struct {
-    uint8_t controlStatus;
     int16_t speed;
     int16_t steering;
-    uint8_t command;
+    ISO_UNIT_TYPE steeringUnit;
+    ISO_UNIT_TYPE speedUnit;
+    uint8_t command;             // Manoeuvre command (MANOEUVRE_NONE = 0, MANOEUVRE_BACK_TO_START = 3)
 } chronos_rcmm;
 
 typedef struct {
@@ -173,6 +181,8 @@ typedef struct {
 } chronos_init_sup;
 
 #define PROTOCOL_VERSION 2
+
+#define THROTTLE_MAX 0.15 // Default setting in RControlStation = 0.15
 
 // Chronos messaging
 
@@ -304,6 +314,18 @@ typedef struct {
 #define ISO_VALUE_ID_OPRO_POSITION_DISPLACEMENT_X 0x0107
 #define ISO_VALUE_ID_OPRO_POSITION_DISPLACEMENT_Y 0x0108
 #define ISO_VALUE_ID_OPRO_POSITION_DISPLACEMENT_Z 0x0109
+
+// ************************* Type definitions according ISO protocol specification *******************************
+// Predefined integer values with special meaning
+#define ISO_SPEED_UNAVAILABLE_VALUE (-32768)
+#define ISO_SPEED_ONE_METER_PER_SECOND_VALUE 100.0
+#define ISO_STEERING_ANGLE_ONE_DEGREE_VALUE 100.0
+#define ISO_STEERING_ANGLE_MAX_VALUE_DEG 18000
+#define ISO_STEERING_ANGLE_MIN_VALUE_DEG (-18000)
+#define ISO_STEERING_ANGLE_MAX_VALUE_RAD M_PI
+#define ISO_STEERING_ANGLE_UNAVAILABLE_VALUE 18001
+#define ISO_MAX_VALUE_PERCENTAGE 100
+#define ISO_MIN_VALUE_PERCENTAGE (-100)
 
 class ChronosComm : public QObject
 {

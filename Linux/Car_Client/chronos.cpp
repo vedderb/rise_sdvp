@@ -312,12 +312,63 @@ void Chronos::processRcmm(chronos_rcmm rcmm)
 {
     qDebug() << "RCMM RX";
 
-    // Todo: Check object states?
+    // TODO:
+    // - Check object state?
+    // - Maneouver command?
 
     if(mPacket) {
-        double dutySpeed = rcmm.speed / (100.0 / 0.15); // RControlStation min/max values: -0.15 -> 0.15
-        double dutySteering = rcmm.steering / 100.0;    // RControlStation min/max values: -1 -> 1
-        mPacket->setRcControlDuty(255, dutySpeed, dutySteering); // Duty refers to one of the control modes: Off, Duty, Current.
-        qDebug() << "setRcControlCurrent speed / steering" << dutySpeed << " / " << dutySteering;
+        double setSteering = 0;
+        double setSpeed = 0;
+
+        // Fill steering value
+        if (rcmm.steering != ISO_STEERING_ANGLE_UNAVAILABLE_VALUE) {
+            if(rcmm.steeringUnit == ISO_UNIT_TYPE_STEERING_DEGREES) {
+                if (rcmm.steering <= ISO_STEERING_ANGLE_MAX_VALUE_DEG
+                && rcmm.steering >= ISO_STEERING_ANGLE_MIN_VALUE_DEG) {
+                    setSteering = rcmm.steering / ISO_STEERING_ANGLE_ONE_DEGREE_VALUE * (ISO_STEERING_ANGLE_MAX_VALUE_RAD / 180.0);
+                }
+                else {
+                    qDebug() << "Error: Steering angle value is out of bounds\n";
+                    return;
+                }
+            }
+            else if(rcmm.steeringUnit == ISO_UNIT_TYPE_STEERING_PERCENTAGE){
+                if (rcmm.steering <= ISO_MAX_VALUE_PERCENTAGE && rcmm.steering >= ISO_MIN_VALUE_PERCENTAGE) {
+                    setSteering = rcmm.steering / 100.0;
+                }
+                else {
+                    qDebug() << "Error: Steering percentage value is out of bounds\n";
+                    return;
+                }
+            }
+            else {
+                qDebug() << "Unknown unit in RCMM message";
+                return;
+            }
+        }
+
+        // Fill speed value
+        if (rcmm.speed != ISO_SPEED_UNAVAILABLE_VALUE) {
+
+            if(rcmm.speedUnit == ISO_UNIT_TYPE_SPEED_METER_SECOND) {
+                setSpeed = rcmm.speed / ISO_SPEED_ONE_METER_PER_SECOND_VALUE;
+            }
+            else if(rcmm.speedUnit == ISO_UNIT_TYPE_SPEED_PERCENTAGE){
+                setSpeed = rcmm.speed / (100.0 / THROTTLE_MAX);
+            }
+            else {
+                qDebug() << "Unknown unit in RCMM message";
+                return;
+            }
+        }
+
+        if(rcmm.speedUnit == ISO_UNIT_TYPE_SPEED_METER_SECOND) {
+            mPacket->setRcControlPid(255, setSpeed, setSteering); // RC control modes: Off, Duty, Current.
+        }
+        else {
+            mPacket->setRcControlDuty(255, setSpeed, setSteering); // RC control modes: Off, Duty, Current.
+        }
+
+        qDebug() << "Set speed = " << setSpeed << " / steering = " << setSteering;
     }
 }
