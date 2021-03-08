@@ -182,8 +182,6 @@ typedef struct {
 
 #define PROTOCOL_VERSION 2
 
-#define THROTTLE_MAX 0.15 // Default setting in RControlStation = 0.15
-
 // Chronos messaging
 
 // SYNC Word

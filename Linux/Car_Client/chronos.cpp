@@ -312,9 +312,7 @@ void Chronos::processRcmm(chronos_rcmm rcmm)
 {
     qDebug() << "RCMM RX";
 
-    // TODO:
-    // - Check object state?
-    // - Maneouver command?
+    // TODO: Check object state? Maneouver command?
 
     if(mPacket) {
         double setSteering = 0;
@@ -349,12 +347,11 @@ void Chronos::processRcmm(chronos_rcmm rcmm)
 
         // Fill speed value
         if (rcmm.speed != ISO_SPEED_UNAVAILABLE_VALUE) {
-
             if(rcmm.speedUnit == ISO_UNIT_TYPE_SPEED_METER_SECOND) {
                 setSpeed = rcmm.speed / ISO_SPEED_ONE_METER_PER_SECOND_VALUE;
             }
             else if(rcmm.speedUnit == ISO_UNIT_TYPE_SPEED_PERCENTAGE){
-                setSpeed = rcmm.speed / (100.0 / THROTTLE_MAX);
+                setSpeed = rcmm.speed;
             }
             else {
                 qDebug() << "Unknown unit in RCMM message";
@@ -362,13 +359,15 @@ void Chronos::processRcmm(chronos_rcmm rcmm)
             }
         }
 
+        qDebug() << "Set speed = " << setSpeed << " / steering = " << setSteering;
+
         if(rcmm.speedUnit == ISO_UNIT_TYPE_SPEED_METER_SECOND) {
-            mPacket->setRcControlPid(255, setSpeed, setSteering); // RC control modes: Off, Duty, Current.
+            // This method takes speed in m/s and regulates the motor rpm. Steering -1 to 1.
+            mPacket->setRcControlPid(255, setSpeed, setSteering);
         }
         else {
-            mPacket->setRcControlDuty(255, setSpeed, setSteering); // RC control modes: Off, Duty, Current.
+            // Speed -100 to 100. Steering -1 to 1
+            mPacket->setRcControlCurrent(255, setSpeed, setSteering);
         }
-
-        qDebug() << "Set speed = " << setSpeed << " / steering = " << setSteering;
     }
 }
