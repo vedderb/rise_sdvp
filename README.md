@@ -1,6 +1,6 @@
-# The RISE Self-Driving Model Vehicle Platform (SDVP)
+# VESC Self-Driving Model Vehicle Platform (formerly known as RISE SDVP)
 
-This is the source code and hardware design for a model vehicle platform developed and maintained at RISE Research Institutes of Sweden. The platform currently has full support for cars with Ackermann steering, robots with differential steering and partial support for quadcopters.
+This is the source code and hardware design for a model vehicle platform developed and maintained by the VESC project (formerly at RISE Research Institutes of Sweden). The platform has support for cars with Ackermann steering, robots with differential steering and partial support for quadcopters.
 
 Self-Driving in this context means that the vehicles can follow a pre-programmed path outdoors accurately using RTK-GNSS. The paths can be edited using [RControlStation](Linux/RControlStation) as a set of points with different time stamps or velocities, depending on the mode. It is also possible to send paths to the vehicles with time stamps in real-time from external applications (either using UDP or TCP to RControlStation, or directly over a radio link) for e.g. following other vehicles.
 
@@ -10,7 +10,7 @@ Figure 1 shows a screenshot of RControlStation, which is a GUI where model vehic
 
 ![RControlStation](Documentation/Pictures/GUI/map.png)
 
-Here is a (quire outdated) video with a test of RISE SDVP on a model car:
+Here is a (quire outdated) video with a test of VESC SDVP on a model car:
 
 [![RC Car Test](http://img.youtube.com/vi/4wPVpvPP-8w/0.jpg)](http://www.youtube.com/watch?v=4wPVpvPP-8w "Tero RC car with autopilot and RTK-GPS")
 
@@ -57,7 +57,7 @@ The repository is organized as follows:
 
 ## Hardware
 
-Figure 2 shows a hardware diagram of a working configuration of the RISE-SDVP platform. The cyan-colored boxes to the left are the components on a model car, and the green boxes to the right are a laptop computer connected over 4G to the model car. The laptop computer also runs a RTK-GNSS base station, so that the model car can position itself with around 3 cm accuracy relative to the GNSS antenna connected to the receiver on the laptop.
+Figure 2 shows a hardware diagram of a working configuration of the VESC-SDVP platform. The cyan-colored boxes to the left are the components on a model car, and the green boxes to the right are a laptop computer connected over 4G to the model car. The laptop computer also runs a RTK-GNSS base station, so that the model car can position itself with around 3 cm accuracy relative to the GNSS antenna connected to the receiver on the laptop.
 
 ![Hardware Diagram](Documentation/Pictures/block_diagram.png)
 
@@ -65,7 +65,7 @@ Here is a video that shows how a model car like the one in the block diagram abo
 
 [![RC Car Build](http://img.youtube.com/vi/nIqKJCZP5LM/0.jpg)](http://www.youtube.com/watch?v=nIqKJCZP5LM "Building a self-driving model car")
 
-There are many different configuration of hardware components that can result in a working RISE SDVP model car. What they need to function in general is:
+There are many different configuration of hardware components that can result in a working VESC SDVP model car. What they need to function in general is:
 
 - The [Controller](Hardware/Controller), which runs the embedded software that controls the motion and estimates the position of the model car.
 - A [VESC](https://vesc-project.com) motor controller that controls the motor on the car over CAN-bus, and provides speed and position estimation from the motor that is used in the sensor fusion in the controller.
@@ -124,34 +124,12 @@ This will simulate a model car locally, including the autopilot. Then RControlSt
 ./Car_Client -h
 ```
 
-## Setting up a Raspberry Pi 3 Image to run Car_Client
+## Building and Running Car_Client
 
-A somewhat pre-configured image for the Raspberry PI 3 can be downloaded [here](http://home.vedder.se/rise_sdvp/pi_img.zip). The login credentials on the image are:
-
-```
-User:     pi
-Password: elpgem1
-```
-
-Starting by changing the password is a good idea.
-
-Once the image is up and running, the repository should be updated to the latest version:
+Car_Client can be built with
 
 ```
-cd ~/rise_sdvp
-git pull
-```
-
-At boot there is a screen session that starts automatically that runs Car_Client. Before rebuilding Car_Client, the screen session should be stopped with
-
-```
-killall screen
-```
-
-Then Car_Client should be rebuilt
-
-```
-cd ~/rise_sdvp/Linux/Car_Client
+cd Linux/Car_Client
 qmake -qt=5 DEFINES+=HAS_CAMERA
 make clean
 make
@@ -159,15 +137,7 @@ make
 After that Car_Client can be started, and a connection can be made from RControlStation:
 
 ```
-./Car_Client -p /dev/car --useudp --logusb --usetcp
-```
-
-Notice that there are udev rules that map the USB-serial device of the Controller to _/dev/car_
-
-The next time the raspberry pi boots it will start a screen session with Car_Client. This is done from the ~/start_screen script. It might be a good idea to check if the Car_Client command in that script has the correct arguments for the latest version of rise_sdvp. At this time it should be
-
-```
-screen -d -m -S car bash -c 'cd /home/pi/rise_sdvp/Linux/Car_Client && ./Car_Client -p /dev/car --useudp --logusb --usetcp ; bash'
+./Car_Client -p /dev/ttyACM0 --useudp --logusb --usetcp
 ```
 
 ## GPS Emulation using Software-Defined Radio (SDR)
